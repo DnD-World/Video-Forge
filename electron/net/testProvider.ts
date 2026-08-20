@@ -67,12 +67,23 @@ export async function testProvider(
         const cap = b.character_limit ?? 0;
         const left = Math.max(0, cap - used);
         // Said in lessons as well as credits, because credits mean nothing until
-        // they are turned into work.
+        // they are turned into work. 5,250 not 4,640: lesson 101.1 measured
+        // 4,640 characters of Greek, and on v3 each span also carries its
+        // acting tag — "[sighs] " is billed like any other character, and it
+        // adds about an eighth.
+        const tier = (b.tier ?? "unknown").toLowerCase();
+        // 44.1kHz PCM IS PRO AND ABOVE. Said here, at the moment the key is
+        // tested, rather than discovered as a 401 in the middle of a lesson.
+        const rateNote =
+          tier.includes("pro") || tier.includes("scale") || tier.includes("business") || tier.includes("enterprise")
+            ? ""
+            : " 44.1kHz audio needs Pro — this account will get 24kHz, which is fine but not the same.";
         return {
           ok: true,
           message:
             `${b.tier ?? "unknown"} tier — ${left.toLocaleString()} of ` +
-            `${cap.toLocaleString()} credits left, about ${Math.floor(left / 4640)} lessons.`,
+            `${cap.toLocaleString()} credits left, about ${Math.floor(left / 5250)} lessons.` +
+            rateNote,
         };
       }
 

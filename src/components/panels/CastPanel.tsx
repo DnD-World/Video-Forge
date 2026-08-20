@@ -660,24 +660,81 @@ export function CastPanel() {
                       }
                     />
                   </label>
-                  <Slider
-                    label="Speed" value={speaker.eleven?.speed ?? 1} min={0.7} max={1.2} step={0.05}
-                    onChange={(v) =>
-                      updateSpeaker(speaker.id, { eleven: { ...speaker.eleven, speed: v } })
-                    }
-                    format={(v) => `${v.toFixed(2)}x`}
-                  />
-                  <Slider
-                    label="Steadiness" value={speaker.eleven?.stability ?? 0.5} min={0} max={1} step={0.05}
-                    onChange={(v) =>
-                      updateSpeaker(speaker.id, { eleven: { ...speaker.eleven, stability: v } })
-                    }
-                    format={(v) => `${Math.round(v * 100)}%`}
-                  />
+                  <label className="block">
+                    <span className="label-etched text-sm">Model</span>
+                    <Picker
+                      aria-label="ElevenLabs model"
+                      className="mt-1 w-full"
+                      value={speaker.elevenModel ?? "eleven_v3"}
+                      options={[
+                        { value: "eleven_v3", label: "v3 — acts on the script's directions" },
+                        { value: "eleven_multilingual_v2", label: "Multilingual v2 — flatter, has a speed dial" },
+                      ]}
+                      onChange={(v) =>
+                        updateSpeaker(speaker.id, {
+                          elevenModel: v as "eleven_v3" | "eleven_multilingual_v2",
+                        })
+                      }
+                    />
+                  </label>
+
+                  {(speaker.elevenModel ?? "eleven_v3") === "eleven_v3" ? (
+                    <>
+                      {/* Three positions, not a slider — v3 accepts 0, 0.5 and 1
+                          and rejects everything between. A slider here would be
+                          a control that fails the lesson at line one. */}
+                      <label className="block">
+                        <span className="label-etched text-sm">Steadiness</span>
+                        <Picker
+                          aria-label="Steadiness"
+                          className="mt-1 w-full"
+                          value={String(speaker.eleven?.stability ?? 0.5)}
+                          options={[
+                            { value: "0", label: "Creative — most expressive, can wander" },
+                            { value: "0.5", label: "Natural — the balance" },
+                            { value: "1", label: "Robust — steady, ignores direction more" },
+                          ]}
+                          onChange={(v) =>
+                            updateSpeaker(speaker.id, {
+                              eleven: { ...speaker.eleven, stability: Number(v) },
+                            })
+                          }
+                        />
+                      </label>
+                      <p className="text-sm text-neutral-500">
+                        v3 acts on the words <em>outside</em> the quotes: «She sighs
+                        heavily,» is sent as <code>[sighs]</code> in front of the line.
+                        The same script still works on DramaBox — nothing is rewritten,
+                        and the subtitle never shows the tag. There is no speed dial;
+                        speed is a direction («slows right down»).
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <Slider
+                        label="Speed" value={speaker.eleven?.speed ?? 1} min={0.7} max={1.2} step={0.05}
+                        onChange={(v) =>
+                          updateSpeaker(speaker.id, { eleven: { ...speaker.eleven, speed: v } })
+                        }
+                        format={(v) => `${v.toFixed(2)}x`}
+                      />
+                      <Slider
+                        label="Steadiness" value={speaker.eleven?.stability ?? 0.5} min={0} max={1} step={0.05}
+                        onChange={(v) =>
+                          updateSpeaker(speaker.id, { eleven: { ...speaker.eleven, stability: v } })
+                        }
+                        format={(v) => `${Math.round(v * 100)}%`}
+                      />
+                      <p className="text-sm text-neutral-500">
+                        Low steadiness wanders and is more expressive; high is even and
+                        flatter. v2 does not read acting tags — it reads them out — so a
+                        script's directions do nothing here.
+                      </p>
+                    </>
+                  )}
                   <p className="text-sm text-neutral-500">
-                    Low steadiness wanders and is more expressive; high is even and
-                    flatter. Every generation is charged by the character, and a
-                    re-render is charged again.
+                    Every generation is charged by the character, and a re-render is
+                    charged again.
                   </p>
                 </div>
               )}

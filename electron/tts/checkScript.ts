@@ -165,6 +165,21 @@ export function checkScript(script: string, openingPhrases: string[]): ScriptPro
         fix: "Spell the sound (Χαχαχα), or move it outside the quotes.",
       });
     }
+    // AN ACTING TAG BELONGS OUTSIDE THE QUOTES, in every engine this app has.
+    // ElevenLabs v3 writes them inside — "[excited] Σήμερα…" — and a script
+    // written that way somewhere else will arrive here sooner or later. The
+    // app builds its own tags from the directions, so one written by hand is
+    // either doubled on v3 or, on DramaBox and Piper, spoken: a Greek lesson
+    // that opens by saying the word "excited".
+    const inlineTag = /\[[^\]]{1,40}\]/u.exec(spoken);
+    if (inlineTag) {
+      problems.push({
+        line: n, text: short,
+        problem: `"${inlineTag[0]}" is an acting tag inside the speech, and DramaBox and Piper read it out loud.`,
+        fix: "Move it outside the quotes as a direction — [sighs] becomes `She sighs heavily,`. On ElevenLabs v3 the app writes the tag itself.",
+      });
+    }
+
     const enoise = NAMED_NOISE_ENGLISH.find((w) => new RegExp(`\\b${w}\\b`, "i").test(spoken));
     if (enoise) {
       problems.push({

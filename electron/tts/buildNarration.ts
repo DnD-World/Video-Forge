@@ -21,6 +21,7 @@ import { concatWavBuffers } from "../audio/concatWav";
 import { analyzeNarration } from "../audio/analyzeNarration";
 import { trimSilence, squeezeSilence } from "../audio/trimSilence";
 import { displayLine } from "../../src/lib/narration/displayText";
+import { withAudioTags } from "../../src/lib/narration/elevenTags";
 
 /** One line of script, with its speaker's voice already resolved.
  *
@@ -35,10 +36,18 @@ export interface NarrationInput {
   text: string;
   language: string;
   engine?: "piper" | "elevenlabs";
+  /** How this one line is delivered — the words outside the quotes.
+   *
+   *  Carried this far ONLY for ElevenLabs v3, which takes its acting from a
+   *  bracketed tag inside the text. Piper has nowhere to put it and ignores
+   *  it, exactly as it always has. */
+  direction?: string;
   piperPythonPath?: string;
   piperOnnxPath?: string;
   /** ElevenLabs: the voice id and this character's settings. */
   elevenVoiceId?: string;
+  /** `eleven_v3` (acts, reads tags) or `eleven_multilingual_v2`. */
+  elevenModel?: string;
   eleven?: {
     stability?: number;
     similarityBoost?: number;
@@ -103,6 +112,13 @@ function narrationKey(segments: NarrationInput[], pauses: NarrationPauses): stri
       // change looks like it did nothing. That has already happened twice in
       // this file's history, which is what the version string above is for.
       s.elevenVoiceId,
+      // THE MODEL AND THE DIRECTION COUNT TOO, for the same reason. v3 and v2
+      // are different voices of the same voice, and on v3 the direction
+      // becomes an audio tag that is part of what is sent — changing
+      // "speaks evenly" to "snaps furiously" changes the audio and leaves the
+      // spoken words identical.
+      s.elevenModel,
+      s.engine === "elevenlabs" ? s.direction : undefined,
       s.eleven?.stability,
       s.eleven?.similarityBoost,
       s.eleven?.style,
@@ -185,9 +201,18 @@ export async function buildNarration(
 
   for (const seg of segments) {
     if (seg.engine === "elevenlabs") {
+      // THE TAG IS ADDED HERE AND NOWHERE EARLIER. `seg.text` stays the clean
+      // Greek the subtitle shows and the aligner is given; only the string
+      // handed to the API carries "[sighs] ". A tag that leaked into the
+      // segment would be drawn on screen and looked for in the audio.
+      const spoken =
+        (seg.elevenModel ?? "eleven_v3").startsWith("eleven_v3")
+          ? withAudioTags(seg.text, seg.direction)
+          : seg.text;
       const { audioBuffer, credits: spent } = await elevenlabs.synthesize({
-        text: seg.text,
+        text: spoken,
         voiceId: seg.elevenVoiceId ?? "",
+        modelId: seg.elevenModel,
         settings: {
           stability: seg.eleven?.stability,
           similarityBoost: seg.eleven?.similarityBoost,

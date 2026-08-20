@@ -74,6 +74,9 @@ export interface JobSpeaker {
   engine: "piper" | "dramabox" | "elevenlabs";
   /** ElevenLabs voice id, and this character's settings. */
   elevenVoiceId?: string;
+  /** `eleven_v3` (default — acts, reads the script's directions as tags) or
+   *  `eleven_multilingual_v2`. */
+  elevenModel?: "eleven_v3" | "eleven_multilingual_v2";
   eleven?: { stability?: number; similarityBoost?: number; style?: number; speed?: number };
   piperPythonPath?: string;
   piperOnnxPath?: string;
@@ -376,9 +379,13 @@ export async function runBatchJob(
       text: seg.text,
       language,
       engine: c.engine === "elevenlabs" ? ("elevenlabs" as const) : ("piper" as const),
+      // The words outside the quotes. On v3 they become the audio tag; every
+      // other engine here ignores them.
+      direction: seg.direction,
       piperPythonPath: c.piperPythonPath,
       piperOnnxPath: c.piperOnnxPath,
       elevenVoiceId: c.elevenVoiceId,
+      elevenModel: c.elevenModel,
       eleven: c.eleven,
     } as NarrationInput;
   });

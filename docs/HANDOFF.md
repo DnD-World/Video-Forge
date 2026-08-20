@@ -218,6 +218,68 @@ it did nothing. That has happened twice in this project for other reasons.
 Untested against the real API — there is no key saved yet. The key test in
 Backend Settings reports the tier and how many lessons the remaining credits buy.
 
+### v3 — the model that acts, added 20 Aug 2026
+
+`eleven_v3` is now the default for any character set to ElevenLabs, chosen per
+character in the Cast panel alongside `eleven_multilingual_v2`.
+
+**The script does not change.** v3 takes its acting from a bracketed tag inside
+the text; DramaBox takes the same instruction from the words outside the quotes.
+So `src/lib/narration/elevenTags.ts` turns one into the other at the last moment
+before synthesis:
+
+```
+A bright woman sighs heavily, "Ουφ, δεν την καταλαβαίνω."
+                ↓
+[sighs] Ουφ, δεν την καταλαβαίνω.
+```
+
+`segment.text` is untouched, so the subtitle never shows a tag and the aligner
+is never asked to find one. **Measured on lesson 101.1: 48 spans, 42 tagged, and
+the six that were not are directions a voice cannot perform** — `nods slowly`,
+`claps her hands`. A body does those; no tag is the right answer, and a tag v3
+cannot follow is either ignored or performed as a sound.
+
+**Three things about v3 that are not true of v2**, each of which fails the whole
+lesson at line one if got wrong:
+
+| | |
+|---|---|
+| `stability` | Three values only — 0.0 Creative, 0.5 Natural, 1.0 Robust. Snapped, not passed through, so a slider at 0.35 does not 422. |
+| `style`, `speed` | Do not exist. Speed is a direction: «slows right down». |
+| Character limit | 5,000 per request against v2's 10,000. Irrelevant per line, fatal if anyone ever batches. |
+
+**`pcm_44100` needs the Pro plan.** Documented, and it fails at request time on
+anything cheaper — which on Creator is every line of every lesson. The engine
+asks for 44.1k, and on a tier refusal retries once at 24k and says so in the
+log. Nothing downstream cares about the rate as long as it is consistent: every
+reader in `electron/audio` takes it from the WAV header. The key test now names
+this at the moment the key is saved rather than leaving it to be found mid-lesson.
+
+**Text-to-dialogue was looked at and rejected.** It takes the multi-speaker
+`inputs[]` array — the shape a JSON-emitting script writer would produce — but
+it caps at **2,000 characters across all inputs** (a lesson is 4,600) and returns
+**one merged blob**, which destroys the per-line timing that subtitles, visemes
+and the active-speaker gate are all built on. The per-line convert endpoint keeps
+the architecture intact.
+
+**The acting tags cost money.** Measured on 101.1: 4,597 characters of Greek plus
+663 of tags — **+14.4%**. A lesson is ~5,260 credits on v3, not 4,640.
+
+| | credits | at Creator (121k/mo) | at Pro (600k/mo) |
+|---|---|---|---|
+| One lesson | 5,260 | | |
+| All 72 | **378,720** | 3.2 months, no re-renders | 0.63 of one month |
+| One full re-render of the course | another 378,720 | | |
+
+**Pro at $99 is the only plan that fits**, and it fits once with about 1.6
+re-renders of headroom. Creator at $22 buys 23 lessons a month. DramaBox does the
+same course for about $5 of rented card and charges only minutes for a re-render.
+
+The in-app **Generate** button is still the Piper path. ElevenLabs runs from a
+job file (`"engine": "elevenlabs"`, `"elevenModel": "eleven_v3"`) through
+`npm run job`, which is how lessons are actually made.
+
 ## YouTube — scheduled publishing
 
 Not a Premiere. **Decided 20 Aug 2026:** a video is uploaded private with a

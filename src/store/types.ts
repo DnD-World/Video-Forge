@@ -337,8 +337,17 @@ export interface SpeakerConfig {
   voiceId?: string;      // assigned Piper voice's onnxPath, if any
   /** The voice id from the ElevenLabs library or a clone. An id, not a name. */
   elevenVoiceId?: string;
-  /** Per-character voice settings. `speed` is the nearest thing to DramaBox's
-   *  pace; `stability` low wanders and is expressive, high is steady and flat. */
+  /** Which ElevenLabs model speaks this character.
+   *
+   *  `eleven_v3` is the default and the one that acts: it reads bracketed
+   *  tags, and `elevenTags.ts` builds those from the same stage directions
+   *  DramaBox uses, so one script feeds either engine. `eleven_multilingual_v2`
+   *  ignores tags — it reads them out — and is kept for its continuous
+   *  stability and its speed control. */
+  elevenModel?: "eleven_v3" | "eleven_multilingual_v2";
+  /** Per-character voice settings. `speed` and `style` are v2 ONLY — v3
+   *  rejects them, and takes its pace from a tag. `stability` on v3 is three
+   *  positions (0 / 0.5 / 1) and is snapped to the nearest. */
   eleven?: {
     stability?: number;
     similarityBoost?: number;
