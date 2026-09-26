@@ -334,6 +334,49 @@ speaker turn rather than per line; and forced alignment for word-level timing.
 
 ---
 
+## Image Forge, once both are installed — decided 20 Sep 2026
+
+[Image Forge](../../qwen%20image%20creator) is the sister app: bulk AI image
+generation from a spreadsheet, same BYOK and local-first shape, already
+shipping as an installed Windows app.
+
+**They stay two apps.** No merge, no shared UI, no shared repository. The plan
+is narrower: **game recognising game** — when both are installed on the same
+computer, this app notices Image Forge is there and can ask it for pictures.
+
+The favour runs one way: **this app asks the forge for the art the puppets are
+made of** — viseme sheets, sprite sheets, turnarounds, expression sets, and
+backgrounds — instead of someone generating files in one app and hand-placing
+them here.
+
+Why this is the seam, and not somewhere else:
+
+- The puppets already eat exactly what the forge already makes. `tools/
+  slice-grid.mjs`, `tools/build-viseme-sheet.mjs` and `tools/forge-to-sheets.mjs`
+  turn grids of mouth shapes into the 3×3 sheets `SpeakerAvatar` reads.
+- Image Forge already plans those sets by name (viseme, turnaround, expression,
+  avatar eyes and brows) and gives each frame its own seed plus a "change ONLY
+  this" instruction — the thing that keeps a character from being redesigned
+  between frames.
+- Image Forge already exposes handles a neighbouring program can use: a **fixed
+  local port** (47821–47825) and an **MCP server with eight tools** over stdio
+  that generates real files and updates its manifest.
+
+Open, on purpose: which side starts the conversation, whether it goes over MCP
+or the local port, how this app words "ten mouth shapes for Σερίφης in this
+style", and how finished files come back. Agree that here before writing code.
+
+⚠️ Reality check before relying on it: the forge's free engines return
+**square** pictures and ignore seeds (OVHcloud), and only Google's models spell
+readable words. Sheets hold together best on an engine that takes a seed and a
+reference picture.
+
+**Nothing has been built for this. Nothing was started on 20 September 2026.**
+The matching note is §14.2 of `qwen image creator/HANDOFF.md`; keep the two in
+step.
+
+---
+
 ## Traps that have each cost a day
 
 **Antivirus HTTPS scanning.** Avast re-signs every response with its own root,

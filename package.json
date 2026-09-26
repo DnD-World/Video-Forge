@@ -11,7 +11,9 @@
     "build": "electron-vite build",
     "preview": "electron-vite preview",
     "start": "electron-vite preview",
-    "job": "electron . --job"
+    "job": "electron . --job",
+    "ask-forge": "node tools/ask-forge.mjs",
+    "test:link": "node --test tools/lib/forgeLink.test.mjs"
   },
   "dependencies": {
     "@remotion/bundler": "^4.0.500",
