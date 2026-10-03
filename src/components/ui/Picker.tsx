@@ -27,6 +27,9 @@ export interface PickerOption<T extends string> {
   note?: string;
   /** Per-option typeface, for a list that previews what it offers. */
   fontFamily?: string;
+  /** Shown but not choosable — for something that exists but isn't ready,
+   *  like an engine marked "coming soon". Put the reason in `note`. */
+  disabled?: boolean;
 }
 
 interface Props<T extends string> {
@@ -112,7 +115,7 @@ export function Picker<T extends string>({
 
   function commit(i: number) {
     const o = options[i];
-    if (!o) return;
+    if (!o || o.disabled) return;
     onChange(o.value);
     setOpen(false);
     triggerRef.current?.focus();
@@ -203,10 +206,15 @@ export function Picker<T extends string>({
                 data-i={i}
                 role="option"
                 aria-selected={o.value === value}
+                aria-disabled={o.disabled || undefined}
                 onPointerEnter={() => setActive(i)}
                 onClick={() => commit(i)}
                 className="pickopt flex items-center gap-2"
-                style={{ fontFamily: o.fontFamily, ...(i === active ? { color: "var(--accent)" } : null) }}
+                style={{
+                  fontFamily: o.fontFamily,
+                  ...(i === active && !o.disabled ? { color: "var(--accent)" } : null),
+                  ...(o.disabled ? { opacity: 0.45, cursor: "not-allowed" } : null),
+                }}
               >
                 <span className="flex-1 truncate text-left">{o.label}</span>
                 {o.note && (

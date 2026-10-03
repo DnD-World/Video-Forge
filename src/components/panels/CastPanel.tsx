@@ -22,9 +22,10 @@ import { useProjectStore } from "../../store/useProjectStore";
 import { useVoicesStore } from "../../store/useVoicesStore";
 import { useSpeakerLibraryStore } from "../../store/useSpeakerLibraryStore";
 import { usePuppetDefs } from "../../lib/puppets/usePuppets";
-import { BUILTIN_CAST, builtinPuppetPath, type BuiltinCharacter } from "../../store/builtinCast";
-import { defaultTrackWaveform } from "../../lib/waveform/buildTracks";
+import { BUILTIN_CAST, builtinSpeaker, type BuiltinCharacter } from "../../store/builtinCast";
 import type { OutlineShape } from "../../store/types";
+import { ENGINE_OPTIONS, engineOf, type TtsEngine } from "../../lib/features";
+import { useUiStore } from "../../store/useUiStore";
 
 const SHAPES: { id: OutlineShape; label: string }[] = [
   { id: "circle", label: "Circle" },
@@ -51,6 +52,7 @@ export function CastPanel() {
   const [musicBusy, setMusicBusy] = useState(false);
   const [musicNote, setMusicNote] = useState<string | null>(null);
   const voices = useVoicesStore((s) => s.voices);
+  const goTo = useUiStore((s) => s.goTo);
   // Definitions only, no art: this panel needs to know whether a puppet file
   // is valid, not what it looks like.
   const { errors: puppetErrors } = usePuppetDefs(speakers.map((sp) => sp.puppetPath));
@@ -132,19 +134,7 @@ export function CastPanel() {
   function addBuiltin(c: BuiltinCharacter) {
     if (!puppetDir) return;
     setCastError(null);
-    // Same defaults a blank speaker gets, so a built-in character differs only
-    // in the things that actually make them that character: name, face, colour.
-    addSpeakerFrom({
-      label: c.label,
-      puppetPath: builtinPuppetPath(puppetDir, c.file),
-      borderColor: c.borderColor,
-      bgColor: "#1a1a1a",
-      bgOpacity: 0,
-      borderOpacity: 1,
-      outlineShape: "none",
-      size: 0.28,
-      waveform: defaultTrackWaveform(speakers.length === 0 ? 0 : speakers.length % 2 === 1 ? 1 : -1),
-    });
+    addSpeakerFrom(builtinSpeaker(c, puppetDir, speakers.length));
   }
 
   return (
@@ -302,7 +292,7 @@ export function CastPanel() {
               onChange={(volume) => setMusicMix({ volume })}
             />
             <Slider
-              label="Duck under speech"
+              label="Lower music while someone talks"
               value={musicDuck}
               min={0} max={1} step={0.05}
               format={(v) => (v === 0 ? "off" : `−${Math.round(v * 100)}%`)}
@@ -489,12 +479,12 @@ export function CastPanel() {
                 </p>
               </div>
               <Slider
-                label="Outline Opacity" value={speaker.borderOpacity} min={0} max={1} step={0.05}
+                label="Frame visibility" value={speaker.borderOpacity} min={0} max={1} step={0.05}
                 onChange={(v) => updateSpeaker(speaker.id, { borderOpacity: v })}
                 format={(v) => `${Math.round(v * 100)}%`}
               />
               <Slider
-                label="Fill Opacity" value={speaker.bgOpacity} min={0} max={1} step={0.05}
+                label="Background visibility" value={speaker.bgOpacity} min={0} max={1} step={0.05}
                 onChange={(v) => updateSpeaker(speaker.id, { bgOpacity: v })}
                 format={(v) => (v === 0 ? "transparent" : `${Math.round(v * 100)}%`)}
               />
@@ -508,12 +498,12 @@ export function CastPanel() {
                 format={(v) => `${Math.round(v * 100)}%`}
               />
               <Slider
-                label="Position X" value={speaker.x} min={0} max={1} step={0.01}
+                label="Left ↔ right" value={speaker.x} min={0} max={1} step={0.01}
                 onChange={(v) => updateSpeaker(speaker.id, { x: v })}
                 format={(v) => `${Math.round(v * 100)}%`}
               />
               <Slider
-                label="Position Y" value={speaker.y} min={0} max={1} step={0.01}
+                label="Up ↕ down" value={speaker.y} min={0} max={1} step={0.01}
                 onChange={(v) => updateSpeaker(speaker.id, { y: v })}
                 format={(v) => `${Math.round(v * 100)}%`}
               />
@@ -521,45 +511,52 @@ export function CastPanel() {
             </section>
 
             <section className="space-y-3">
+              {/* The ONE place a speaker's voice is set. The Script step shows
+                  it read-only and links back here. */}
               <div className="label-etched">Voice</div>
               <Picker
                 aria-label="Voice engine"
                 className="w-full"
-                value={speaker.ttsEngine ?? "chatterbox"}
-                options={[
-                  { value: "piper", label: "Piper — fast, local" },
-                  { value: "chatterbox", label: "Chatterbox — higher quality" },
-                ]}
-                onChange={(v) =>
-                  updateSpeaker(speaker.id, { ttsEngine: v as "chatterbox" | "piper" })
-                }
+                value={engineOf(speaker)}
+                options={ENGINE_OPTIONS}
+                onChange={(v) => updateSpeaker(speaker.id, { ttsEngine: v as TtsEngine })}
               />
-              {(speaker.ttsEngine ?? "chatterbox") === "piper" && (
+              {engineOf(speaker) === "piper" && (
                 <Picker
                   aria-label="Piper voice"
                   className="w-full"
                   placeholder={
                     voices.length === 0
-                      ? "No voices — scan in Backend Settings"
+                      ? "No voices found yet"
                       : "Saved voice not found — pick another"
                   }
                   value={speaker.voiceId ?? ""}
                   options={[
                     {
                       value: "",
-                      label:
-                        voices.length === 0
-                          ? "No voices — scan in Backend Settings"
-                          : "No voice assigned",
+                      label: voices.length === 0 ? "No voices found yet" : "Pick a voice…",
                     },
                     ...voices.map((v) => ({ value: v.onnxPath, label: v.name })),
                   ]}
                   onChange={(v) => updateSpeaker(speaker.id, { voiceId: v || undefined })}
                 />
               )}
-              <p className="text-sm text-neutral-500">
-                Chatterbox voices are assigned in the Narration tab.
-              </p>
+              {voices.length === 0 ? (
+                <p className="text-sm text-accent-bright">
+                  No voices found on this computer yet.{" "}
+                  <button
+                    className="underline hover:text-accent-bright"
+                    onClick={() => goTo("setup")}
+                  >
+                    Go to Setup to find them
+                  </button>
+                  .
+                </p>
+              ) : !speaker.voiceId ? (
+                <p className="text-sm text-accent-bright">
+                  Pick a voice — {speaker.label} can't speak without one.
+                </p>
+              ) : null}
             </section>
 
           </>

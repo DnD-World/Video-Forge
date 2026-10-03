@@ -20,6 +20,11 @@ import BackendPanel from "./components/settings/BackendPanel";
 import NarrationPanel from "./components/settings/NarrationPanel";
 import { useProjectStore } from "./store/useProjectStore";
 import { useChatterboxVoicesStore } from "./store/useChatterboxVoicesStore";
+import { useUiStore } from "./store/useUiStore";
+import { useVoicesStore } from "./store/useVoicesStore";
+import { StepBar } from "./components/StepBar";
+import { Welcome } from "./components/Welcome";
+import { FEATURES } from "./lib/features";
 import { useSettingsStore } from "./store/useSettingsStore";
 import { deriveAccentShades, rgbTripleToHex } from "./lib/color/deriveShades";
 import { headMotion, motionTransform } from "./lib/motion/idleMotion";
@@ -114,14 +119,17 @@ function Rail({
 }
 
 export default function App() {
-  const [view, setView] = useState<"canvas" | "settings" | "narration">("canvas");
+  const view = useUiStore((s) => s.view);
   const canvasRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const [stageSize, setStageSize] = useState({ w: 0, h: 0 });
   const [snapToGrid, setSnapToGrid] = useState(true);
   const [draggingId, setDraggingId] = useState<string | null>(null);
-  const [castOpen, setCastOpen] = useState(true);
-  const [sceneOpen, setSceneOpen] = useState(true);
+  const castOpen = useUiStore((s) => s.castOpen);
+  const setCastOpen = useUiStore((s) => s.setCastOpen);
+  const sceneOpen = useUiStore((s) => s.sceneOpen);
+  const setSceneOpen = useUiStore((s) => s.setSceneOpen);
+  const setWelcomeOpen = useUiStore((s) => s.setWelcomeOpen);
 
   const fps = useProjectStore((s) => s.fps);
   const render = useProjectStore((s) => s.render);
@@ -310,6 +318,9 @@ export default function App() {
   // without anyone watching.
   const refreshChatterbox = useChatterboxVoicesStore((s) => s.refresh);
   useEffect(() => {
+    // Switched off with the engine (lib/features.ts): no reason to ping a port
+    // every twelve seconds for a server that isn't installed.
+    if (!FEATURES.chatterbox) return;
     void refreshChatterbox();
     const id = window.setInterval(() => void refreshChatterbox(), 12000);
     const onFocus = () => void refreshChatterbox();
@@ -319,6 +330,26 @@ export default function App() {
       window.removeEventListener("focus", onFocus);
     };
   }, [refreshChatterbox]);
+
+  // Find the Piper voices once at launch. The list isn't saved (it describes
+  // the disk, not a choice), and it used to stay empty until someone found
+  // Setup and pressed Scan — so every speaker's voice picker said "no voices"
+  // on every launch, on a machine that had them all along.
+  const piperVoicesDir = useSettingsStore((s) => s.defaults.piperVoicesDir);
+  useEffect(() => {
+    if (!window.byok?.tts || !piperVoicesDir.trim()) return;
+    if (useVoicesStore.getState().voices.length > 0) return;
+    void useVoicesStore.getState().scan(piperVoicesDir);
+    // Only at launch: a changed folder is re-scanned from Setup on purpose.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // First launch opens the welcome screen. Read once, at mount — closing it
+  // sets welcomeSeen, and that must not re-trigger anything.
+  useEffect(() => {
+    if (!useSettingsStore.getState().welcomeSeen) setWelcomeOpen(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // The grain is ambient motion, so it answers to the app's own motion toggle
   // as well as to prefers-reduced-motion.
@@ -398,6 +429,7 @@ export default function App() {
     // library's own demo lifts its wrapper the same way.
     <div className="relative z-[1] h-full w-full flex flex-col text-neutral-200">
       <div className="scanlines" />
+      <Welcome />
 
       {/* Top bar */}
       <header
@@ -410,30 +442,13 @@ export default function App() {
           BYOK-Vid-Creator
         </h1>
         <div className="flex items-center gap-3">
-          <span className="label-etched hidden sm:inline mr-2">Deterministic Video Studio</span>
+          <StepBar />
           <button
-            onClick={() => setView("canvas")}
-            className={`label-etched px-3 py-1.5 border ${
-              view === "canvas" ? "border-accent text-accent-bright" : "border-accent/30 hover:border-accent hover:text-accent-bright"
-            }`}
+            onClick={() => setWelcomeOpen(true)}
+            title="Sample project, new project, open a project"
+            className="label-etched px-3 py-1.5 border border-accent/30 hover:border-accent hover:text-accent-bright"
           >
-            Canvas
-          </button>
-          <button
-            onClick={() => setView("narration")}
-            className={`label-etched px-3 py-1.5 border ${
-              view === "narration" ? "border-accent text-accent-bright" : "border-accent/30 hover:border-accent hover:text-accent-bright"
-            }`}
-          >
-            Narration
-          </button>
-          <button
-            onClick={() => setView("settings")}
-            className={`label-etched px-3 py-1.5 border ${
-              view === "settings" ? "border-accent text-accent-bright" : "border-accent/30 hover:border-accent hover:text-accent-bright"
-            }`}
-          >
-            ⚙ Backend Settings
+            Start
           </button>
         </div>
       </header>
@@ -444,7 +459,7 @@ export default function App() {
           title="Cast"
           side="left"
           open={castOpen}
-          onToggle={() => setCastOpen((v) => !v)}
+          onToggle={() => setCastOpen(!castOpen)}
           flareRef={asideFlare.ref}
           onFlare={asideFlare.fire}
         >
@@ -624,7 +639,7 @@ export default function App() {
           title="Scene"
           side="right"
           open={sceneOpen}
-          onToggle={() => setSceneOpen((v) => !v)}
+          onToggle={() => setSceneOpen(!sceneOpen)}
           flareRef={sceneFlare.ref}
           onFlare={sceneFlare.fire}
         >

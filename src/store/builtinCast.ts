@@ -1,3 +1,5 @@
+import { defaultTrackWaveform } from "../lib/waveform/buildTracks";
+
 // ---------------------------------------------------------------------------
 // The cast that ships with the app.
 //
@@ -64,4 +66,21 @@ export const BUILTIN_CAST: BuiltinCharacter[] = [
 export function builtinPuppetPath(dir: string, file: string): string {
   const sep = dir.includes("\\") ? "\\" : "/";
   return dir.endsWith(sep) ? dir + file : dir + sep + file;
+}
+
+/** A built-in character as a speaker, ready for `addSpeakerFrom`. Same
+ *  defaults a blank speaker gets, so a built-in character differs only in the
+ *  things that actually make them that character: name, face, colour. */
+export function builtinSpeaker(c: BuiltinCharacter, puppetDir: string, index: number) {
+  return {
+    label: c.label,
+    puppetPath: builtinPuppetPath(puppetDir, c.file),
+    borderColor: c.borderColor,
+    bgColor: "#1a1a1a",
+    bgOpacity: 0,
+    borderOpacity: 1,
+    outlineShape: "none" as const,
+    size: 0.28,
+    waveform: defaultTrackWaveform(index === 0 ? 0 : index % 2 === 1 ? 1 : -1),
+  };
 }

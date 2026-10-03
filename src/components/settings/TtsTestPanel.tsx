@@ -66,23 +66,27 @@ export default function TtsTestPanel() {
 
   return (
     <div className="border border-accent/25 bg-metal-800/60 p-4 space-y-3">
-      <h3 className="label-lit text-sm">Local TTS Test (Piper)</h3>
+      <h3 className="label-lit text-sm">Piper — free voices on this computer</h3>
       <p className="text-sm">
-        Proves the full pipeline — start a persistent Piper server, get
-        audio, play it — before wiring in XTTS-v2. First synthesis per voice
-        is slower (server warm-up); after that it's fast.
+        The app looks for voices in the folder below when it starts. If none
+        are found, check the two folders and press Scan. Then try a voice — the
+        first time each voice speaks takes a few seconds while it loads.
       </p>
 
       <div className="space-y-2">
+        <span className="label-etched text-xs">Piper program (Python)</span>
         <input
           type="text"
+          aria-label="Piper program (Python)"
           placeholder="Python executable (e.g. python3, or a full path)…"
           value={piperPythonPath}
           onChange={(e) => setDefault("piperPythonPath", e.target.value)}
           className="w-full bg-metal-900 border border-accent/25 px-3 py-2 text-base text-neutral-100 outline-none focus:border-accent"
         />
+        <span className="label-etched text-xs">Voices folder</span>
         <input
           type="text"
+          aria-label="Voices folder"
           placeholder="Folder containing your .onnx voice models…"
           value={piperVoicesDir}
           onChange={(e) => setDefault("piperVoicesDir", e.target.value)}
@@ -126,7 +130,7 @@ export default function TtsTestPanel() {
           disabled={synthesizing || !selectedVoice}
           className="btn cut-sm btn-primary px-4 py-2 text-sm font-display font-semibold uppercase tracking-[0.1em] text-accent-bright disabled:opacity-40"
         >
-          {synthesizing ? "Synthesizing…" : "Synthesize & Play"}
+          {synthesizing ? "Speaking…" : "▶ Try this voice"}
         </button>
         {synthError && <p className="text-sm text-red-400 whitespace-pre-wrap">{synthError}</p>}
         {audioUrl && (

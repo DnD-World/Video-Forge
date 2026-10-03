@@ -2,6 +2,8 @@ interface Props {
   label: string;
   checked: boolean;
   onChange: (v: boolean) => void;
+  /** One plain-English line under the switch. */
+  hint?: string;
 }
 
 /**
@@ -20,8 +22,8 @@ interface Props {
  * A real <input type="checkbox"> underneath, so keyboard, focus and screen
  * readers work without reimplementing any of it.
  */
-export function Toggle({ label, checked, onChange }: Props) {
-  return (
+export function Toggle({ label, checked, onChange, hint }: Props) {
+  const row = (
     <div className="leverrow">
       <span className="tlabel">{label}</span>
       <label className="lever">
@@ -38,6 +40,13 @@ export function Toggle({ label, checked, onChange }: Props) {
           <span className="word" />
         </span>
       </label>
+    </div>
+  );
+  if (!hint) return row;
+  return (
+    <div>
+      {row}
+      <p className="text-xs text-neutral-500 mt-1">{hint}</p>
     </div>
   );
 }
