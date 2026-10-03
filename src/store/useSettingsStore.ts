@@ -22,6 +22,10 @@ interface SettingsState {
    *  regardless of this). Default on. */
   motionEnabled: boolean;
   setMotionEnabled: (v: boolean) => void;
+  /** The welcome screen has been closed once. After that it only opens from
+   *  the "Start" button in the header. */
+  welcomeSeen: boolean;
+  setWelcomeSeen: (v: boolean) => void;
 }
 
 const INITIAL_DEFAULTS: BackendDefaults = {
@@ -51,6 +55,9 @@ export const useSettingsStore = create<SettingsState>()(
 
       motionEnabled: true,
       setMotionEnabled: (v) => set({ motionEnabled: v }),
+
+      welcomeSeen: false,
+      setWelcomeSeen: (v) => set({ welcomeSeen: v }),
     }),
     {
       name: "byok-settings", // saved to localStorage, survives restarts

@@ -1,15 +1,10 @@
 // ---------------------------------------------------------------------------
 // Render controls.
 //
-// Deliberately minimal: pick a length, optionally attach a narration WAV,
-// press render, watch a bar, open the folder. The point of this first pass is
-// to make the pipeline visible and provable end to end, not to be a full
-// export dialog.
-//
-// The narration WAV is chosen by hand here rather than picked up automatically
-// from the Narration panel — that panel currently keeps its result in local
-// component state, so there's nothing global to read. Lifting it into the
-// project store is the follow-up that makes this automatic.
+// Step ⑤. The voice track from the Script step is attached automatically; a
+// different WAV can still be picked by hand. A render is never started by one
+// click: it holds the graphics card for minutes to hours (CLAUDE.md), so the
+// first click shows how long it will take and asks.
 // ---------------------------------------------------------------------------
 
 import { useEffect, useRef, useState } from "react";
@@ -17,6 +12,27 @@ import { NumberField } from "../ui/NumberField";
 import { HudButton } from "../ui/HudButton";
 import { Toggle } from "../ui/Toggle";
 import { useProjectStore } from "../../store/useProjectStore";
+import { useUiStore } from "../../store/useUiStore";
+import { ErrorNote } from "../ui/ErrorNote";
+
+/** Frames per second this app renders at on the reference machine (laptop RTX
+ *  3070, 1080x1920): 12,720 frames in 14.5 minutes, measured 13 Aug 2026 — see
+ *  PLAN.md. Pixel count is the same in both orientations, so one number does. */
+const MEASURED_RENDER_FPS = 14.6;
+/** Bundling, browser start-up and the final mux — roughly constant. */
+const RENDER_OVERHEAD_MIN = 0.5;
+
+function estimateMinutes(durationSec: number, fps: number): number {
+  return (durationSec * fps) / MEASURED_RENDER_FPS / 60 + RENDER_OVERHEAD_MIN;
+}
+
+function formatMinutes(min: number): string {
+  if (min < 1.5) return "about a minute";
+  if (min < 60) return `about ${Math.round(min)} minutes`;
+  const h = Math.floor(min / 60);
+  const m = Math.round(min - h * 60);
+  return `about ${h} h ${m} min`;
+}
 
 interface RenderResult {
   outputPath: string;
@@ -62,7 +78,22 @@ export function RenderBar() {
   const [busy, setBusy] = useState(false);
   const [pct, setPct] = useState(0);
   const [note, setNote] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<unknown>(null);
+  /** The "are you sure" box is open — renders hold the graphics card for a
+   *  long time, so they are never started by a single click. */
+  const [confirming, setConfirming] = useState(false);
+  const [startedAt, setStartedAt] = useState<number | null>(null);
+  const [, tick] = useState(0);
+  const goTo = useUiStore((s) => s.goTo);
+  const setLastRenderPath = useUiStore((s) => s.setLastRenderPath);
+  const estimate = estimateMinutes(effectiveDuration, fps);
+
+  // Once a second while rendering, so elapsed and remaining time move.
+  useEffect(() => {
+    if (!busy) return;
+    const id = window.setInterval(() => tick((n) => n + 1), 1000);
+    return () => window.clearInterval(id);
+  }, [busy]);
   const [result, setResult] = useState<RenderResult | null>(null);
 
   // Subscribe once. The unsubscribe matters: without it every remount would
@@ -106,6 +137,8 @@ export function RenderBar() {
   }
 
   async function start() {
+    setConfirming(false);
+    setStartedAt(Date.now());
     setBusy(true);
     setError(null);
     setResult(null);
@@ -186,13 +219,14 @@ export function RenderBar() {
 
       if (res.ok) {
         setResult({ outputPath: res.outputPath, frames: res.frames });
+        setLastRenderPath(res.outputPath);
         setNote("Done");
         setPct(100);
       } else {
-        setError(res.error ?? "Render failed.");
+        setError(res.error ?? "The render stopped without saying why.");
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(e);
     } finally {
       setBusy(false);
     }
@@ -200,7 +234,21 @@ export function RenderBar() {
 
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="label-etched">Render</h2>
+      <p className="text-sm text-neutral-400">
+        Makes the finished video file. Everything you see in the preview is
+        exactly what you get.
+      </p>
+
+      {!narration && !audioPath && (
+        <div className="text-sm border border-amber-400/40 bg-amber-400/10 px-3 py-2">
+          <span className="text-amber-300">No voice track yet</span> — the video
+          would be silent, with no subtitles or talking.{" "}
+          <button className="underline hover:text-accent-bright" onClick={() => goTo("script")}>
+            Make one in Script
+          </button>
+          .
+        </div>
+      )}
 
       {narration && narrationSec && (
         <div className="border border-accent/25 bg-metal-800/60 px-3 py-2 space-y-2">
@@ -256,9 +304,31 @@ export function RenderBar() {
         <p className="text-xs text-neutral-500 break-all">{audioPath}</p>
       )}
 
-      <HudButton active={!busy} onClick={busy ? undefined : start}>
-        {busy ? "Rendering…" : "▶ Render Video"}
-      </HudButton>
+      {!busy && !confirming && (
+        <HudButton active onClick={() => setConfirming(true)}>
+          ▶ Render Video
+        </HudButton>
+      )}
+
+      {confirming && !busy && (
+        <div className="border border-accent/40 bg-accent/5 px-3 py-3 space-y-2 text-sm">
+          <p>
+            This will take <strong className="text-accent-bright">{formatMinutes(estimate)}</strong>{" "}
+            for a {effectiveDuration}-second video at {fps} fps.
+          </p>
+          <p className="text-neutral-300">
+            It uses the graphics card the whole time, so the computer will be
+            slow and warm. Close other heavy programs first — anything running AI
+            models, like Ollama or Hermes.
+          </p>
+          <div className="flex gap-2 pt-1">
+            <HudButton active onClick={start}>
+              Start render
+            </HudButton>
+            <HudButton onClick={() => setConfirming(false)}>Cancel</HudButton>
+          </div>
+        </div>
+      )}
 
       {busy && (
         <div className="flex flex-col gap-1">
@@ -271,21 +341,33 @@ export function RenderBar() {
           <p className="text-xs text-neutral-400">
             {pct}% · {note}
           </p>
+          {startedAt && (
+            <p className="text-xs text-neutral-500">
+              {(() => {
+                const elapsedMin = (Date.now() - startedAt) / 60000;
+                // Remaining from progress once there is some to go on; the
+                // up-front estimate until then.
+                const remaining =
+                  pct >= 5 ? (elapsedMin * (100 - pct)) / pct : Math.max(0, estimate - elapsedMin);
+                return `${Math.floor(elapsedMin)} min so far · ${formatMinutes(remaining)} left`;
+              })()}
+            </p>
+          )}
         </div>
       )}
 
-      {error && (
-        <p className="text-xs text-red-400 break-words">{error}</p>
-      )}
+      {error != null && <ErrorNote error={error} />}
 
       {result && !busy && (
         <div className="flex flex-col gap-2">
-          <p className="text-xs text-neutral-400 break-all">
-            {result.frames} frames → {result.outputPath}
-          </p>
-          <HudButton onClick={() => window.byok.storage.openOutputDir()}>
-            Open Folder
-          </HudButton>
+          <p className="text-sm text-emerald-300">✓ Your video is ready.</p>
+          <p className="text-xs text-neutral-400 break-all">{result.outputPath}</p>
+          <div className="flex gap-2">
+            <HudButton active onClick={() => window.byok.storage.openOutputDir()}>
+              Show in folder
+            </HudButton>
+            <HudButton onClick={() => setConfirming(true)}>Render again</HudButton>
+          </div>
         </div>
       )}
     </section>

@@ -4,6 +4,8 @@ import { Toggle } from "../ui/Toggle";
 import { HudButton } from "../ui/HudButton";
 import TtsTestPanel from "./TtsTestPanel";
 import ChatterboxTestPanel from "./ChatterboxTestPanel";
+import { Hint } from "../ui/Hint";
+import { FEATURES } from "../../lib/features";
 
 // Every provider carries its own plain-English explanation and a direct link
 // to the page that issues the key. The `access` field is the important one:
@@ -161,54 +163,50 @@ export default function BackendPanel() {
 
   return (
     <div className="p-6 space-y-4 overflow-y-auto h-full">
-      <h2 className="label-lit text-base">API Keys &amp; Backend</h2>
-      <p className="text-sm">
-        Keys are encrypted with your OS keychain and never leave this machine.
-        Paste a key, press Save, then press Test to confirm it actually works —
-        Test makes one real call to the provider.
-      </p>
-
-      <div className="border border-accent/25 bg-metal-800/60 p-4 space-y-3">
-        <h3 className="label-lit text-sm">Appearance</h3>
-        <div className="flex items-center gap-3 flex-wrap">
-          <input
-            type="color"
-            value={accentColor}
-            onChange={(e) => setAccentColor(e.target.value)}
-            className="h-9 w-9 border border-accent/30 bg-transparent p-0"
-          />
-          <span className="text-sm flex-1 min-w-[16rem]">
-            Accent color — recolors glows, highlights, and active states everywhere
-          </span>
-          {/* A colour picker with no way back is a trap: pick something unusable
-              and the control you would use to fix it is now unreadable. */}
-          <HudButton
-            onClick={() => setAccentColor(DEFAULT_ACCENT)}
-            disabled={accentColor.toLowerCase() === DEFAULT_ACCENT}
-            title={`Back to the default brass (${DEFAULT_ACCENT})`}
-          >
-            Default
-          </HudButton>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="label-etched">Presets</span>
-          {ACCENT_PRESETS.map((p) => (
-            <button
-              key={p.hex}
-              onClick={() => setAccentColor(p.hex)}
-              title={`${p.name} — ${p.hex}`}
-              aria-label={p.name}
-              className="h-7 w-7 cut-sm border border-white/15 hover:border-white/50 transition-colors"
-              style={{ background: p.hex }}
-            />
-          ))}
-        </div>
-        <Toggle
-          label="Interface motion (breathing glow & click effects)"
-          checked={motionEnabled}
-          onChange={setMotionEnabled}
-        />
+      <div>
+        <h2 className="label-lit text-base">① Setup</h2>
+        <p className="text-sm text-neutral-400 mt-1">
+          One-time setup. Only the voices are needed to make a video — everything
+          else is optional and adds extras.
+        </p>
       </div>
+
+      <section className="space-y-3">
+        <h3 className="label-lit text-sm">
+          Voices <span className="label-etched normal-case">needed</span>
+          <Hint>
+            Piper is a free voice engine that runs on this computer — no account,
+            no key, no internet once installed. Below, point the app at where it's
+            installed and press Scan; then pick a voice for each speaker in Cast.
+          </Hint>
+        </h3>
+        <TtsTestPanel />
+        {!FEATURES.chatterbox && (
+          <div className="border border-dashed border-accent/25 p-3 text-sm text-neutral-400">
+            <span className="label-etched mr-2">Coming soon</span>
+            Higher-quality voices — <strong className="text-neutral-200">DramaBox</strong> (acted,
+            studio quality) and <strong className="text-neutral-200">Chatterbox</strong> — plus a
+            choice of free online voices. They'll appear here and in each speaker's
+            voice list when ready.
+          </div>
+        )}
+        {FEATURES.chatterbox && <ChatterboxTestPanel />}
+      </section>
+
+      <section className="border-t border-accent/20 pt-4 space-y-1">
+        <h3 className="label-lit text-sm">
+          Online services <span className="label-etched normal-case">optional</span>
+          <Hint>
+            Each one adds an extra: AI-written scripts (NVIDIA), background video
+            clips (Pixabay, Pexels), sound effects (Freesound). All have free
+            accounts. Paste a key, press Save, then Test — Test makes one real call
+            to check it works.
+          </Hint>
+        </h3>
+        <p className="text-sm text-neutral-400">
+          Keys are encrypted with your computer's keychain and never leave this machine.
+        </p>
+      </section>
 
       {!encryptionAvailable && (
         <p className="text-sm text-accent-bright border border-accent-deep/40 bg-accent-deep/10 px-3 py-2">
@@ -300,20 +298,50 @@ export default function BackendPanel() {
         );
       })}
 
-      <div className="border border-accent/25 bg-metal-800/60 p-4">
-        <h3 className="label-lit text-sm mb-2">Voice Engines — no API key needed</h3>
-        <p className="text-sm">
-          Chatterbox and Piper run entirely on your own machine, so there's
-          nothing to sign up for and nothing to paste. What they ask for below
-          are <em>folder paths</em> on this computer — where you installed them —
-          not keys. Chatterbox is the quality voice; Piper is the fast one for
-          quick tests.
-        </p>
+      <div className="border-t border-accent/20 pt-4">
+        <h3 className="label-lit text-sm">Appearance</h3>
+      </div>
+      <div className="border border-accent/25 bg-metal-800/60 p-4 space-y-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          <input
+            type="color"
+            value={accentColor}
+            onChange={(e) => setAccentColor(e.target.value)}
+            className="h-9 w-9 border border-accent/30 bg-transparent p-0"
+          />
+          <span className="text-sm flex-1 min-w-[16rem]">
+            Accent color — recolors glows, highlights, and active states everywhere
+          </span>
+          {/* A colour picker with no way back is a trap: pick something unusable
+              and the control you would use to fix it is now unreadable. */}
+          <HudButton
+            onClick={() => setAccentColor(DEFAULT_ACCENT)}
+            disabled={accentColor.toLowerCase() === DEFAULT_ACCENT}
+            title={`Back to the default brass (${DEFAULT_ACCENT})`}
+          >
+            Default
+          </HudButton>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="label-etched">Presets</span>
+          {ACCENT_PRESETS.map((p) => (
+            <button
+              key={p.hex}
+              onClick={() => setAccentColor(p.hex)}
+              title={`${p.name} — ${p.hex}`}
+              aria-label={p.name}
+              className="h-7 w-7 cut-sm border border-white/15 hover:border-white/50 transition-colors"
+              style={{ background: p.hex }}
+            />
+          ))}
+        </div>
+        <Toggle
+          label="Interface motion (breathing glow & click effects)"
+          checked={motionEnabled}
+          onChange={setMotionEnabled}
+        />
       </div>
 
-      <ChatterboxTestPanel />
-
-      <TtsTestPanel />
     </div>
   );
 }

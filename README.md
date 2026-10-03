@@ -17,8 +17,9 @@ BYOK-Vid-Creator is a **desktop studio** for producing narrated, subtitled,
 avatar-driven videos with animated audio waveforms — in Greek and English.
 
 It is **not** a generative-video toy. Every frame is **deterministic**:
-what you arrange on the canvas is exactly what renders. You bring your own
-API keys for TTS and stock media; everything runs and renders **on your
+what you arrange on the canvas is exactly what renders. Voices run free on
+your own computer; online services (AI scripts, stock clips, sound effects)
+are optional and use your own free keys. Rendering happens **on your
 machine** via a bundled Remotion + FFmpeg pipeline.
 
 > Designed for creators who want **repeatable, polished output** — not
@@ -26,15 +27,20 @@ machine** via a bundled Remotion + FFmpeg pipeline.
 
 ## ✨ Features
 
-- 🎙️ **Multi-provider TTS** (BYOK): Azure Speech, Google Chirp 3 HD, Edge TTS
-- 👄 **Viseme lip-sync** — 9-shape mouth animation driven directly from TTS timing
-- 🧑‍🤝‍🧑 **Two-speaker avatars** — round disks, transparent backgrounds, drag/resize/snap
-- 📝 **Subtitle engine** — active-word glow + crisp stroke, full styling, SRT export
-- 🌊 **5 waveform styles** × 5 positions × 6 behavior modes (only active speakers animate)
-- 🎼 **Smart audio** — auto-ducking, Freesound/Pixabay library, pinned custom uploads
-- 🎞️ **AI background automation** — contextual stock clips with a Relevancy↔Frequency dial
-- 🖥️ **Local rendering** — Remotion + FFmpeg, up to 10-min videos, 9:16 & 16:9
-- 🎛️ **Tactile UI** — charcoal-metal chassis, chunky clear-plastic controls, amber glow
+- 🎙️ **Free local voices** — Piper, Greek and English, no account needed
+- 🧭 **Five guided steps** — Setup › Cast › Script › Look › Render, with a sample project to start from
+- ✅ **Script checker** — catches misspelt names and broken lines before any voice is made
+- ✍️ **AI script drafts** (optional, free NVIDIA key)
+- 👄 **Lip-sync** — mouth shapes timed from the voice track
+- 🧑‍🤝‍🧑 **Built-in characters** — drag, resize, snap; save your own to a library
+- 📝 **Subtitles** — active-word glow, full styling, SRT export
+- 🌊 **Audio-reactive waveforms** — six styles; only the active speaker animates
+- 🎼 **Music with auto-ducking**, CC0 sound effects from Freesound
+- 🎞️ **Background clips** from Pixabay and Pexels, planned from the script
+- 🖥️ **Local rendering** — 9:16 and 16:9, with a time estimate before you start
+
+**Coming soon:** studio-quality voices (DramaBox, Chatterbox), more free
+voice options, intro/outro image cards.
 
 ## 🚀 Quick Start
 
@@ -45,14 +51,16 @@ npm install
 npm run dev
 ```
 
-> Open the Backend Panel → paste your API keys → load the “Dogs & Butterflies” sample project → hit Render.
-> Recommended specs: NVIDIA 8GB GPU · 32GB RAM · ~1 hr render / 10 min video.
+> The app opens on a welcome screen — choose **Try the sample**, press
+> **Make the voice track**, then **Render**.
+> Recommended: NVIDIA 8 GB GPU · 32 GB RAM. Rendering takes roughly
+> 2.5× the video's length (an 8-minute video ≈ 21 minutes).
 
 ## 🗺️ Roadmap
-- Google Drive export
-- ElevenLabs voices
-- Local neural voices (Piper / Coqui XTTS-v2, incl. voice cloning)
-- Expanded transition library
+- Studio voices (DramaBox) and more free/free-tier voice engines — see `docs/TTS-OPTIONS.md`
+- Step-by-step in-app guides for the advanced features — see `docs/EASE-OF-USE-PLAN.md`
+- Batch production of a whole series from a spreadsheet, inside the app
+- Intro / outro image cards
 
 ## 🤖 Built With AI
 This project was designed and engineered in collaboration with AI systems:

@@ -4,6 +4,7 @@
 // ---------------------------------------------------------------------------
 
 import { useState } from "react";
+import { useUiStore } from "../../store/useUiStore";
 import { HudButton } from "../ui/HudButton";
 import { Slider } from "../ui/Slider";
 import { Toggle } from "../ui/Toggle";
@@ -18,13 +19,15 @@ import { buildCues } from "../../lib/subtitles/wordTiming";
 import { toSrt } from "../../lib/subtitles/srt";
 import type { Fps, SubtitleConfig } from "../../store/types";
 
-type Tab = "frame" | "background" | "subtitles" | "render" | "presets";
 
 const FPS_OPTIONS: Fps[] = [10, 24, 30];
 const SUB_POS: SubtitleConfig["position"][] = ["top", "center", "bottom"];
 
 export function ScenePanel() {
-  const [tab, setTab] = useState<Tab>("frame");
+  // In the shared UI store so the step bar and other panels can open a tab
+  // ("go to Render", "open Presets") rather than only the tabs themselves.
+  const tab = useUiStore((s) => s.sceneTab);
+  const setTab = useUiStore((s) => s.setSceneTab);
 
   const fps = useProjectStore((s) => s.fps);
   const setFps = useProjectStore((s) => s.setFps);
@@ -62,7 +65,9 @@ export function ScenePanel() {
 
   return (
     <div className="flex flex-col h-full">
-      <h2 className="title-deco uppercase text-lg mb-3">Scene</h2>
+      <h2 className="title-deco uppercase text-lg mb-3 pl-8">
+        {tab === "render" ? "Render" : "Look"}
+      </h2>
 
       <Tabs
         tabs={[
@@ -80,7 +85,7 @@ export function ScenePanel() {
         {tab === "frame" && (
           <>
             <section>
-              <div className="label-etched mb-2">Aspect Ratio</div>
+              <div className="label-etched mb-2">Shape</div>
               <div className="flex gap-2">
                 <HudButton
                   active={render.format === "9:16"}
@@ -98,7 +103,7 @@ export function ScenePanel() {
             </section>
 
             <section>
-              <div className="label-etched mb-2">Frame Rate</div>
+              <div className="label-etched mb-2">Smoothness (frames per second)</div>
               <div className="flex gap-2">
                 {FPS_OPTIONS.map((f) => (
                   <HudButton key={f} active={fps === f} onClick={() => setFps(f)}>
@@ -107,14 +112,14 @@ export function ScenePanel() {
                 ))}
               </div>
               <p className="text-sm text-neutral-500 mt-2">
-                Higher is smoother and slower to render. 24 is a good default.
+                Higher is smoother but takes longer to render. 24 is a good default.
               </p>
             </section>
 
             <section>
-              <div className="label-etched mb-2">Lip-sync</div>
+              <div className="label-etched mb-2">Faces</div>
               <Slider
-                label="Mouth Crossfade" value={visemeFadeMs} min={0} max={200} step={5}
+                label="Mouth smoothness" value={visemeFadeMs} min={0} max={200} step={5}
                 onChange={(v) => setVisemeFadeMs(Math.round(v))}
                 format={(v) => (v === 0 ? "hard cut" : `${Math.round(v)} ms`)}
               />
@@ -125,7 +130,7 @@ export function ScenePanel() {
               </p>
               <div className="mt-4">
                 <Slider
-                  label="Idle Motion" value={idleMotion} min={0} max={1} step={0.05}
+                  label="Natural movement" value={idleMotion} min={0} max={1} step={0.05}
                   onChange={setIdleMotion}
                   format={(v) => (v === 0 ? "still" : `${Math.round(v * 100)}%`)}
                 />
@@ -168,7 +173,7 @@ export function ScenePanel() {
                   </div>
                 </div>
                 <Slider
-                  label="Text Size" value={subtitles.fontSize} min={0.02} max={0.14} step={0.002}
+                  label="Text size" value={subtitles.fontSize} min={0.02} max={0.14} step={0.002}
                   onChange={(v) => setSubtitles({ fontSize: v })}
                   format={(v) => `${(v * 100).toFixed(1)}%`}
                 />
@@ -178,17 +183,17 @@ export function ScenePanel() {
                   format={(v) => (v === 0 ? "none" : `${Math.round(v * 100)}%`)}
                 />
                 <Slider
-                  label="Active Word Glow" value={subtitles.activeGlow} min={0} max={1.5} step={0.05}
+                  label="Glow on the spoken word" value={subtitles.activeGlow} min={0} max={1.5} step={0.05}
                   onChange={(v) => setSubtitles({ activeGlow: v })}
                   format={(v) => (v === 0 ? "off" : `${v.toFixed(2)}x`)}
                 />
                 <Slider
-                  label="Line Length" value={subtitles.maxChars} min={14} max={80} step={1}
+                  label="Longest subtitle line" value={subtitles.maxChars} min={14} max={80} step={1}
                   onChange={(v) => setSubtitles({ maxChars: Math.round(v) })}
                   format={(v) => `${Math.round(v)} chars`}
                 />
                 <Toggle
-                  label="Active word takes the speaker's colour"
+                  label="Spoken word in the speaker's colour"
                   checked={subtitles.activeFromSpeaker}
                   onChange={(v) => setSubtitles({ activeFromSpeaker: v })}
                 />
@@ -222,7 +227,7 @@ export function ScenePanel() {
                 </div>
                 {!narration && (
                   <p className="text-sm text-neutral-500">
-                    Generate narration to see real subtitles on the canvas.
+                    Make the voice track (Script step) to see real subtitles on the canvas.
                   </p>
                 )}
 

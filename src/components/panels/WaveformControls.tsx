@@ -95,7 +95,7 @@ export function WaveformControls({ value, onChange, label, canAnchorToFace = tru
             onChange={(v) => onChange({ scale: v })} format={(v) => `${v.toFixed(2)}x`}
           />
           <Slider
-            label="Count" value={value.density} min={8} max={160} step={1}
+            label="Number of bars" value={value.density} min={8} max={160} step={1}
             onChange={(v) => onChange({ density: Math.round(v) })} format={(v) => `${Math.round(v)}`}
           />
           <Slider
@@ -108,7 +108,7 @@ export function WaveformControls({ value, onChange, label, canAnchorToFace = tru
             format={(v) => (v === 0 ? "raw" : `${Math.round(v * 100)}%`)}
           />
           <Slider
-            label="Lane Offset" value={value.lane} min={-3} max={3} step={0.1}
+            label="Stack position" value={value.lane} min={-3} max={3} step={0.1}
             onChange={(v) => onChange({ lane: v })} format={(v) => v.toFixed(1)}
           />
           <Slider
@@ -138,15 +138,15 @@ export function WaveformControls({ value, onChange, label, canAnchorToFace = tru
                 onChange={(v) => onChange({ ringSize: v })} format={(v) => `${v.toFixed(2)}x`}
               />
               <Slider
-                label="Center Opening" value={value.ringInnerRadius} min={0} max={0.9} step={0.01}
+                label="Hole in the middle" value={value.ringInnerRadius} min={0} max={0.9} step={0.01}
                 onChange={(v) => onChange({ ringInnerRadius: v })} format={(v) => `${Math.round(v * 100)}%`}
               />
               <Slider
-                label="Ring X" value={value.ringX} min={0} max={1} step={0.01}
+                label="Ring left ↔ right" value={value.ringX} min={0} max={1} step={0.01}
                 onChange={(v) => onChange({ ringX: v })} format={(v) => `${Math.round(v * 100)}%`}
               />
               <Slider
-                label="Ring Y" value={value.ringY} min={0} max={1} step={0.01}
+                label="Ring up ↕ down" value={value.ringY} min={0} max={1} step={0.01}
                 onChange={(v) => onChange({ ringY: v })} format={(v) => `${Math.round(v * 100)}%`}
               />
             </>

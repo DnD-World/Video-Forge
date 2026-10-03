@@ -1,9 +1,40 @@
 # Ease-of-Use Plan — make the app usable by amateurs
 
 > Written 3 Oct 2026 from a read of the code on `main` (App.tsx, every panel,
-> the render bar, the batch runner) against `PLAN.md`. Nothing here is built
-> yet. Each phase is safe to ship on its own and none of them changes what a
-> render looks like — this is about getting a person *to* a render.
+> the render bar, the batch runner) against `PLAN.md`. Each phase is safe to
+> ship on its own and none of them changes what a render looks like — this is
+> about getting a person *to* a render.
+
+## Status — 3 Oct 2026
+
+**Phases 0 and 1 are built.** Typechecked, built, and clicked through in a
+browser with the Electron bridge stubbed. **Not yet run inside the real
+Electron app** — that is the next check.
+
+| Item | State | Where |
+|---|---|---|
+| Chatterbox + DramaBox off, shown as "coming soon" | ✅ | `src/lib/features.ts` (one switch each) |
+| One home for voices (Cast); Script shows them read-only | ✅ | `CastPanel`, `NarrationPanel` |
+| "Write it for me (AI)" | ✅ | `NarrationPanel` |
+| README matches the app | ✅ | `README.md` |
+| Step bar ① Setup › ② Cast › ③ Script › ④ Look › ⑤ Render | ✅ | `src/components/StepBar.tsx`, `src/store/useUiStore.ts` |
+| Welcome screen with sample project | ✅ | `src/components/Welcome.tsx` |
+| Script checker, line-by-line, before voices | ✅ | `src/lib/narration/checkScriptLines.ts` |
+| Render time estimate + graphics-card warning + confirm | ✅ | `RenderBar` |
+| Plain labels + one-line hints + ⓘ explanations | ✅ main controls | `Slider`/`Toggle` `hint`, `src/components/ui/Hint.tsx` |
+| Errors in plain words with a "go there" button | ✅ Script and Render | `src/lib/errors/friendly.ts`, `ErrorNote` |
+| Autosave | ✅ **already existed** — the "not saved" note in PLAN.md §5 is stale | `useProjectStore` `persist` |
+| Voices found automatically at launch (new) | ✅ | `App.tsx` |
+
+Deliberately **not** done in Phase 1:
+
+- Rails don't fold automatically when a step is chosen. Folding changes the
+  preview size, and the preview's sizing has broken before (`.dn-grid` trap) —
+  stability first. Rails still fold by hand.
+- Headless batch (`npm run job`) is untouched, DramaBox included, so lessons
+  already narrated keep rendering.
+
+Voice engine choices for what comes after Piper: `docs/TTS-OPTIONS.md`.
 
 ## The goal in one line
 

@@ -175,7 +175,7 @@ export function BackgroundPanel() {
           clip exactly as they do to a planned one. */}
       <div className="space-y-3 border-t border-accent/15 pt-3">
         <Slider
-          label="Dim"
+          label="Darken background"
           value={backgroundDim}
           min={0}
           max={1}
@@ -184,7 +184,7 @@ export function BackgroundPanel() {
           onChange={(dim) => setBackgroundStyle({ dim })}
         />
         <Slider
-          label="Crossfade"
+          label="Blend between clips"
           value={backgroundCrossfadeMs}
           min={0}
           max={2000}
