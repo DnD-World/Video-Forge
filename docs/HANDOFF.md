@@ -75,6 +75,18 @@ and the app builds.
 Nothing here is hard to undo: `npm run brand -- off/skilitsa` flips it, and the
 whole change is one commit to revert.
 
+**Laptop results, 9 Oct 2026:** Skilitsa is ON.
+
+| # | Result |
+|---|---|
+| 1 | Pass — "Brand pack on: Skilitsa"; tests 18/18, typecheck clean |
+| 2 | Pass — `Intros/`, `outros/`, `banners/` gone; `puppet/` holds only its README |
+| 3 | Pass — app opened, Load Dogs & Butterflies loaded, three faces drawn (screenshot seen) |
+| 4 | Pass — brand off: no sample offered. Speakers still listed = this PC's saved project, not the pack |
+| 5, 7 | Not run — renders; waiting for Ak's yes |
+| 6 | Pass after `npm run build` — 70 lessons listed, all already have outros. **Gotcha:** `npm run outros/job` run the compiled copy in `out/`; rebuild after every pull |
+| 8 | Not run — waiting for Ak |
+
 ---
 
 ## The pipeline, end to end
