@@ -1,0 +1,42 @@
+{
+  "language": "el",
+  "format": "9:16",
+  "backgrounds": "auto",
+  "crf": 20,
+  "cast": [
+    {
+      "label": "Τσίκα",
+      "aliases": [
+        "tsika"
+      ],
+      "puppetPath": "C:/Users/strav/Documents/CLAUDE SPACE/BYOK-Vid-Creator/puppet/tsika.rig-wide.json",
+      "engine": "dramabox",
+      "borderColor": "#ff9a3c"
+    },
+    {
+      "label": "Καίτη",
+      "aliases": [
+        "kaiti"
+      ],
+      "puppetPath": "C:/Users/strav/Documents/CLAUDE SPACE/BYOK-Vid-Creator/puppet/kaiti.rig-wide.json",
+      "engine": "dramabox",
+      "borderColor": "#ff5fa2"
+    },
+    {
+      "label": "Σερίφης",
+      "aliases": [
+        "serifis"
+      ],
+      "puppetPath": "C:/Users/strav/Documents/CLAUDE SPACE/BYOK-Vid-Creator/puppet/serifis.rig-wide.json",
+      "engine": "dramabox",
+      "borderColor": "#3cb4ff"
+    }
+  ],
+  "subtitleFont": "Comfortaa",
+  "subtitleFontWeight": 700,
+  "presetPath": "C:/Users/strav/Documents/CLAUDE SPACE/BYOK-Vid-Creator/presets/lms-2xx.json",
+  "bannerDir": "C:/Users/strav/Documents/CLAUDE SPACE/BYOK-Vid-Creator/banners",
+  "introDir": "C:/Users/strav/Documents/CLAUDE SPACE/BYOK-Vid-Creator/Intros/cut-2s",
+  "outroDir": "C:/Users/strav/Documents/CLAUDE SPACE/BYOK-Vid-Creator/outros/cut",
+  "topic": "Dog training course for dog owners — everyday life at home and on walks. Always a dog in shot."
+}

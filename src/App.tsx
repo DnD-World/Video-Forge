@@ -19,7 +19,6 @@ import { buildTracks } from "./lib/waveform/buildTracks";
 import BackendPanel from "./components/settings/BackendPanel";
 import NarrationPanel from "./components/settings/NarrationPanel";
 import { useProjectStore } from "./store/useProjectStore";
-import { useChatterboxVoicesStore } from "./store/useChatterboxVoicesStore";
 import { useSettingsStore } from "./store/useSettingsStore";
 import { deriveAccentShades, rgbTripleToHex } from "./lib/color/deriveShades";
 import { headMotion, motionTransform } from "./lib/motion/idleMotion";
@@ -216,10 +215,22 @@ export default function App() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      // Opened with --project: that project replaces the autosave before
+      // anything below looks at the store.
+      const doc = (await window.byok.project.startup()) as
+        | { kind?: string; project?: Parameters<ReturnType<typeof useProjectStore.getState>["loadProject"]>[0] }
+        | null;
+      if (!cancelled && doc?.kind === "byok-project" && doc.project) {
+        useProjectStore.getState().loadProject(doc.project);
+      }
       const n = useProjectStore.getState().narration;
       if (n?.filePath && !n.analysis) {
         try {
-          const analysis = await window.byok.audio.analyzeFile(n.filePath);
+          const analysis = await window.byok.audio.analyzeFile(
+            n.filePath,
+            n.segments,
+            useProjectStore.getState().speakers.map((s) => s.id)
+          );
           if (!cancelled && analysis) setNarration({ ...n, analysis });
         } catch {
           // The file was moved or deleted. Keeping the segments is still worth
@@ -293,32 +304,6 @@ export default function App() {
     });
   }, []);
 
-  // Keep the Chatterbox status honest.
-  //
-  // It was reported once, when Start Server succeeded, and then believed
-  // forever. The server does not last forever: in dev every main-process edit
-  // restarts Electron and kills the child it spawned, and in a packaged build
-  // a crash or an out-of-memory does the same. The panel went on showing
-  // "running ✓" over a server that had been gone for an hour, and everything
-  // failed with "failed to fetch" against a green tick — which sends you
-  // looking at the network, the port, the install, anywhere except the one
-  // true cause.
-  //
-  // Twelve seconds is one localhost ping; the voice lists are only re-fetched
-  // when the answer actually changes. Also on window focus, because coming
-  // back to the app after leaving it running is exactly when it will have died
-  // without anyone watching.
-  const refreshChatterbox = useChatterboxVoicesStore((s) => s.refresh);
-  useEffect(() => {
-    void refreshChatterbox();
-    const id = window.setInterval(() => void refreshChatterbox(), 12000);
-    const onFocus = () => void refreshChatterbox();
-    window.addEventListener("focus", onFocus);
-    return () => {
-      window.clearInterval(id);
-      window.removeEventListener("focus", onFocus);
-    };
-  }, [refreshChatterbox]);
 
   // The grain is ambient motion, so it answers to the app's own motion toggle
   // as well as to prefers-reduced-motion.
@@ -570,6 +555,7 @@ export default function App() {
                     <PuppetAvatar
                       puppet={loaded.puppet}
                       urls={loaded.urls}
+                      urlsReady={loaded.ready}
                       viseme={blend.to}
                       prevViseme={blend.from}
                       mix={blend.mix}

@@ -13,7 +13,7 @@
 // ---------------------------------------------------------------------------
 
 import { useMemo } from "react";
-import { AbsoluteFill, Audio, Sequence, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
+import { AbsoluteFill, Audio, Img, Loop, OffthreadVideo, Sequence, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { WaveformScene } from "../src/components/canvas/WaveformScene";
 import { SubtitleScene } from "../src/components/canvas/SubtitleScene";
 import { SpeakerAvatar } from "../src/components/canvas/SpeakerAvatar";
@@ -26,12 +26,13 @@ import { buildCues, cueAt } from "../src/lib/subtitles/wordTiming";
 import { buildTracks } from "../src/lib/waveform/buildTracks";
 import { buildSpeakerVisemeTracks } from "../src/lib/visemes/speakerTracks";
 import { visemeBlendAt } from "../src/lib/visemes/timeline";
-import { VISEME } from "../src/lib/visemes/visemeMap";
+import { VISEME, SMILE_VISEME } from "../src/lib/visemes/visemeMap";
 import { useWaitForImages } from "./useWaitForImages";
 import { useSpectrumFile } from "./useSpectrumFile";
 import { headMotion, motionTransform } from "../src/lib/motion/idleMotion";
 import {
   blinkAt, blinkBlendAt, browAt, buildSpeakerBrowTracks,
+  buildSpeakerMoodTracks, moodAt, moodFace,
   buildSpeakerHeadTracks, headPoseAt,
 } from "../src/lib/motion/facePerformance";
 import { sampleAnalysis } from "../src/lib/waveform/audioAnalysis";
@@ -70,6 +71,7 @@ export function VideoComposition({
   backgrounds,
   backgroundDim,
   backgroundBlur,
+  backgroundBand = null,
   glass,
   backgroundCrossfadeMs,
   subtitles,
@@ -78,6 +80,10 @@ export function VideoComposition({
   idleMotion,
   narrationSegments,
   narrationPauses = [],
+  logo = null,
+  introOverlay = null,
+  topScrim = null,
+  bannerVideo = null,
 }: RenderProps) {
   const frame = useCurrentFrame();
   const { width, height, fps, durationInFrames } = useVideoConfig();
@@ -110,6 +116,13 @@ export function VideoComposition({
   // same segments the subtitles and the mouth use.
   const browTracks = useMemo(
     () => buildSpeakerBrowTracks(narrationSegments),
+    [narrationSegments]
+  );
+  // What each speaker's line FEELS, moment to moment. Drives the things a brow
+  // track cannot: how wide the eyes rest, and whether the mouth rests in a
+  // smile between words.
+  const moodTracks = useMemo(
+    () => buildSpeakerMoodTracks(narrationSegments),
     [narrationSegments]
   );
   const headTracks = useMemo(
@@ -176,7 +189,20 @@ export function VideoComposition({
         dim={backgroundDim}
         blur={backgroundBlur ?? 0}
         width={width}
+        band={backgroundBand}
       />
+      {/* UNDER THE WORDS, OVER THE FOOTAGE. Full-frame footage put a sunny
+          park behind white subtitles; this band is only as tall as the text
+          needs and fades out below it, so the picture is untouched elsewhere. */}
+      {topScrim && (
+        <AbsoluteFill
+          style={{
+            height: `${topScrim.height * 100}%`,
+            bottom: "auto",
+            background: `linear-gradient(to bottom, rgba(0,0,0,${topScrim.opacity}) 0%, rgba(0,0,0,${topScrim.opacity}) 55%, rgba(0,0,0,0) 100%)`,
+          }}
+        />
+      )}
       <div style={{ position: "absolute", inset: 0 }}>
         <WaveformScene
           tracks={tracks}
@@ -287,6 +313,14 @@ export function VideoComposition({
         const blend = track
           ? visemeBlendAt(track, timeMs / 1000, visemeFadeMs / 1000)
           : { from: VISEME.NEUTRAL, to: VISEME.NEUTRAL, mix: 1 };
+        // THE RESTING FACE FOLLOWS THE FEELING. Between words a mouth returns
+        // to NEUTRAL and the eyes to open; on a fond or delighted line it
+        // should return to a smile instead, and on an astonished one the eyes
+        // should rest wide. Only the resting shapes are touched — every spoken
+        // viseme is left exactly as the words produced it.
+        const face = moodFace(moodAt(moodTracks[sp.id], timeMs));
+        const rest = (v: number) => (face?.smile && v === VISEME.NEUTRAL ? SMILE_VISEME : v);
+        const mouth = { from: rest(blend.from), to: rest(blend.to), mix: blend.mix };
         // size is a fraction of frame width, so this resolves identically in
         // the preview and here — no scaling factor to get wrong.
         const size = Math.max(8, sp.size * width);
@@ -313,9 +347,9 @@ export function VideoComposition({
               <PuppetAvatar
                 puppet={sp.puppet}
                 urls={puppetUrls[i]}
-                viseme={blend.to}
-                prevViseme={blend.from}
-                mix={blend.mix}
+                viseme={mouth.to}
+                prevViseme={mouth.from}
+                mix={mouth.mix}
                 // Both eyes blink together. Per-eye lids exist for the wink,
                 // which is a directed choice rather than something an
                 // automatic track should ever produce on its own.
@@ -326,9 +360,14 @@ export function VideoComposition({
                 // it five times would be five binary searches per eye per frame.
                 {...(() => {
                   const b = blinkBlendAt(sp.id, timeMs, idleMotion);
+                  // "open" is where a blink starts and ends, and on a startled
+                  // line that resting state is wide eyes rather than ordinary
+                  // ones. The blink itself is untouched: it still closes.
+                  const at = (state: string) =>
+                    state === "open" && face?.lid ? face.lid : state;
                   return {
-                    lidLeft: b.from, lidRight: b.from,
-                    lidLeftTo: b.to, lidRightTo: b.to, lidMix: b.mix,
+                    lidLeft: at(b.from), lidRight: at(b.from),
+                    lidLeftTo: at(b.to), lidRightTo: at(b.to), lidMix: b.mix,
                   };
                 })()}
                 browLeft={browAt(browTracks[sp.id], timeMs)}
@@ -410,6 +449,92 @@ export function VideoComposition({
         glass={glass}
         externalPane={!!captionGlass}
       />
+
+      {/* THE INTRO, over the lesson's own opening silence rather than welded
+          in front of it. Nothing underneath moves, so the mouths stay in sync
+          with the voices to the frame; the lesson's audio — including the
+          music swell this covers — plays underneath throughout. Muted, because
+          the clip's own sound was stripped and the lesson owns the soundtrack. */}
+      {introOverlay && (
+        <Sequence
+          from={0}
+          durationInFrames={Math.max(1, Math.round((introOverlay.durationMs / 1000) * fps))}
+        >
+          <AbsoluteFill style={{ backgroundColor: "#000" }}>
+            <OffthreadVideo
+              src={staticFile(introOverlay.fileName)}
+              muted
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            />
+          </AbsoluteFill>
+        </Sequence>
+      )}
+
+      {/* THE BANNER. The source is 16:9 with the brand in its middle half; the
+          box below is exactly the kept strip's shape at full frame width, and
+          the video inside is scaled to the frame width and shifted up by the
+          cut, so only the middle shows. Looped for the whole lesson, muted —
+          the lesson owns the soundtrack. */}
+      {bannerVideo && (() => {
+        const keep = 1 - bannerVideo.cropTop - bannerVideo.cropBottom;
+        const sourceHeight = width * (9 / 16);
+        const boxHeight = sourceHeight * keep;
+        return (
+          <div
+            style={{
+              position: "absolute", left: 0, right: 0, bottom: 0,
+              height: boxHeight, overflow: "hidden",
+            }}
+          >
+            <Loop durationInFrames={Math.round(10 * fps)}>
+              <OffthreadVideo
+                src={staticFile(bannerVideo.fileName)}
+                muted
+                style={{
+                  position: "absolute", left: 0, width: "100%",
+                  height: sourceHeight, top: -sourceHeight * bannerVideo.cropTop,
+                  objectFit: "cover",
+                }}
+              />
+            </Loop>
+          </div>
+        );
+      })()}
+
+      {/* ABOVE EVERYTHING, including the subtitles. A logo that a caption can
+          cover is not a logo — the one thing it has to do is be present in
+          every frame it is asked for. */}
+      {logo && (
+        <Img
+          src={staticFile(logo.fileName)}
+          style={{
+            position: "absolute",
+            width: width * logo.size,
+            opacity: logo.opacity,
+            // A watermark sits in the middle and is meant to be ignored; the
+            // four corners are meant to be read.
+            ...(logo.position === "watermark"
+              ? {
+                  left: "50%",
+                  top: "50%",
+                  transform: "translate(-50%, -50%)",
+                }
+              : logo.position === "bottom-center"
+              ? {
+                  // Centred on the bottom edge — a banner, not a corner mark.
+                  bottom: width * logo.margin,
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                }
+              : {
+                  [logo.position.startsWith("top") ? "top" : "bottom"]:
+                    width * logo.margin,
+                  [logo.position.endsWith("left") ? "left" : "right"]:
+                    width * logo.margin,
+                }),
+          }}
+        />
+      )}
     </AbsoluteFill>
   );
 }

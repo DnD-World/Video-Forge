@@ -17,6 +17,7 @@ import { HudButton } from "../ui/HudButton";
 import { Slider } from "../ui/Slider";
 import { Tabs } from "../ui/Tabs";
 import { WaveformControls } from "./WaveformControls";
+import { VoiceControls } from "./VoiceControls";
 import { SfxPanel } from "./SfxPanel";
 import { useProjectStore } from "../../store/useProjectStore";
 import { useVoicesStore } from "../../store/useVoicesStore";
@@ -49,22 +50,24 @@ export function CastPanel() {
   const musicDuck = useProjectStore((s) => s.musicDuck);
   const setMusicMix = useProjectStore((s) => s.setMusicMix);
   const [musicBusy, setMusicBusy] = useState(false);
+  const [elevenVoices, setElevenVoices] = useState<{ id: string; name: string }[]>([]);
+  useEffect(() => {
+    window.byok?.tts?.listElevenVoices?.().then(setElevenVoices).catch(() => setElevenVoices([]));
+  }, []);
+  const [musicLibrary, setMusicLibrary] = useState<{ name: string; filePath: string }[]>([]);
+  useEffect(() => {
+    window.byok?.music?.list().then(setMusicLibrary).catch(() => setMusicLibrary([]));
+  }, []);
   const [musicNote, setMusicNote] = useState<string | null>(null);
   const voices = useVoicesStore((s) => s.voices);
   // Definitions only, no art: this panel needs to know whether a puppet file
   // is valid, not what it looks like.
   const { errors: puppetErrors } = usePuppetDefs(speakers.map((sp) => sp.puppetPath));
 
-  /** Load a music bed. The file plays whatever it is — the render decodes it
-   *  with FFmpeg — but only a WAV can be ANALYSED, and the analysis is what
-   *  gives the waveform something to move to and tells the render where the
-   *  track ends so it can repeat it. Said plainly on screen rather than left
-   *  as a mystery about why one file animates and another doesn't. */
-  const pickMusic = async () => {
-    const p = await window.byok.dialog.openFile([
-      { name: "Audio", extensions: ["wav", "mp3", "m4a", "ogg", "flac"] },
-    ]);
-    if (!p) return;
+  /** Load one track and analyse it. Shared by the library buttons and the file
+   *  dialog, because an unanalysed bed plays once and then leaves silence —
+   *  which is the whole reason the analysis is not optional here. */
+  const loadMusicFile = async (p: string) => {
     setMusicBusy(true);
     setMusicNote(null);
     try {
@@ -86,6 +89,13 @@ export function CastPanel() {
     } finally {
       setMusicBusy(false);
     }
+  };
+
+  const pickMusic = async () => {
+    const p = await window.byok.dialog.openFile([
+      { name: "Audio", extensions: ["wav", "mp3", "m4a", "ogg", "flac"] },
+    ]);
+    if (p) await loadMusicFile(p);
   };
 
   const addSpeakerFrom = useProjectStore((s) => s.addSpeakerFrom);
@@ -138,6 +148,14 @@ export function CastPanel() {
       label: c.label,
       puppetPath: builtinPuppetPath(puppetDir, c.file),
       borderColor: c.borderColor,
+      // The voice comes with the character. Adding Καίτη used to give you her
+      // face and none of her voice — no opening phrase, no reference clip, no
+      // settings — so every project re-typed all three by hand, or shipped
+      // without them.
+      openingPhrase: c.openingPhrase,
+      voiceRef: c.voiceRef,
+      ttsEngine: "dramabox",
+      ...(c.dramabox ? { dramabox: c.dramabox } : {}),
       bgColor: "#1a1a1a",
       bgOpacity: 0,
       borderOpacity: 1,
@@ -156,36 +174,14 @@ export function CastPanel() {
         </button>
       </div>
 
-      {/* The cast that ships with the app. These were drawn, rigged and
-          committed, but nothing offered them: "Add speaker" produced a blank,
-          and the library below only appears once you have saved someone into
-          it yourself — so the built-in characters were invisible unless you
-          knew to hunt down their JSON in a file dialog. */}
       <div className="mb-3">
-        <div className="label-etched mb-1.5">Characters</div>
-        <div className="flex flex-wrap gap-2">
-          {BUILTIN_CAST.map((c) => (
-            <HudButton
-              key={c.file}
-              onClick={() => addBuiltin(c)}
-              disabled={!puppetDir}
-              title={
-                puppetDir
-                  ? `${c.note} — adds ${c.label} with their puppet already assigned`
-                  : "Looking for the bundled characters…"
-              }
-            >
-              + {c.label}
-            </HudButton>
-          ))}
-        </div>
         {castError && <p className="text-sm text-red-400 mt-1.5">{castError}</p>}
       </div>
 
       {/* Recall a saved speaker. A face, a voice and a look are properties of a
           character, not of one video — picking them again every time is the
           most repetitive thing in the app. */}
-      {library.length > 0 && (
+      {musicLibrary.length > 0 && (
         <div className="flex items-center gap-2 mb-3">
           <Picker
             aria-label="Add a saved speaker from the library"
@@ -268,6 +264,30 @@ export function CastPanel() {
           <SfxPanel />
         ) : section === "music" ? (
           <>
+            {/* The loops that ship with the app. A batch picks from these by
+                itself; this is for choosing one by hand on a single video. */}
+            {musicLibrary.length > 0 && (
+              <div className="space-y-2">
+                <div className="label-etched">Library</div>
+                <div className="flex flex-wrap gap-2">
+                  {musicLibrary.map((t) => (
+                    <HudButton
+                      key={t.filePath}
+                      active={music?.filePath === t.filePath}
+                      onClick={() => loadMusicFile(t.filePath)}
+                    >
+                      {t.name.replace(/\.wav$/i, "").replace(/[_-]+/g, " ").slice(0, 28)}
+                    </HudButton>
+                  ))}
+                </div>
+                <p className="text-sm text-neutral-500">
+                  All loopable and cleared for use. A batch gives each lesson one
+                  of these on rotation, so the same lesson always gets the same
+                  bed and the next one gets the next track along.
+                </p>
+              </div>
+            )}
+
             <div className="flex items-center gap-2">
               <HudButton onClick={pickMusic} disabled={musicBusy}>
                 {musicBusy ? "Analysing…" : music ? "Change Track" : "Load Music"}
@@ -525,16 +545,19 @@ export function CastPanel() {
               <Picker
                 aria-label="Voice engine"
                 className="w-full"
-                value={speaker.ttsEngine ?? "chatterbox"}
+                value={speaker.ttsEngine ?? "dramabox"}
                 options={[
-                  { value: "piper", label: "Piper — fast, local" },
-                  { value: "chatterbox", label: "Chatterbox — higher quality" },
+                  { value: "dramabox", label: "DramaBox — acts, runs on the GPU box" },
+                  { value: "elevenlabs", label: "ElevenLabs — charged per character" },
+                  { value: "piper", label: "Piper — fast, local, flat" },
                 ]}
                 onChange={(v) =>
-                  updateSpeaker(speaker.id, { ttsEngine: v as "chatterbox" | "piper" })
+                  updateSpeaker(speaker.id, {
+                    ttsEngine: v as "dramabox" | "elevenlabs" | "piper",
+                  })
                 }
               />
-              {(speaker.ttsEngine ?? "chatterbox") === "piper" && (
+              {(speaker.ttsEngine ?? "dramabox") === "piper" && (
                 <Picker
                   aria-label="Piper voice"
                   className="w-full"
@@ -558,8 +581,152 @@ export function CastPanel() {
                 />
               )}
               <p className="text-sm text-neutral-500">
-                Chatterbox voices are assigned in the Narration tab.
+                DramaBox voices come from the reference clip below, and the
+                audio is generated on the GPU box — write its files from the
+                Narration tab.
               </p>
+            </section>
+
+            {/* Every DramaBox knob, per character. These used to be literals in
+                a Python file on the GPU box, which meant one setting for the
+                whole cast and no way to see what it was. */}
+            <section className="space-y-3">
+              <div className="label-etched">DramaBox — this voice</div>
+              <label className="block">
+                <span className="label-etched text-sm">Opens their blocks with</span>
+                <input
+                  type="text"
+                  className="w-full mt-1 bg-black/30 border border-accent/20 rounded px-2 py-1 text-sm"
+                  placeholder="A grave man"
+                  value={speaker.openingPhrase ?? ""}
+                  onChange={(e) =>
+                    updateSpeaker(speaker.id, { openingPhrase: e.target.value || undefined })
+                  }
+                />
+              </label>
+              <label className="block">
+                <span className="label-etched text-sm">Reference clip</span>
+                <input
+                  type="text"
+                  className="w-full mt-1 bg-black/30 border border-accent/20 rounded px-2 py-1 text-sm"
+                  placeholder="kaiti.wav"
+                  value={speaker.voiceRef ?? ""}
+                  onChange={(e) =>
+                    updateSpeaker(speaker.id, { voiceRef: e.target.value || undefined })
+                  }
+                />
+              </label>
+              {(speaker.ttsEngine ?? "dramabox") === "elevenlabs" && (
+                <div className="space-y-2">
+                  <label className="block">
+                    <span className="label-etched text-sm">ElevenLabs voice</span>
+                    <Picker
+                      aria-label="ElevenLabs voice"
+                      className="mt-1 w-full"
+                      placeholder={
+                        elevenVoices.length === 0
+                          ? "No voices — save a key in Backend Settings"
+                          : "Pick a voice"
+                      }
+                      value={speaker.elevenVoiceId ?? ""}
+                      options={[
+                        { value: "", label: "No voice chosen" },
+                        ...elevenVoices.map((v) => ({ value: v.id, label: v.name })),
+                      ]}
+                      onChange={(v) =>
+                        updateSpeaker(speaker.id, { elevenVoiceId: v || undefined })
+                      }
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="label-etched text-sm">Model</span>
+                    <Picker
+                      aria-label="ElevenLabs model"
+                      className="mt-1 w-full"
+                      value={speaker.elevenModel ?? "eleven_v3"}
+                      options={[
+                        { value: "eleven_v3", label: "v3 — acts on the script's directions" },
+                        { value: "eleven_multilingual_v2", label: "Multilingual v2 — flatter, has a speed dial" },
+                      ]}
+                      onChange={(v) =>
+                        updateSpeaker(speaker.id, {
+                          elevenModel: v as "eleven_v3" | "eleven_multilingual_v2",
+                        })
+                      }
+                    />
+                  </label>
+
+                  {(speaker.elevenModel ?? "eleven_v3") === "eleven_v3" ? (
+                    <>
+                      {/* Three positions, not a slider — v3 accepts 0, 0.5 and 1
+                          and rejects everything between. A slider here would be
+                          a control that fails the lesson at line one. */}
+                      <label className="block">
+                        <span className="label-etched text-sm">Steadiness</span>
+                        <Picker
+                          aria-label="Steadiness"
+                          className="mt-1 w-full"
+                          value={String(speaker.eleven?.stability ?? 0.5)}
+                          options={[
+                            { value: "0", label: "Creative — most expressive, can wander" },
+                            { value: "0.5", label: "Natural — the balance" },
+                            { value: "1", label: "Robust — steady, ignores direction more" },
+                          ]}
+                          onChange={(v) =>
+                            updateSpeaker(speaker.id, {
+                              eleven: { ...speaker.eleven, stability: Number(v) },
+                            })
+                          }
+                        />
+                      </label>
+                      <p className="text-sm text-neutral-500">
+                        v3 acts on the words <em>outside</em> the quotes: «She sighs
+                        heavily,» is sent as <code>[sighs]</code> in front of the line.
+                        The same script still works on DramaBox — nothing is rewritten,
+                        and the subtitle never shows the tag. There is no speed dial;
+                        speed is a direction («slows right down»).
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <Slider
+                        label="Speed" value={speaker.eleven?.speed ?? 1} min={0.7} max={1.2} step={0.05}
+                        onChange={(v) =>
+                          updateSpeaker(speaker.id, { eleven: { ...speaker.eleven, speed: v } })
+                        }
+                        format={(v) => `${v.toFixed(2)}x`}
+                      />
+                      <Slider
+                        label="Steadiness" value={speaker.eleven?.stability ?? 0.5} min={0} max={1} step={0.05}
+                        onChange={(v) =>
+                          updateSpeaker(speaker.id, { eleven: { ...speaker.eleven, stability: v } })
+                        }
+                        format={(v) => `${Math.round(v * 100)}%`}
+                      />
+                      <p className="text-sm text-neutral-500">
+                        Low steadiness wanders and is more expressive; high is even and
+                        flatter. v2 does not read acting tags — it reads them out — so a
+                        script's directions do nothing here.
+                      </p>
+                    </>
+                  )}
+                  <p className="text-sm text-neutral-500">
+                    Every generation is charged by the character, and a re-render is
+                    charged again.
+                  </p>
+                </div>
+              )}
+
+              {(speaker.ttsEngine ?? "dramabox") !== "elevenlabs" && (
+              <VoiceControls
+                value={speaker.dramabox ?? {}}
+                onChange={(dramabox) => updateSpeaker(speaker.id, { dramabox })}
+                expression={speaker.expression ?? {}}
+                onExpressionChange={(expression) =>
+                  updateSpeaker(speaker.id, { expression })
+                }
+              />
+              )}
             </section>
 
           </>

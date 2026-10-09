@@ -33,6 +33,8 @@ The short version: **this project owns its own folder and nothing else.**
 Write only inside `C:\Users\strav\Documents\CLAUDE SPACE\BYOK-Vid-Creator`
 and the session scratchpad folder.
 
+Allowed as well: `C:\Users\strav\Documents\CLAUDE SPACE\lms` (the course's scripts, narration and puppet art) — read and write.
+
 Never read or write:
 
 - `C:\Users\strav\.hermes` and `C:\Users\strav\.openhuman` — Hermes' own files

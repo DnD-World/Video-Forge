@@ -177,6 +177,123 @@ export interface BrowSpan {
   set: string;
 }
 
+// ---------------------------------------------------------------------------
+// What the script SAYS the line feels
+// ---------------------------------------------------------------------------
+
+/**
+ * A feeling tag from the script → what the face does for that whole line.
+ *
+ * WHY THIS BEATS PUNCTUATION. Punctuation is all the face had, so a line could
+ * only ask a question or shout. The scripts have carried a feeling on nearly
+ * every line all along — `[curiosity]`, `[nervousness]`, `[amazed]` — and 3,600
+ * of those tags were being thrown away at the door.
+ *
+ * Punctuation still applies ON TOP: a mood span covers the line, a question
+ * mark inside it wins for its own moment, because it is the later span.
+ *
+ * `lid` and `rest` are for puppets that have those layers. Anything missing
+ * falls back — a face without a "raised" brow uses its resting one rather than
+ * drawing nothing.
+ */
+export interface MoodFace {
+  brow?: string;
+  /** The eyes' resting state while this feeling lasts. Blinks still happen. */
+  lid?: "wide" | "half";
+  /** Use the closed-smile mouth between words instead of the neutral one. */
+  smile?: boolean;
+  head?: HeadGestureKind;
+}
+
+const MOOD: Record<string, MoodFace> = {
+  // Warm, pleased, fond — the largest group by far, about 900 lines.
+  positive: { brow: "happy", smile: true },
+  enthusiasm: { brow: "happy", smile: true },
+  excitement: { brow: "happy", smile: true },
+  excited: { brow: "happy", smile: true },
+  amusement: { brow: "happy", smile: true, head: "bob" },
+  adoration: { brow: "happy", smile: true },
+  admiration: { brow: "happy", smile: true },
+  hope: { brow: "happy", smile: true },
+  proud: { brow: "happy", smile: true },
+  laughs: { brow: "happy", smile: true, head: "bob" },
+  giggles: { brow: "happy", smile: true, head: "bob" },
+  mischievously: { brow: "happy", smile: true },
+  // Teaching, insisting, disapproving. "firm" is the heavy brow drawing; a
+  // puppet without one falls back to its resting brows.
+  //
+  // "[serious]" IS NOT ANGRY. It is on 1,500 lines and in these scripts it
+  // means "calm, teaching tone". Drawn with the serious brows, the first render
+  // had all three of them glaring through a lesson about chewed slippers —
+  // Καίτη smiling with a scowl on top. The resting face is what calm looks
+  // like; the heavy brows are kept for the lines that really are firm.
+  serious: {},
+  seriousness: {},
+  determination: { brow: "firm" },
+  frustration: { brow: "firm", head: "shake" },
+  annoyance: { brow: "firm" },
+  negative: { brow: "firm", head: "shake" },
+  sarcastic: { brow: "confused" },
+  // Taken aback.
+  amazed: { brow: "raised", lid: "wide" },
+  surprise: { brow: "raised", lid: "wide" },
+  awe: { brow: "raised", lid: "wide" },
+  gasp: { brow: "raised", lid: "wide" },
+  // Uneasy.
+  nervousness: { brow: "worried" },
+  tension: { brow: "worried" },
+  panicked: { brow: "worried", lid: "wide" },
+  trembling: { brow: "worried" },
+  agitation: { brow: "worried" },
+  sadness: { brow: "worried", head: "droop" },
+  reluctantly: { brow: "worried", head: "droop" },
+  // Asking, wondering.
+  curiosity: { head: "tilt" },
+  curious: { head: "tilt" },
+  interest: { head: "tilt" },
+  confusion: { brow: "confused", head: "tilt" },
+  // Settled.
+  neutral: {},
+  tired: { lid: "half" },
+  sighs: { lid: "half" },
+};
+
+/** The face for a feeling, or nothing when the tag is not one we dress. */
+export function moodFace(mood: string | undefined): MoodFace | undefined {
+  return mood ? MOOD[mood] : undefined;
+}
+
+/** Spans of feeling per speaker — one per line that carries a tag.
+ *
+ *  Separate from the brow track because a feeling drives more than brows: the
+ *  eyes rest differently, the mouth rests differently, and the head moves. */
+export function buildSpeakerMoodTracks(
+  segments: NarrationSegment[]
+): Record<string, { startMs: number; endMs: number; mood: string }[]> {
+  const tracks: Record<string, { startMs: number; endMs: number; mood: string }[]> = {};
+  for (const seg of segments) {
+    if (!seg.mood) continue;
+    (tracks[seg.speakerId] ??= []).push({
+      startMs: seg.startMs,
+      endMs: seg.endMs,
+      mood: seg.mood,
+    });
+  }
+  return tracks;
+}
+
+/** The feeling in play for this speaker at this moment. */
+export function moodAt(
+  spans: { startMs: number; endMs: number; mood: string }[] | undefined,
+  timeMs: number
+): string | undefined {
+  let mood: string | undefined;
+  for (const s of spans ?? []) {
+    if (timeMs >= s.startMs && timeMs < s.endMs) mood = s.mood;
+  }
+  return mood;
+}
+
 /** Brows lead the voice slightly — they move as the phrase turns, not after
  *  it lands. A brow that rises on the question mark itself is always late. */
 const BROW_LEAD_MS = 220;
@@ -197,6 +314,19 @@ export function buildSpeakerBrowTracks(
   const tracks: Record<string, BrowSpan[]> = {};
 
   for (const seg of segments) {
+    // THE LINE'S OWN FEELING FIRST, under everything else. Pushed before the
+    // punctuation spans so that where they overlap the punctuation wins —
+    // `browAt` takes the last span covering the moment — which is what you
+    // want: a fond line that happens to ask a question raises its brows for
+    // the question and goes back to fond afterwards.
+    const face = moodFace(seg.mood);
+    if (face?.brow) {
+      (tracks[seg.speakerId] ??= []).push({
+        startMs: Math.max(0, seg.startMs - BROW_LEAD_MS),
+        endMs: seg.endMs + BROW_HOLD_MS,
+        set: face.brow,
+      });
+    }
     const cues = buildCues([seg], Number.MAX_SAFE_INTEGER);
     for (const cue of cues) {
       for (const w of cue.words) {
@@ -285,6 +415,17 @@ export function buildSpeakerHeadTracks(
   const tracks: Record<string, HeadSpan[]> = {};
 
   for (const seg of segments) {
+    // A gesture for the line's feeling, at the top of the line only. It runs
+    // for about a second and settles: a head that tilts for a whole paragraph
+    // is a head stuck sideways, not a curious one.
+    const face = moodFace(seg.mood);
+    if (face?.head) {
+      (tracks[seg.speakerId] ??= []).push({
+        startMs: Math.max(0, seg.startMs - HEAD_LEAD_MS),
+        endMs: Math.min(seg.endMs, seg.startMs + 1100),
+        kind: face.head,
+      });
+    }
     const cues = buildCues([seg], Number.MAX_SAFE_INTEGER);
     for (const cue of cues) {
       for (const w of cue.words) {

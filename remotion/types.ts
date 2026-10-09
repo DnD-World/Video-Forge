@@ -143,6 +143,39 @@ export type RenderProps = {
    *  footage back without darkening it, so avatars and text can carry their
    *  own surfaces over a bright clip. */
   backgroundBlur: number;
+  /** Where the footage sits, as fractions of frame HEIGHT — `{ top: 1/3,
+   *  bottom: 2/3 }` is the middle third. Absent means the whole frame.
+   *
+   *  The lesson layout gives the top third to the subtitles and the bottom
+   *  third to the three faces, and asks for the footage between them. Full-
+   *  frame footage put a park behind the words and a hallway behind the faces,
+   *  which is exactly the competition the layout exists to avoid. */
+  backgroundBand?: { top: number; bottom: number } | null;
+  /** An intro clip played over the opening of the lesson — see introOverMs in
+   *  RenderJob. Null for the ordinary case of no intro, or one welded on. */
+  introOverlay?: {
+    fileName: string;
+    durationMs: number;
+  } | null;
+  /** A soft dark band at the TOP, behind the subtitles, so white text stays
+   *  readable over full-frame footage. `height` is a fraction of frame height;
+   *  it fades to nothing at its lower edge. Null for none. */
+  topScrim?: { height: number; opacity: number } | null;
+  /** A looping video banner along the bottom edge — the skilitsa.com strip.
+   *
+   *  The source is a 16:9 clip with the brand in its middle half, so `cropTop`
+   *  and `cropBottom` (fractions of the SOURCE height) cut the empty grey away
+   *  and what is left is fitted to the full frame width. */
+  bannerVideo?: { fileName: string; cropTop: number; cropBottom: number } | null;
+  /** A logo drawn over everything. `fileName` is inside the render's public
+   *  dir, like every other asset the composition loads. */
+  logo: {
+    fileName: string;
+    position: "top-left" | "top-right" | "bottom-left" | "bottom-right" | "bottom-center" | "watermark";
+    size: number;
+    opacity: number;
+    margin: number;
+  } | null;
   /** How glass behaves, for every pane in the video.
    *
    *  Tuning only — it does NOT say where glass appears. That is decided per

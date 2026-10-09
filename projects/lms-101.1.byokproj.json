@@ -1,0 +1,4628 @@
+{
+  "kind": "byok-project",
+  "version": 1,
+  "savedAt": 1789543580302,
+  "project": {
+    "render": {
+      "format": "9:16",
+      "width": 1080,
+      "height": 1920,
+      "durationSec": 440,
+      "engine": "remotion"
+    },
+    "fps": 30,
+    "speakers": [
+      {
+        "id": "s1",
+        "label": "Τσίκα",
+        "puppetPath": "C:/Users/strav/Documents/CLAUDE SPACE/BYOK-Vid-Creator/puppet/tsika.rig.json",
+        "borderColor": "#ff9a3c",
+        "surface": {
+          "style": "none",
+          "blur": 0.008,
+          "color": "#000000",
+          "opacity": 0.35,
+          "borderOpacity": 0.25,
+          "radius": 0.25
+        },
+        "bgColor": "#000000",
+        "bgOpacity": 0,
+        "borderOpacity": 1,
+        "outlineShape": "circle",
+        "waveform": {
+          "enabled": true,
+          "style": "mirror",
+          "position": "speaker",
+          "scale": 1.05,
+          "density": 64,
+          "thickness": 1,
+          "dotSize": 1,
+          "edgeFlush": false,
+          "smoothing": 0.2,
+          "ringInnerRadius": 0.2,
+          "ringSize": 1,
+          "ringX": 0.5,
+          "ringY": 0.5,
+          "lane": 0,
+          "sparkle": 0
+        },
+        "x": 0.2,
+        "y": 0.78,
+        "size": 0.25,
+        "ttsEngine": "dramabox"
+      },
+      {
+        "id": "s2",
+        "label": "Καίτη",
+        "puppetPath": "C:/Users/strav/Documents/CLAUDE SPACE/BYOK-Vid-Creator/puppet/kaiti.rig.json",
+        "borderColor": "#ff5fa2",
+        "surface": {
+          "style": "none",
+          "blur": 0.008,
+          "color": "#000000",
+          "opacity": 0.35,
+          "borderOpacity": 0.25,
+          "radius": 0.25
+        },
+        "bgColor": "#000000",
+        "bgOpacity": 0,
+        "borderOpacity": 1,
+        "outlineShape": "circle",
+        "waveform": {
+          "enabled": true,
+          "style": "mirror",
+          "position": "speaker",
+          "scale": 1.05,
+          "density": 64,
+          "thickness": 1,
+          "dotSize": 1,
+          "edgeFlush": false,
+          "smoothing": 0.2,
+          "ringInnerRadius": 0.2,
+          "ringSize": 1,
+          "ringX": 0.5,
+          "ringY": 0.5,
+          "lane": 0,
+          "sparkle": 0
+        },
+        "x": 0.5,
+        "y": 0.78,
+        "size": 0.25,
+        "ttsEngine": "dramabox"
+      },
+      {
+        "id": "s3",
+        "label": "Σερίφης",
+        "puppetPath": "C:/Users/strav/Documents/CLAUDE SPACE/BYOK-Vid-Creator/puppet/serifis.rig.json",
+        "borderColor": "#3cb4ff",
+        "surface": {
+          "style": "none",
+          "blur": 0.008,
+          "color": "#000000",
+          "opacity": 0.35,
+          "borderOpacity": 0.25,
+          "radius": 0.25
+        },
+        "bgColor": "#000000",
+        "bgOpacity": 0,
+        "borderOpacity": 1,
+        "outlineShape": "circle",
+        "waveform": {
+          "enabled": true,
+          "style": "mirror",
+          "position": "speaker",
+          "scale": 1.05,
+          "density": 64,
+          "thickness": 1,
+          "dotSize": 1,
+          "edgeFlush": false,
+          "smoothing": 0.2,
+          "ringInnerRadius": 0.2,
+          "ringSize": 1,
+          "ringX": 0.5,
+          "ringY": 0.5,
+          "lane": 0,
+          "sparkle": 0
+        },
+        "x": 0.8,
+        "y": 0.78,
+        "size": 0.25,
+        "ttsEngine": "dramabox"
+      }
+    ],
+    "subtitles": {
+      "enabled": true,
+      "position": "top",
+      "fontSize": 0.072,
+      "color": "#ffffff",
+      "activeColor": "#ff9a3c",
+      "activeFromSpeaker": true,
+      "strokeColor": "#000000",
+      "strokeWidth": 0.22,
+      "activeGlow": 0.25,
+      "activeEmphasis": "lift",
+      "uppercase": false,
+      "maxChars": 32,
+      "fontFamily": "Comfortaa",
+      "fontWeight": 700,
+      "surface": {
+        "style": "none",
+        "blur": 0.01,
+        "color": "#000000",
+        "opacity": 0.35,
+        "borderOpacity": 0.2,
+        "radius": 0.25
+      },
+      "transition": {
+        "style": "pop",
+        "durationMs": 220,
+        "overshoot": 1.05,
+        "blur": 0.4
+      }
+    },
+    "backgroundDim": 0,
+    "backgroundBlur": 0,
+    "language": "el",
+    "visemeFadeMs": 130,
+    "narration": {
+      "filePath": "C:\\Users\\strav\\Documents\\CLAUDE SPACE\\lms\\tts\\out\\101.1\\101.1-full.wav",
+      "segments": [
+        {
+          "speakerId": "s2",
+          "speakerLabel": "Καίτη",
+          "text": "Γιατί όταν γυρνάς σπίτι και βρίσκεις την παντόφλα σου μασουλημένη, η σκυλίτσα σου σε κοιτάει με αυτό το απίστευτο βλέμμα απόλυτης ενοχής;",
+          "startMs": 2000,
+          "endMs": 10360,
+          "mood": "curiosity",
+          "words": [
+            {
+              "text": "Γιατί",
+              "startMs": 2381,
+              "endMs": 2642
+            },
+            {
+              "text": "όταν",
+              "startMs": 2722,
+              "endMs": 2922
+            },
+            {
+              "text": "γυρνάς",
+              "startMs": 3002,
+              "endMs": 3383
+            },
+            {
+              "text": "σπίτι",
+              "startMs": 3403,
+              "endMs": 3724
+            },
+            {
+              "text": "και",
+              "startMs": 3784,
+              "endMs": 3885
+            },
+            {
+              "text": "βρίσκεις",
+              "startMs": 3905,
+              "endMs": 4245
+            },
+            {
+              "text": "την",
+              "startMs": 4265,
+              "endMs": 4366
+            },
+            {
+              "text": "παντόφλα",
+              "startMs": 4386,
+              "endMs": 4787
+            },
+            {
+              "text": "σου",
+              "startMs": 4847,
+              "endMs": 4947
+            },
+            {
+              "text": "μασουλημένη,",
+              "startMs": 4967,
+              "endMs": 5669
+            },
+            {
+              "text": "η",
+              "startMs": 6090,
+              "endMs": 6110
+            },
+            {
+              "text": "σκυλίτσα",
+              "startMs": 6170,
+              "endMs": 6711
+            },
+            {
+              "text": "σου",
+              "startMs": 6751,
+              "endMs": 6872
+            },
+            {
+              "text": "σε",
+              "startMs": 6872,
+              "endMs": 6952
+            },
+            {
+              "text": "κοιτάει",
+              "startMs": 7012,
+              "endMs": 7313
+            },
+            {
+              "text": "με",
+              "startMs": 7353,
+              "endMs": 7393
+            },
+            {
+              "text": "αυτό",
+              "startMs": 7393,
+              "endMs": 7593
+            },
+            {
+              "text": "το",
+              "startMs": 7654,
+              "endMs": 7714
+            },
+            {
+              "text": "απίστευτο",
+              "startMs": 7794,
+              "endMs": 8496
+            },
+            {
+              "text": "βλέμμα",
+              "startMs": 8536,
+              "endMs": 8796
+            },
+            {
+              "text": "απόλυτης",
+              "startMs": 8876,
+              "endMs": 9458
+            },
+            {
+              "text": "ενοχής;",
+              "startMs": 9498,
+              "endMs": 9979
+            }
+          ]
+        },
+        {
+          "speakerId": "s3",
+          "speakerLabel": "Σερίφης",
+          "text": "Δεν είναι ενοχή. Είναι καθαρός φόβος απέναντι στην απειλητική γλώσσα του σώματός σου.",
+          "startMs": 10680,
+          "endMs": 18440,
+          "mood": "serious",
+          "words": [
+            {
+              "text": "Δεν",
+              "startMs": 11101,
+              "endMs": 11342
+            },
+            {
+              "text": "είναι",
+              "startMs": 11422,
+              "endMs": 11642
+            },
+            {
+              "text": "ενοχή.",
+              "startMs": 11683,
+              "endMs": 12184
+            },
+            {
+              "text": "Είναι",
+              "startMs": 12826,
+              "endMs": 13026
+            },
+            {
+              "text": "καθαρός",
+              "startMs": 13086,
+              "endMs": 13708
+            },
+            {
+              "text": "φόβος",
+              "startMs": 13828,
+              "endMs": 14329
+            },
+            {
+              "text": "απέναντι",
+              "startMs": 14670,
+              "endMs": 15192
+            },
+            {
+              "text": "στην",
+              "startMs": 15252,
+              "endMs": 15452
+            },
+            {
+              "text": "απειλητική",
+              "startMs": 15512,
+              "endMs": 16274
+            },
+            {
+              "text": "γλώσσα",
+              "startMs": 16375,
+              "endMs": 16816
+            },
+            {
+              "text": "του",
+              "startMs": 16896,
+              "endMs": 17016
+            },
+            {
+              "text": "σώματός",
+              "startMs": 17097,
+              "endMs": 17738
+            },
+            {
+              "text": "σου.",
+              "startMs": 17818,
+              "endMs": 17999
+            }
+          ]
+        },
+        {
+          "speakerId": "s2",
+          "speakerLabel": "Καίτη",
+          "text": "Μα Σερίφη μου, αποκλείεται να κάνω τόσο μεγάλο λάθος! Χαμηλώνει το κεφάλι, γλείφει τα χείλη της και στρέφει αλλού το βλέμμα.",
+          "startMs": 18760,
+          "endMs": 28440,
+          "mood": "confusion",
+          "words": [
+            {
+              "text": "Μα",
+              "startMs": 19121,
+              "endMs": 19201
+            },
+            {
+              "text": "Σερίφη",
+              "startMs": 19722,
+              "endMs": 20083
+            },
+            {
+              "text": "μου,",
+              "startMs": 20123,
+              "endMs": 20223
+            },
+            {
+              "text": "αποκλείεται",
+              "startMs": 20263,
+              "endMs": 20985
+            },
+            {
+              "text": "να",
+              "startMs": 21025,
+              "endMs": 21085
+            },
+            {
+              "text": "κάνω",
+              "startMs": 21145,
+              "endMs": 21305
+            },
+            {
+              "text": "τόσο",
+              "startMs": 21345,
+              "endMs": 21526
+            },
+            {
+              "text": "μεγάλο",
+              "startMs": 21566,
+              "endMs": 21886
+            },
+            {
+              "text": "λάθος!",
+              "startMs": 21967,
+              "endMs": 22428
+            },
+            {
+              "text": "Χαμηλώνει",
+              "startMs": 23510,
+              "endMs": 23951
+            },
+            {
+              "text": "το",
+              "startMs": 23951,
+              "endMs": 24011
+            },
+            {
+              "text": "κεφάλι,",
+              "startMs": 24071,
+              "endMs": 24652
+            },
+            {
+              "text": "γλείφει",
+              "startMs": 25414,
+              "endMs": 25734
+            },
+            {
+              "text": "τα",
+              "startMs": 25754,
+              "endMs": 25835
+            },
+            {
+              "text": "χείλη",
+              "startMs": 25935,
+              "endMs": 26255
+            },
+            {
+              "text": "της",
+              "startMs": 26296,
+              "endMs": 26536
+            },
+            {
+              "text": "και",
+              "startMs": 26636,
+              "endMs": 26777
+            },
+            {
+              "text": "στρέφει",
+              "startMs": 27137,
+              "endMs": 27438
+            },
+            {
+              "text": "αλλού",
+              "startMs": 27478,
+              "endMs": 27658
+            },
+            {
+              "text": "το",
+              "startMs": 27678,
+              "endMs": 27739
+            },
+            {
+              "text": "βλέμμα.",
+              "startMs": 27779,
+              "endMs": 28099
+            }
+          ]
+        },
+        {
+          "speakerId": "s2",
+          "speakerLabel": "Καίτη",
+          "text": "Είναι σαν να μου λέει συγγνώμη μαμά, ξέρω ότι έκανα μεγάλη ζημιά και δεν θα το ξανακάνω ποτέ!",
+          "startMs": 28760,
+          "endMs": 35960,
+          "mood": "adoration",
+          "words": [
+            {
+              "text": "Είναι",
+              "startMs": 29161,
+              "endMs": 29402
+            },
+            {
+              "text": "σαν",
+              "startMs": 29562,
+              "endMs": 29683
+            },
+            {
+              "text": "να",
+              "startMs": 29703,
+              "endMs": 29763
+            },
+            {
+              "text": "μου",
+              "startMs": 29803,
+              "endMs": 29903
+            },
+            {
+              "text": "λέει",
+              "startMs": 29963,
+              "endMs": 30204
+            },
+            {
+              "text": "συγγνώμη",
+              "startMs": 30705,
+              "endMs": 31307
+            },
+            {
+              "text": "μαμά,",
+              "startMs": 31387,
+              "endMs": 31668
+            },
+            {
+              "text": "ξέρω",
+              "startMs": 32029,
+              "endMs": 32390
+            },
+            {
+              "text": "ότι",
+              "startMs": 32430,
+              "endMs": 32551
+            },
+            {
+              "text": "έκανα",
+              "startMs": 32611,
+              "endMs": 32871
+            },
+            {
+              "text": "μεγάλη",
+              "startMs": 32912,
+              "endMs": 33373
+            },
+            {
+              "text": "ζημιά",
+              "startMs": 33453,
+              "endMs": 33774
+            },
+            {
+              "text": "και",
+              "startMs": 34035,
+              "endMs": 34155
+            },
+            {
+              "text": "δεν",
+              "startMs": 34215,
+              "endMs": 34376
+            },
+            {
+              "text": "θα",
+              "startMs": 34416,
+              "endMs": 34496
+            },
+            {
+              "text": "το",
+              "startMs": 34536,
+              "endMs": 34596
+            },
+            {
+              "text": "ξανακάνω",
+              "startMs": 34636,
+              "endMs": 35118
+            },
+            {
+              "text": "ποτέ!",
+              "startMs": 35198,
+              "endMs": 35459
+            }
+          ]
+        },
+        {
+          "speakerId": "s3",
+          "speakerLabel": "Σερίφης",
+          "text": "Αυτό λέγεται ανθρωπομορφισμός. Φορτώνεις έναν σκύλο με ανθρώπινα ηθικά διλήμματα που απλώς δεν υπάρχουν στη βιολογία του.",
+          "startMs": 36280,
+          "endMs": 46640,
+          "mood": "serious",
+          "words": [
+            {
+              "text": "Αυτό",
+              "startMs": 36641,
+              "endMs": 36981
+            },
+            {
+              "text": "λέγεται",
+              "startMs": 37402,
+              "endMs": 37863
+            },
+            {
+              "text": "ανθρωπομορφισμός.",
+              "startMs": 38043,
+              "endMs": 39326
+            },
+            {
+              "text": "Φορτώνεις",
+              "startMs": 40147,
+              "endMs": 40709
+            },
+            {
+              "text": "έναν",
+              "startMs": 40789,
+              "endMs": 40969
+            },
+            {
+              "text": "σκύλο",
+              "startMs": 41049,
+              "endMs": 41470
+            },
+            {
+              "text": "με",
+              "startMs": 41650,
+              "endMs": 41731
+            },
+            {
+              "text": "ανθρώπινα",
+              "startMs": 41811,
+              "endMs": 42392
+            },
+            {
+              "text": "ηθικά",
+              "startMs": 42472,
+              "endMs": 42813
+            },
+            {
+              "text": "διλήμματα",
+              "startMs": 42913,
+              "endMs": 43474
+            },
+            {
+              "text": "που",
+              "startMs": 43714,
+              "endMs": 43835
+            },
+            {
+              "text": "απλώς",
+              "startMs": 43895,
+              "endMs": 44356
+            },
+            {
+              "text": "δεν",
+              "startMs": 44556,
+              "endMs": 44716
+            },
+            {
+              "text": "υπάρχουν",
+              "startMs": 44796,
+              "endMs": 45257
+            },
+            {
+              "text": "στη",
+              "startMs": 45297,
+              "endMs": 45418
+            },
+            {
+              "text": "βιολογία",
+              "startMs": 45458,
+              "endMs": 46059
+            },
+            {
+              "text": "του.",
+              "startMs": 46139,
+              "endMs": 46259
+            }
+          ]
+        },
+        {
+          "speakerId": "s3",
+          "speakerLabel": "Σερίφης",
+          "text": "Τα χαμηλωμένα αυτιά και το γλείψιμο των χειλιών είναι σινιάλα ηρεμίας. Προσπαθεί να σε κατευνάσει επειδή βλέπει έναν έξαλλο άνθρωπο.",
+          "startMs": 46960,
+          "endMs": 58720,
+          "mood": "neutral",
+          "words": [
+            {
+              "text": "Τα",
+              "startMs": 47381,
+              "endMs": 47481
+            },
+            {
+              "text": "χαμηλωμένα",
+              "startMs": 47581,
+              "endMs": 48463
+            },
+            {
+              "text": "αυτιά",
+              "startMs": 48543,
+              "endMs": 49003
+            },
+            {
+              "text": "και",
+              "startMs": 49564,
+              "endMs": 49665
+            },
+            {
+              "text": "το",
+              "startMs": 49705,
+              "endMs": 49785
+            },
+            {
+              "text": "γλείψιμο",
+              "startMs": 49885,
+              "endMs": 50466
+            },
+            {
+              "text": "των",
+              "startMs": 50546,
+              "endMs": 50646
+            },
+            {
+              "text": "χειλιών",
+              "startMs": 50706,
+              "endMs": 51167
+            },
+            {
+              "text": "είναι",
+              "startMs": 51688,
+              "endMs": 51888
+            },
+            {
+              "text": "σινιάλα",
+              "startMs": 51969,
+              "endMs": 52529
+            },
+            {
+              "text": "ηρεμίας.",
+              "startMs": 52630,
+              "endMs": 53411
+            },
+            {
+              "text": "Προσπαθεί",
+              "startMs": 54132,
+              "endMs": 54653
+            },
+            {
+              "text": "να",
+              "startMs": 54673,
+              "endMs": 54733
+            },
+            {
+              "text": "σε",
+              "startMs": 54793,
+              "endMs": 54893
+            },
+            {
+              "text": "κατευνάσει",
+              "startMs": 54974,
+              "endMs": 55835
+            },
+            {
+              "text": "επειδή",
+              "startMs": 56096,
+              "endMs": 56376
+            },
+            {
+              "text": "βλέπει",
+              "startMs": 56496,
+              "endMs": 56917
+            },
+            {
+              "text": "έναν",
+              "startMs": 56957,
+              "endMs": 57197
+            },
+            {
+              "text": "έξαλλο",
+              "startMs": 57298,
+              "endMs": 57778
+            },
+            {
+              "text": "άνθρωπο.",
+              "startMs": 57859,
+              "endMs": 58279
+            }
+          ]
+        },
+        {
+          "speakerId": "s1",
+          "speakerLabel": "Τσίκα",
+          "text": "Εγώ πάντως όταν βλέπω τέτοια μούτρα στην πόρτα, γίνομαι αμέσως ένα μικρό παστάκι για να γλιτώσω τη φασαρία!",
+          "startMs": 59940,
+          "endMs": 67860,
+          "mood": "enthusiasm",
+          "words": [
+            {
+              "text": "Εγώ",
+              "startMs": 60301,
+              "endMs": 60562
+            },
+            {
+              "text": "πάντως",
+              "startMs": 60742,
+              "endMs": 61183
+            },
+            {
+              "text": "όταν",
+              "startMs": 61444,
+              "endMs": 61644
+            },
+            {
+              "text": "βλέπω",
+              "startMs": 61704,
+              "endMs": 61965
+            },
+            {
+              "text": "τέτοια",
+              "startMs": 62065,
+              "endMs": 62346
+            },
+            {
+              "text": "μούτρα",
+              "startMs": 62426,
+              "endMs": 62727
+            },
+            {
+              "text": "στην",
+              "startMs": 62907,
+              "endMs": 63088
+            },
+            {
+              "text": "πόρτα,",
+              "startMs": 63148,
+              "endMs": 63469
+            },
+            {
+              "text": "γίνομαι",
+              "startMs": 63790,
+              "endMs": 64111
+            },
+            {
+              "text": "αμέσως",
+              "startMs": 64151,
+              "endMs": 64632
+            },
+            {
+              "text": "ένα",
+              "startMs": 64672,
+              "endMs": 64792
+            },
+            {
+              "text": "μικρό",
+              "startMs": 64852,
+              "endMs": 65153
+            },
+            {
+              "text": "παστάκι",
+              "startMs": 65233,
+              "endMs": 65775
+            },
+            {
+              "text": "για",
+              "startMs": 66015,
+              "endMs": 66116
+            },
+            {
+              "text": "να",
+              "startMs": 66136,
+              "endMs": 66196
+            },
+            {
+              "text": "γλιτώσω",
+              "startMs": 66236,
+              "endMs": 66657
+            },
+            {
+              "text": "τη",
+              "startMs": 66697,
+              "endMs": 66757
+            },
+            {
+              "text": "φασαρία!",
+              "startMs": 66797,
+              "endMs": 67319
+            }
+          ]
+        },
+        {
+          "speakerId": "s1",
+          "speakerLabel": "Τσίκα",
+          "text": "Δεν έχω ιδέα τι συνέβη πριν από μισή ώρα, αλλά καταλαβαίνω ότι κάποιος πρέπει να σώσει την κατάσταση!",
+          "startMs": 68180,
+          "endMs": 76380,
+          "mood": "amusement",
+          "words": [
+            {
+              "text": "Δεν",
+              "startMs": 68541,
+              "endMs": 68802
+            },
+            {
+              "text": "έχω",
+              "startMs": 68882,
+              "endMs": 69102
+            },
+            {
+              "text": "ιδέα",
+              "startMs": 69243,
+              "endMs": 69844
+            },
+            {
+              "text": "τι",
+              "startMs": 69924,
+              "endMs": 70004
+            },
+            {
+              "text": "συνέβη",
+              "startMs": 70085,
+              "endMs": 70466
+            },
+            {
+              "text": "πριν",
+              "startMs": 70546,
+              "endMs": 70726
+            },
+            {
+              "text": "από",
+              "startMs": 70766,
+              "endMs": 70887
+            },
+            {
+              "text": "μισή",
+              "startMs": 70947,
+              "endMs": 71247
+            },
+            {
+              "text": "ώρα,",
+              "startMs": 71408,
+              "endMs": 71608
+            },
+            {
+              "text": "αλλά",
+              "startMs": 72651,
+              "endMs": 72851
+            },
+            {
+              "text": "καταλαβαίνω",
+              "startMs": 72932,
+              "endMs": 73573
+            },
+            {
+              "text": "ότι",
+              "startMs": 73633,
+              "endMs": 73774
+            },
+            {
+              "text": "κάποιος",
+              "startMs": 73934,
+              "endMs": 74315
+            },
+            {
+              "text": "πρέπει",
+              "startMs": 74355,
+              "endMs": 74636
+            },
+            {
+              "text": "να",
+              "startMs": 74656,
+              "endMs": 74736
+            },
+            {
+              "text": "σώσει",
+              "startMs": 74876,
+              "endMs": 75157
+            },
+            {
+              "text": "την",
+              "startMs": 75177,
+              "endMs": 75277
+            },
+            {
+              "text": "κατάσταση!",
+              "startMs": 75297,
+              "endMs": 75979
+            }
+          ]
+        },
+        {
+          "speakerId": "s2",
+          "speakerLabel": "Καίτη",
+          "text": "Αχ το μωράκι μου το πανέξυπνο, πόσο γλυκιά ψυχούλα είσαι εσύ!",
+          "startMs": 76700,
+          "endMs": 82580,
+          "mood": "adoration",
+          "words": [
+            {
+              "text": "Αχ",
+              "startMs": 77101,
+              "endMs": 77683
+            },
+            {
+              "text": "το",
+              "startMs": 77764,
+              "endMs": 77864
+            },
+            {
+              "text": "μωράκι",
+              "startMs": 77944,
+              "endMs": 78566
+            },
+            {
+              "text": "μου",
+              "startMs": 78586,
+              "endMs": 78687
+            },
+            {
+              "text": "το",
+              "startMs": 78727,
+              "endMs": 78787
+            },
+            {
+              "text": "πανέξυπνο,",
+              "startMs": 78847,
+              "endMs": 79710
+            },
+            {
+              "text": "πόσο",
+              "startMs": 80212,
+              "endMs": 80633
+            },
+            {
+              "text": "γλυκιά",
+              "startMs": 80694,
+              "endMs": 81135
+            },
+            {
+              "text": "ψυχούλα",
+              "startMs": 81215,
+              "endMs": 81777
+            },
+            {
+              "text": "είσαι",
+              "startMs": 81837,
+              "endMs": 82038
+            },
+            {
+              "text": "εσύ!",
+              "startMs": 82038,
+              "endMs": 82259
+            }
+          ]
+        },
+        {
+          "speakerId": "s1",
+          "speakerLabel": "Τσίκα",
+          "text": "Δεν είμαι μωράκι, είμαι ένα ευαίσθητο αρπακτικό συντροφιάς με τρομερά ανεπτυγμένες αισθήσεις.",
+          "startMs": 82900,
+          "endMs": 91460,
+          "mood": "neutral",
+          "words": [
+            {
+              "text": "Δεν",
+              "startMs": 83481,
+              "endMs": 83842
+            },
+            {
+              "text": "είμαι",
+              "startMs": 83942,
+              "endMs": 84183
+            },
+            {
+              "text": "μωράκι,",
+              "startMs": 84223,
+              "endMs": 84845
+            },
+            {
+              "text": "είμαι",
+              "startMs": 85245,
+              "endMs": 85426
+            },
+            {
+              "text": "ένα",
+              "startMs": 85486,
+              "endMs": 85666
+            },
+            {
+              "text": "ευαίσθητο",
+              "startMs": 85767,
+              "endMs": 86528
+            },
+            {
+              "text": "αρπακτικό",
+              "startMs": 86589,
+              "endMs": 87250
+            },
+            {
+              "text": "συντροφιάς",
+              "startMs": 87370,
+              "endMs": 88052
+            },
+            {
+              "text": "με",
+              "startMs": 88313,
+              "endMs": 88393
+            },
+            {
+              "text": "τρομερά",
+              "startMs": 88533,
+              "endMs": 89355
+            },
+            {
+              "text": "ανεπτυγμένες",
+              "startMs": 89495,
+              "endMs": 90297
+            },
+            {
+              "text": "αισθήσεις.",
+              "startMs": 90357,
+              "endMs": 90919
+            }
+          ]
+        },
+        {
+          "speakerId": "s3",
+          "speakerLabel": "Σερίφης",
+          "text": "Εδώ ακριβώς ξεκινάει η θεμελιώδης διαφορά μας. Ο άνθρωπος είναι πρωτεύον θηλαστικό, οπτικό και έντονα λεκτικό.",
+          "startMs": 91780,
+          "endMs": 103300,
+          "mood": "serious",
+          "words": [
+            {
+              "text": "Εδώ",
+              "startMs": 92301,
+              "endMs": 92601
+            },
+            {
+              "text": "ακριβώς",
+              "startMs": 92702,
+              "endMs": 93483
+            },
+            {
+              "text": "ξεκινάει",
+              "startMs": 93763,
+              "endMs": 94445
+            },
+            {
+              "text": "η",
+              "startMs": 94445,
+              "endMs": 94465
+            },
+            {
+              "text": "θεμελιώδης",
+              "startMs": 94545,
+              "endMs": 95466
+            },
+            {
+              "text": "διαφορά",
+              "startMs": 95506,
+              "endMs": 96027
+            },
+            {
+              "text": "μας.",
+              "startMs": 96148,
+              "endMs": 96348
+            },
+            {
+              "text": "Ο",
+              "startMs": 97310,
+              "endMs": 97350
+            },
+            {
+              "text": "άνθρωπος",
+              "startMs": 97450,
+              "endMs": 97991
+            },
+            {
+              "text": "είναι",
+              "startMs": 98191,
+              "endMs": 98371
+            },
+            {
+              "text": "πρωτεύον",
+              "startMs": 98432,
+              "endMs": 99033
+            },
+            {
+              "text": "θηλαστικό,",
+              "startMs": 99073,
+              "endMs": 99734
+            },
+            {
+              "text": "οπτικό",
+              "startMs": 100415,
+              "endMs": 100976
+            },
+            {
+              "text": "και",
+              "startMs": 101477,
+              "endMs": 101657
+            },
+            {
+              "text": "έντονα",
+              "startMs": 101737,
+              "endMs": 102118
+            },
+            {
+              "text": "λεκτικό.",
+              "startMs": 102198,
+              "endMs": 102719
+            }
+          ]
+        },
+        {
+          "speakerId": "s3",
+          "speakerLabel": "Σερίφης",
+          "text": "Επικοινωνείς με προτάσεις, επιχειρήματα και περίπλοκες αφηρημένες έννοιες.",
+          "startMs": 103620,
+          "endMs": 111180,
+          "mood": "neutral",
+          "words": [
+            {
+              "text": "Επικοινωνείς",
+              "startMs": 103961,
+              "endMs": 104923
+            },
+            {
+              "text": "με",
+              "startMs": 105084,
+              "endMs": 105164
+            },
+            {
+              "text": "προτάσεις,",
+              "startMs": 105284,
+              "endMs": 106227
+            },
+            {
+              "text": "επιχειρήματα",
+              "startMs": 106588,
+              "endMs": 107651
+            },
+            {
+              "text": "και",
+              "startMs": 108032,
+              "endMs": 108152
+            },
+            {
+              "text": "περίπλοκες",
+              "startMs": 108232,
+              "endMs": 109074
+            },
+            {
+              "text": "αφηρημένες",
+              "startMs": 109135,
+              "endMs": 110037
+            },
+            {
+              "text": "έννοιες.",
+              "startMs": 110177,
+              "endMs": 110699
+            }
+          ]
+        },
+        {
+          "speakerId": "s3",
+          "speakerLabel": "Σερίφης",
+          "text": "Η σκυλίτσα όμως ζει σε έναν κόσμο μυρωδιών, μικροκινήσεων και άμεσων συσχετισμών.",
+          "startMs": 111500,
+          "endMs": 119980,
+          "mood": "serious",
+          "words": [
+            {
+              "text": "Η",
+              "startMs": 111801,
+              "endMs": 111821
+            },
+            {
+              "text": "σκυλίτσα",
+              "startMs": 111941,
+              "endMs": 112803
+            },
+            {
+              "text": "όμως",
+              "startMs": 112943,
+              "endMs": 113324
+            },
+            {
+              "text": "ζει",
+              "startMs": 113785,
+              "endMs": 113886
+            },
+            {
+              "text": "σε",
+              "startMs": 113926,
+              "endMs": 113986
+            },
+            {
+              "text": "έναν",
+              "startMs": 114006,
+              "endMs": 114186
+            },
+            {
+              "text": "κόσμο",
+              "startMs": 114307,
+              "endMs": 114688
+            },
+            {
+              "text": "μυρωδιών,",
+              "startMs": 114768,
+              "endMs": 115530
+            },
+            {
+              "text": "μικροκινήσεων",
+              "startMs": 116171,
+              "endMs": 117374
+            },
+            {
+              "text": "και",
+              "startMs": 117735,
+              "endMs": 117875
+            },
+            {
+              "text": "άμεσων",
+              "startMs": 117995,
+              "endMs": 118517
+            },
+            {
+              "text": "συσχετισμών.",
+              "startMs": 118597,
+              "endMs": 119479
+            }
+          ]
+        },
+        {
+          "speakerId": "s2",
+          "speakerLabel": "Καίτη",
+          "text": "Δηλαδή όταν γυρνάω και της λέω ολόκληρο κήρυγμα, τύπου γιατί μου το έκανες αυτό αφού είχαμε συμφωνήσει να είσαι καλό κορίτσι, τι ακούει;",
+          "startMs": 120300,
+          "endMs": 131260,
+          "mood": "curiosity",
+          "words": [
+            {
+              "text": "Δηλαδή",
+              "startMs": 120661,
+              "endMs": 121162
+            },
+            {
+              "text": "όταν",
+              "startMs": 121763,
+              "endMs": 121983
+            },
+            {
+              "text": "γυρνάω",
+              "startMs": 122063,
+              "endMs": 122564
+            },
+            {
+              "text": "και",
+              "startMs": 122624,
+              "endMs": 122724
+            },
+            {
+              "text": "της",
+              "startMs": 122744,
+              "endMs": 122885
+            },
+            {
+              "text": "λέω",
+              "startMs": 122965,
+              "endMs": 123205
+            },
+            {
+              "text": "ολόκληρο",
+              "startMs": 123546,
+              "endMs": 124327
+            },
+            {
+              "text": "κήρυγμα,",
+              "startMs": 124428,
+              "endMs": 124928
+            },
+            {
+              "text": "τύπου",
+              "startMs": 125309,
+              "endMs": 125590
+            },
+            {
+              "text": "γιατί",
+              "startMs": 125910,
+              "endMs": 126271
+            },
+            {
+              "text": "μου",
+              "startMs": 126351,
+              "endMs": 126471
+            },
+            {
+              "text": "το",
+              "startMs": 126491,
+              "endMs": 126571
+            },
+            {
+              "text": "έκανες",
+              "startMs": 126652,
+              "endMs": 126952
+            },
+            {
+              "text": "αυτό",
+              "startMs": 126992,
+              "endMs": 127273
+            },
+            {
+              "text": "αφού",
+              "startMs": 127413,
+              "endMs": 127593
+            },
+            {
+              "text": "είχαμε",
+              "startMs": 127593,
+              "endMs": 127814
+            },
+            {
+              "text": "συμφωνήσει",
+              "startMs": 127874,
+              "endMs": 128475
+            },
+            {
+              "text": "να",
+              "startMs": 128495,
+              "endMs": 128555
+            },
+            {
+              "text": "είσαι",
+              "startMs": 128615,
+              "endMs": 128775
+            },
+            {
+              "text": "καλό",
+              "startMs": 128816,
+              "endMs": 129116
+            },
+            {
+              "text": "κορίτσι,",
+              "startMs": 129216,
+              "endMs": 129717
+            },
+            {
+              "text": "τι",
+              "startMs": 130318,
+              "endMs": 130398
+            },
+            {
+              "text": "ακούει;",
+              "startMs": 130519,
+              "endMs": 130919
+            }
+          ]
+        },
+        {
+          "speakerId": "s1",
+          "speakerLabel": "Τσίκα",
+          "text": "Ακούμε έναν θόρυβο σαν χαλασμένο ραδιόφωνο! Και μετά βλέπουμε τα μάτια σου να πετάνε σπίθες!",
+          "startMs": 131580,
+          "endMs": 138740,
+          "mood": "amusement",
+          "words": [
+            {
+              "text": "Ακούμε",
+              "startMs": 131881,
+              "endMs": 132282
+            },
+            {
+              "text": "έναν",
+              "startMs": 132322,
+              "endMs": 132523
+            },
+            {
+              "text": "θόρυβο",
+              "startMs": 132563,
+              "endMs": 132924
+            },
+            {
+              "text": "σαν",
+              "startMs": 133004,
+              "endMs": 133144
+            },
+            {
+              "text": "χαλασμένο",
+              "startMs": 133205,
+              "endMs": 133746
+            },
+            {
+              "text": "ραδιόφωνο!",
+              "startMs": 133826,
+              "endMs": 134548
+            },
+            {
+              "text": "Και",
+              "startMs": 135732,
+              "endMs": 135852
+            },
+            {
+              "text": "μετά",
+              "startMs": 135892,
+              "endMs": 136133
+            },
+            {
+              "text": "βλέπουμε",
+              "startMs": 136253,
+              "endMs": 136614
+            },
+            {
+              "text": "τα",
+              "startMs": 136674,
+              "endMs": 136754
+            },
+            {
+              "text": "μάτια",
+              "startMs": 136815,
+              "endMs": 137095
+            },
+            {
+              "text": "σου",
+              "startMs": 137136,
+              "endMs": 137236
+            },
+            {
+              "text": "να",
+              "startMs": 137256,
+              "endMs": 137336
+            },
+            {
+              "text": "πετάνε",
+              "startMs": 137376,
+              "endMs": 137697
+            },
+            {
+              "text": "σπίθες!",
+              "startMs": 137797,
+              "endMs": 138339
+            }
+          ]
+        },
+        {
+          "speakerId": "s3",
+          "speakerLabel": "Σερίφης",
+          "text": "Οι σκύλοι δεν κατανοούν ανθρώπινη σύνταξη. Ακούνε ηχητικά μοτίβα, αλλά κυρίως διαβάζουν τη μυρωδιά του άγχους σου και τη σωματική σου ένταση.",
+          "startMs": 139060,
+          "endMs": 151660,
+          "mood": "serious",
+          "words": [
+            {
+              "text": "Οι",
+              "startMs": 139381,
+              "endMs": 139441
+            },
+            {
+              "text": "σκύλοι",
+              "startMs": 139521,
+              "endMs": 140042
+            },
+            {
+              "text": "δεν",
+              "startMs": 140482,
+              "endMs": 140602
+            },
+            {
+              "text": "κατανοούν",
+              "startMs": 140663,
+              "endMs": 141384
+            },
+            {
+              "text": "ανθρώπινη",
+              "startMs": 141464,
+              "endMs": 142085
+            },
+            {
+              "text": "σύνταξη.",
+              "startMs": 142205,
+              "endMs": 142806
+            },
+            {
+              "text": "Ακούνε",
+              "startMs": 143487,
+              "endMs": 143868
+            },
+            {
+              "text": "ηχητικά",
+              "startMs": 143908,
+              "endMs": 144449
+            },
+            {
+              "text": "μοτίβα,",
+              "startMs": 144549,
+              "endMs": 145090
+            },
+            {
+              "text": "αλλά",
+              "startMs": 145691,
+              "endMs": 145871
+            },
+            {
+              "text": "κυρίως",
+              "startMs": 145991,
+              "endMs": 146532
+            },
+            {
+              "text": "διαβάζουν",
+              "startMs": 146872,
+              "endMs": 147513
+            },
+            {
+              "text": "τη",
+              "startMs": 147574,
+              "endMs": 147634
+            },
+            {
+              "text": "μυρωδιά",
+              "startMs": 147714,
+              "endMs": 148215
+            },
+            {
+              "text": "του",
+              "startMs": 148335,
+              "endMs": 148455
+            },
+            {
+              "text": "άγχους",
+              "startMs": 148555,
+              "endMs": 148916
+            },
+            {
+              "text": "σου",
+              "startMs": 148976,
+              "endMs": 149156
+            },
+            {
+              "text": "και",
+              "startMs": 149557,
+              "endMs": 149657
+            },
+            {
+              "text": "τη",
+              "startMs": 149697,
+              "endMs": 149757
+            },
+            {
+              "text": "σωματική",
+              "startMs": 149857,
+              "endMs": 150458
+            },
+            {
+              "text": "σου",
+              "startMs": 150558,
+              "endMs": 150698
+            },
+            {
+              "text": "ένταση.",
+              "startMs": 150739,
+              "endMs": 151219
+            }
+          ]
+        },
+        {
+          "speakerId": "s2",
+          "speakerLabel": "Καίτη",
+          "text": "Περίμενε, μυρίζει το άγχος μου; Δηλαδή καταλαβαίνει τι νιώθω πριν καν ανοίξω το στόμα μου;",
+          "startMs": 151980,
+          "endMs": 161580,
+          "mood": "nervousness",
+          "words": [
+            {
+              "text": "Περίμενε,",
+              "startMs": 152962,
+              "endMs": 153503
+            },
+            {
+              "text": "μυρίζει",
+              "startMs": 154405,
+              "endMs": 154866
+            },
+            {
+              "text": "το",
+              "startMs": 155006,
+              "endMs": 155107
+            },
+            {
+              "text": "άγχος",
+              "startMs": 155167,
+              "endMs": 155507
+            },
+            {
+              "text": "μου;",
+              "startMs": 155567,
+              "endMs": 155708
+            },
+            {
+              "text": "Δηλαδή",
+              "startMs": 157371,
+              "endMs": 157732
+            },
+            {
+              "text": "καταλαβαίνει",
+              "startMs": 158293,
+              "endMs": 158894
+            },
+            {
+              "text": "τι",
+              "startMs": 158955,
+              "endMs": 159035
+            },
+            {
+              "text": "νιώθω",
+              "startMs": 159135,
+              "endMs": 159496
+            },
+            {
+              "text": "πριν",
+              "startMs": 159796,
+              "endMs": 159997
+            },
+            {
+              "text": "καν",
+              "startMs": 160117,
+              "endMs": 160297
+            },
+            {
+              "text": "ανοίξω",
+              "startMs": 160337,
+              "endMs": 160618
+            },
+            {
+              "text": "το",
+              "startMs": 160658,
+              "endMs": 160738
+            },
+            {
+              "text": "στόμα",
+              "startMs": 160778,
+              "endMs": 161039
+            },
+            {
+              "text": "μου;",
+              "startMs": 161099,
+              "endMs": 161219
+            }
+          ]
+        },
+        {
+          "speakerId": "s3",
+          "speakerLabel": "Σερίφης",
+          "text": "Απόλυτα. Οι χημικές αλλαγές στον ιδρώτα σου και στον ρυθμό της αναπνοής σου είναι για εκείνη ανοιχτό βιβλίο.",
+          "startMs": 161900,
+          "endMs": 171740,
+          "mood": "serious",
+          "words": [
+            {
+              "text": "Απόλυτα.",
+              "startMs": 162261,
+              "endMs": 163022
+            },
+            {
+              "text": "Οι",
+              "startMs": 163804,
+              "endMs": 163844
+            },
+            {
+              "text": "χημικές",
+              "startMs": 163944,
+              "endMs": 164545
+            },
+            {
+              "text": "αλλαγές",
+              "startMs": 164626,
+              "endMs": 165147
+            },
+            {
+              "text": "στον",
+              "startMs": 165187,
+              "endMs": 165367
+            },
+            {
+              "text": "ιδρώτα",
+              "startMs": 165447,
+              "endMs": 165928
+            },
+            {
+              "text": "σου",
+              "startMs": 166048,
+              "endMs": 166209
+            },
+            {
+              "text": "και",
+              "startMs": 166569,
+              "endMs": 166710
+            },
+            {
+              "text": "στον",
+              "startMs": 166730,
+              "endMs": 166890
+            },
+            {
+              "text": "ρυθμό",
+              "startMs": 166950,
+              "endMs": 167311
+            },
+            {
+              "text": "της",
+              "startMs": 167391,
+              "endMs": 167531
+            },
+            {
+              "text": "αναπνοής",
+              "startMs": 167592,
+              "endMs": 168193
+            },
+            {
+              "text": "σου",
+              "startMs": 168233,
+              "endMs": 168413
+            },
+            {
+              "text": "είναι",
+              "startMs": 168894,
+              "endMs": 169115
+            },
+            {
+              "text": "για",
+              "startMs": 169175,
+              "endMs": 169295
+            },
+            {
+              "text": "εκείνη",
+              "startMs": 169355,
+              "endMs": 169816
+            },
+            {
+              "text": "ανοιχτό",
+              "startMs": 170137,
+              "endMs": 170698
+            },
+            {
+              "text": "βιβλίο.",
+              "startMs": 170798,
+              "endMs": 171339
+            }
+          ]
+        },
+        {
+          "speakerId": "s3",
+          "speakerLabel": "Σερίφης",
+          "text": "Ενώ εσύ νομίζεις ότι την μαλώνεις δίκαια, εκείνη απλώς εισπράττει μια ανεξήγητη απειλή χωρίς κανένα λογικό πλαίσιο.",
+          "startMs": 172060,
+          "endMs": 181180,
+          "mood": "serious",
+          "words": [
+            {
+              "text": "Ενώ",
+              "startMs": 172361,
+              "endMs": 172581
+            },
+            {
+              "text": "εσύ",
+              "startMs": 172641,
+              "endMs": 172862
+            },
+            {
+              "text": "νομίζεις",
+              "startMs": 172922,
+              "endMs": 173423
+            },
+            {
+              "text": "ότι",
+              "startMs": 173483,
+              "endMs": 173643
+            },
+            {
+              "text": "την",
+              "startMs": 173704,
+              "endMs": 173824
+            },
+            {
+              "text": "μαλώνεις",
+              "startMs": 173864,
+              "endMs": 174325
+            },
+            {
+              "text": "δίκαια,",
+              "startMs": 174465,
+              "endMs": 174906
+            },
+            {
+              "text": "εκείνη",
+              "startMs": 175628,
+              "endMs": 176089
+            },
+            {
+              "text": "απλώς",
+              "startMs": 176269,
+              "endMs": 176590
+            },
+            {
+              "text": "εισπράττει",
+              "startMs": 176650,
+              "endMs": 177151
+            },
+            {
+              "text": "μια",
+              "startMs": 177231,
+              "endMs": 177352
+            },
+            {
+              "text": "ανεξήγητη",
+              "startMs": 177412,
+              "endMs": 178153
+            },
+            {
+              "text": "απειλή",
+              "startMs": 178234,
+              "endMs": 178675
+            },
+            {
+              "text": "χωρίς",
+              "startMs": 179095,
+              "endMs": 179336
+            },
+            {
+              "text": "κανένα",
+              "startMs": 179416,
+              "endMs": 179897
+            },
+            {
+              "text": "λογικό",
+              "startMs": 179957,
+              "endMs": 180318
+            },
+            {
+              "text": "πλαίσιο.",
+              "startMs": 180398,
+              "endMs": 180839
+            }
+          ]
+        },
+        {
+          "speakerId": "s1",
+          "speakerLabel": "Τσίκα",
+          "text": "Οι άνθρωποι νομίζετε ότι εκδικούμαστε, ενώ απλώς βαριόμαστε!",
+          "startMs": 182400,
+          "endMs": 185478,
+          "words": [
+            {
+              "text": "Οι",
+              "startMs": 182601,
+              "endMs": 182661
+            },
+            {
+              "text": "άνθρωποι",
+              "startMs": 182702,
+              "endMs": 183024
+            },
+            {
+              "text": "νομίζετε",
+              "startMs": 183044,
+              "endMs": 183325
+            },
+            {
+              "text": "ότι",
+              "startMs": 183325,
+              "endMs": 183426
+            },
+            {
+              "text": "εκδικούμαστε,",
+              "startMs": 183446,
+              "endMs": 184009
+            },
+            {
+              "text": "ενώ",
+              "startMs": 184210,
+              "endMs": 184351
+            },
+            {
+              "text": "απλώς",
+              "startMs": 184371,
+              "endMs": 184612
+            },
+            {
+              "text": "βαριόμαστε!",
+              "startMs": 184633,
+              "endMs": 185256
+            }
+          ]
+        },
+        {
+          "speakerId": "s1",
+          "speakerLabel": "Τσίκα",
+          "text": "...Συγγνώμη. Οι άνθρωποι νομίζετε ότι εκδικούμαστε, ενώ εμείς απλώς βαριόμαστε.",
+          "startMs": 185798.04166666666,
+          "endMs": 192318.04166666666,
+          "mood": "neutral",
+          "words": [
+            {
+              "text": "...Συγγνώμη.",
+              "startMs": 186320,
+              "endMs": 187102
+            },
+            {
+              "text": "Οι",
+              "startMs": 187583,
+              "endMs": 187624
+            },
+            {
+              "text": "άνθρωποι",
+              "startMs": 187784,
+              "endMs": 188286
+            },
+            {
+              "text": "νομίζετε",
+              "startMs": 188366,
+              "endMs": 188887
+            },
+            {
+              "text": "ότι",
+              "startMs": 188928,
+              "endMs": 189068
+            },
+            {
+              "text": "εκδικούμαστε,",
+              "startMs": 189108,
+              "endMs": 189951
+            },
+            {
+              "text": "ενώ",
+              "startMs": 190252,
+              "endMs": 190472
+            },
+            {
+              "text": "εμείς",
+              "startMs": 190553,
+              "endMs": 190813
+            },
+            {
+              "text": "απλώς",
+              "startMs": 190874,
+              "endMs": 191154
+            },
+            {
+              "text": "βαριόμαστε.",
+              "startMs": 191195,
+              "endMs": 191957
+            }
+          ]
+        },
+        {
+          "speakerId": "s2",
+          "speakerLabel": "Καίτη",
+          "text": "Μισό λεπτό, Τσίκα μου! Θέλεις να πεις ότι δεν υπάρχει ίχνος εκδίκησης όταν μασάτε τα αγαπημένα μας παπούτσια;",
+          "startMs": 192638.04166666666,
+          "endMs": 201398.04166666666,
+          "mood": "curiosity",
+          "words": [
+            {
+              "text": "Μισό",
+              "startMs": 193580,
+              "endMs": 193881
+            },
+            {
+              "text": "λεπτό,",
+              "startMs": 193961,
+              "endMs": 194202
+            },
+            {
+              "text": "Τσίκα",
+              "startMs": 194302,
+              "endMs": 194562
+            },
+            {
+              "text": "μου!",
+              "startMs": 194643,
+              "endMs": 194743
+            },
+            {
+              "text": "Θέλεις",
+              "startMs": 195505,
+              "endMs": 195845
+            },
+            {
+              "text": "να",
+              "startMs": 195885,
+              "endMs": 195966
+            },
+            {
+              "text": "πεις",
+              "startMs": 196086,
+              "endMs": 196387
+            },
+            {
+              "text": "ότι",
+              "startMs": 196787,
+              "endMs": 196948
+            },
+            {
+              "text": "δεν",
+              "startMs": 197008,
+              "endMs": 197148
+            },
+            {
+              "text": "υπάρχει",
+              "startMs": 197208,
+              "endMs": 197569
+            },
+            {
+              "text": "ίχνος",
+              "startMs": 197910,
+              "endMs": 198351
+            },
+            {
+              "text": "εκδίκησης",
+              "startMs": 198411,
+              "endMs": 199173
+            },
+            {
+              "text": "όταν",
+              "startMs": 199213,
+              "endMs": 199393
+            },
+            {
+              "text": "μασάτε",
+              "startMs": 199434,
+              "endMs": 199774
+            },
+            {
+              "text": "τα",
+              "startMs": 199834,
+              "endMs": 199875
+            },
+            {
+              "text": "αγαπημένα",
+              "startMs": 199915,
+              "endMs": 200356
+            },
+            {
+              "text": "μας",
+              "startMs": 200396,
+              "endMs": 200516
+            },
+            {
+              "text": "παπούτσια;",
+              "startMs": 200556,
+              "endMs": 201057
+            }
+          ]
+        },
+        {
+          "speakerId": "s3",
+          "speakerLabel": "Σερίφης",
+          "text": "Κατηγορηματικά κανένα. Η εκδίκηση απαιτεί προμελέτη, μνησικακία και σύλληψη του μέλλοντος.",
+          "startMs": 201718.04166666666,
+          "endMs": 211198.04166666666,
+          "mood": "serious",
+          "words": [
+            {
+              "text": "Κατηγορηματικά",
+              "startMs": 202019,
+              "endMs": 203121
+            },
+            {
+              "text": "κανένα.",
+              "startMs": 203582,
+              "endMs": 204143
+            },
+            {
+              "text": "Η",
+              "startMs": 205085,
+              "endMs": 205105
+            },
+            {
+              "text": "εκδίκηση",
+              "startMs": 205185,
+              "endMs": 205867
+            },
+            {
+              "text": "απαιτεί",
+              "startMs": 206248,
+              "endMs": 206608
+            },
+            {
+              "text": "προμελέτη,",
+              "startMs": 206668,
+              "endMs": 207450
+            },
+            {
+              "text": "μνησικακία",
+              "startMs": 207851,
+              "endMs": 208813
+            },
+            {
+              "text": "και",
+              "startMs": 209154,
+              "endMs": 209274
+            },
+            {
+              "text": "σύλληψη",
+              "startMs": 209354,
+              "endMs": 209795
+            },
+            {
+              "text": "του",
+              "startMs": 209855,
+              "endMs": 209975
+            },
+            {
+              "text": "μέλλοντος.",
+              "startMs": 210036,
+              "endMs": 210637
+            }
+          ]
+        },
+        {
+          "speakerId": "s3",
+          "speakerLabel": "Σερίφης",
+          "text": "Ο εγκέφαλος της σκυλίτσας λειτουργεί με βάση το άμεσο όφελος και την εκτόνωση του στρες.",
+          "startMs": 211518.04166666666,
+          "endMs": 219838.04166666666,
+          "mood": "neutral",
+          "words": [
+            {
+              "text": "Ο",
+              "startMs": 211799,
+              "endMs": 211839
+            },
+            {
+              "text": "εγκέφαλος",
+              "startMs": 211919,
+              "endMs": 212721
+            },
+            {
+              "text": "της",
+              "startMs": 212801,
+              "endMs": 212941
+            },
+            {
+              "text": "σκυλίτσας",
+              "startMs": 212961,
+              "endMs": 213743
+            },
+            {
+              "text": "λειτουργεί",
+              "startMs": 214265,
+              "endMs": 214826
+            },
+            {
+              "text": "με",
+              "startMs": 214886,
+              "endMs": 214966
+            },
+            {
+              "text": "βάση",
+              "startMs": 215067,
+              "endMs": 215407
+            },
+            {
+              "text": "το",
+              "startMs": 215488,
+              "endMs": 215588
+            },
+            {
+              "text": "άμεσο",
+              "startMs": 215768,
+              "endMs": 216249
+            },
+            {
+              "text": "όφελος",
+              "startMs": 216390,
+              "endMs": 216971
+            },
+            {
+              "text": "και",
+              "startMs": 217553,
+              "endMs": 217653
+            },
+            {
+              "text": "την",
+              "startMs": 217693,
+              "endMs": 217813
+            },
+            {
+              "text": "εκτόνωση",
+              "startMs": 217873,
+              "endMs": 218575
+            },
+            {
+              "text": "του",
+              "startMs": 218635,
+              "endMs": 218735
+            },
+            {
+              "text": "στρες.",
+              "startMs": 218755,
+              "endMs": 219196
+            }
+          ]
+        },
+        {
+          "speakerId": "s3",
+          "speakerLabel": "Σερίφης",
+          "text": "Αν μασήσει ένα αντικείμενο, το κάνει είτε επειδή μυρίζει έντονα εσένα και την ανακουφίζει, είτε επειδή τα ούλα της έχουν ενόχληση, είτε από απόλυτη ανία.",
+          "startMs": 220158.04166666666,
+          "endMs": 232198.04166666666,
+          "mood": "serious",
+          "words": [
+            {
+              "text": "Αν",
+              "startMs": 220499,
+              "endMs": 220599
+            },
+            {
+              "text": "μασήσει",
+              "startMs": 220639,
+              "endMs": 221160
+            },
+            {
+              "text": "ένα",
+              "startMs": 221200,
+              "endMs": 221300
+            },
+            {
+              "text": "αντικείμενο,",
+              "startMs": 221340,
+              "endMs": 222101
+            },
+            {
+              "text": "το",
+              "startMs": 222702,
+              "endMs": 222782
+            },
+            {
+              "text": "κάνει",
+              "startMs": 222883,
+              "endMs": 223163
+            },
+            {
+              "text": "είτε",
+              "startMs": 223183,
+              "endMs": 223343
+            },
+            {
+              "text": "επειδή",
+              "startMs": 223403,
+              "endMs": 223724
+            },
+            {
+              "text": "μυρίζει",
+              "startMs": 223804,
+              "endMs": 224265
+            },
+            {
+              "text": "έντονα",
+              "startMs": 224345,
+              "endMs": 224706
+            },
+            {
+              "text": "εσένα",
+              "startMs": 224786,
+              "endMs": 225327
+            },
+            {
+              "text": "και",
+              "startMs": 225487,
+              "endMs": 225607
+            },
+            {
+              "text": "την",
+              "startMs": 225627,
+              "endMs": 225747
+            },
+            {
+              "text": "ανακουφίζει,",
+              "startMs": 225787,
+              "endMs": 226589
+            },
+            {
+              "text": "είτε",
+              "startMs": 227150,
+              "endMs": 227310
+            },
+            {
+              "text": "επειδή",
+              "startMs": 227350,
+              "endMs": 227630
+            },
+            {
+              "text": "τα",
+              "startMs": 227711,
+              "endMs": 227791
+            },
+            {
+              "text": "ούλα",
+              "startMs": 227891,
+              "endMs": 228111
+            },
+            {
+              "text": "της",
+              "startMs": 228171,
+              "endMs": 228332
+            },
+            {
+              "text": "έχουν",
+              "startMs": 228392,
+              "endMs": 228632
+            },
+            {
+              "text": "ενόχληση,",
+              "startMs": 228672,
+              "endMs": 229393
+            },
+            {
+              "text": "είτε",
+              "startMs": 230014,
+              "endMs": 230175
+            },
+            {
+              "text": "από",
+              "startMs": 230255,
+              "endMs": 230455
+            },
+            {
+              "text": "απόλυτη",
+              "startMs": 230535,
+              "endMs": 231196
+            },
+            {
+              "text": "ανία.",
+              "startMs": 231276,
+              "endMs": 231737
+            }
+          ]
+        },
+        {
+          "speakerId": "s2",
+          "speakerLabel": "Καίτη",
+          "text": "Και τότε ποιο είναι το μεγάλο λάθος που κάνουμε όλοι μας; Γιατί είμαι σίγουρη ότι όλοι έχουμε φωνάξει τουλάχιστον μία φορά!",
+          "startMs": 232518.04166666666,
+          "endMs": 241358.04166666666,
+          "mood": "frustration",
+          "words": [
+            {
+              "text": "Και",
+              "startMs": 232919,
+              "endMs": 233059
+            },
+            {
+              "text": "τότε",
+              "startMs": 233139,
+              "endMs": 233400
+            },
+            {
+              "text": "ποιο",
+              "startMs": 233480,
+              "endMs": 233681
+            },
+            {
+              "text": "είναι",
+              "startMs": 233761,
+              "endMs": 233921
+            },
+            {
+              "text": "το",
+              "startMs": 233941,
+              "endMs": 234001
+            },
+            {
+              "text": "μεγάλο",
+              "startMs": 234061,
+              "endMs": 234502
+            },
+            {
+              "text": "λάθος",
+              "startMs": 234583,
+              "endMs": 234903
+            },
+            {
+              "text": "που",
+              "startMs": 234943,
+              "endMs": 235044
+            },
+            {
+              "text": "κάνουμε",
+              "startMs": 235084,
+              "endMs": 235425
+            },
+            {
+              "text": "όλοι",
+              "startMs": 235525,
+              "endMs": 235725
+            },
+            {
+              "text": "μας;",
+              "startMs": 235765,
+              "endMs": 236006
+            },
+            {
+              "text": "Γιατί",
+              "startMs": 236808,
+              "endMs": 236988
+            },
+            {
+              "text": "είμαι",
+              "startMs": 237028,
+              "endMs": 237148
+            },
+            {
+              "text": "σίγουρη",
+              "startMs": 237249,
+              "endMs": 237610
+            },
+            {
+              "text": "ότι",
+              "startMs": 237670,
+              "endMs": 237810
+            },
+            {
+              "text": "όλοι",
+              "startMs": 238151,
+              "endMs": 238411
+            },
+            {
+              "text": "έχουμε",
+              "startMs": 238451,
+              "endMs": 238712
+            },
+            {
+              "text": "φωνάξει",
+              "startMs": 238752,
+              "endMs": 239273
+            },
+            {
+              "text": "τουλάχιστον",
+              "startMs": 239353,
+              "endMs": 240235
+            },
+            {
+              "text": "μία",
+              "startMs": 240296,
+              "endMs": 240456
+            },
+            {
+              "text": "φορά!",
+              "startMs": 240536,
+              "endMs": 240797
+            }
+          ]
+        },
+        {
+          "speakerId": "s3",
+          "speakerLabel": "Σερίφης",
+          "text": "Η καθυστερημένη διόρθωση. Είναι η πιο καταστροφική παγίδα στη σχέση ανθρώπου και σκύλου.",
+          "startMs": 241678.04166666666,
+          "endMs": 250358.04166666666,
+          "mood": "serious",
+          "words": [
+            {
+              "text": "Η",
+              "startMs": 242039,
+              "endMs": 242059
+            },
+            {
+              "text": "καθυστερημένη",
+              "startMs": 242159,
+              "endMs": 243302
+            },
+            {
+              "text": "διόρθωση.",
+              "startMs": 243382,
+              "endMs": 244124
+            },
+            {
+              "text": "Είναι",
+              "startMs": 245246,
+              "endMs": 245487
+            },
+            {
+              "text": "η",
+              "startMs": 245547,
+              "endMs": 245567
+            },
+            {
+              "text": "πιο",
+              "startMs": 245647,
+              "endMs": 245868
+            },
+            {
+              "text": "καταστροφική",
+              "startMs": 246008,
+              "endMs": 246950
+            },
+            {
+              "text": "παγίδα",
+              "startMs": 247090,
+              "endMs": 247672
+            },
+            {
+              "text": "στη",
+              "startMs": 247952,
+              "endMs": 248113
+            },
+            {
+              "text": "σχέση",
+              "startMs": 248193,
+              "endMs": 248574
+            },
+            {
+              "text": "ανθρώπου",
+              "startMs": 248714,
+              "endMs": 249276
+            },
+            {
+              "text": "και",
+              "startMs": 249336,
+              "endMs": 249476
+            },
+            {
+              "text": "σκύλου.",
+              "startMs": 249536,
+              "endMs": 249997
+            }
+          ]
+        },
+        {
+          "speakerId": "s3",
+          "speakerLabel": "Σερίφης",
+          "text": "Η σκυλίτσα συνδέει τη συνέπεια αποκλειστικά με τη συμπεριφορά που εκδηλώνει ακριβώς εκείνο το κλάσμα του δευτερολέπτου.",
+          "startMs": 250678.04166666666,
+          "endMs": 259918.04166666666,
+          "mood": "serious",
+          "words": [
+            {
+              "text": "Η",
+              "startMs": 250959,
+              "endMs": 250979
+            },
+            {
+              "text": "σκυλίτσα",
+              "startMs": 251059,
+              "endMs": 251740
+            },
+            {
+              "text": "συνδέει",
+              "startMs": 252121,
+              "endMs": 252582
+            },
+            {
+              "text": "τη",
+              "startMs": 252622,
+              "endMs": 252702
+            },
+            {
+              "text": "συνέπεια",
+              "startMs": 252803,
+              "endMs": 253424
+            },
+            {
+              "text": "αποκλειστικά",
+              "startMs": 253825,
+              "endMs": 254687
+            },
+            {
+              "text": "με",
+              "startMs": 254767,
+              "endMs": 254827
+            },
+            {
+              "text": "τη",
+              "startMs": 254907,
+              "endMs": 254967
+            },
+            {
+              "text": "συμπεριφορά",
+              "startMs": 255027,
+              "endMs": 255709
+            },
+            {
+              "text": "που",
+              "startMs": 255789,
+              "endMs": 255889
+            },
+            {
+              "text": "εκδηλώνει",
+              "startMs": 255929,
+              "endMs": 256571
+            },
+            {
+              "text": "ακριβώς",
+              "startMs": 256791,
+              "endMs": 257473
+            },
+            {
+              "text": "εκείνο",
+              "startMs": 257573,
+              "endMs": 257954
+            },
+            {
+              "text": "το",
+              "startMs": 258014,
+              "endMs": 258094
+            },
+            {
+              "text": "κλάσμα",
+              "startMs": 258174,
+              "endMs": 258575
+            },
+            {
+              "text": "του",
+              "startMs": 258635,
+              "endMs": 258735
+            },
+            {
+              "text": "δευτερολέπτου.",
+              "startMs": 258755,
+              "endMs": 259537
+            }
+          ]
+        },
+        {
+          "speakerId": "s3",
+          "speakerLabel": "Σερίφης",
+          "text": "Αν γυρίσεις σπίτι μετά από τέσσερις ώρες και αρχίσεις τις φωνές μπροστά στο χαλασμένο μαξιλάρι, δεν τιμωρείς το μάσημα.",
+          "startMs": 260238.04166666666,
+          "endMs": 270158.0416666666,
+          "mood": "neutral",
+          "words": [
+            {
+              "text": "Αν",
+              "startMs": 260579,
+              "endMs": 260699
+            },
+            {
+              "text": "γυρίσεις",
+              "startMs": 260759,
+              "endMs": 261320
+            },
+            {
+              "text": "σπίτι",
+              "startMs": 261340,
+              "endMs": 261781
+            },
+            {
+              "text": "μετά",
+              "startMs": 262022,
+              "endMs": 262262
+            },
+            {
+              "text": "από",
+              "startMs": 262342,
+              "endMs": 262483
+            },
+            {
+              "text": "τέσσερις",
+              "startMs": 262623,
+              "endMs": 263144
+            },
+            {
+              "text": "ώρες",
+              "startMs": 263264,
+              "endMs": 263585
+            },
+            {
+              "text": "και",
+              "startMs": 263986,
+              "endMs": 264086
+            },
+            {
+              "text": "αρχίσεις",
+              "startMs": 264126,
+              "endMs": 264647
+            },
+            {
+              "text": "τις",
+              "startMs": 264687,
+              "endMs": 264827
+            },
+            {
+              "text": "φωνές",
+              "startMs": 264907,
+              "endMs": 265368
+            },
+            {
+              "text": "μπροστά",
+              "startMs": 265428,
+              "endMs": 265769
+            },
+            {
+              "text": "στο",
+              "startMs": 265809,
+              "endMs": 265929
+            },
+            {
+              "text": "χαλασμένο",
+              "startMs": 265970,
+              "endMs": 266591
+            },
+            {
+              "text": "μαξιλάρι,",
+              "startMs": 266631,
+              "endMs": 267372
+            },
+            {
+              "text": "δεν",
+              "startMs": 268314,
+              "endMs": 268455
+            },
+            {
+              "text": "τιμωρείς",
+              "startMs": 268475,
+              "endMs": 268956
+            },
+            {
+              "text": "το",
+              "startMs": 269016,
+              "endMs": 269096
+            },
+            {
+              "text": "μάσημα.",
+              "startMs": 269216,
+              "endMs": 269717
+            }
+          ]
+        },
+        {
+          "speakerId": "s3",
+          "speakerLabel": "Σερίφης",
+          "text": "Τιμωρείς την πράξη του να σε πλησιάζει και να σε χαιρετάει στην εξώπορτα. Της μαθαίνεις απλώς ότι η επιστροφή σου είναι επικίνδυνη.",
+          "startMs": 270478.0416666666,
+          "endMs": 279998.0416666666,
+          "mood": "serious",
+          "words": [
+            {
+              "text": "Τιμωρείς",
+              "startMs": 270759,
+              "endMs": 271300
+            },
+            {
+              "text": "την",
+              "startMs": 271340,
+              "endMs": 271460
+            },
+            {
+              "text": "πράξη",
+              "startMs": 271480,
+              "endMs": 271841
+            },
+            {
+              "text": "του",
+              "startMs": 271901,
+              "endMs": 272001
+            },
+            {
+              "text": "να",
+              "startMs": 272061,
+              "endMs": 272121
+            },
+            {
+              "text": "σε",
+              "startMs": 272182,
+              "endMs": 272262
+            },
+            {
+              "text": "πλησιάζει",
+              "startMs": 272342,
+              "endMs": 273083
+            },
+            {
+              "text": "και",
+              "startMs": 273344,
+              "endMs": 273444
+            },
+            {
+              "text": "να",
+              "startMs": 273484,
+              "endMs": 273544
+            },
+            {
+              "text": "σε",
+              "startMs": 273605,
+              "endMs": 273685
+            },
+            {
+              "text": "χαιρετάει",
+              "startMs": 273765,
+              "endMs": 274306
+            },
+            {
+              "text": "στην",
+              "startMs": 274306,
+              "endMs": 274466
+            },
+            {
+              "text": "εξώπορτα.",
+              "startMs": 274506,
+              "endMs": 275088
+            },
+            {
+              "text": "Της",
+              "startMs": 276010,
+              "endMs": 276170
+            },
+            {
+              "text": "μαθαίνεις",
+              "startMs": 276230,
+              "endMs": 276671
+            },
+            {
+              "text": "απλώς",
+              "startMs": 276731,
+              "endMs": 277092
+            },
+            {
+              "text": "ότι",
+              "startMs": 277352,
+              "endMs": 277493
+            },
+            {
+              "text": "η",
+              "startMs": 277553,
+              "endMs": 277573
+            },
+            {
+              "text": "επιστροφή",
+              "startMs": 277633,
+              "endMs": 278174
+            },
+            {
+              "text": "σου",
+              "startMs": 278294,
+              "endMs": 278435
+            },
+            {
+              "text": "είναι",
+              "startMs": 278715,
+              "endMs": 278896
+            },
+            {
+              "text": "επικίνδυνη.",
+              "startMs": 278916,
+              "endMs": 279617
+            }
+          ]
+        },
+        {
+          "speakerId": "s2",
+          "speakerLabel": "Καίτη",
+          "text": "Πω πω, αυτό πονάει που το ακούω. Δηλαδή νομίζουμε ότι εκπαιδεύουμε, ενώ στην πραγματικότητα σπέρνουμε άγχος και ανασφάλεια;",
+          "startMs": 280318.0416666666,
+          "endMs": 288478.0416666666,
+          "mood": "tension",
+          "words": [
+            {
+              "text": "Πω",
+              "startMs": 280619,
+              "endMs": 280699
+            },
+            {
+              "text": "πω,",
+              "startMs": 280839,
+              "endMs": 280940
+            },
+            {
+              "text": "αυτό",
+              "startMs": 281160,
+              "endMs": 281341
+            },
+            {
+              "text": "πονάει",
+              "startMs": 281381,
+              "endMs": 281741
+            },
+            {
+              "text": "που",
+              "startMs": 281762,
+              "endMs": 281862
+            },
+            {
+              "text": "το",
+              "startMs": 281882,
+              "endMs": 281922
+            },
+            {
+              "text": "ακούω.",
+              "startMs": 281982,
+              "endMs": 282323
+            },
+            {
+              "text": "Δηλαδή",
+              "startMs": 283085,
+              "endMs": 283426
+            },
+            {
+              "text": "νομίζουμε",
+              "startMs": 283486,
+              "endMs": 283887
+            },
+            {
+              "text": "ότι",
+              "startMs": 283927,
+              "endMs": 284027
+            },
+            {
+              "text": "εκπαιδεύουμε,",
+              "startMs": 284067,
+              "endMs": 284889
+            },
+            {
+              "text": "ενώ",
+              "startMs": 285190,
+              "endMs": 285330
+            },
+            {
+              "text": "στην",
+              "startMs": 285350,
+              "endMs": 285471
+            },
+            {
+              "text": "πραγματικότητα",
+              "startMs": 285491,
+              "endMs": 286172
+            },
+            {
+              "text": "σπέρνουμε",
+              "startMs": 286373,
+              "endMs": 286834
+            },
+            {
+              "text": "άγχος",
+              "startMs": 286934,
+              "endMs": 287255
+            },
+            {
+              "text": "και",
+              "startMs": 287295,
+              "endMs": 287375
+            },
+            {
+              "text": "ανασφάλεια;",
+              "startMs": 287415,
+              "endMs": 288057
+            }
+          ]
+        },
+        {
+          "speakerId": "s3",
+          "speakerLabel": "Σερίφης",
+          "text": "Ακριβώς αυτό συμβαίνει. Καταστρέφεις την εμπιστοσύνη χωρίς να διορθώνεις απολύτως τίποτα.",
+          "startMs": 288798.0416666666,
+          "endMs": 295758.0416666666,
+          "mood": "serious",
+          "words": [
+            {
+              "text": "Ακριβώς",
+              "startMs": 289139,
+              "endMs": 289761
+            },
+            {
+              "text": "αυτό",
+              "startMs": 289841,
+              "endMs": 290102
+            },
+            {
+              "text": "συμβαίνει.",
+              "startMs": 290222,
+              "endMs": 290784
+            },
+            {
+              "text": "Καταστρέφεις",
+              "startMs": 291345,
+              "endMs": 292087
+            },
+            {
+              "text": "την",
+              "startMs": 292108,
+              "endMs": 292208
+            },
+            {
+              "text": "εμπιστοσύνη",
+              "startMs": 292248,
+              "endMs": 292910
+            },
+            {
+              "text": "χωρίς",
+              "startMs": 293151,
+              "endMs": 293431
+            },
+            {
+              "text": "να",
+              "startMs": 293471,
+              "endMs": 293532
+            },
+            {
+              "text": "διορθώνεις",
+              "startMs": 293592,
+              "endMs": 294214
+            },
+            {
+              "text": "απολύτως",
+              "startMs": 294254,
+              "endMs": 294916
+            },
+            {
+              "text": "τίποτα.",
+              "startMs": 294976,
+              "endMs": 295377
+            }
+          ]
+        },
+        {
+          "speakerId": "s2",
+          "speakerLabel": "Καίτη",
+          "text": "Ωραία, αλλάξαμε οπτική γωνία! Πάμε στην πράξη, γιατί θέλουμε άμεσες λύσεις για το σπίτι και τη βόλτα!",
+          "startMs": 296078.0416666666,
+          "endMs": 304038.0416666666,
+          "mood": "determination",
+          "words": [
+            {
+              "text": "Ωραία,",
+              "startMs": 296399,
+              "endMs": 296820
+            },
+            {
+              "text": "αλλάξαμε",
+              "startMs": 297281,
+              "endMs": 297883
+            },
+            {
+              "text": "οπτική",
+              "startMs": 297943,
+              "endMs": 298243
+            },
+            {
+              "text": "γωνία!",
+              "startMs": 298284,
+              "endMs": 298685
+            },
+            {
+              "text": "Πάμε",
+              "startMs": 299166,
+              "endMs": 299386
+            },
+            {
+              "text": "στην",
+              "startMs": 299426,
+              "endMs": 299567
+            },
+            {
+              "text": "πράξη,",
+              "startMs": 299607,
+              "endMs": 299988
+            },
+            {
+              "text": "γιατί",
+              "startMs": 300329,
+              "endMs": 300509
+            },
+            {
+              "text": "θέλουμε",
+              "startMs": 300569,
+              "endMs": 300870
+            },
+            {
+              "text": "άμεσες",
+              "startMs": 301131,
+              "endMs": 301552
+            },
+            {
+              "text": "λύσεις",
+              "startMs": 301612,
+              "endMs": 301993
+            },
+            {
+              "text": "για",
+              "startMs": 302254,
+              "endMs": 302354
+            },
+            {
+              "text": "το",
+              "startMs": 302414,
+              "endMs": 302474
+            },
+            {
+              "text": "σπίτι",
+              "startMs": 302554,
+              "endMs": 302935
+            },
+            {
+              "text": "και",
+              "startMs": 303076,
+              "endMs": 303176
+            },
+            {
+              "text": "τη",
+              "startMs": 303216,
+              "endMs": 303276
+            },
+            {
+              "text": "βόλτα!",
+              "startMs": 303336,
+              "endMs": 303677
+            }
+          ]
+        },
+        {
+          "speakerId": "s3",
+          "speakerLabel": "Σερίφης",
+          "text": "Πρώτη άμεση ενέργεια για σήμερα. Εφάρμοσε τον κανόνα της σιωπής.",
+          "startMs": 304358.0416666666,
+          "endMs": 310598.0416666666,
+          "mood": "serious",
+          "words": [
+            {
+              "text": "Πρώτη",
+              "startMs": 304619,
+              "endMs": 305040
+            },
+            {
+              "text": "άμεση",
+              "startMs": 305201,
+              "endMs": 305602
+            },
+            {
+              "text": "ενέργεια",
+              "startMs": 305682,
+              "endMs": 306244
+            },
+            {
+              "text": "για",
+              "startMs": 306324,
+              "endMs": 306425
+            },
+            {
+              "text": "σήμερα.",
+              "startMs": 306565,
+              "endMs": 306966
+            },
+            {
+              "text": "Εφάρμοσε",
+              "startMs": 307929,
+              "endMs": 308592
+            },
+            {
+              "text": "τον",
+              "startMs": 308672,
+              "endMs": 308792
+            },
+            {
+              "text": "κανόνα",
+              "startMs": 308832,
+              "endMs": 309294
+            },
+            {
+              "text": "της",
+              "startMs": 309374,
+              "endMs": 309515
+            },
+            {
+              "text": "σιωπής.",
+              "startMs": 309555,
+              "endMs": 310137
+            }
+          ]
+        },
+        {
+          "speakerId": "s3",
+          "speakerLabel": "Σερίφης",
+          "text": "Μείωσε τις περιττές ομιλίες κατά ογδόντα τοις εκατό. Όταν ζητάς μια συμπεριφορά, χρησιμοποίησε μία καθαρή λέξη και σαφές σινιάλο με το σώμα σου.",
+          "startMs": 310918.0416666666,
+          "endMs": 324278.0416666666,
+          "mood": "neutral",
+          "words": [
+            {
+              "text": "Μείωσε",
+              "startMs": 311359,
+              "endMs": 311919
+            },
+            {
+              "text": "τις",
+              "startMs": 312000,
+              "endMs": 312160
+            },
+            {
+              "text": "περιττές",
+              "startMs": 312240,
+              "endMs": 312841
+            },
+            {
+              "text": "ομιλίες",
+              "startMs": 312921,
+              "endMs": 313682
+            },
+            {
+              "text": "κατά",
+              "startMs": 313842,
+              "endMs": 314143
+            },
+            {
+              "text": "ογδόντα",
+              "startMs": 314263,
+              "endMs": 314904
+            },
+            {
+              "text": "τοις",
+              "startMs": 314984,
+              "endMs": 315164
+            },
+            {
+              "text": "εκατό.",
+              "startMs": 315204,
+              "endMs": 315645
+            },
+            {
+              "text": "Όταν",
+              "startMs": 316667,
+              "endMs": 316927
+            },
+            {
+              "text": "ζητάς",
+              "startMs": 316987,
+              "endMs": 317348
+            },
+            {
+              "text": "μια",
+              "startMs": 317388,
+              "endMs": 317528
+            },
+            {
+              "text": "συμπεριφορά,",
+              "startMs": 317608,
+              "endMs": 318349
+            },
+            {
+              "text": "χρησιμοποίησε",
+              "startMs": 318910,
+              "endMs": 319771
+            },
+            {
+              "text": "μία",
+              "startMs": 319851,
+              "endMs": 320032
+            },
+            {
+              "text": "καθαρή",
+              "startMs": 320172,
+              "endMs": 320793
+            },
+            {
+              "text": "λέξη",
+              "startMs": 320953,
+              "endMs": 321394
+            },
+            {
+              "text": "και",
+              "startMs": 321734,
+              "endMs": 321854
+            },
+            {
+              "text": "σαφές",
+              "startMs": 321975,
+              "endMs": 322475
+            },
+            {
+              "text": "σινιάλο",
+              "startMs": 322535,
+              "endMs": 323096
+            },
+            {
+              "text": "με",
+              "startMs": 323156,
+              "endMs": 323216
+            },
+            {
+              "text": "το",
+              "startMs": 323277,
+              "endMs": 323337
+            },
+            {
+              "text": "σώμα",
+              "startMs": 323457,
+              "endMs": 323717
+            },
+            {
+              "text": "σου.",
+              "startMs": 323817,
+              "endMs": 323958
+            }
+          ]
+        },
+        {
+          "speakerId": "s3",
+          "speakerLabel": "Σερίφης",
+          "text": "Μην επαναλαμβάνεις την εντολή δέκα φορές σαν χαλασμένη κασέτα. Αυτό δημιουργεί μόνο σύγχυση.",
+          "startMs": 324598.0416666666,
+          "endMs": 332718.0416666666,
+          "mood": "serious",
+          "words": [
+            {
+              "text": "Μην",
+              "startMs": 324979,
+              "endMs": 325179
+            },
+            {
+              "text": "επαναλαμβάνεις",
+              "startMs": 325240,
+              "endMs": 326182
+            },
+            {
+              "text": "την",
+              "startMs": 326222,
+              "endMs": 326362
+            },
+            {
+              "text": "εντολή",
+              "startMs": 326382,
+              "endMs": 326763
+            },
+            {
+              "text": "δέκα",
+              "startMs": 326984,
+              "endMs": 327285
+            },
+            {
+              "text": "φορές",
+              "startMs": 327345,
+              "endMs": 327766
+            },
+            {
+              "text": "σαν",
+              "startMs": 328067,
+              "endMs": 328207
+            },
+            {
+              "text": "χαλασμένη",
+              "startMs": 328247,
+              "endMs": 328869
+            },
+            {
+              "text": "κασέτα.",
+              "startMs": 328909,
+              "endMs": 329430
+            },
+            {
+              "text": "Αυτό",
+              "startMs": 330132,
+              "endMs": 330392
+            },
+            {
+              "text": "δημιουργεί",
+              "startMs": 330833,
+              "endMs": 331375
+            },
+            {
+              "text": "μόνο",
+              "startMs": 331455,
+              "endMs": 331675
+            },
+            {
+              "text": "σύγχυση.",
+              "startMs": 331836,
+              "endMs": 332377
+            }
+          ]
+        },
+        {
+          "speakerId": "s2",
+          "speakerLabel": "Καίτη",
+          "text": "Και στη βόλτα; Πώς αλλάζουμε συνήθειες στο πεζοδρόμιο;",
+          "startMs": 333038.0416666666,
+          "endMs": 337198.0416666666,
+          "mood": "interest",
+          "words": [
+            {
+              "text": "Και",
+              "startMs": 333299,
+              "endMs": 333420
+            },
+            {
+              "text": "στη",
+              "startMs": 333480,
+              "endMs": 333641
+            },
+            {
+              "text": "βόλτα;",
+              "startMs": 333701,
+              "endMs": 334163
+            },
+            {
+              "text": "Πώς",
+              "startMs": 334766,
+              "endMs": 334967
+            },
+            {
+              "text": "αλλάζουμε",
+              "startMs": 335048,
+              "endMs": 335510
+            },
+            {
+              "text": "συνήθειες",
+              "startMs": 335570,
+              "endMs": 336052
+            },
+            {
+              "text": "στο",
+              "startMs": 336073,
+              "endMs": 336153
+            },
+            {
+              "text": "πεζοδρόμιο;",
+              "startMs": 336193,
+              "endMs": 336836
+            }
+          ]
+        },
+        {
+          "speakerId": "s3",
+          "speakerLabel": "Σερίφης",
+          "text": "Στη βόλτα, σταμάτα να τραβάς το λουρί κάθε φορά που χώνει τη μύτη της στο έδαφος.",
+          "startMs": 337518.0416666666,
+          "endMs": 345438.0416666666,
+          "mood": "neutral",
+          "words": [
+            {
+              "text": "Στη",
+              "startMs": 337859,
+              "endMs": 338039
+            },
+            {
+              "text": "βόλτα,",
+              "startMs": 338160,
+              "endMs": 338601
+            },
+            {
+              "text": "σταμάτα",
+              "startMs": 339343,
+              "endMs": 340084
+            },
+            {
+              "text": "να",
+              "startMs": 340165,
+              "endMs": 340245
+            },
+            {
+              "text": "τραβάς",
+              "startMs": 340345,
+              "endMs": 340866
+            },
+            {
+              "text": "το",
+              "startMs": 340947,
+              "endMs": 341027
+            },
+            {
+              "text": "λουρί",
+              "startMs": 341107,
+              "endMs": 341408
+            },
+            {
+              "text": "κάθε",
+              "startMs": 341929,
+              "endMs": 342310
+            },
+            {
+              "text": "φορά",
+              "startMs": 342410,
+              "endMs": 342671
+            },
+            {
+              "text": "που",
+              "startMs": 342771,
+              "endMs": 342892
+            },
+            {
+              "text": "χώνει",
+              "startMs": 343012,
+              "endMs": 343333
+            },
+            {
+              "text": "τη",
+              "startMs": 343433,
+              "endMs": 343513
+            },
+            {
+              "text": "μύτη",
+              "startMs": 343674,
+              "endMs": 343954
+            },
+            {
+              "text": "της",
+              "startMs": 344034,
+              "endMs": 344155
+            },
+            {
+              "text": "στο",
+              "startMs": 344175,
+              "endMs": 344355
+            },
+            {
+              "text": "έδαφος.",
+              "startMs": 344456,
+              "endMs": 344977
+            }
+          ]
+        },
+        {
+          "speakerId": "s3",
+          "speakerLabel": "Σερίφης",
+          "text": "Για τον άνθρωπο η βόλτα είναι γυμναστική και προορισμός. Για τη σκυλίτσα είναι πνευματική ανάγνωση του περιβάλλοντος.",
+          "startMs": 345758.0416666666,
+          "endMs": 355398.0416666666,
+          "mood": "serious",
+          "words": [
+            {
+              "text": "Για",
+              "startMs": 346079,
+              "endMs": 346199
+            },
+            {
+              "text": "τον",
+              "startMs": 346279,
+              "endMs": 346439
+            },
+            {
+              "text": "άνθρωπο",
+              "startMs": 346540,
+              "endMs": 346981
+            },
+            {
+              "text": "η",
+              "startMs": 347421,
+              "endMs": 347441
+            },
+            {
+              "text": "βόλτα",
+              "startMs": 347522,
+              "endMs": 347842
+            },
+            {
+              "text": "είναι",
+              "startMs": 347902,
+              "endMs": 348063
+            },
+            {
+              "text": "γυμναστική",
+              "startMs": 348103,
+              "endMs": 348784
+            },
+            {
+              "text": "και",
+              "startMs": 348905,
+              "endMs": 349025
+            },
+            {
+              "text": "προορισμός.",
+              "startMs": 349065,
+              "endMs": 349806
+            },
+            {
+              "text": "Για",
+              "startMs": 350788,
+              "endMs": 350889
+            },
+            {
+              "text": "τη",
+              "startMs": 350969,
+              "endMs": 351029
+            },
+            {
+              "text": "σκυλίτσα",
+              "startMs": 351089,
+              "endMs": 351670
+            },
+            {
+              "text": "είναι",
+              "startMs": 352272,
+              "endMs": 352452
+            },
+            {
+              "text": "πνευματική",
+              "startMs": 352492,
+              "endMs": 353334
+            },
+            {
+              "text": "ανάγνωση",
+              "startMs": 353454,
+              "endMs": 354055
+            },
+            {
+              "text": "του",
+              "startMs": 354115,
+              "endMs": 354196
+            },
+            {
+              "text": "περιβάλλοντος.",
+              "startMs": 354236,
+              "endMs": 355037
+            }
+          ]
+        },
+        {
+          "speakerId": "s1",
+          "speakerLabel": "Τσίκα",
+          "text": "Ακριβώς! Κάθε γωνιά, κάθε κολόνα είναι σαν να μπαίνω στα μέσα κοινωνικής δικτύωσης!",
+          "startMs": 355718.0416666666,
+          "endMs": 362278.0416666666,
+          "mood": "enthusiasm",
+          "words": [
+            {
+              "text": "Ακριβώς!",
+              "startMs": 355999,
+              "endMs": 356982
+            },
+            {
+              "text": "Κάθε",
+              "startMs": 357283,
+              "endMs": 357564
+            },
+            {
+              "text": "γωνιά,",
+              "startMs": 357624,
+              "endMs": 357965
+            },
+            {
+              "text": "κάθε",
+              "startMs": 358165,
+              "endMs": 358426
+            },
+            {
+              "text": "κολόνα",
+              "startMs": 358507,
+              "endMs": 359048
+            },
+            {
+              "text": "είναι",
+              "startMs": 359329,
+              "endMs": 359489
+            },
+            {
+              "text": "σαν",
+              "startMs": 359510,
+              "endMs": 359610
+            },
+            {
+              "text": "να",
+              "startMs": 359630,
+              "endMs": 359710
+            },
+            {
+              "text": "μπαίνω",
+              "startMs": 359770,
+              "endMs": 359971
+            },
+            {
+              "text": "στα",
+              "startMs": 360011,
+              "endMs": 360131
+            },
+            {
+              "text": "μέσα",
+              "startMs": 360272,
+              "endMs": 360513
+            },
+            {
+              "text": "κοινωνικής",
+              "startMs": 360573,
+              "endMs": 361094
+            },
+            {
+              "text": "δικτύωσης!",
+              "startMs": 361135,
+              "endMs": 361817
+            }
+          ]
+        },
+        {
+          "speakerId": "s1",
+          "speakerLabel": "Τσίκα",
+          "text": "Βλέπω ποιος πέρασε, τι ώρα πέρασε, αν ήταν χαρούμενος και τι νόστιμο έφαγε για μεσημεριανό!",
+          "startMs": 362598.0416666666,
+          "endMs": 370638.0416666666,
+          "mood": "amusement",
+          "words": [
+            {
+              "text": "Βλέπω",
+              "startMs": 363099,
+              "endMs": 363400
+            },
+            {
+              "text": "ποιος",
+              "startMs": 363460,
+              "endMs": 363661
+            },
+            {
+              "text": "πέρασε,",
+              "startMs": 363801,
+              "endMs": 364342
+            },
+            {
+              "text": "τι",
+              "startMs": 364503,
+              "endMs": 364603
+            },
+            {
+              "text": "ώρα",
+              "startMs": 364763,
+              "endMs": 364964
+            },
+            {
+              "text": "πέρασε,",
+              "startMs": 365104,
+              "endMs": 365646
+            },
+            {
+              "text": "αν",
+              "startMs": 366628,
+              "endMs": 366748
+            },
+            {
+              "text": "ήταν",
+              "startMs": 366768,
+              "endMs": 366969
+            },
+            {
+              "text": "χαρούμενος",
+              "startMs": 366969,
+              "endMs": 367831
+            },
+            {
+              "text": "και",
+              "startMs": 368052,
+              "endMs": 368132
+            },
+            {
+              "text": "τι",
+              "startMs": 368232,
+              "endMs": 368312
+            },
+            {
+              "text": "νόστιμο",
+              "startMs": 368513,
+              "endMs": 368954
+            },
+            {
+              "text": "έφαγε",
+              "startMs": 369014,
+              "endMs": 369315
+            },
+            {
+              "text": "για",
+              "startMs": 369335,
+              "endMs": 369435
+            },
+            {
+              "text": "μεσημεριανό!",
+              "startMs": 369475,
+              "endMs": 370177
+            }
+          ]
+        },
+        {
+          "speakerId": "s2",
+          "speakerLabel": "Καίτη",
+          "text": "Έλα ρε Τσικάκι μου, δηλαδή διαβάζεις τα κουτσομπολιά της γειτονιάς σε κάθε δέντρο;",
+          "startMs": 370958.0416666666,
+          "endMs": 378358.0416666666,
+          "mood": "adoration",
+          "words": [
+            {
+              "text": "Έλα",
+              "startMs": 371660,
+              "endMs": 372041
+            },
+            {
+              "text": "ρε",
+              "startMs": 372121,
+              "endMs": 372201
+            },
+            {
+              "text": "Τσικάκι",
+              "startMs": 372282,
+              "endMs": 372983
+            },
+            {
+              "text": "μου,",
+              "startMs": 373104,
+              "endMs": 373324
+            },
+            {
+              "text": "δηλαδή",
+              "startMs": 374548,
+              "endMs": 374869
+            },
+            {
+              "text": "διαβάζεις",
+              "startMs": 375089,
+              "endMs": 375631
+            },
+            {
+              "text": "τα",
+              "startMs": 375631,
+              "endMs": 375691
+            },
+            {
+              "text": "κουτσομπολιά",
+              "startMs": 375751,
+              "endMs": 376272
+            },
+            {
+              "text": "της",
+              "startMs": 376312,
+              "endMs": 376433
+            },
+            {
+              "text": "γειτονιάς",
+              "startMs": 376453,
+              "endMs": 376934
+            },
+            {
+              "text": "σε",
+              "startMs": 377075,
+              "endMs": 377155
+            },
+            {
+              "text": "κάθε",
+              "startMs": 377235,
+              "endMs": 377496
+            },
+            {
+              "text": "δέντρο;",
+              "startMs": 377576,
+              "endMs": 377937
+            }
+          ]
+        },
+        {
+          "speakerId": "s1",
+          "speakerLabel": "Τσίκα",
+          "text": "Εννοείται! Και όταν με τραβάτε μακριά, είναι σαν να μου κλείνετε την οθόνη την ώρα που διαβάζω την καλύτερη είδηση!",
+          "startMs": 378678.0416666666,
+          "endMs": 385718.0416666666,
+          "mood": "positive",
+          "words": [
+            {
+              "text": "Εννοείται!",
+              "startMs": 378999,
+              "endMs": 379821
+            },
+            {
+              "text": "Και",
+              "startMs": 380122,
+              "endMs": 380222
+            },
+            {
+              "text": "όταν",
+              "startMs": 380283,
+              "endMs": 380463
+            },
+            {
+              "text": "με",
+              "startMs": 380483,
+              "endMs": 380523
+            },
+            {
+              "text": "τραβάτε",
+              "startMs": 380583,
+              "endMs": 380944
+            },
+            {
+              "text": "μακριά,",
+              "startMs": 380985,
+              "endMs": 381366
+            },
+            {
+              "text": "είναι",
+              "startMs": 381687,
+              "endMs": 381847
+            },
+            {
+              "text": "σαν",
+              "startMs": 381887,
+              "endMs": 382007
+            },
+            {
+              "text": "να",
+              "startMs": 382028,
+              "endMs": 382088
+            },
+            {
+              "text": "μου",
+              "startMs": 382108,
+              "endMs": 382208
+            },
+            {
+              "text": "κλείνετε",
+              "startMs": 382228,
+              "endMs": 382589
+            },
+            {
+              "text": "την",
+              "startMs": 382629,
+              "endMs": 382770
+            },
+            {
+              "text": "οθόνη",
+              "startMs": 382810,
+              "endMs": 383111
+            },
+            {
+              "text": "την",
+              "startMs": 383171,
+              "endMs": 383291
+            },
+            {
+              "text": "ώρα",
+              "startMs": 383331,
+              "endMs": 383452
+            },
+            {
+              "text": "που",
+              "startMs": 383492,
+              "endMs": 383592
+            },
+            {
+              "text": "διαβάζω",
+              "startMs": 383592,
+              "endMs": 383953
+            },
+            {
+              "text": "την",
+              "startMs": 383993,
+              "endMs": 384093
+            },
+            {
+              "text": "καλύτερη",
+              "startMs": 384133,
+              "endMs": 384715
+            },
+            {
+              "text": "είδηση!",
+              "startMs": 384835,
+              "endMs": 385297
+            }
+          ]
+        },
+        {
+          "speakerId": "s3",
+          "speakerLabel": "Σερίφης",
+          "text": "Η στέρηση της όσφρησης οδηγεί σε συσσωρευμένο στρες και νευρικότητα. Δέκα λεπτά ελεύθερης όσφρησης κουράζουν το μυαλό της περισσότερο από μισή ώρα έντονου τρεξίματος.",
+          "startMs": 386938.0416666666,
+          "endMs": 401018.0416666666,
+          "mood": "serious",
+          "words": [
+            {
+              "text": "Η",
+              "startMs": 387278,
+              "endMs": 387299
+            },
+            {
+              "text": "στέρηση",
+              "startMs": 387419,
+              "endMs": 388000
+            },
+            {
+              "text": "της",
+              "startMs": 388060,
+              "endMs": 388300
+            },
+            {
+              "text": "όσφρησης",
+              "startMs": 388380,
+              "endMs": 389101
+            },
+            {
+              "text": "οδηγεί",
+              "startMs": 389462,
+              "endMs": 389862
+            },
+            {
+              "text": "σε",
+              "startMs": 389922,
+              "endMs": 390002
+            },
+            {
+              "text": "συσσωρευμένο",
+              "startMs": 390102,
+              "endMs": 390964
+            },
+            {
+              "text": "στρες",
+              "startMs": 391044,
+              "endMs": 391464
+            },
+            {
+              "text": "και",
+              "startMs": 391585,
+              "endMs": 391705
+            },
+            {
+              "text": "νευρικότητα.",
+              "startMs": 391785,
+              "endMs": 392706
+            },
+            {
+              "text": "Δέκα",
+              "startMs": 393527,
+              "endMs": 393808
+            },
+            {
+              "text": "λεπτά",
+              "startMs": 393868,
+              "endMs": 394188
+            },
+            {
+              "text": "ελεύθερης",
+              "startMs": 394268,
+              "endMs": 394909
+            },
+            {
+              "text": "όσφρησης",
+              "startMs": 394989,
+              "endMs": 395570
+            },
+            {
+              "text": "κουράζουν",
+              "startMs": 395831,
+              "endMs": 396391
+            },
+            {
+              "text": "το",
+              "startMs": 396452,
+              "endMs": 396532
+            },
+            {
+              "text": "μυαλό",
+              "startMs": 396592,
+              "endMs": 396912
+            },
+            {
+              "text": "της",
+              "startMs": 396972,
+              "endMs": 397112
+            },
+            {
+              "text": "περισσότερο",
+              "startMs": 397173,
+              "endMs": 397954
+            },
+            {
+              "text": "από",
+              "startMs": 398234,
+              "endMs": 398414
+            },
+            {
+              "text": "μισή",
+              "startMs": 398494,
+              "endMs": 398855
+            },
+            {
+              "text": "ώρα",
+              "startMs": 399015,
+              "endMs": 399195
+            },
+            {
+              "text": "έντονου",
+              "startMs": 399296,
+              "endMs": 399676
+            },
+            {
+              "text": "τρεξίματος.",
+              "startMs": 399716,
+              "endMs": 400617
+            }
+          ]
+        },
+        {
+          "speakerId": "s2",
+          "speakerLabel": "Καίτη",
+          "text": "Άρα λοιπόν, η βασική συμβουλή που παίρνουμε σήμερα για να ξεκινήσουμε σωστά τη σχέση μας ποια είναι;",
+          "startMs": 401338.0416666666,
+          "endMs": 408178.0416666666,
+          "mood": "curiosity",
+          "words": [
+            {
+              "text": "Άρα",
+              "startMs": 401839,
+              "endMs": 402040
+            },
+            {
+              "text": "λοιπόν,",
+              "startMs": 402120,
+              "endMs": 402562
+            },
+            {
+              "text": "η",
+              "startMs": 402943,
+              "endMs": 402963
+            },
+            {
+              "text": "βασική",
+              "startMs": 403063,
+              "endMs": 403524
+            },
+            {
+              "text": "συμβουλή",
+              "startMs": 403625,
+              "endMs": 404006
+            },
+            {
+              "text": "που",
+              "startMs": 404046,
+              "endMs": 404146
+            },
+            {
+              "text": "παίρνουμε",
+              "startMs": 404166,
+              "endMs": 404487
+            },
+            {
+              "text": "σήμερα",
+              "startMs": 404567,
+              "endMs": 404888
+            },
+            {
+              "text": "για",
+              "startMs": 404928,
+              "endMs": 405009
+            },
+            {
+              "text": "να",
+              "startMs": 405049,
+              "endMs": 405089
+            },
+            {
+              "text": "ξεκινήσουμε",
+              "startMs": 405129,
+              "endMs": 405671
+            },
+            {
+              "text": "σωστά",
+              "startMs": 405771,
+              "endMs": 406112
+            },
+            {
+              "text": "τη",
+              "startMs": 406212,
+              "endMs": 406272
+            },
+            {
+              "text": "σχέση",
+              "startMs": 406313,
+              "endMs": 406694
+            },
+            {
+              "text": "μας",
+              "startMs": 406734,
+              "endMs": 406914
+            },
+            {
+              "text": "ποια",
+              "startMs": 407175,
+              "endMs": 407376
+            },
+            {
+              "text": "είναι;",
+              "startMs": 407496,
+              "endMs": 407717
+            }
+          ]
+        },
+        {
+          "speakerId": "s3",
+          "speakerLabel": "Σερίφης",
+          "text": "Αποδέξου ότι έχεις στο σπίτι ένα διαφορετικό είδος με τις δικές του φυσιολογικές ανάγκες. Μάθε πρώτα να παρατηρείς το σώμα της πριν της ζητήσεις να καταλάβει τη φωνή σου.",
+          "startMs": 408498.0416666666,
+          "endMs": 420978.0416666666,
+          "mood": "serious",
+          "words": [
+            {
+              "text": "Αποδέξου",
+              "startMs": 408879,
+              "endMs": 409620
+            },
+            {
+              "text": "ότι",
+              "startMs": 409660,
+              "endMs": 409820
+            },
+            {
+              "text": "έχεις",
+              "startMs": 409900,
+              "endMs": 410121
+            },
+            {
+              "text": "στο",
+              "startMs": 410141,
+              "endMs": 410241
+            },
+            {
+              "text": "σπίτι",
+              "startMs": 410301,
+              "endMs": 410702
+            },
+            {
+              "text": "ένα",
+              "startMs": 410922,
+              "endMs": 411062
+            },
+            {
+              "text": "διαφορετικό",
+              "startMs": 411142,
+              "endMs": 411883
+            },
+            {
+              "text": "είδος",
+              "startMs": 412024,
+              "endMs": 412364
+            },
+            {
+              "text": "με",
+              "startMs": 412705,
+              "endMs": 412785
+            },
+            {
+              "text": "τις",
+              "startMs": 412845,
+              "endMs": 412985
+            },
+            {
+              "text": "δικές",
+              "startMs": 413045,
+              "endMs": 413386
+            },
+            {
+              "text": "του",
+              "startMs": 413446,
+              "endMs": 413546
+            },
+            {
+              "text": "φυσιολογικές",
+              "startMs": 413586,
+              "endMs": 414448
+            },
+            {
+              "text": "ανάγκες.",
+              "startMs": 414528,
+              "endMs": 415028
+            },
+            {
+              "text": "Μάθε",
+              "startMs": 415830,
+              "endMs": 416110
+            },
+            {
+              "text": "πρώτα",
+              "startMs": 416210,
+              "endMs": 416491
+            },
+            {
+              "text": "να",
+              "startMs": 416551,
+              "endMs": 416611
+            },
+            {
+              "text": "παρατηρείς",
+              "startMs": 416691,
+              "endMs": 417312
+            },
+            {
+              "text": "το",
+              "startMs": 417372,
+              "endMs": 417452
+            },
+            {
+              "text": "σώμα",
+              "startMs": 417573,
+              "endMs": 417813
+            },
+            {
+              "text": "της",
+              "startMs": 417893,
+              "endMs": 418073
+            },
+            {
+              "text": "πριν",
+              "startMs": 418354,
+              "endMs": 418534
+            },
+            {
+              "text": "της",
+              "startMs": 418574,
+              "endMs": 418694
+            },
+            {
+              "text": "ζητήσεις",
+              "startMs": 418734,
+              "endMs": 419235
+            },
+            {
+              "text": "να",
+              "startMs": 419295,
+              "endMs": 419355
+            },
+            {
+              "text": "καταλάβει",
+              "startMs": 419415,
+              "endMs": 419976
+            },
+            {
+              "text": "τη",
+              "startMs": 419996,
+              "endMs": 420057
+            },
+            {
+              "text": "φωνή",
+              "startMs": 420117,
+              "endMs": 420397
+            },
+            {
+              "text": "σου.",
+              "startMs": 420477,
+              "endMs": 420637
+            }
+          ]
+        },
+        {
+          "speakerId": "s2",
+          "speakerLabel": "Καίτη",
+          "text": "Υπέροχα! Από σήμερα κλείνουμε το στόμα, ανοίγουμε τα μάτια και αφήνουμε τη σκυλίτσα μας να μυρίσει τον κόσμο της με την ησυχία της!",
+          "startMs": 421298.0416666666,
+          "endMs": 430338.0416666666,
+          "mood": "enthusiasm",
+          "words": [
+            {
+              "text": "Υπέροχα!",
+              "startMs": 421619,
+              "endMs": 422521
+            },
+            {
+              "text": "Από",
+              "startMs": 423102,
+              "endMs": 423282
+            },
+            {
+              "text": "σήμερα",
+              "startMs": 423403,
+              "endMs": 423763
+            },
+            {
+              "text": "κλείνουμε",
+              "startMs": 424004,
+              "endMs": 424445
+            },
+            {
+              "text": "το",
+              "startMs": 424485,
+              "endMs": 424565
+            },
+            {
+              "text": "στόμα,",
+              "startMs": 424605,
+              "endMs": 424946
+            },
+            {
+              "text": "ανοίγουμε",
+              "startMs": 425247,
+              "endMs": 425768
+            },
+            {
+              "text": "τα",
+              "startMs": 425828,
+              "endMs": 425888
+            },
+            {
+              "text": "μάτια",
+              "startMs": 425968,
+              "endMs": 426289
+            },
+            {
+              "text": "και",
+              "startMs": 426630,
+              "endMs": 426750
+            },
+            {
+              "text": "αφήνουμε",
+              "startMs": 426790,
+              "endMs": 427231
+            },
+            {
+              "text": "τη",
+              "startMs": 427271,
+              "endMs": 427331
+            },
+            {
+              "text": "σκυλίτσα",
+              "startMs": 427351,
+              "endMs": 427772
+            },
+            {
+              "text": "μας",
+              "startMs": 427812,
+              "endMs": 427933
+            },
+            {
+              "text": "να",
+              "startMs": 427973,
+              "endMs": 428033
+            },
+            {
+              "text": "μυρίσει",
+              "startMs": 428093,
+              "endMs": 428554
+            },
+            {
+              "text": "τον",
+              "startMs": 428574,
+              "endMs": 428674
+            },
+            {
+              "text": "κόσμο",
+              "startMs": 428714,
+              "endMs": 428955
+            },
+            {
+              "text": "της",
+              "startMs": 429015,
+              "endMs": 429135
+            },
+            {
+              "text": "με",
+              "startMs": 429175,
+              "endMs": 429236
+            },
+            {
+              "text": "την",
+              "startMs": 429276,
+              "endMs": 429396
+            },
+            {
+              "text": "ησυχία",
+              "startMs": 429416,
+              "endMs": 429797
+            },
+            {
+              "text": "της!",
+              "startMs": 429857,
+              "endMs": 430037
+            }
+          ]
+        },
+        {
+          "speakerId": "s1",
+          "speakerLabel": "Τσίκα",
+          "text": "Και μην ξεχνάτε, είμαστε οι καλύτεροι σύντροφοι του κόσμου, αρκεί να μας καταλαβαίνετε!",
+          "startMs": 430658.0416666666,
+          "endMs": 436098.0416666666,
+          "mood": "enthusiasm",
+          "words": [
+            {
+              "text": "Και",
+              "startMs": 431039,
+              "endMs": 431160
+            },
+            {
+              "text": "μην",
+              "startMs": 431220,
+              "endMs": 431341
+            },
+            {
+              "text": "ξεχνάτε,",
+              "startMs": 431361,
+              "endMs": 432003
+            },
+            {
+              "text": "είμαστε",
+              "startMs": 432364,
+              "endMs": 432645
+            },
+            {
+              "text": "οι",
+              "startMs": 432685,
+              "endMs": 432726
+            },
+            {
+              "text": "καλύτεροι",
+              "startMs": 432746,
+              "endMs": 433207
+            },
+            {
+              "text": "σύντροφοι",
+              "startMs": 433248,
+              "endMs": 433649
+            },
+            {
+              "text": "του",
+              "startMs": 433669,
+              "endMs": 433769
+            },
+            {
+              "text": "κόσμου,",
+              "startMs": 433810,
+              "endMs": 434191
+            },
+            {
+              "text": "αρκεί",
+              "startMs": 434432,
+              "endMs": 434693
+            },
+            {
+              "text": "να",
+              "startMs": 434733,
+              "endMs": 434793
+            },
+            {
+              "text": "μας",
+              "startMs": 434833,
+              "endMs": 434954
+            },
+            {
+              "text": "καταλαβαίνετε!",
+              "startMs": 434994,
+              "endMs": 435777
+            }
+          ]
+        }
+      ],
+      "analysis": null
+    }
+  }
+}

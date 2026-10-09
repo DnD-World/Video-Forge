@@ -8,6 +8,14 @@ export const VISEME = {
 
 export type VisemeId = typeof VISEME[keyof typeof VISEME];
 
+/** The closed smile: a RESTING mouth, not a sound.
+ *
+ *  Outside 0-8 on purpose. No letter can produce it, so nothing that turns
+ *  text into visemes can ever ask for it by accident; the performance code
+ *  swaps it in for NEUTRAL between words on a happy line. A puppet without the
+ *  drawing simply falls back to its neutral mouth. */
+export const SMILE_VISEME = 9;
+
 // Order matters: check multi-char digraphs BEFORE single chars.
 const DIGRAPHS: [RegExp, VisemeId][] = [
   [/^ου/i, VISEME.OO],

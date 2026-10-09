@@ -41,6 +41,12 @@ export interface MediaHit {
    *  later is not. */
   author: string;
   pageUrl: string;
+  /** What the library says is IN the clip, lower case — Pixabay's tags, or the
+   *  words of a Pexels page address ("a-dog-eating-from-a-bowl"). Lets the
+   *  picker check for a dog instead of trusting that a search for one found
+   *  one: the first vertical render of 101.1 opened on 25 seconds of a mug and
+   *  a hand, returned for a query that asked for a dog. */
+  tags: string;
 }
 
 export interface MediaSearchResult {
@@ -69,12 +75,22 @@ function pickPixabayFile(videos: Record<string, PixabayFile>) {
   return under[0] ?? videos.medium ?? videos.small ?? videos.tiny;
 }
 
-async function searchPixabay(query: string, perPage: number): Promise<MediaHit[]> {
+async function searchPixabay(
+  query: string,
+  perPage: number,
+  orientation?: "portrait" | "landscape"
+): Promise<MediaHit[]> {
   const key = await keyStore.getKey("pixabay");
   if (!key) throw new Error("no key");
+  // Pixabay's own words are "vertical" and "horizontal". This app said for a
+  // month that its VIDEO API had no orientation filter; it does, same as its
+  // image API — Ak found the vertical search on the site, 16 Sep 2026.
+  const pixabayOrientation =
+    orientation === "portrait" ? "vertical" : orientation === "landscape" ? "horizontal" : null;
   const url =
     `https://pixabay.com/api/videos/?key=${encodeURIComponent(key)}` +
-    `&q=${encodeURIComponent(query)}&per_page=${perPage}&safesearch=true`;
+    `&q=${encodeURIComponent(query)}&per_page=${perPage}&safesearch=true` +
+    (pixabayOrientation ? `&orientation=${pixabayOrientation}` : "");
   const res = await request(url);
   if (res.status !== 200) throw new Error(`HTTP ${res.status}`);
   const data = JSON.parse(res.body) as {
@@ -84,6 +100,7 @@ async function searchPixabay(query: string, perPage: number): Promise<MediaHit[]
       pageURL: string;
       user: string;
       picture_id?: string;
+      tags?: string;
       videos: Record<string, PixabayFile>;
     }[];
   };
@@ -109,16 +126,22 @@ async function searchPixabay(query: string, perPage: number): Promise<MediaHit[]
       durationSec: h.duration,
       author: h.user,
       pageUrl: h.pageURL,
+      tags: (h.tags ?? "").toLowerCase(),
     }];
   });
 }
 
-async function searchPexels(query: string, perPage: number): Promise<MediaHit[]> {
+async function searchPexels(
+  query: string,
+  perPage: number,
+  orientation?: "portrait" | "landscape"
+): Promise<MediaHit[]> {
   const key = await keyStore.getKey("pexels");
   if (!key) throw new Error("no key");
   const url =
     `https://api.pexels.com/videos/search?query=${encodeURIComponent(query)}` +
-    `&per_page=${perPage}`;
+    `&per_page=${perPage}` +
+    (orientation ? `&orientation=${orientation}` : "");
   const res = await request(url, { headers: { Authorization: key } });
   if (res.status !== 200) throw new Error(`HTTP ${res.status}`);
   const data = JSON.parse(res.body) as {
@@ -148,11 +171,19 @@ async function searchPexels(query: string, perPage: number): Promise<MediaHit[]>
       durationSec: v.duration,
       author: v.user?.name ?? "Unknown",
       pageUrl: v.url,
+      // Pexels has no tags field; its page address is the clip's own title.
+      tags: (v.url.split("/video/")[1] ?? "").replace(/[-_/0-9]+/g, " ").trim().toLowerCase(),
     }];
   });
 }
 
-const PROVIDERS: Record<MediaProvider, (q: string, n: number) => Promise<MediaHit[]>> = {
+// Both providers filter by orientation at the source. The picker still checks
+// each clip's real width and height afterwards, because "vertical" in a
+// library's index and taller-than-wide in the file are not always the same.
+const PROVIDERS: Record<
+  MediaProvider,
+  (q: string, n: number, orientation?: "portrait" | "landscape") => Promise<MediaHit[]>
+> = {
   pixabay: searchPixabay,
   pexels: searchPexels,
 };
@@ -167,7 +198,16 @@ const PROVIDERS: Record<MediaProvider, (q: string, n: number) => Promise<MediaHi
  */
 export async function searchVideos(
   query: string,
-  opts: { perProvider?: number; providers?: MediaProvider[] } = {}
+  opts: {
+    perProvider?: number;
+    providers?: MediaProvider[];
+    /** Ask the library itself for this shape. Scoring the results afterwards
+     *  was not enough: a 9:16 lesson kept filling with landscape clips because
+     *  that is most of what comes back. Pexels can filter at the source;
+     *  Pixabay's video API has no such parameter, so its hits are still only
+     *  scored. */
+    orientation?: "portrait" | "landscape";
+  } = {}
 ): Promise<MediaSearchResult> {
   const wanted = opts.providers ?? (Object.keys(PROVIDERS) as MediaProvider[]);
   const perPage = opts.perProvider ?? 20;
@@ -176,7 +216,7 @@ export async function searchVideos(
   const settled = await Promise.all(
     wanted.map(async (p) => {
       try {
-        return { p, hits: await PROVIDERS[p](query, perPage) };
+        return { p, hits: await PROVIDERS[p](query, perPage, opts.orientation) };
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
         notes.push(

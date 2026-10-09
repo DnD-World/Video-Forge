@@ -3,8 +3,10 @@ import path from "node:path";
 import fsp from "node:fs/promises";
 import * as keyStore from "./keyStore";
 import { listPiperVoices, synthesizeWithPiper, shutdownAllPiperServers } from "./tts/piperEngine";
-import * as chatterbox from "./tts/chatterboxEngine";
 import { analyzeNarration } from "./audio/analyzeNarration";
+import { listMusic } from "./audio/musicLibrary";
+import * as elevenlabs from "./tts/elevenlabsEngine";
+import { listMedia } from "./net/mediaLibrary";
 import { draftScript } from "./llm/glmScenePlanner";
 import { testProvider } from "./net/testProvider";
 import { searchVideos, downloadTo, type MediaProvider } from "./net/mediaSearch";
@@ -15,6 +17,14 @@ import { renderVideo, type RenderJob } from "./render/renderVideo";
 import { installExitHandlers, reapOrphansFromLastSession } from "./process/childTree";
 import { buildNarration, type NarrationInput } from "./tts/buildNarration";
 import { runBatchJob, type BatchJob } from "./batch/runJob";
+import { makeSfxEleven } from "./audio/makeSfxEleven";
+import { getSfxFreesound } from "./audio/getSfxFreesound";
+import { addOutros } from "./render/addOutros";
+import {
+  buildBlocks,
+  describeBuild,
+  type BlockSpeaker,
+} from "../src/lib/narration/buildBlocks";
 
 // Pin the identity before anything asks where it lives.
 //
@@ -100,6 +110,22 @@ function createWindow() {
   });
 }
 
+// `--project <file>` opens the app on a saved project instead of the autosave —
+// so the look a batch job rendered with can be looked at in the app itself.
+// Pulled by the window once it has loaded, rather than pushed, so there is no
+// race between the message and the page being ready to hear it.
+ipcMain.handle("project:startup", async () => {
+  const i = process.argv.indexOf("--project");
+  const file = i === -1 ? null : process.argv[i + 1];
+  if (!file) return null;
+  try {
+    return JSON.parse(await fsp.readFile(file, "utf8"));
+  } catch {
+    return null;
+  }
+});
+
+
 // ---------------------------------------------------------------------------
 // Key vault IPC — all reads/writes go through electron/keyStore.ts, the
 // single source of truth for encrypted key storage. Nothing in the renderer
@@ -133,10 +159,18 @@ ipcMain.handle("keys:encryptionAvailable", async () => {
 // marked "unknown speaker" and only the loudness envelope is real. That's
 // enough to make the waveform react, which is what the user expects the moment
 // they attach a file.
-ipcMain.handle("audio:analyzeFile", async (_e, filePath: string) => {
-  const buf = await fsp.readFile(filePath);
-  return analyzeNarration(buf, [], []);
-});
+ipcMain.handle(
+  "audio:analyzeFile",
+  async (
+    _e,
+    filePath: string,
+    segments?: { speakerId: string; startMs: number; endMs: number }[],
+    speakerOrder?: string[]
+  ) => {
+    const buf = await fsp.readFile(filePath);
+    return analyzeNarration(buf, segments ?? [], speakerOrder ?? []);
+  }
+);
 
 // Runs in main rather than the renderer on purpose: the key never has to be
 // handed back across the bridge just to be tested.
@@ -261,6 +295,66 @@ ipcMain.handle("storage:writeFile", async (_e, filePath: string, data: ArrayBuff
 });
 
 // ---------------------------------------------------------------------------
+// DramaBox — the two files the GPU box reads.
+//
+// THIS IS THE STEP THAT WAS MISSING. Every voice knob in the Cast panel was
+// saved onto the speaker and then read by nothing, because the only thing that
+// built blocks.json was a command-line script reading a job file. The settings
+// existed in the app and could not leave it.
+//
+// The work itself is in src/lib/narration/buildBlocks.ts, shared with that
+// script, so the button and the command line cannot produce different files.
+// ---------------------------------------------------------------------------
+
+// The local media library: clips and sounds already on this machine. Both
+// folders, because downloads land under userData and the sound effects that
+// ship with the app live in the repo.
+ipcMain.handle("media:library", async () => {
+  return listMedia([
+    path.join(app.getPath("userData"), "media"),
+    path.join(app.getAppPath(), "sfx", "library"),
+  ]);
+});
+
+// The voices on the ElevenLabs account, so the Cast panel can offer a list
+// rather than asking someone to go and find an id and paste it.
+ipcMain.handle("tts:listElevenVoices", async () => {
+  return elevenlabs.listVoices();
+});
+
+// The music library — the loops that ship with the app, in music/.
+ipcMain.handle("music:list", async () => {
+  return listMusic(path.join(app.getAppPath(), "music"));
+});
+
+ipcMain.handle(
+  "dramabox:writeBlocks",
+  async (_e, scriptText: string, speakers: BlockSpeaker[], outDir: string) => {
+    const result = buildBlocks(scriptText, speakers);
+    if (result.errors.length) {
+      return { ok: false as const, errors: result.errors, summary: [] as string[] };
+    }
+    await fsp.mkdir(outDir, { recursive: true });
+    await fsp.writeFile(
+      path.join(outDir, "blocks.json"),
+      JSON.stringify(result.blocks, null, 1),
+      "utf8"
+    );
+    await fsp.writeFile(
+      path.join(outDir, "align.json"),
+      JSON.stringify(result.align, null, 1),
+      "utf8"
+    );
+    return {
+      ok: true as const,
+      errors: [],
+      count: result.blocks.length,
+      summary: describeBuild(result),
+    };
+  }
+);
+
+// ---------------------------------------------------------------------------
 // Render — Remotion. Progress is pushed back to the renderer on the
 // "render:progress" channel rather than returned, since a render is long
 // running and the UI needs to move while it happens.
@@ -292,8 +386,8 @@ ipcMain.handle("render:start", async (_e, job: RenderJob) => {
 
 // ---------------------------------------------------------------------------
 // TTS — Piper. Persistent per-voice HTTP servers, spawned lazily and kept
-// warm. Matches the renderer-facing shape in preload.ts, so adding another
-// engine is additive rather than a rewrite (see Chatterbox below).
+// warm. The only engine that synthesises inside this app: DramaBox runs on a
+// rented GPU and Chatterbox was removed on 18 Aug 2026.
 // ---------------------------------------------------------------------------
 
 ipcMain.handle("tts:listPiperVoices", async (_e, voicesDir: string) => {
@@ -302,34 +396,6 @@ ipcMain.handle("tts:listPiperVoices", async (_e, voicesDir: string) => {
 
 ipcMain.handle("tts:synthesizePiper", async (_e, pythonPath: string, onnxPath: string, text: string) => {
   return synthesizeWithPiper(pythonPath, onnxPath, text);
-});
-
-// ---------------------------------------------------------------------------
-// TTS — Chatterbox Multilingual v3. Electron owns this server's lifecycle
-// (Ak's choice — auto-start rather than a standalone background app), so it
-// gets started on first use and shut down cleanly (releasing GPU memory) on
-// app quit, same pattern as Piper's cleanup below.
-// ---------------------------------------------------------------------------
-
-ipcMain.handle("tts:chatterboxEnsureRunning", async (_e, cfg: chatterbox.ChatterboxConfig) => {
-  await chatterbox.ensureServerRunning(cfg);
-  return true;
-});
-
-ipcMain.handle("tts:chatterboxIsRunning", async () => {
-  return chatterbox.isServerRunning();
-});
-
-ipcMain.handle("tts:chatterboxListPredefinedVoices", async () => {
-  return chatterbox.listPredefinedVoices();
-});
-
-ipcMain.handle("tts:chatterboxListReferenceAudio", async () => {
-  return chatterbox.listReferenceAudio();
-});
-
-ipcMain.handle("tts:chatterboxSynthesize", async (_e, opts: chatterbox.SynthesizeOptions) => {
-  return chatterbox.synthesize(opts);
 });
 
 // ---------------------------------------------------------------------------
@@ -370,9 +436,6 @@ ipcMain.handle(
 // spawned Python servers running — holding several GB of an 8 GB card, with no
 // window to explain themselves. installExitHandlers covers every exit path.
 installExitHandlers(async () => {
-  if (await chatterbox.isServerRunning()) {
-    await chatterbox.shutdownServer();
-  }
   shutdownAllPiperServers();
 });
 
@@ -393,6 +456,59 @@ app.whenReady().then(async () => {
   const jobArg = process.argv.indexOf("--job");
   if (jobArg !== -1 && process.argv[jobArg + 1]) {
     await runHeadless(process.argv[jobArg + 1]);
+    return;
+  }
+
+  // `--sfx <wanted.csv>` makes a course's sound effects before anything is
+  // rendered. Headless for the same reasons as --job: the key is in the vault.
+  // `--add-outros` repairs finished lessons that rendered without their outro.
+  if (process.argv.includes("--add-outros")) {
+    // indexOf returns -1 when --only is absent, and argv[-1 + 1] is argv[0],
+    // which is the path to electron itself. That matched no lesson, so every
+    // video was skipped in silence: "done 0, skipped 0" on a run meant to
+    // repair 68 files (20 Sep 2026).
+    const onlyAt = process.argv.indexOf("--only");
+    const only = onlyAt === -1 ? undefined : process.argv[onlyAt + 1];
+    try {
+      await addOutros({
+        videosDir: path.join(outputDir(), "lessons"),
+        lessonsSrc: "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out",
+        outrosDir: path.join(app.getAppPath(), "outros", "cut"),
+        apply: process.argv.includes("--apply"),
+        only: only && !only.startsWith("--") ? only : undefined,
+        fps: 24,
+      });
+      app.exit(0);
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : String(err));
+      app.exit(1);
+    }
+    return;
+  }
+
+  // `--sfx-free <wanted.csv>` gathers CC0 candidates from Freesound first —
+  // free, and a real recording of a clicker beats a generated one.
+  const freeArg = process.argv.indexOf("--sfx-free");
+  if (freeArg !== -1 && process.argv[freeArg + 1]) {
+    try {
+      await getSfxFreesound(process.argv.slice(freeArg + 1));
+      app.exit(0);
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : String(err));
+      app.exit(1);
+    }
+    return;
+  }
+
+  const sfxArg = process.argv.indexOf("--sfx");
+  if (sfxArg !== -1 && process.argv[sfxArg + 1]) {
+    try {
+      await makeSfxEleven(process.argv.slice(sfxArg + 1));
+      app.exit(0);
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : String(err));
+      app.exit(1);
+    }
     return;
   }
 
@@ -432,6 +548,17 @@ async function runHeadless(jobPath: string): Promise<void> {
         `\n${result.unmatchedLines.length} script line(s) matched no speaker and were skipped:`
       );
       for (const line of result.unmatchedLines.slice(0, 10)) console.warn(`  ${line}`);
+    }
+
+    // NAMED AFTER THE LESSON, in its own folder. A batch otherwise leaves a
+    // pile of render-<timestamp>.mp4 files with nothing to say which is 101.3.
+    if (job.outputName) {
+      const lessonsDir = path.join(outputDir(), "lessons");
+      await fsp.mkdir(lessonsDir, { recursive: true });
+      const named = path.join(lessonsDir, `${job.outputName}.mp4`);
+      await fsp.rm(named, { force: true });
+      await fsp.rename(result.outputPath, named);
+      result.outputPath = named;
     }
 
     console.log(`\nDone in ${((Date.now() - started) / 60000).toFixed(1)} minutes.`);
