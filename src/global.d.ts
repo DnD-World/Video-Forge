@@ -52,7 +52,11 @@ declare global {
         saveFile: (defaultName: string, filters?: unknown) => Promise<string | null>;
       };
       audio: {
-        analyzeFile: (filePath: string) => Promise<AudioAnalysis | null>;
+        analyzeFile: (
+          filePath: string,
+          segments?: { speakerId: string; startMs: number; endMs: number }[],
+          speakerOrder?: string[]
+        ) => Promise<AudioAnalysis | null>;
       };
       media: {
         searchVideos: (
@@ -206,6 +210,9 @@ declare global {
           segments: { speakerId: string; speakerLabel: string; text: string; startMs: number; endMs: number }[];
           analysis: AudioAnalysis | null;
         }>;
+      };
+      project: {
+        startup: () => Promise<unknown>;
       };
       llm: {
         draftScript: (opts: {

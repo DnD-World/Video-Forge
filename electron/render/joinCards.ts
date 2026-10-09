@@ -22,6 +22,7 @@
 import { spawn } from "node:child_process";
 import fsp from "node:fs/promises";
 import path from "node:path";
+import { ffmpegBin, ffprobeBin } from "../process/ffmpegPath";
 
 export interface JoinCardsOptions {
   /** The rendered lesson. Not modified — the joined file is written beside it. */
@@ -48,7 +49,7 @@ export interface JoinCardsResult {
 
 function run(args: string[]): Promise<{ code: number; err: string }> {
   return new Promise((resolve) => {
-    const p = spawn("ffmpeg", args, { windowsHide: true });
+    const p = spawn(ffmpegBin(), args, { windowsHide: true });
     let err = "";
     p.stderr.on("data", (d) => { err += String(d); });
     p.on("error", () => resolve({ code: -1, err: "ffmpeg not found on PATH" }));
@@ -59,7 +60,7 @@ function run(args: string[]): Promise<{ code: number; err: string }> {
 /** Does this file carry sound at all? */
 async function hasAudio(file: string): Promise<boolean> {
   return new Promise((resolve) => {
-    const p = spawn("ffprobe", [
+    const p = spawn(ffprobeBin(), [
       "-v", "error", "-select_streams", "a",
       "-show_entries", "stream=index", "-of", "csv=p=0", file,
     ], { windowsHide: true });
@@ -72,7 +73,7 @@ async function hasAudio(file: string): Promise<boolean> {
 
 async function durationOf(file: string): Promise<number> {
   return new Promise((resolve) => {
-    const p = spawn("ffprobe", [
+    const p = spawn(ffprobeBin(), [
       "-v", "error", "-show_entries", "format=duration",
       "-of", "default=nw=1:nk=1", file,
     ], { windowsHide: true });

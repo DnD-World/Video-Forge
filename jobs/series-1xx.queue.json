@@ -1,0 +1,72 @@
+[
+  {
+    "job": "jobs/lms-1xx-template.json",
+    "lessonDir": "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out/101.1",
+    "outputName": "101.1"
+  },
+  {
+    "job": "jobs/lms-1xx-template.json",
+    "lessonDir": "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out/101.2",
+    "outputName": "101.2"
+  },
+  {
+    "job": "jobs/lms-1xx-template.json",
+    "lessonDir": "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out/101.3",
+    "outputName": "101.3"
+  },
+  {
+    "job": "jobs/lms-1xx-template.json",
+    "lessonDir": "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out/101.4",
+    "outputName": "101.4"
+  },
+  {
+    "job": "jobs/lms-1xx-template.json",
+    "lessonDir": "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out/101.5",
+    "outputName": "101.5"
+  },
+  {
+    "job": "jobs/lms-1xx-template.json",
+    "lessonDir": "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out/102.1",
+    "outputName": "102.1"
+  },
+  {
+    "job": "jobs/lms-1xx-template.json",
+    "lessonDir": "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out/102.2",
+    "outputName": "102.2"
+  },
+  {
+    "job": "jobs/lms-1xx-template.json",
+    "lessonDir": "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out/102.3",
+    "outputName": "102.3"
+  },
+  {
+    "job": "jobs/lms-1xx-template.json",
+    "lessonDir": "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out/102.4",
+    "outputName": "102.4"
+  },
+  {
+    "job": "jobs/lms-1xx-template.json",
+    "lessonDir": "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out/103.1",
+    "outputName": "103.1"
+  },
+  {
+    "job": "jobs/lms-1xx-template.json",
+    "lessonDir": "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out/103.2",
+    "outputName": "103.2"
+  },
+  {
+    "job": "jobs/lms-1xx-template.json",
+    "lessonDir": "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out/103.2b",
+    "outputName": "103.2b"
+  },
+  {
+    "job": "jobs/lms-1xx-template.json",
+    "lessonDir": "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out/103.2c",
+    "outputName": "103.2c"
+  },
+  {
+    "job": "jobs/lms-1xx-template.json",
+    "lessonDir": "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out/103.3",
+    "outputName": "103.3"
+  }
+]

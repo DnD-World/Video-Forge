@@ -174,29 +174,7 @@ export function CastPanel() {
         </button>
       </div>
 
-      {/* The cast that ships with the app. These were drawn, rigged and
-          committed, but nothing offered them: "Add speaker" produced a blank,
-          and the library below only appears once you have saved someone into
-          it yourself — so the built-in characters were invisible unless you
-          knew to hunt down their JSON in a file dialog. */}
       <div className="mb-3">
-        <div className="label-etched mb-1.5">Characters</div>
-        <div className="flex flex-wrap gap-2">
-          {BUILTIN_CAST.map((c) => (
-            <HudButton
-              key={c.file}
-              onClick={() => addBuiltin(c)}
-              disabled={!puppetDir}
-              title={
-                puppetDir
-                  ? `${c.note} — adds ${c.label} with their puppet already assigned`
-                  : "Looking for the bundled characters…"
-              }
-            >
-              + {c.label}
-            </HudButton>
-          ))}
-        </div>
         {castError && <p className="text-sm text-red-400 mt-1.5">{castError}</p>}
       </div>
 

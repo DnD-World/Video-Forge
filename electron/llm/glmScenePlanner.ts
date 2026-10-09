@@ -1,5 +1,6 @@
 import { request } from "../net/http";
 import * as keyStore from "../keyStore";
+import { nvidiaChatModels } from "./nvidiaModel";
 
 // ---------------------------------------------------------------------------
 // GLM-5.2 via NVIDIA NIM — script draft assistant. Rather than inventing a
@@ -10,7 +11,7 @@ import * as keyStore from "../keyStore";
 // stage. MIT-licensed model, OpenAI-compatible API.
 // ---------------------------------------------------------------------------
 
-const NVIDIA_MODEL = "z-ai/glm-5.2";
+// The model is looked up live — see nvidiaModel.ts for why it is not typed here.
 const NVIDIA_HOST = "integrate.api.nvidia.com";
 
 export interface DraftScriptOptions {
@@ -58,7 +59,7 @@ export async function draftScript(opts: DraftScriptOptions): Promise<string> {
   ].filter(Boolean).join("\n");
 
   const payload = JSON.stringify({
-    model: NVIDIA_MODEL,
+    model: (await nvidiaChatModels(apiKey))[0],
     messages: [
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt },

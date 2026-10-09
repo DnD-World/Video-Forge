@@ -36,9 +36,13 @@ const api = {
 
   audio: {
     analyzeFile: (
-      filePath: string
+      filePath: string,
+      /** Who speaks when, and the speakers in drawing order. Without these every
+       *  frame is "unknown speaker" and every waveform animates at once. */
+      segments?: { speakerId: string; startMs: number; endMs: number }[],
+      speakerOrder?: string[]
     ): Promise<{ hz: number; durationMs: number; amp: number[]; speaker: number[] } | null> =>
-      ipcRenderer.invoke("audio:analyzeFile", filePath),
+      ipcRenderer.invoke("audio:analyzeFile", filePath, segments, speakerOrder),
   },
 
   media: {
@@ -145,6 +149,11 @@ const api = {
       segments: { speakerId: string; speakerLabel: string; text: string; startMs: number; endMs: number }[];
       analysis: unknown;
     }> => ipcRenderer.invoke("tts:generateNarration", segments, speakerOrder, pauses),
+  },
+
+  project: {
+    /** The project named with --project on the command line, or null. */
+    startup: (): Promise<unknown> => ipcRenderer.invoke("project:startup"),
   },
 
   llm: {

@@ -262,14 +262,22 @@ export function WaveformScene({
 
         // Three sources, in order of how real they are: the spectrum, the bare
         // loudness envelope, and the placeholder animation.
+        // A SPEAKER WHO IS NOT TALKING DOES NOT MOVE. Every speaker's track
+        // reads the same narration signal, and `active` used to set only the
+        // opacity — so all three rings danced to one voice, the quiet two at
+        // half brightness. Ak saw it on the first lesson render (15 Sep 2026):
+        // "all 3 waveforms work at the same time". Silenced at the source here,
+        // so every style below — bars, mirror, boil, ribbon, wave, sparks —
+        // gets it without each one remembering to check.
+        const silent = !isMusic && !!moment && !active;
         const ampAt = (i: number, count: number, ring: boolean) =>
-          src?.bands
+          silent ? 0 : src?.bands
             ? bandAmplitude(src.bands, src.bandCount, i, count, ring)
             : src
               ? shapedAmplitude(ti, i, timeMs, src.level)
               : placeholderAmplitude(ti, i, timeMs);
         const peakAt = (i: number, count: number, ring: boolean) =>
-          src?.peaks ? bandAmplitude(src.peaks, src.bandCount, i, count, ring) : 0;
+          silent ? 0 : src?.peaks ? bandAmplitude(src.peaks, src.bandCount, i, count, ring) : 0;
 
         // BOILING. Bumps that swell where they start and subside there, while
         // others do the same elsewhere on their own schedule — not a spectrum

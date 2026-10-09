@@ -1,0 +1,92 @@
+[
+  {
+    "job": "jobs/lms-4xx-template.json",
+    "lessonDir": "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out/401.1",
+    "outputName": "401.1"
+  },
+  {
+    "job": "jobs/lms-4xx-template.json",
+    "lessonDir": "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out/401.2",
+    "outputName": "401.2"
+  },
+  {
+    "job": "jobs/lms-4xx-template.json",
+    "lessonDir": "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out/401.3",
+    "outputName": "401.3"
+  },
+  {
+    "job": "jobs/lms-4xx-template.json",
+    "lessonDir": "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out/401.4",
+    "outputName": "401.4"
+  },
+  {
+    "job": "jobs/lms-4xx-template.json",
+    "lessonDir": "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out/402.1",
+    "outputName": "402.1"
+  },
+  {
+    "job": "jobs/lms-4xx-template.json",
+    "lessonDir": "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out/402.2",
+    "outputName": "402.2"
+  },
+  {
+    "job": "jobs/lms-4xx-template.json",
+    "lessonDir": "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out/403.1",
+    "outputName": "403.1"
+  },
+  {
+    "job": "jobs/lms-4xx-template.json",
+    "lessonDir": "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out/403.2",
+    "outputName": "403.2"
+  },
+  {
+    "job": "jobs/lms-4xx-template.json",
+    "lessonDir": "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out/403.3",
+    "outputName": "403.3"
+  },
+  {
+    "job": "jobs/lms-4xx-template.json",
+    "lessonDir": "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out/404.1",
+    "outputName": "404.1"
+  },
+  {
+    "job": "jobs/lms-4xx-template.json",
+    "lessonDir": "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out/404.2",
+    "outputName": "404.2"
+  },
+  {
+    "job": "jobs/lms-4xx-template.json",
+    "lessonDir": "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out/404.3",
+    "outputName": "404.3"
+  },
+  {
+    "job": "jobs/lms-4xx-template.json",
+    "lessonDir": "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out/404.4",
+    "outputName": "404.4"
+  },
+  {
+    "job": "jobs/lms-4xx-template.json",
+    "lessonDir": "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out/405.1",
+    "outputName": "405.1"
+  },
+  {
+    "job": "jobs/lms-4xx-template.json",
+    "lessonDir": "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out/405.2",
+    "outputName": "405.2"
+  },
+  {
+    "job": "jobs/lms-4xx-template.json",
+    "lessonDir": "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out/405.3",
+    "outputName": "405.3"
+  },
+  {
+    "job": "jobs/lms-4xx-template.json",
+    "lessonDir": "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out/406.1",
+    "outputName": "406.1"
+  },
+  {
+    "job": "jobs/lms-4xx-template.json",
+    "lessonDir": "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out/406.2",
+    "outputName": "406.2"
+  }
+]

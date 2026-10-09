@@ -60,6 +60,16 @@ const REDIRECT = `http://localhost:${PORT}`;
 const SCOPE = [
   "https://www.googleapis.com/auth/youtube.upload",
   "https://www.googleapis.com/auth/youtube.readonly",
+  // EDITING WHAT IS ALREADY UP needs more than uploading. Changing a title,
+  // description, tags or privacy on an existing video is videos.update, which
+  // youtube.upload does not cover — it only lets you put NEW videos on the
+  // channel. Added 20 Sep 2026 so the 69 lessons uploaded by hand can have
+  // their titles and schedule fixed afterwards.
+  //
+  // An API KEY CANNOT DO THIS AT ALL. A key identifies the app, not the owner
+  // of the channel, and YouTube will not let an app change someone's video
+  // without that person signing in. Hence this flow, and hence re-running it.
+  "https://www.googleapis.com/auth/youtube.force-ssl",
 ].join(" ");
 /** Long enough to find the right Google account, read the consent screen, and
  *  make a cup of tea. Five minutes was not, and running out looks exactly like

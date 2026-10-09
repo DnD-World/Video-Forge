@@ -47,6 +47,7 @@ export function BackgroundLayer({
   dim,
   blur,
   width,
+  band,
 }: {
   backgrounds: RenderBackground[];
   fps: number;
@@ -58,6 +59,8 @@ export function BackgroundLayer({
    *  speaker size and subtitle size already follow. */
   blur: number;
   width: number;
+  /** Fractions of frame height; absent = the whole frame. */
+  band?: { top: number; bottom: number } | null;
 }) {
   const timing = useMemo(
     () => backgroundTiming(backgrounds, crossfadeMs, fps),
@@ -98,6 +101,26 @@ export function BackgroundLayer({
     // to cover the whole video, and dimming a stretch that has nothing behind it
     // would darken the plain frames for no reason.
     <Sequence from={first.startFrame} durationInFrames={span} name="Backgrounds">
+      {/* THE BAND. Clipped to a strip and feathered at both edges, so the
+          footage fades into the dark rather than ending on a hard line under
+          the subtitles and over the faces. The feather is 12% of the strip —
+          wide enough to read as a fade, narrow enough to keep most of it. */}
+      <AbsoluteFill
+        style={
+          band
+            ? {
+                top: `${band.top * 100}%`,
+                height: `${(band.bottom - band.top) * 100}%`,
+                bottom: "auto",
+                overflow: "hidden",
+                maskImage:
+                  "linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)",
+                WebkitMaskImage:
+                  "linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)",
+              }
+            : undefined
+        }
+      >
       <AbsoluteFill
         style={
           blur > 0
@@ -117,6 +140,7 @@ export function BackgroundLayer({
       {dim > 0 && (
         <AbsoluteFill style={{ backgroundColor: `rgba(0, 0, 0, ${Math.min(1, dim)})` }} />
       )}
+      </AbsoluteFill>
     </Sequence>
   );
 }

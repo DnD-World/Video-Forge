@@ -215,10 +215,22 @@ export default function App() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      // Opened with --project: that project replaces the autosave before
+      // anything below looks at the store.
+      const doc = (await window.byok.project.startup()) as
+        | { kind?: string; project?: Parameters<ReturnType<typeof useProjectStore.getState>["loadProject"]>[0] }
+        | null;
+      if (!cancelled && doc?.kind === "byok-project" && doc.project) {
+        useProjectStore.getState().loadProject(doc.project);
+      }
       const n = useProjectStore.getState().narration;
       if (n?.filePath && !n.analysis) {
         try {
-          const analysis = await window.byok.audio.analyzeFile(n.filePath);
+          const analysis = await window.byok.audio.analyzeFile(
+            n.filePath,
+            n.segments,
+            useProjectStore.getState().speakers.map((s) => s.id)
+          );
           if (!cancelled && analysis) setNarration({ ...n, analysis });
         } catch {
           // The file was moved or deleted. Keeping the segments is still worth

@@ -53,6 +53,10 @@ export interface ProjectPreset {
    *  script rather than to the look. */
   backgroundDim?: number;
   backgroundBlur?: number;
+  /** Where the footage sits, as fractions of frame height. See RenderProps. */
+  backgroundBand?: { top: number; bottom: number } | null;
+  /** Dark band at the top behind the subtitles. See RenderProps.topScrim. */
+  topScrim?: { height: number; opacity: number } | null;
   backgroundCrossfadeMs?: number;
   /** Layout and dress, one entry per speaker, applied by position.
    *

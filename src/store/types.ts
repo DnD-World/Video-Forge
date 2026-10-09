@@ -199,7 +199,7 @@ export interface Cards {
  *  the same size in a 1080p render. */
 export interface LogoConfig {
   filePath?: string | null;
-  position: "top-left" | "top-right" | "bottom-left" | "bottom-right" | "watermark";
+  position: "top-left" | "top-right" | "bottom-left" | "bottom-right" | "bottom-center" | "watermark";
   /** 0.02–0.5 of frame width. */
   size: number;
   opacity: number;
@@ -397,12 +397,25 @@ export interface NarrationSegment {
   endMs: number;
   /** When each word was ACTUALLY said, from forced alignment.
    *
-   *  Present only when the narration went through tools/dramabox-align.py.
+   *  Present only when the narration went through tools/timestamp-audio-for-puppets-and-subtitles.py.
    *  Everything that needs word timing — subtitles, the mouth, the highlight —
    *  estimates it from letter counts when this is absent, and an estimate
    *  drifts: by the end of a long line the subtitle runs a phrase ahead of the
    *  voice. This is the measurement that replaces the guess. */
   words?: { text: string; startMs: number; endMs: number }[];
+  /** What the line is FEELING, when the script said so — "curiosity",
+   *  "serious", "amazed".
+   *
+   *  The scripts carry one of these on almost every line, and until this field
+   *  existed the face could not see them: brows moved on punctuation alone, so
+   *  a hundred astonished lines and eight hundred fond ones were drawn exactly
+   *  the same. Kept as the script's own word rather than a code of ours, so a
+   *  new tag in a new lesson is a mapping to add and never a parse failure. */
+  mood?: string;
+  /** A sound the voice makes before the first word — a laugh, a sigh, a gasp.
+   *  The mouth has to move through it, and the words do not start until it is
+   *  over, which is why 13 lines came back "starting late" when timed. */
+  openingSound?: string;
 }
 
 /** The last successfully generated narration. Held in the project store

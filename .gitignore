@@ -46,3 +46,10 @@ voice-refs/work/
 # accident is one that has to be revoked in the Google console.
 client_secret*.json
 youtube-token.json
+
+# Model weights downloaded by tools (timestamping etc.) — kept in the project, not in the user profile.
+models/
+
+# Queue run state — machine-local progress, not source.
+jobs/.queue/
+jobs/*.queue.state.json

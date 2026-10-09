@@ -72,6 +72,7 @@ export interface RenderJob {
   }[];
   backgroundDim?: number;
   backgroundBlur?: number;
+  backgroundBand?: { top: number; bottom: number } | null;
   glass?: RenderProps["glass"];
   backgroundCrossfadeMs?: number;
   subtitles: RenderProps["subtitles"];
@@ -93,12 +94,26 @@ export interface RenderJob {
    *  frame and given a silent track if it has none. */
   introPath?: string | null;
   outroPath?: string | null;
+  /** Play the intro OVER the first N ms of the lesson instead of before it.
+   *
+   *  A course lesson opens with a couple of seconds of held silence carrying
+   *  the music's opening swell — room for exactly this. Welding the intro on
+   *  the front instead would put two seconds of intro in front of two seconds
+   *  of nothing, and the swell would play to an empty screen.
+   *
+   *  An overlay, never an insert: the lesson's own timeline does not move by a
+   *  frame, so lip-sync cannot drift — the whole reason cards are joined after
+   *  the render rather than placed inside it. */
+  introOverMs?: number;
+  topScrim?: RenderProps["topScrim"];
+  /** A looping banner clip for the bottom edge, copied into the public dir. */
+  bannerVideo?: { filePath: string; cropTop: number; cropBottom: number } | null;
   /** A logo over the video. The file is copied into the render's public dir
    *  like the faces and the audio, because the composition runs in a browser
    *  and cannot read the disk. */
   logo?: {
     filePath?: string | null;
-    position: "top-left" | "top-right" | "bottom-left" | "bottom-right" | "watermark";
+    position: "top-left" | "top-right" | "bottom-left" | "bottom-right" | "bottom-center" | "watermark";
     size: number;
     opacity: number;
     margin: number;
@@ -416,6 +431,32 @@ export async function renderVideo(
     // was written afterwards first time and the render died with "Error loading
     // image", which is at least loud; the same mistake with the spectrum failed
     // silently and cost a day.
+    // The intro is copied in beside the logo, and for the same reason: the
+    // bundler serves the public dir as it stood when it ran.
+    let introOverlay: RenderProps["introOverlay"] = null;
+    if (job.introOverMs && job.introPath) {
+      try {
+        const ext = path.extname(job.introPath) || ".mp4";
+        const fileName = `intro${ext}`;
+        await fsp.copyFile(job.introPath, path.join(publicDir, fileName));
+        introOverlay = { fileName, durationMs: job.introOverMs };
+      } catch {
+        warnings.push(`[byok] the intro could not be read and was left off: ${job.introPath}`);
+      }
+    }
+
+    let bannerProps: RenderProps["bannerVideo"] = null;
+    if (job.bannerVideo?.filePath) {
+      try {
+        const ext = path.extname(job.bannerVideo.filePath) || ".mp4";
+        const fileName = `banner${ext}`;
+        await fsp.copyFile(job.bannerVideo.filePath, path.join(publicDir, fileName));
+        bannerProps = { fileName, cropTop: job.bannerVideo.cropTop, cropBottom: job.bannerVideo.cropBottom };
+      } catch {
+        warnings.push(`[byok] the banner could not be read and was left off: ${job.bannerVideo.filePath}`);
+      }
+    }
+
     let logoProps: RenderProps["logo"] = null;
     if (job.logo?.filePath) {
       try {
@@ -467,7 +508,11 @@ export async function renderVideo(
       backgrounds,
       backgroundDim: job.backgroundDim ?? 0,
       backgroundBlur: job.backgroundBlur ?? 0,
+      backgroundBand: job.backgroundBand ?? null,
       logo: logoProps,
+      introOverlay,
+      bannerVideo: bannerProps,
+      topScrim: job.topScrim ?? null,
       glass: job.glass ?? null,
       backgroundCrossfadeMs: job.backgroundCrossfadeMs ?? 0,
       subtitles: job.subtitles,
@@ -503,7 +548,9 @@ export async function renderVideo(
       "backgrounds",        // clips copied in, rewritten to file names
       "subtitleFont",       // fetched and forwarded as files
       "crf",                // encoder setting, never reaches the composition
-      "introPath",          // joined on after the render, see joinCards.ts
+      "introPath",          // joined on after the render, or overlaid — see below
+      "introOverMs",        // forwarded as `introOverlay` in inputProps
+      "bannerVideo",        // copied in, forwarded as `bannerVideo`
       "outroPath",
       "logo",               // copied in and forwarded as `logo` in inputProps
       "projectRoot",
@@ -590,7 +637,9 @@ export async function renderVideo(
     // The cards go on last, once the lesson is finished and timed.
     const joined = await joinCards({
       mainPath: outputPath,
-      introPath: job.introPath,
+      // An overlaid intro is already in the picture; joining it again would
+      // show it twice.
+      introPath: job.introOverMs ? null : job.introPath,
       outroPath: job.outroPath,
       width: job.width,
       height: job.height,

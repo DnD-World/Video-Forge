@@ -163,7 +163,7 @@ for (const l of lessons) {
 await gcloud([
   "compute", "scp", `--zone=${ZONE}`,
   path.join(ROOT, "tools", "dramabox-render-blocks.py"),
-  path.join(ROOT, "tools", "dramabox-align.py"),
+  path.join(ROOT, "tools", "timestamp-audio-for-puppets-and-subtitles.py"),
   `${INSTANCE}:${REMOTE}/`,
 ], { quiet: true });
 
@@ -180,7 +180,7 @@ if (gen.code !== 0) {
 
 say("Measuring when every word was said");
 for (const l of lessons) {
-  await ssh(`cd ${REMOTE} && ${VENV} dramabox-align.py ${REMOTE}/lessons/${l.name}`);
+  await ssh(`cd ${REMOTE} && ${VENV} timestamp-audio-for-puppets-and-subtitles.py ${REMOTE}/lessons/${l.name}`);
 }
 
 // ---- 5. back ---------------------------------------------------------------

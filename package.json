@@ -11,13 +11,20 @@
     "build": "electron-vite build",
     "preview": "electron-vite preview",
     "start": "electron-vite preview",
-    "job": "electron . --job"
+    "job": "electron . --job",
+    "sfx": "electron . --sfx",
+    "sfx:free": "electron . --sfx-free",
+    "build-exe": "node scripts/build-exe.mjs",
+    "outros": "electron . --add-outros",
+    "ask-forge": "node tools/ask-forge.mjs",
+    "test:link": "node --test tools/lib/forgeLink.test.mjs"
   },
   "dependencies": {
     "@remotion/bundler": "^4.0.500",
     "@remotion/renderer": "^4.0.500",
     "@remotion/transitions": "^4.0.500",
     "framer-motion": "^11.3.0",
+    "google-auth-library": "^11.1.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "remotion": "^4.0.500",
@@ -30,11 +37,67 @@
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.19",
     "electron": "^31.2.0",
+    "electron-builder": "^26.15.3",
     "electron-vite": "^2.3.0",
     "pngjs": "^7.0.0",
     "postcss": "^8.4.39",
     "tailwindcss": "^3.4.6",
     "typescript": "^5.5.3",
     "vite": "^5.3.4"
+  },
+  "build": {
+    "appId": "com.stravelakis.byokvidcreator",
+    "productName": "BYOK-Vid-Creator",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "asar": false,
+    "files": [
+      "out/**",
+      "remotion/**",
+      "src/**",
+      "puppet/**",
+      "music/**",
+      "sfx/library/**",
+      "presets/**",
+      "tools/windows-ca-bundle.pem",
+      "tsconfig.json",
+      "package.json",
+      "!**/*.map",
+      "!release/**",
+      "!piper-venv/**",
+      "!stableaudio-venv/**",
+      "!models/**",
+      "!dramabox-audition/**",
+      "!viseme*/**",
+      "!voice-refs/**",
+      "!jobs/**",
+      "!docs/**",
+      "!inspiration looks/**",
+      "!Intros/**",
+      "!outros/**",
+      "!scripts/**"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "BYOK-Vid-Creator",
+      "deleteAppDataOnUninstall": false,
+      "include": "build/installer.nsh"
+    },
+    "portable": {
+      "artifactName": "byok-vid-creator-portable.exe"
+    }
   }
 }

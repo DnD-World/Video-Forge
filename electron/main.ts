@@ -17,6 +17,9 @@ import { renderVideo, type RenderJob } from "./render/renderVideo";
 import { installExitHandlers, reapOrphansFromLastSession } from "./process/childTree";
 import { buildNarration, type NarrationInput } from "./tts/buildNarration";
 import { runBatchJob, type BatchJob } from "./batch/runJob";
+import { makeSfxEleven } from "./audio/makeSfxEleven";
+import { getSfxFreesound } from "./audio/getSfxFreesound";
+import { addOutros } from "./render/addOutros";
 import {
   buildBlocks,
   describeBuild,
@@ -107,6 +110,22 @@ function createWindow() {
   });
 }
 
+// `--project <file>` opens the app on a saved project instead of the autosave —
+// so the look a batch job rendered with can be looked at in the app itself.
+// Pulled by the window once it has loaded, rather than pushed, so there is no
+// race between the message and the page being ready to hear it.
+ipcMain.handle("project:startup", async () => {
+  const i = process.argv.indexOf("--project");
+  const file = i === -1 ? null : process.argv[i + 1];
+  if (!file) return null;
+  try {
+    return JSON.parse(await fsp.readFile(file, "utf8"));
+  } catch {
+    return null;
+  }
+});
+
+
 // ---------------------------------------------------------------------------
 // Key vault IPC — all reads/writes go through electron/keyStore.ts, the
 // single source of truth for encrypted key storage. Nothing in the renderer
@@ -140,10 +159,18 @@ ipcMain.handle("keys:encryptionAvailable", async () => {
 // marked "unknown speaker" and only the loudness envelope is real. That's
 // enough to make the waveform react, which is what the user expects the moment
 // they attach a file.
-ipcMain.handle("audio:analyzeFile", async (_e, filePath: string) => {
-  const buf = await fsp.readFile(filePath);
-  return analyzeNarration(buf, [], []);
-});
+ipcMain.handle(
+  "audio:analyzeFile",
+  async (
+    _e,
+    filePath: string,
+    segments?: { speakerId: string; startMs: number; endMs: number }[],
+    speakerOrder?: string[]
+  ) => {
+    const buf = await fsp.readFile(filePath);
+    return analyzeNarration(buf, segments ?? [], speakerOrder ?? []);
+  }
+);
 
 // Runs in main rather than the renderer on purpose: the key never has to be
 // handed back across the bridge just to be tested.
@@ -432,6 +459,59 @@ app.whenReady().then(async () => {
     return;
   }
 
+  // `--sfx <wanted.csv>` makes a course's sound effects before anything is
+  // rendered. Headless for the same reasons as --job: the key is in the vault.
+  // `--add-outros` repairs finished lessons that rendered without their outro.
+  if (process.argv.includes("--add-outros")) {
+    // indexOf returns -1 when --only is absent, and argv[-1 + 1] is argv[0],
+    // which is the path to electron itself. That matched no lesson, so every
+    // video was skipped in silence: "done 0, skipped 0" on a run meant to
+    // repair 68 files (20 Sep 2026).
+    const onlyAt = process.argv.indexOf("--only");
+    const only = onlyAt === -1 ? undefined : process.argv[onlyAt + 1];
+    try {
+      await addOutros({
+        videosDir: path.join(outputDir(), "lessons"),
+        lessonsSrc: "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out",
+        outrosDir: path.join(app.getAppPath(), "outros", "cut"),
+        apply: process.argv.includes("--apply"),
+        only: only && !only.startsWith("--") ? only : undefined,
+        fps: 24,
+      });
+      app.exit(0);
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : String(err));
+      app.exit(1);
+    }
+    return;
+  }
+
+  // `--sfx-free <wanted.csv>` gathers CC0 candidates from Freesound first —
+  // free, and a real recording of a clicker beats a generated one.
+  const freeArg = process.argv.indexOf("--sfx-free");
+  if (freeArg !== -1 && process.argv[freeArg + 1]) {
+    try {
+      await getSfxFreesound(process.argv.slice(freeArg + 1));
+      app.exit(0);
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : String(err));
+      app.exit(1);
+    }
+    return;
+  }
+
+  const sfxArg = process.argv.indexOf("--sfx");
+  if (sfxArg !== -1 && process.argv[sfxArg + 1]) {
+    try {
+      await makeSfxEleven(process.argv.slice(sfxArg + 1));
+      app.exit(0);
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : String(err));
+      app.exit(1);
+    }
+    return;
+  }
+
   createWindow();
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -468,6 +548,17 @@ async function runHeadless(jobPath: string): Promise<void> {
         `\n${result.unmatchedLines.length} script line(s) matched no speaker and were skipped:`
       );
       for (const line of result.unmatchedLines.slice(0, 10)) console.warn(`  ${line}`);
+    }
+
+    // NAMED AFTER THE LESSON, in its own folder. A batch otherwise leaves a
+    // pile of render-<timestamp>.mp4 files with nothing to say which is 101.3.
+    if (job.outputName) {
+      const lessonsDir = path.join(outputDir(), "lessons");
+      await fsp.mkdir(lessonsDir, { recursive: true });
+      const named = path.join(lessonsDir, `${job.outputName}.mp4`);
+      await fsp.rm(named, { force: true });
+      await fsp.rename(result.outputPath, named);
+      result.outputPath = named;
     }
 
     console.log(`\nDone in ${((Date.now() - started) / 60000).toFixed(1)} minutes.`);

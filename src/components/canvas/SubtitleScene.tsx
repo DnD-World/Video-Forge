@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 // ---------------------------------------------------------------------------
 // Subtitles, as a PURE function of (cues, config, size, timeMs).
 //
@@ -206,7 +207,14 @@ function emphasisStyle(
         // Scaled about its own centre so the line does not reflow. inline-block
         // is required for a transform to apply to an inline element at all.
         display: "inline-block",
-        transform: "translateY(-0.06em) scale(1.14)",
+        // 1.14 was too much. A word grows about its own centre, so 14% on a
+        // 300px word pushes 21px past each end — wider than the space beside
+        // it, so the spoken word visibly touched the next one ("βρίσκειςτην",
+        // 16 Sep 2026). The space was never missing; it was covered.
+        transform: "translateY(-0.06em) scale(1.08)",
+        // And room kept for what is left of the growth, in the word's own box,
+        // so the layout accounts for it instead of the neighbours absorbing it.
+        marginInline: "0.18em",
         textShadow: `0 ${(strokePx * 0.45).toFixed(1)}px ${strokePx.toFixed(1)}px rgba(0,0,0,.9), 0 0 ${(glowPx * 0.8).toFixed(1)}px ${activeColor}`,
       };
     case "glow":
@@ -321,23 +329,33 @@ export function SubtitleScene({
       >
         {cue.words.map((w, i) => {
           const isActive = timeMs >= w.startMs && timeMs < w.endMs;
+          // WHAT GROWS AND WHAT DOES NOT. "lift" scales the spoken word, and a
+          // scaled inline-block swallows the space that follows it inside the
+          // same box — which ran the words together ("ΜαΣερίφημου", 15 Sep
+          // 2026). So the transform goes on an inner span holding only the
+          // word, and the space stays in the outer one, unscaled.
+          const { display, transform, marginInline, ...outer } = emphasisStyle(
+            config.activeEmphasis ?? "glow",
+            isActive,
+            activeColor,
+            config.color,
+            glowPx,
+            strokePx
+          );
+          const grow = { display, transform, marginInline };
           return (
+            <Fragment key={i}>
             <span
-              key={i}
               style={{
-                ...emphasisStyle(
-                  config.activeEmphasis ?? "glow",
-                  isActive,
-                  activeColor,
-                  config.color,
-                  glowPx,
-                  strokePx
-                ),
+                ...outer,
                 // A trailing space inside the span, rather than a gap between
-                // flex items, so the line wraps like ordinary text does.
+                // flex items, so the line wraps like ordinary text does — a
+                // whitespace-only node BETWEEN flex items is dropped, which is
+                // what made the words touch when the space was moved out.
                 whiteSpace: "pre-wrap",
               }}
             >
+              <span style={grow}>
               {(() => {
                 const swap = config.emoji ? emojiFor(w.text) : { text: w.text, isEmoji: false };
                 if (!swap.isEmoji) {
@@ -360,8 +378,10 @@ export function SubtitleScene({
                   </span>
                 );
               })()}
+              </span>
               {i < cue.words.length - 1 ? " " : ""}
             </span>
+            </Fragment>
           );
         })}
       </div>

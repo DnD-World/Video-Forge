@@ -36,7 +36,7 @@ export interface DramaboxBlock {
   segmentIndices: number[];
 }
 
-/** Word times from tools/dramabox-align.py, keyed by block id ("000"), in
+/** Word times from tools/timestamp-audio-for-puppets-and-subtitles.py, keyed by block id ("000"), in
  *  seconds from the start of that block's own WAV. */
 export type AlignedWords = Record<string, { w: string; start: number; end: number }[]>;
 

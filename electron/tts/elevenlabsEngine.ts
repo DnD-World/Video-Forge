@@ -85,7 +85,7 @@ function snapStability(v: number): number {
  *  Written by hand rather than pulled from a library because it is forty bytes
  *  of header and one more dependency is not worth it. Mono, 16-bit, little
  *  endian — what the API returns for pcm_*. */
-function wrapPcmAsWav(pcm: Buffer, sampleRate: number, channels = 1): Buffer {
+export function wrapPcmAsWav(pcm: Buffer, sampleRate: number, channels = 1): Buffer {
   const header = Buffer.alloc(44);
   const byteRate = sampleRate * channels * 2;
 

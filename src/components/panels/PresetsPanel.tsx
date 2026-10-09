@@ -178,7 +178,11 @@ export function PresetsPanel() {
       const n = useProjectStore.getState().narration;
       if (n?.filePath) {
         try {
-          const analysis = await window.byok.audio.analyzeFile(n.filePath);
+          const analysis = await window.byok.audio.analyzeFile(
+            n.filePath,
+            n.segments,
+            useProjectStore.getState().speakers.map((s) => s.id)
+          );
           if (analysis) setNarration({ ...n, analysis });
         } catch {
           setNote(`Loaded, but its narration file is missing — regenerate to get the waveform back.`);

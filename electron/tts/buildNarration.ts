@@ -73,6 +73,11 @@ export interface BuiltNarration {
     endMs: number;
     /** When each word was really said, when forced alignment has run. */
     words?: { text: string; startMs: number; endMs: number }[];
+    /** What the line feels, when the script said so, and any sound the voice
+     *  makes before the first word. Both carried through to the face — see
+     *  NarrationSegment in store/types.ts. */
+    mood?: string;
+    openingSound?: string;
   }[];
   analysis: ReturnType<typeof analyzeNarration>;
   /** Moments the voice measurably stopped. Empty for engines whose output is
