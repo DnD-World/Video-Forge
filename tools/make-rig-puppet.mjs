@@ -1,6 +1,11 @@
 // Turn the cut-layer artwork into a puppet this app can draw.
 //
-//   node tools/make-rig-puppet.mjs "../lms/visemes" tsika kaiti serifis
+//   node tools/make-rig-puppet.mjs "../lms/visemes" tsika kaiti serifis --out brands/skilitsa/puppet
+//   node tools/make-rig-puppet.mjs "my-art" robin --out puppet
+//
+// --out is the folder the puppet files land in. Leave it off and they go to
+// puppet/, the place for your own characters; a brand pack's characters live
+// in that pack's folder instead (see docs/PUPPET-MAKING.md).
 //
 // The art from lms/visemes is a base portrait plus layers anchored by absolute
 // x/y/w/h in `placement.json`. The app's puppets are anchored to a named head
@@ -29,10 +34,13 @@ import path from 'node:path';
 import { PNG } from 'pngjs';
 
 const SRC = process.argv[2] ?? '../lms/visemes';
-const CHARS = process.argv.slice(3).filter((a) => !a.startsWith('--'));
-if (!CHARS.length) { console.error('usage: make-rig-puppet.mjs <visemes dir> <char> [char…]'); process.exit(1); }
+const outAt = process.argv.indexOf('--out');
+const CHARS = process.argv
+  .slice(3)
+  .filter((a, i) => !a.startsWith('--') && !(outAt !== -1 && i + 3 === outAt + 1));
+if (!CHARS.length) { console.error('usage: make-rig-puppet.mjs <visemes dir> <char> [char…] [--wide] [--out DIR]'); process.exit(1); }
 
-const OUT_ROOT = 'puppet';
+const OUT_ROOT = outAt !== -1 && process.argv[outAt + 1] ? process.argv[outAt + 1] : 'puppet';
 // --wide makes a second, zoomed-out version beside the close one: as much of
 // the portrait as fits in the frame, so clothes show — Καίτη's shirt, Σερίφης'
 // uniform, Τσίκα's bow. Asked for the 2xx series (16 Sep 2026). Written to its

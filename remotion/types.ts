@@ -161,7 +161,7 @@ export type RenderProps = {
    *  readable over full-frame footage. `height` is a fraction of frame height;
    *  it fades to nothing at its lower edge. Null for none. */
   topScrim?: { height: number; opacity: number } | null;
-  /** A looping video banner along the bottom edge — the skilitsa.com strip.
+  /** A looping video banner along the bottom edge — a brand pack's web-address strip, say.
    *
    *  The source is a 16:9 clip with the brand in its middle half, so `cropTop`
    *  and `cropBottom` (fractions of the SOURCE height) cut the empty grey away

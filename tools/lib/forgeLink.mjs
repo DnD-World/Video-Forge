@@ -111,20 +111,9 @@ export function collectPictures(result, intoDir) {
 
 /* ---------------- what we ask for ---------------- */
 
-/** The cast, described so a picture model can draw them without references. */
-export const CHARACTERS = {
-  kaiti:
-    "Kaiti, a young woman in her early twenties with long auburn hair in a high side ponytail over her right shoulder, " +
-    "a patterned headband in pink, lilac and pale yellow, small dog-shaped earrings, wearing a colour-blocked jacket in " +
-    "teal, mustard yellow and dusty pink",
-  serifis:
-    "Serifis, a cartoon schnauzer dog police officer standing upright like a person, wiry grey and charcoal fur, big " +
-    "bushy schnauzer beard and eyebrows, floppy ears, navy blue police uniform with a peaked cap and a chest badge",
-  tsika:
-    "Tsika, a cartoon chihuahua dog standing upright like a person, small and cute, warm fawn fur, very large upright " +
-    "pointed ears, short little muzzle, wearing a pink dress with a bow",
-};
-
+/** The cast, described so a picture model can draw them without references.
+ *  These belong to a brand pack (`forgeCharacters` in its brand.json); the
+ *  caller passes them in. */
 export const MOODS = {
   neutral: "a calm neutral expression, eyebrows level and relaxed, eyes open normally",
   happy: "a happy expression, eyebrows raised and arched, eyes bright and cheerful",
@@ -154,8 +143,8 @@ export const styleSlug = (style) =>
  * The rows for viseme grids: one per mood. Named so tools/forge-to-sheets.mjs
  * turns them straight into the 3x3 sheets SpeakerAvatar reads.
  */
-export function visemeRows(character, { style = "stop-motion-clay", moods = Object.keys(MOODS), describe } = {}) {
-  const who = describe || CHARACTERS[character];
+export function visemeRows(character, { style = "stop-motion-clay", moods = Object.keys(MOODS), describe, characters = {} } = {}) {
+  const who = describe || characters[character];
   if (!who) throw new Error(`no description for "${character}" — pass --describe "..."`);
   const slug = styleSlug(style);
   return moods.map((mood) => {

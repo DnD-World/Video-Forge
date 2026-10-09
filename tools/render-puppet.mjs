@@ -7,8 +7,8 @@
 //   2. Fallback. `--cells DIR` writes the nine viseme cells, so the sprite
 //      path still works for anything that hasn't moved to live layers.
 //
-//   node tools/render-puppet.mjs puppet/kaiti.puppet.json --contact out.png
-//   node tools/render-puppet.mjs puppet/kaiti.puppet.json --cells viseme-v2 --name kaiti
+//   node tools/render-puppet.mjs brands/skilitsa/puppet/kaiti.puppet.json --contact out.png
+//   node tools/render-puppet.mjs brands/skilitsa/puppet/kaiti.puppet.json --cells viseme-v2 --name kaiti
 //
 // If this and the component ever disagree, that IS the bug — the geometry is
 // specified once, in the puppet JSON, and both sides only apply it.

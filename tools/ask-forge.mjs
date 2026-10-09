@@ -19,6 +19,7 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { collectPictures, findForge, sendRequest, visemeRows, waitForRequest } from "./lib/forgeLink.mjs";
+import { loadBrand } from "./lib/brand.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const argv = process.argv.slice(2);
@@ -99,9 +100,9 @@ async function main() {
     return;
   }
   if (cmd === "visemes") {
-    if (!arg) throw new Error('say which character: visemes kaiti   (or add --describe "...")');
+    if (!arg) throw new Error('say which character: visemes robin   (add --describe "..." unless the brand pack describes them)');
     const moods = String(flag("moods", "neutral,happy,serious")).split(",").map((m) => m.trim()).filter(Boolean);
-    const rows = visemeRows(arg, { style: flag("style", "stop-motion-clay"), moods, describe: flag("describe") });
+    const rows = visemeRows(arg, { style: flag("style", "stop-motion-clay"), moods, describe: flag("describe"), characters: loadBrand()?.forgeCharacters });
     const { out } = await ask(rows, `mouth shapes for ${arg}`);
     // Seen on a real run (25 Sep 2026): free SDXL asked for a 3x3 grid painted
     // ONE portrait. The slicer cannot tell, so say it plainly every time.

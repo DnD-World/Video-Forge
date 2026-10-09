@@ -15,7 +15,7 @@
       {
         "id": "s1",
         "label": "Τσίκα",
-        "puppetPath": "C:/Users/strav/Documents/CLAUDE SPACE/BYOK-Vid-Creator/puppet/tsika.rig.json",
+        "puppetPath": "C:/Users/strav/Documents/CLAUDE SPACE/BYOK-Vid-Creator/brands/skilitsa/puppet/tsika.rig.json",
         "borderColor": "#ff9a3c",
         "surface": {
           "style": "none",
@@ -54,7 +54,7 @@
       {
         "id": "s2",
         "label": "Καίτη",
-        "puppetPath": "C:/Users/strav/Documents/CLAUDE SPACE/BYOK-Vid-Creator/puppet/kaiti.rig.json",
+        "puppetPath": "C:/Users/strav/Documents/CLAUDE SPACE/BYOK-Vid-Creator/brands/skilitsa/puppet/kaiti.rig.json",
         "borderColor": "#ff5fa2",
         "surface": {
           "style": "none",
@@ -93,7 +93,7 @@
       {
         "id": "s3",
         "label": "Σερίφης",
-        "puppetPath": "C:/Users/strav/Documents/CLAUDE SPACE/BYOK-Vid-Creator/puppet/serifis.rig.json",
+        "puppetPath": "C:/Users/strav/Documents/CLAUDE SPACE/BYOK-Vid-Creator/brands/skilitsa/puppet/serifis.rig.json",
         "borderColor": "#3cb4ff",
         "surface": {
           "style": "none",

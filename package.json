@@ -17,6 +17,8 @@
     "build-exe": "node scripts/build-exe.mjs",
     "outros": "electron . --add-outros",
     "ask-forge": "node tools/ask-forge.mjs",
+    "brand": "node tools/use-brand.mjs",
+    "test": "node --test tools/lib/forgeLink.test.mjs tools/lib/brand.test.mjs",
     "test:link": "node --test tools/lib/forgeLink.test.mjs"
   },
   "dependencies": {
@@ -58,6 +60,8 @@
       "remotion/**",
       "src/**",
       "puppet/**",
+      "brands/**",
+      "brand.local.json",
       "music/**",
       "sfx/library/**",
       "presets/**",
@@ -75,8 +79,10 @@
       "!jobs/**",
       "!docs/**",
       "!inspiration looks/**",
-      "!Intros/**",
-      "!outros/**",
+      "!brands/*/intros/**",
+      "!brands/*/outros/**",
+      "!brands/*/banners/**",
+      "!brands/*/presets/**",
       "!scripts/**"
     ],
     "win": {

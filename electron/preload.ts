@@ -75,11 +75,15 @@ const api = {
     outputDir: (): Promise<string> => ipcRenderer.invoke("storage:outputDir"),
     openOutputDir: (): Promise<boolean> =>
       ipcRenderer.invoke("storage:openOutputDir"),
-    puppetDir: (): Promise<string> => ipcRenderer.invoke("storage:puppetDir"),
     readFile: (filePath: string): Promise<ArrayBuffer> =>
       ipcRenderer.invoke("storage:readFile", filePath),
     writeFile: (filePath: string, data: ArrayBuffer): Promise<boolean> =>
       ipcRenderer.invoke("storage:writeFile", filePath, data),
+  },
+
+  brand: {
+    /** The brand pack switched on for this computer, or null for none. */
+    active: () => ipcRenderer.invoke("brand:active"),
   },
 
   music: {

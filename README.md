@@ -51,7 +51,10 @@ npm install
 npm run dev
 ```
 
-> Open the Backend Panel → paste your API keys → load the “Dogs & Butterflies” sample project → hit Render.
+> Open the Backend Panel → paste your API keys → add a speaker, give them a puppet and a script → hit Render.
+> The app ships with no characters of its own. Make your own ([docs/PUPPET-MAKING.md](docs/PUPPET-MAKING.md)),
+> or switch on a brand pack — a creator's cast, sample project and clips — with `npm run brand -- <name>`
+> ([docs/BRAND-PACKS.md](docs/BRAND-PACKS.md)).
 > Recommended specs: NVIDIA 8GB GPU · 32GB RAM · ~1 hr render / 10 min video.
 
 ## 🗺️ Roadmap

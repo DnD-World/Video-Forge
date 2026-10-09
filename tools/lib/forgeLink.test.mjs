@@ -86,13 +86,18 @@ test("stops waiting after the timeout rather than hanging", async () => {
 });
 
 test("viseme rows are named the way forge-to-sheets expects", () => {
-  const rows = visemeRows("kaiti", { style: "stop-motion-clay" });
+  const rows = visemeRows("kaiti", { style: "stop-motion-clay", characters: { kaiti: "a woman" } });
   assert.deepEqual(rows.map((r) => r.filename), ["sheet_kaiti_clay_neutral.png", "sheet_kaiti_clay_happy.png", "sheet_kaiti_clay_serious.png"]);
   // forge-to-sheets: /^sheet_[a-z0-9]+_[a-z0-9]+_[a-z]+\.(png|jpg|jpeg)$/i
   for (const r of rows) assert.match(r.filename, /^sheet_[a-z0-9]+_[a-z0-9]+_[a-z]+\.png$/);
   // Image Forge: /^[a-z0-9][a-z0-9_]{0,80}\.(png|jpg|jpeg|webp)$/
   for (const r of rows) assert.match(r.filename, /^[a-z0-9][a-z0-9_]{0,80}\.(png|jpg|jpeg|webp)$/);
   assert.ok(rows.every((r) => r.category === "sheet" && r.aspect_ratio === "1:1"));
+});
+
+test("a character nobody described is refused, not drawn blind", () => {
+  assert.throws(() => visemeRows("robin"), /no description for "robin"/);
+  assert.equal(visemeRows("robin", { describe: "a robin" }).length, 3);
 });
 
 test("a style name never breaks the sheet filename", () => {

@@ -11,13 +11,14 @@
 // you, with no integration on the app's side.
 // ---------------------------------------------------------------------------
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { HudButton } from "../ui/HudButton";
 import { useProjectStore } from "../../store/useProjectStore";
 import { useTemplatesStore } from "../../store/useTemplatesStore";
 import type { ProjectPreset } from "../../store/templatesTypes";
 import { builtinPresets } from "../../store/builtinPresets";
-import { sampleProject, SAMPLE_NAME } from "../../store/sampleProject";
+import { sampleProject } from "../../store/sampleProject";
+import type { BrandInfo } from "../../store/builtinCast";
 import { migrateSurface } from "../../store/types";
 
 
@@ -40,6 +41,20 @@ export function PresetsPanel() {
   const subtitles = useProjectStore((s) => s.subtitles);
   const backgroundDim = useProjectStore((s) => s.backgroundDim);
   const backgroundCrossfadeMs = useProjectStore((s) => s.backgroundCrossfadeMs);
+
+  // The sample project comes from the brand pack, so there is none without one.
+  const [brand, setBrand] = useState<BrandInfo | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    window.byok?.brand
+      ?.active()
+      .then((b) => !cancelled && setBrand(b))
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  const sample = brand?.sample;
 
   const templates = useTemplatesStore((s) => s.templates);
   const saveTemplate = useTemplatesStore((s) => s.saveTemplate);
@@ -280,30 +295,34 @@ export function PresetsPanel() {
       </section>
 
       {/* A whole finished video, in a click. Someone opening this app for the
-          first time otherwise faces an empty canvas and no idea what it makes. */}
-      <section className="space-y-3 border-t border-accent/15 pt-5">
-        <div className="label-etched">Sample project</div>
-        <p className="text-sm text-neutral-500">
-          "{SAMPLE_NAME}" — all three characters, a written script, the house
-          look and subtitles. Press Render and you get a video. It replaces what
-          is on screen now, so save first if you want to keep it.
-        </p>
-        <HudButton
-          onClick={async () => {
-            if (
-              speakers.length > 0 &&
-              !window.confirm("This replaces the current project. Continue?")
-            ) {
-              return;
-            }
-            const dir = await window.byok?.storage?.puppetDir().catch(() => null);
-            loadProject(sampleProject(dir ?? null));
-            setNote(`Loaded "${SAMPLE_NAME}".`);
-          }}
-        >
-          Load {SAMPLE_NAME}
-        </HudButton>
-      </section>
+          first time otherwise faces an empty canvas and no idea what it makes.
+          Only offered when a brand pack with a sample is switched on. */}
+      {brand && sample && (
+        <section className="space-y-3 border-t border-accent/15 pt-5">
+          <div className="label-etched">Sample project</div>
+          <p className="text-sm text-neutral-500">
+            "{sample.name}" — the {brand.name} characters, a written script, the
+            house look and subtitles. Press Render and you get a video. It
+            replaces what is on screen now, so save first if you want to keep it.
+          </p>
+          <HudButton
+            onClick={() => {
+              if (
+                speakers.length > 0 &&
+                !window.confirm("This replaces the current project. Continue?")
+              ) {
+                return;
+              }
+              const project = sampleProject(brand);
+              if (!project) return;
+              loadProject(project);
+              setNote(`Loaded "${sample.name}".`);
+            }}
+          >
+            Load {sample.name}
+          </HudButton>
+        </section>
+      )}
 
       <section className="space-y-3 border-t border-accent/15 pt-5">
         <div className="label-etched">Share the look as a file</div>

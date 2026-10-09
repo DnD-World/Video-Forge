@@ -18,15 +18,24 @@
  * THE SAME OUTRO IT WOULD HAVE HAD: lessons in name order, outros in turn, which
  * is the rule in electron/batch/runJob.ts. Re-running this cannot change which
  * outro a lesson gets.
+ *
+ * WHICH LESSONS, WHICH OUTROS. Both come from the brand pack that is switched
+ * on (`npm run brand`), under `addOutros` in its brand.json.
  */
 import fs from "node:fs";
 import fsp from "node:fs/promises";
 import path from "node:path";
+import { loadBrand } from "./lib/brand.mjs";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
-const LESSONS_SRC = "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out";
+const brand = loadBrand();
+const LESSONS_SRC = brand?.addOutros?.lessonsSrc;
+const OUTROS = brand?.addOutros?.outrosDir;
+if (!LESSONS_SRC || !OUTROS) {
+  console.error("add-outros needs a brand pack with `addOutros` (outrosDir, lessonsSrc). Switch one on: npm run brand -- <name>");
+  process.exit(1);
+}
 const VIDEOS = path.join(process.env.APPDATA ?? "", "byok-vid-creator", "renders", "lessons");
-const OUTROS = path.join(ROOT, "outros", "cut");
 
 const argv = process.argv.slice(2);
 const apply = argv.includes("--apply");

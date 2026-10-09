@@ -13,7 +13,55 @@ professional soft skills second. Same material also cut for social, so a project
 must come out in more than one orientation.
 
 Three characters: **Καίτη** (human), **Σερίφης** (serious dog), **Τσίκα**
-(chihuahua). Voice briefs in `docs/CHARACTER-VOICES.md`.
+(chihuahua). Voice briefs in `docs/CHARACTER-VOICES.md`. Since 9 Oct 2026 they
+live in the Skilitsa brand pack — see below.
+
+---
+
+## Brand packs — 9 Oct 2026 (cloud session)
+
+**The app no longer carries Skilitsa.** Everything that was the course's —
+the three characters, intro/outro clips, banners, logo, the 1xx–5xx presets,
+the sample project, the Image Forge picture lists — now lives in
+`brands/skilitsa/`. A fresh install shows no characters and no sample. This
+laptop gets them back with one command:
+
+```bash
+npm run brand -- skilitsa      # once, then restart the app
+```
+
+How it works: [BRAND-PACKS.md](BRAND-PACKS.md). Making a new character:
+[PUPPET-MAKING.md](PUPPET-MAKING.md). What moved where:
+`brands/skilitsa/README.md`.
+
+### Left where it was, on purpose
+
+`jobs/` (series queues and templates), `projects/`, `scripts/`,
+`dramabox-audition/`, `sfx/wanted.csv`, `inspiration looks/`. The queues keep
+their progress in `jobs/*.queue.state.json` beside them; moving them while the
+series is unfinished would re-render finished lessons. **Move them into the
+pack after the 5xx series is done.** Every path inside them already points at
+the new locations.
+
+### Check on the laptop — the cloud could not
+
+The cloud session has no GPU, no speech engines, no `lms` folder and no
+`viseme/` art, so none of this was run for real. Tests (18) and typecheck pass,
+and the app builds.
+
+| # | Do | Expect |
+|---|---|---|
+| 1 | `git pull`, then `npm run brand -- skilitsa` | "Brand pack on: Skilitsa" |
+| 2 | Look in `Intros/`, `outros/`, `banners/`, `puppet/` at the top level | Only files git never tracked are left. Move any you want into the matching `brands/skilitsa/` folder; delete the rest |
+| 3 | Open the app → Presets → **Load Dogs & Butterflies** | Three faces, Greek script — same as before |
+| 4 | Same, after `npm run brand -- off` and a restart | No sample section; Cast panel works with blank speakers |
+| 5 | `npm run job -- jobs/lms-smoke.json` | Renders as before (intro clip, logo, rig puppets found at the new paths) |
+| 6 | `npm run outros` (dry run) | Lists lessons and outros as before |
+| 7 | A job using `*.puppet.json` (e.g. `jobs/smoke.json`) | Faces still draw — they read art from top-level `viseme/` via `../../../viseme` |
+| 8 | `npm run build-exe`, if the exe is used | Installed app opens with Skilitsa (copied `brand.local.json`) |
+
+Nothing here is hard to undo: `npm run brand -- off/skilitsa` flips it, and the
+whole change is one commit to revert.
 
 ---
 

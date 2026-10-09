@@ -20,6 +20,8 @@ import { runBatchJob, type BatchJob } from "./batch/runJob";
 import { makeSfxEleven } from "./audio/makeSfxEleven";
 import { getSfxFreesound } from "./audio/getSfxFreesound";
 import { addOutros } from "./render/addOutros";
+import { loadActiveBrand } from "./brand";
+import type { BrandInfo } from "../src/store/builtinCast";
 import {
   buildBlocks,
   describeBuild,
@@ -259,19 +261,19 @@ ipcMain.handle("media:download", async (_e, id: string, url: string) => {
 });
 
 /**
- * Where the bundled character puppets live.
+ * The brand pack this computer has switched on, or null for none.
  *
  * The renderer cannot work this out for itself: it has no filesystem and no
- * notion of where the app was installed. Returning the folder rather than the
- * individual files keeps the cast list in the renderer, where it belongs, and
- * leaves this handler as one line that never changes when a character is added.
+ * notion of where the app was installed. It gets the pack's name, cast, sample
+ * and puppet folder; everything else in the pack stays on this side.
  */
-ipcMain.handle("storage:puppetDir", async () => {
-  // app.getAppPath() is the repo root in dev and the asar root when packaged;
-  // puppet/ sits beside package.json in both, provided it is listed in the
-  // build's `files`. The ART it references lives outside git and is resolved
+ipcMain.handle("brand:active", async (): Promise<BrandInfo | null> => {
+  // app.getAppPath() is the repo root in dev and the app root when packaged;
+  // brands/ sits beside package.json in both, provided it is listed in the
+  // build's `files`. Puppet ART referenced from outside git is resolved
   // relative to each puppet.json, so it follows the same folder.
-  return path.join(app.getAppPath(), "puppet");
+  const b = await loadActiveBrand(app.getAppPath());
+  return b && { id: b.id, name: b.name, puppetDir: b.puppetDir, cast: b.cast, sample: b.sample };
 });
 
 // Subtitle fonts. The cache lives beside the media cache, under userData, so
@@ -470,10 +472,20 @@ app.whenReady().then(async () => {
     const onlyAt = process.argv.indexOf("--only");
     const only = onlyAt === -1 ? undefined : process.argv[onlyAt + 1];
     try {
+      // The outro clips and the lessons belong to a brand pack, not the app.
+      const brand = await loadActiveBrand(app.getAppPath());
+      const lessonsSrc = brand?.addOutros?.lessonsSrc;
+      const outrosDir = brand?.addOutros?.outrosDir;
+      if (!lessonsSrc || !outrosDir) {
+        throw new Error(
+          "--add-outros needs a brand pack with `addOutros` set (outrosDir and lessonsSrc). " +
+            "Switch one on with: npm run brand -- <name>"
+        );
+      }
       await addOutros({
         videosDir: path.join(outputDir(), "lessons"),
-        lessonsSrc: "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out",
-        outrosDir: path.join(app.getAppPath(), "outros", "cut"),
+        lessonsSrc,
+        outrosDir,
         apply: process.argv.includes("--apply"),
         only: only && !only.startsWith("--") ? only : undefined,
         fps: 24,

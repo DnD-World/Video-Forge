@@ -4,7 +4,7 @@
 //   node tools/forge-to-sheets.mjs <forgeOutputDir> [--out viseme-sheets-v2]
 //
 // Expects files named  sheet_<character>_<style>_<mood>.<ext>  — exactly what
-// viseme-grids.csv asks the forge to make — where each one is a 3x3 grid of
+// brands/skilitsa/forge/viseme-grids.csv asks the forge to make — where each one is a 3x3 grid of
 // nine head-and-shoulders panels in the app's own viseme order.
 //
 // For each grid it slices the nine panels, squares them, and writes one

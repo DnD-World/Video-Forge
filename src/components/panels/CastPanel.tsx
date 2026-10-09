@@ -23,7 +23,7 @@ import { useProjectStore } from "../../store/useProjectStore";
 import { useVoicesStore } from "../../store/useVoicesStore";
 import { useSpeakerLibraryStore } from "../../store/useSpeakerLibraryStore";
 import { usePuppetDefs } from "../../lib/puppets/usePuppets";
-import { BUILTIN_CAST, builtinPuppetPath, type BuiltinCharacter } from "../../store/builtinCast";
+import { builtinPuppetPath, type BrandInfo, type BuiltinCharacter } from "../../store/builtinCast";
 import { defaultTrackWaveform } from "../../lib/waveform/buildTracks";
 import type { OutlineShape } from "../../store/types";
 
@@ -118,9 +118,10 @@ export function CastPanel() {
 
   const speaker = speakers.find((s) => s.id === active);
 
-  // Where the bundled puppets live. Asked for once — it cannot change while
-  // the app is running, and it is a round trip to the main process.
-  const [puppetDir, setPuppetDir] = useState<string | null>(null);
+  // The brand pack's cast and where its puppets live, or null with no pack
+  // switched on. Asked for once — it cannot change while the app is running,
+  // and it is a round trip to the main process.
+  const [brand, setBrand] = useState<BrandInfo | null>(null);
   const [castError, setCastError] = useState<string | null>(null);
   useEffect(() => {
     let cancelled = false;
@@ -129,27 +130,27 @@ export function CastPanel() {
     // built renderer was served over http for a screenshot — a blank page, and
     // a bug that looked like a styling failure for far longer than it should
     // have. The bridge being absent should cost the built-in cast, nothing else.
-    window.byok?.storage
-      ?.puppetDir()
-      .then((d) => !cancelled && setPuppetDir(d))
-      .catch(() => !cancelled && setCastError("Couldn't locate the bundled characters."));
+    window.byok?.brand
+      ?.active()
+      .then((b) => !cancelled && setBrand(b))
+      .catch(() => !cancelled && setCastError("Couldn't read the brand pack's characters."));
     return () => {
       cancelled = true;
     };
   }, []);
 
-  /** Add a built-in character, with their puppet already assigned. */
+  /** Add a brand pack character, with their puppet already assigned. */
   function addBuiltin(c: BuiltinCharacter) {
-    if (!puppetDir) return;
+    if (!brand) return;
     setCastError(null);
     // Same defaults a blank speaker gets, so a built-in character differs only
     // in the things that actually make them that character: name, face, colour.
     addSpeakerFrom({
       label: c.label,
-      puppetPath: builtinPuppetPath(puppetDir, c.file),
+      puppetPath: builtinPuppetPath(brand.puppetDir, c.file),
       borderColor: c.borderColor,
-      // The voice comes with the character. Adding Καίτη used to give you her
-      // face and none of her voice — no opening phrase, no reference clip, no
+      // The voice comes with the character. Adding one used to give you the
+      // face and none of the voice — no opening phrase, no reference clip, no
       // settings — so every project re-typed all three by hand, or shipped
       // without them.
       openingPhrase: c.openingPhrase,
@@ -609,7 +610,7 @@ export function CastPanel() {
                 <input
                   type="text"
                   className="w-full mt-1 bg-black/30 border border-accent/20 rounded px-2 py-1 text-sm"
-                  placeholder="kaiti.wav"
+                  placeholder="voice.wav"
                   value={speaker.voiceRef ?? ""}
                   onChange={(e) =>
                     updateSpeaker(speaker.id, { voiceRef: e.target.value || undefined })

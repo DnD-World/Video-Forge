@@ -7,7 +7,7 @@ into the nine cells `build-viseme-sheet.mjs` expects, so the app's existing
 sprite pipeline is unchanged.
 
 ```bash
-node tools/build-puppet-cells.mjs puppet/kaiti.json --preview /tmp/preview.png
+node tools/build-puppet-cells.mjs brands/skilitsa/puppet/kaiti.json --preview /tmp/preview.png
 node tools/build-viseme-sheet.mjs viseme-v2 viseme-sheets-v2
 ```
 

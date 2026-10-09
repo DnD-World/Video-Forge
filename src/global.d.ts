@@ -4,6 +4,7 @@ export {};
 // re-declare the analysis inline, which meant adding `spectrum` to
 // AudioAnalysis left the renderer's view of the IPC boundary silently stale.
 import type { AudioAnalysis } from "./store/types";
+import type { BrandInfo } from "./store/builtinCast";
 
 /** The vendored Deco Noir behaviour layer (src/styles/deco-noir.js). It is a
  *  plain IIFE that attaches to window rather than an ES module, because the
@@ -147,9 +148,12 @@ declare global {
       storage: {
         outputDir: () => Promise<string>;
         openOutputDir: () => Promise<boolean>;
-        puppetDir: () => Promise<string>;
         readFile: (filePath: string) => Promise<ArrayBuffer>;
         writeFile: (filePath: string, data: ArrayBuffer) => Promise<boolean>;
+      };
+      brand: {
+        /** The brand pack switched on for this computer, or null for none. */
+        active: () => Promise<BrandInfo | null>;
       };
       music: {
         list: () => Promise<{ name: string; filePath: string }[]>;
