@@ -62,7 +62,7 @@ export async function nvidiaChatModels(apiKey: string): Promise<string[]> {
     throw new Error("This NVIDIA key has no chat model available, so no footage could be planned.");
   }
   cached = ranked;
-  console.log(`[byok] NVIDIA lists ${ranked.length} chat model(s); first choice ${ranked[0]}`);
+  console.log(`[video-forge] NVIDIA lists ${ranked.length} chat model(s); first choice ${ranked[0]}`);
   return ranked;
 }
 

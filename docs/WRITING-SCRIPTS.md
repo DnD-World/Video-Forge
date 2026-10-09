@@ -1,4 +1,4 @@
-# How to write a script for BYOK-Vid-Creator
+# How to write a script for Video Forge
 
 Written for whoever is filling in scripts — including someone who never opens
 the app, because bulk work happens in a spreadsheet.

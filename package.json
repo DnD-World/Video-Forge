@@ -1,7 +1,7 @@
 {
-  "name": "byok-vid-creator",
+  "name": "video-forge",
   "version": "0.1.0",
-  "description": "BYOK-Vid-Creator — deterministic desktop video production machine",
+  "description": "Video Forge — deterministic desktop video production machine",
   "author": "Stravelakis",
   "license": "MIT",
   "type": "module",
@@ -18,7 +18,7 @@
     "outros": "electron . --add-outros",
     "ask-forge": "node tools/ask-forge.mjs",
     "brand": "node tools/use-brand.mjs",
-    "test": "node --test tools/lib/forgeLink.test.mjs tools/lib/brand.test.mjs",
+    "test": "node --test tools/lib/forgeLink.test.mjs tools/lib/brand.test.mjs tools/lib/migrateUserData.test.mjs",
     "test:link": "node --test tools/lib/forgeLink.test.mjs"
   },
   "dependencies": {
@@ -48,8 +48,8 @@
     "vite": "^5.3.4"
   },
   "build": {
-    "appId": "com.stravelakis.byokvidcreator",
-    "productName": "BYOK-Vid-Creator",
+    "appId": "com.stravelakis.videoforge",
+    "productName": "Video Forge",
     "directories": {
       "output": "release",
       "buildResources": "build"
@@ -98,12 +98,12 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "BYOK-Vid-Creator",
+      "shortcutName": "Video Forge",
       "deleteAppDataOnUninstall": false,
       "include": "build/installer.nsh"
     },
     "portable": {
-      "artifactName": "byok-vid-creator-portable.exe"
+      "artifactName": "video-forge-portable.exe"
     }
   }
 }

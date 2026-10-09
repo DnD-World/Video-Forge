@@ -17,7 +17,7 @@
  * WHERE THE SECRETS LIVE: `../SECRETS`, beside the project rather than inside
  * it. A credential in a working tree is one `git add -A` away from being
  * published, and an ignore rule only holds for as long as nobody edits the
- * ignore file. Set BYOK_SECRETS_DIR to override.
+ * ignore file. Set VIDEOFORGE_SECRETS_DIR to override (the old BYOK_SECRETS_DIR still works).
  *
  * THREE WAYS IN, because the first two failed in practice.
  *
@@ -50,7 +50,7 @@ import https from "node:https";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 const SECRETS =
-  process.env.BYOK_SECRETS_DIR ?? path.resolve(ROOT, "..", "SECRETS");
+  process.env.VIDEOFORGE_SECRETS_DIR ?? process.env.BYOK_SECRETS_DIR ?? path.resolve(ROOT, "..", "SECRETS");
 const PORT = 53682;
 const REDIRECT = `http://localhost:${PORT}`;
 // Upload, plus read — the read part is only so --check can SAY which channel

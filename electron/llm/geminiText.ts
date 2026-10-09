@@ -22,7 +22,7 @@
 
 import { GoogleAuth } from "google-auth-library";
 
-const PROJECT = process.env.BYOK_VERTEX_PROJECT ?? "tier-1-ak";
+const PROJECT = process.env.VIDEOFORGE_VERTEX_PROJECT ?? process.env.BYOK_VERTEX_PROJECT ?? "tier-1-ak";
 const MODELS = ["gemini-2.5-flash", "gemini-3.5-flash"];
 
 let client: Awaited<ReturnType<GoogleAuth["getClient"]>> | null = null;
@@ -64,7 +64,7 @@ export async function geminiJson(system: string, user: string): Promise<string> 
         lastProblem = `${model} returned nothing`;
         continue;
       }
-      if (working !== model) console.log(`[byok] Gemini model for planning: ${model}`);
+      if (working !== model) console.log(`[video-forge] Gemini model for planning: ${model}`);
       working = model;
       return text;
     } catch (e: any) {

@@ -35,7 +35,11 @@ if (!LESSONS_SRC || !OUTROS) {
   console.error("add-outros needs a brand pack with `addOutros` (outrosDir, lessonsSrc). Switch one on: npm run brand -- <name>");
   process.exit(1);
 }
-const VIDEOS = path.join(process.env.APPDATA ?? "", "byok-vid-creator", "renders", "lessons");
+// Data folder moved from "byok-vid-creator" to "video-forge" with the rename; the
+// app copies it across on first start, so until then fall back to the old one.
+const NEW_VIDEOS = path.join(process.env.APPDATA ?? "", "video-forge", "renders", "lessons");
+const OLD_VIDEOS = path.join(process.env.APPDATA ?? "", "byok-vid-creator", "renders", "lessons");
+const VIDEOS = !fs.existsSync(NEW_VIDEOS) && fs.existsSync(OLD_VIDEOS) ? OLD_VIDEOS : NEW_VIDEOS;
 
 const argv = process.argv.slice(2);
 const apply = argv.includes("--apply");

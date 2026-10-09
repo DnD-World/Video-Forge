@@ -143,7 +143,7 @@ async function postJson(apiKey: string, payload: string): Promise<string> {
       const why = e instanceof Error ? e.message : String(e);
       if (modelIndex < models.length - 1) {
         console.log(
-          `[byok] ${models[modelIndex]} did not answer (${why}) — ` +
+          `[video-forge] ${models[modelIndex]} did not answer (${why}) — ` +
             `trying ${models[modelIndex + 1]} (${models.length - modelIndex - 1} left)`
         );
         modelIndex++;
@@ -170,7 +170,7 @@ async function postJson(apiKey: string, payload: string): Promise<string> {
     const unusable = res.status === 404 || res.status === 400 || res.status >= 500;
     if (unusable && modelIndex < models.length - 1) {
       console.log(
-        `[byok] NVIDIA cannot serve ${models[modelIndex]} (HTTP ${res.status}) — ` +
+        `[video-forge] NVIDIA cannot serve ${models[modelIndex]} (HTTP ${res.status}) — ` +
           `trying ${models[modelIndex + 1]} (${models.length - modelIndex - 1} left)`
       );
       modelIndex++;
@@ -215,7 +215,7 @@ async function askPlanner(nvidiaKey: string | null, system: string, user: string
     if (!nvidiaKey) {
       throw new Error(`${why} There is no NVIDIA key saved to fall back on.`);
     }
-    console.log(`[byok] ${why} — falling back to NVIDIA.`);
+    console.log(`[video-forge] ${why} — falling back to NVIDIA.`);
     const body = await postJson(
       nvidiaKey,
       JSON.stringify({
@@ -520,7 +520,7 @@ export async function pickBackgrounds(
     const withDog = rightShape.filter((x) => DOG_WORDS.test(x.h.tags));
     const best = (withDog[0] ?? rightShape[0] ?? scored[0])?.h ?? null;
     if (best && !DOG_WORDS.test(best.tags)) {
-      console.log(`[byok] no clip described with a dog for "${scene.query}" — using the closest match`);
+      console.log(`[video-forge] no clip described with a dog for "${scene.query}" — using the closest match`);
     }
     if (best) used.add(best.id);
     out.push({

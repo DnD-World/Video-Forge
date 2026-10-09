@@ -155,13 +155,13 @@ export async function joinCards(o: JoinCardsOptions): Promise<JoinCardsResult> {
     try {
       await fsp.access(src);
     } catch {
-      warnings.push(`[byok] the ${role} file is not there and was left out: ${src}`);
+      warnings.push(`[video-forge] the ${role} file is not there and was left out: ${src}`);
       continue;
     }
     const dest = path.join(o.tempDir, `${role}.mp4`);
     const problem = await normalise(src, dest, o);
     if (problem) {
-      warnings.push(`[byok] the ${role} could not be prepared and was left out — ${problem}`);
+      warnings.push(`[video-forge] the ${role} could not be prepared and was left out — ${problem}`);
       continue;
     }
     normalised[role] = dest;
@@ -193,7 +193,7 @@ export async function joinCards(o: JoinCardsOptions): Promise<JoinCardsResult> {
   ]);
   if (code !== 0) {
     warnings.push(
-      `[byok] the cards could not be joined and the lesson was left on its own — ` +
+      `[video-forge] the cards could not be joined and the lesson was left on its own — ` +
         (err.split("\n").slice(-3).join(" ").trim() || "ffmpeg failed")
     );
     return { outputPath: o.mainPath, warnings, introSec, outroSec };

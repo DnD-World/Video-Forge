@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain, dialog, shell, Menu } from "electron";
 import path from "node:path";
 import fsp from "node:fs/promises";
 import * as keyStore from "./keyStore";
+import { migrateUserData, NEW_APP_NAME } from "./migrateUserData";
 import { listPiperVoices, synthesizeWithPiper, shutdownAllPiperServers } from "./tts/piperEngine";
 import { analyzeNarration } from "./audio/analyzeNarration";
 import { listMusic } from "./audio/musicLibrary";
@@ -31,7 +32,7 @@ import {
 // Pin the identity before anything asks where it lives.
 //
 // app.getPath("userData") is derived from app.getName(), and getName only
-// finds "byok-vid-creator" when Electron was pointed at a directory holding a
+// finds "video-forge" when Electron was pointed at a directory holding a
 // package.json. Launched as `electron out/main/main.js` — which is exactly how
 // a headless job run starts — it falls back to "Electron", and every path in
 // the app silently moves to %APPDATA%/Electron.
@@ -42,7 +43,13 @@ import {
 // then failed with "No NVIDIA API key saved" while the key sat safely in the
 // other folder. Setting the name here makes the identity independent of how
 // the process was started.
-app.setName("byok-vid-creator");
+app.setName(NEW_APP_NAME);
+app.setPath("userData", path.join(app.getPath("appData"), NEW_APP_NAME));
+
+// The app used to be called BYOK-Vid-Creator and kept its data in a folder of
+// that name. Copy it across once (never move) before anything reads userData.
+// See electron/migrateUserData.ts.
+migrateUserData(app.getPath("appData"));
 
 const isDev = !app.isPackaged;
 
@@ -60,7 +67,7 @@ function createWindow() {
     backgroundColor: "#0b0b0d",
     show: false,
     autoHideMenuBar: true,
-    title: "BYOK-Vid-Creator",
+    title: "Video Forge",
     webPreferences: {
       preload: path.join(__dirname, "../preload/preload.mjs"),
       contextIsolation: true,

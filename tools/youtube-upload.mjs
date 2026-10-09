@@ -15,7 +15,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
-const SECRETS = process.env.BYOK_SECRETS_DIR ?? path.resolve(ROOT, "..", "SECRETS");
+const SECRETS = process.env.VIDEOFORGE_SECRETS_DIR ?? process.env.BYOK_SECRETS_DIR ?? path.resolve(ROOT, "..", "SECRETS");
 
 const { readClientSecret, uploadVideo } = await import(
   "file://" + path.join(ROOT, "electron/net/youtube.ts")

@@ -216,4 +216,4 @@ export type RenderProps = {
   narrationPauses?: number[];
 };
 
-export const COMPOSITION_ID = "byok-video";
+export const COMPOSITION_ID = "video-forge";

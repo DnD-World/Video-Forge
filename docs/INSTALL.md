@@ -1,11 +1,11 @@
-# Installing BYOK-Vid-Creator
+# Installing Video Forge
 
 ## The short version
 
-Double-click **`BYOK-Vid-Creator Setup 0.1.0.exe`**, pick a folder, click
+Double-click **`Video Forge Setup 0.1.0.exe`**, pick a folder, click
 Install. A shortcut appears on the desktop and in the Start menu.
 
-Don't want to install anything? **`byok-vid-creator-portable.exe`** is the same
+Don't want to install anything? **`video-forge-portable.exe`** is the same
 app as a single file. Double-click it and it runs.
 
 Both files are in the `release` folder after a build.
@@ -37,7 +37,7 @@ inside the app.
 Everything you create or save lives in one folder, separate from the app:
 
 ```
-%APPDATA%\byok-vid-creator
+%APPDATA%\video-forge
 ```
 
 Paste that into the address bar of any File Explorer window to open it.
@@ -51,7 +51,7 @@ Paste that into the address bar of any File Explorer window to open it.
 
 ## Uninstalling
 
-**Settings → Apps → Installed apps → BYOK-Vid-Creator → Uninstall**, or the
+**Settings → Apps → Installed apps → Video Forge → Uninstall**, or the
 Uninstall entry in the Start menu.
 
 It asks one question: *remove your data as well?*

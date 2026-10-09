@@ -1,4 +1,4 @@
-# BYOK-Vid-Creator — Plan & Inventory
+# Video Forge — Plan & Inventory
 
 > Living document. Supersedes the status sections of `handoff 1–3.md`, which
 > went stale once the render landed. Those remain the record of *why* early

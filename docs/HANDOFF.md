@@ -5,6 +5,17 @@ working state.
 
 ---
 
+
+## Renamed: Video Forge (9 Oct 2026)
+
+The app was called BYOK-Vid-Creator; it is now **Video Forge** (package `video-forge`, appId `com.stravelakis.videoforge`, repo https://github.com/DnD-World/Video-Forge). The folder on disk is still `BYOK-Vid-Creator` (not renamed, so absolute paths in `jobs/` keep working).
+
+- **Saved data:** the app now lives in `%APPDATA%\video-forge`. On first start `electron/migrateUserData.ts` COPIES the old `%APPDATA%\byok-vid-creator` across (settings, key vault, localStorage at once; `media` and `renders` in the background, resumable). The old folder is never touched; delete it by hand once you trust the copy. Tested by `npm test`.
+- **Kept on purpose, so nothing saved breaks:** `window.byok` (internal bridge name), localStorage keys `byok-*`, project file kind `byok-project` / `.byokproj.json`, vault file `byok.secrets.enc`.
+- **Env vars:** `VIDEOFORGE_SECRETS_DIR` and `VIDEOFORGE_VERTEX_PROJECT` are read first; the old `BYOK_SECRETS_DIR` / `BYOK_VERTEX_PROJECT` still work.
+- **Log lines** are now tagged `[video-forge]` (were `[byok]`).
+- The old live-site address `BYOK-Vid-Creator.stravelakis.com` is gone from the README; no new address has been set.
+
 ## What this project is
 
 Two LMS courses of lesson videos, Greek, 3–8 minutes each. Dog training first
@@ -368,7 +379,7 @@ course needs one.
 **Credentials live in `../SECRETS`, outside the repository**, and that is
 deliberate: a secret inside a working tree is one `git add -A` away from being
 published, and an ignore rule only holds for as long as nobody edits the ignore
-file. `BYOK_SECRETS_DIR` overrides the location. The client must be of type
+file. `VIDEOFORGE_SECRETS_DIR` (old name `BYOK_SECRETS_DIR` still works) overrides the location. The client must be of type
 **Desktop app** — a "Web application" client cannot complete a sign-in from a
 program on your own machine, and the tool stops with that explanation rather
 than failing later with something obscure.

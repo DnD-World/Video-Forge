@@ -53,12 +53,12 @@ export function findForge(dir = linkDir()) {
 
 const ID_OK = /^[a-z0-9][a-z0-9-]{5,63}$/;
 
-export function newRequestId(prefix = "vid-creator") {
+export function newRequestId(prefix = "video-forge") {
   return `${prefix}-${Date.now().toString(36)}-${crypto.randomBytes(3).toString("hex")}`;
 }
 
 /** Drop a request in the forge's inbox. Written atomically. */
-export function sendRequest({ id = newRequestId(), from = "BYOK Vid Creator", note = "", rows }, dir = linkDir()) {
+export function sendRequest({ id = newRequestId(), from = "Video Forge", note = "", rows }, dir = linkDir()) {
   if (!ID_OK.test(id)) throw new Error(`bad request id "${id}"`);
   if (!Array.isArray(rows) || rows.length === 0) throw new Error("a request needs at least one picture");
   const inbox = path.join(dir, "inbox");

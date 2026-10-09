@@ -6,10 +6,10 @@
  *
  * 1. builds the app                       → out/
  * 2. packages it with electron-builder    → release/
- *      · "BYOK-Vid-Creator Setup x.y.z.exe"   installer: pick a folder, desktop
+ *      · "Video Forge Setup x.y.z.exe"   installer: pick a folder, desktop
  *                                              and Start menu shortcuts, a real
  *                                              uninstaller in Settings → Apps
- *      · "byok-vid-creator-portable.exe"      one file, runs without installing
+ *      · "video-forge-portable.exe"      one file, runs without installing
  *
  * WHY THE APP IS NOT PACKED INTO AN ASAR ARCHIVE, which is electron-builder's
  * default and makes the install smaller. Rendering works by handing

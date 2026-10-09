@@ -1,9 +1,12 @@
-# 🎬 BYOK-Vid-Creator
+![Video Forge](docs/images/app-2026-10-09.png)
+
+# Video Forge
+
+Video Forge is the evolution of the app formerly called BYOK-Vid-Creator.
 
 **Bring Your Own Keys. Build cinematic, talking-avatar videos — locally, deterministically, beautifully.**
 
 <p align="center">
-  <a href="https://BYOK-Vid-Creator.stravelakis.com">Live Site</a> ·
   <a href="#features">Features</a> ·
   <a href="#quick-start">Quick Start</a> ·
   <a href="#roadmap">Roadmap</a>
@@ -13,7 +16,7 @@
 
 ## What is this?
 
-BYOK-Vid-Creator is a **desktop studio** for producing narrated, subtitled,
+Video Forge is a **desktop studio** for producing narrated, subtitled,
 avatar-driven videos with animated audio waveforms — in Greek and English.
 
 It is **not** a generative-video toy. Every frame is **deterministic**:
@@ -45,8 +48,8 @@ machine** via a bundled Remotion + FFmpeg pipeline.
 ## 🚀 Quick Start
 
 ```bash
-git clone https://github.com/DnD-World/BYOK-Vid-Creator.git
-cd BYOK-Vid-Creator
+git clone https://github.com/DnD-World/Video-Forge.git
+cd Video-Forge
 npm install
 npm run dev
 ```

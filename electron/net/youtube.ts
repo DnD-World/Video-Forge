@@ -88,9 +88,9 @@ export async function readClientSecret(file: string): Promise<ClientSecret> {
  *
  *  A secret in a working tree is one `git add -A` away from being published,
  *  and an ignore rule only holds for as long as nobody edits the ignore file.
- *  Override with BYOK_SECRETS_DIR. */
+ *  Override with VIDEOFORGE_SECRETS_DIR (the old BYOK_SECRETS_DIR still works). */
 export function secretsDir(projectRoot: string): string {
-  return process.env.BYOK_SECRETS_DIR ?? path.resolve(projectRoot, "..", "SECRETS");
+  return process.env.VIDEOFORGE_SECRETS_DIR ?? process.env.BYOK_SECRETS_DIR ?? path.resolve(projectRoot, "..", "SECRETS");
 }
 
 /** Find the client secret, if there is one. */

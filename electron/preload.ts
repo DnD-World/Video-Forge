@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer } from "electron";
 
 // ---------------------------------------------------------------------------
-// BYOK-Vid-Creator — Preload bridge
+// Video Forge — Preload bridge
 // Exposes a small, whitelisted, type-safe API as window.byok
 // contextIsolation MUST be true (set in main.ts) for this to work.
 // ---------------------------------------------------------------------------

@@ -33,7 +33,7 @@ function Clip({ fileName, loopInFrames }: { fileName: string; loopInFrames: numb
       // twenty minutes of good frames. It reports itself and leaves black.
       onError={(err) => {
         // eslint-disable-next-line no-console
-        console.log(`[byok] Background clip ${fileName} failed to decode: ${err.message}`);
+        console.log(`[video-forge] Background clip ${fileName} failed to decode: ${err.message}`);
       }}
     />
   );

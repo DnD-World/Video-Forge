@@ -48,7 +48,7 @@ export function SubtitleFont({ font }: { font: RenderProps["subtitleFont"] }) {
     )
       .catch((e) => {
         // eslint-disable-next-line no-console
-        console.log(`[byok] Subtitle font ${font.family} failed to load: ${e}`);
+        console.log(`[video-forge] Subtitle font ${font.family} failed to load: ${e}`);
       })
       .then(() => {
         if (!cancelled) setDone(true);

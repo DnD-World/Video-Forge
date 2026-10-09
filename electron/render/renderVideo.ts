@@ -173,7 +173,7 @@ export async function renderVideo(
   // headless browser, which is why the audio has to be copied in rather than
   // referenced by absolute path — a file:// src would be blocked as a
   // cross-origin request from the bundle's http:// origin.
-  const publicDir = await fsp.mkdtemp(path.join(os.tmpdir(), "byok-render-"));
+  const publicDir = await fsp.mkdtemp(path.join(os.tmpdir(), "video-forge-render-"));
   let audioFileName: string | null = null;
   const warnings: string[] = [];
 
@@ -223,7 +223,7 @@ export async function renderVideo(
       } catch {
         // Silent video with music missing is wrong; a video with no music is
         // merely plainer. Carry on and say so.
-        warnings.push("[byok] The music file couldn't be read; rendering without it.");
+        warnings.push("[video-forge] The music file couldn't be read; rendering without it.");
       }
     }
 
@@ -276,7 +276,7 @@ export async function renderVideo(
               await fsp.copyFile(abs, path.join(publicDir, name));
               layerNameByPath.set(abs, name);
             } catch {
-              warnings.push(`[byok] ${label}: layer ${file} could not be read.`);
+              warnings.push(`[video-forge] ${label}: layer ${file} could not be read.`);
               continue;
             }
           }
@@ -342,7 +342,7 @@ export async function renderVideo(
           sfxNameByPath.set(clip.filePath, name);
         } catch {
           warnings.push(
-            `[byok] The sound effect "${clip.label ?? clip.filePath}" couldn't be read; skipped.`
+            `[video-forge] The sound effect "${clip.label ?? clip.filePath}" couldn't be read; skipped.`
           );
           continue;
         }
@@ -370,7 +370,7 @@ export async function renderVideo(
           // One unreadable clip is one plain stretch of video, not a failed
           // render — same rule as a missing viseme sheet.
           warnings.push(
-            `[byok] Background clip for "${bg.query ?? "a scene"}" couldn't be read; ` +
+            `[video-forge] Background clip for "${bg.query ?? "a scene"}" couldn't be read; ` +
               `that stretch renders without one.`
           );
           continue;
@@ -405,7 +405,7 @@ export async function renderVideo(
         subtitleFont = { family: font.family, weight: font.weight, faces };
       } catch (e) {
         warnings.push(
-          `[byok] Couldn't prepare the subtitle font "${job.subtitles.fontFamily}" ` +
+          `[video-forge] Couldn't prepare the subtitle font "${job.subtitles.fontFamily}" ` +
             `(${e instanceof Error ? e.message : String(e)}); using the default typeface.`
         );
       }
@@ -441,7 +441,7 @@ export async function renderVideo(
         await fsp.copyFile(job.introPath, path.join(publicDir, fileName));
         introOverlay = { fileName, durationMs: job.introOverMs };
       } catch {
-        warnings.push(`[byok] the intro could not be read and was left off: ${job.introPath}`);
+        warnings.push(`[video-forge] the intro could not be read and was left off: ${job.introPath}`);
       }
     }
 
@@ -453,7 +453,7 @@ export async function renderVideo(
         await fsp.copyFile(job.bannerVideo.filePath, path.join(publicDir, fileName));
         bannerProps = { fileName, cropTop: job.bannerVideo.cropTop, cropBottom: job.bannerVideo.cropBottom };
       } catch {
-        warnings.push(`[byok] the banner could not be read and was left off: ${job.bannerVideo.filePath}`);
+        warnings.push(`[video-forge] the banner could not be read and was left off: ${job.bannerVideo.filePath}`);
       }
     }
 
@@ -471,7 +471,7 @@ export async function renderVideo(
           margin: job.logo.margin,
         };
       } catch {
-        warnings.push(`[byok] the logo could not be read and was left off: ${job.logo.filePath}`);
+        warnings.push(`[video-forge] the logo could not be read and was left off: ${job.logo.filePath}`);
       }
     }
 
@@ -563,7 +563,7 @@ export async function renderVideo(
       if (key in inputProps) continue;
       if (HANDLED_HERE.has(key)) continue;
       warnings.push(
-        `[byok] the render was given "${key}" and nothing carried it into the ` +
+        `[video-forge] the render was given "${key}" and nothing carried it into the ` +
           `composition — it had NO EFFECT on this video.`
       );
     }
@@ -612,7 +612,7 @@ export async function renderVideo(
         // Deduped, because these come from inside the composition and the
         // composition runs once per frame across several workers. Without this
         // one missing eyebrow is six hundred identical lines.
-        if (log.text.includes("[byok]") && !warnings.includes(log.text)) {
+        if (log.text.includes("[video-forge]") && !warnings.includes(log.text)) {
           warnings.push(log.text);
         }
       },

@@ -30,9 +30,9 @@ const reportedMissing = new Set<string>();
 function reportMissingLayer(file: string) {
   if (reportedMissing.has(file)) return;
   reportedMissing.add(file);
-  // "[byok]" is the prefix the renderer greps for. Without it this is invisible
+  // "[video-forge]" is the prefix the renderer greps for. Without it this is invisible
   // outside a devtools window nobody has open during a render.
-  console.error(`[byok] puppet layer has no image and was not drawn: ${file}`);
+  console.error(`[video-forge] puppet layer has no image and was not drawn: ${file}`);
 }
 
 interface Props {
@@ -211,7 +211,7 @@ export function PuppetAvatar({
       if (urlsReady === false) return null;
       // SAY SO. A layer with no image used to return null, so a missing mouth
       // was a face with no mouth and a render that reported success. The
-      // renderer collects "[byok]" lines out of the browser console and prints
+      // renderer collects "[video-forge]" lines out of the browser console and prints
       // them at the end; see onBrowserLog in electron/render/renderVideo.ts.
       reportMissingLayer(l.file);
       return null;

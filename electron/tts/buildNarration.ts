@@ -251,7 +251,7 @@ export async function buildNarration(
   // again — unlike the GPU, where a second attempt costs only minutes.
   if (credits > 0) {
     console.log(
-      `[byok] ElevenLabs: ${credits.toLocaleString()} credits spent on this narration ` +
+      `[video-forge] ElevenLabs: ${credits.toLocaleString()} credits spent on this narration ` +
         `(about ${(credits / 4640).toFixed(1)} lessons' worth).`
     );
   }

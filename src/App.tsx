@@ -392,7 +392,7 @@ export default function App() {
       >
         <HudCorners />
         <h1 className="title-deco uppercase text-2xl">
-          BYOK-Vid-Creator
+          Video Forge
         </h1>
         <div className="flex items-center gap-3">
           <span className="label-etched hidden sm:inline mr-2">Deterministic Video Studio</span>

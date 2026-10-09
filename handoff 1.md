@@ -1,9 +1,9 @@
-📄 MASTER HANDOFF — BYOK-Vid-Creator (Phase 1a–1f complete)
+📄 MASTER HANDOFF — Video Forge (Phase 1a–1f complete)
 WHO I AM: Non-coder. I build by pasting full files only into the GitHub web editor. RULE: never give me edits, snippets, "append", or "// add here". ALWAYS give the ENTIRE file, tagged CREATE or EDIT with its exact path. I take direction well but cannot write code myself.
 WHAT THE APP IS: Desktop-only (Windows 11) Electron app. Turns a script → local TTS narration → auto-fetched stock B-roll + music/SFX → animated glowing waveforms + viseme lip-synced speaker disks + highlighted subtitles → rendered MP4 via Remotion. Deterministic (template/stock driven, NOT generative like Veo/Sora). Max 10 min, must handle 8 min+. End goal = installable .exe (via electron-builder, later phase).
 PRIORITY ORDER: Stability > Functionality > Output quality > UI wow. (But wow IS the dream for both final videos and the UI.)
 MY MACHINE (= recommended spec, not minimum): 8GB NVIDIA GPU, 32GB RAM, AMD CPU. ~1hr render per 10 min is fine.
-HOW I'M BUILDING: Writing files directly in GitHub web editor (github.com/Stravelakis/BYOK-Vid-Creator). I understand I MUST eventually run git clone → npm install → npm run dev on my PC to test — haven't done it yet. Nothing is installed locally yet.
+HOW I'M BUILDING: Writing files directly in GitHub web editor (github.com/DnD-World/Video-Forge). I understand I MUST eventually run git clone → npm install → npm run dev on my PC to test — haven't done it yet. Nothing is installed locally yet.
 LOCKED STACK:
 Electron + electron-vite + React + TypeScript + Tailwind (dark-only) + Zustand + framer-motion.
 Config file is electron.vite.config.ts (NOT vite.config.ts).
@@ -34,7 +34,7 @@ IMMEDIATE TODO FOR USER (on PC, whenever ready): clone repo, npm install, npm ru
 
 =======================
 =======================
-# BYOK-Vid-Creator — Build Handoff (Phase 1a–1d complete)
+# Video Forge — Build Handoff (Phase 1a–1d complete)
 
 ## What this app is
 A **desktop-only** (Electron + Vite + React + TS + Tailwind, dark-only) deterministic
@@ -79,7 +79,7 @@ NEVER say "append". No inline "// add this here" snippets.
 2
 
 📄 HANDOFF DOC (paste this into a fresh chat to continue without the image load)
-PROJECT: BYOK-Vid-Creator — desktop-only video machine. Site: BYOK-Vid-Creator.stravelakis.com. README already live on GitHub. Built with You.com + Opus 4.8 (+ Hermes agent, Google Flow, credited in README).
+PROJECT: Video Forge — desktop-only video machine. Site: BYOK-Vid-Creator.stravelakis.com. README already live on GitHub. Built with You.com + Opus 4.8 (+ Hermes agent, Google Flow, credited in README).
 GOAL: Deterministic (non-generative) video creation. Script → local TTS → auto-fetched stock B-roll + music/SFX → animated waveforms + viseme-synced speaker disks + subtitles → rendered MP4. Max 10min, must handle 8min+. Priorities in order: stability > functionality > output quality > UI wow.
 STACK (locked):
 Electron + React(Vite) + TypeScript + Tailwind (dark-only) + Zustand + framer-motion + Remotion (render engine).
@@ -97,7 +97,7 @@ DONE (Phase 1b): package.json, vite/tailwind/postcss config, index.css theme, st
 
 1
 📄 HANDOFF DOC (paste this into your new clean chat)
-PROJECT: BYOK-Vid-Creator — Handoff v1 URL: https://BYOK-Vid-Creator.stravelakis.com · GitHub live · README live. What it is: Desktop app (Electron) that turns a script into a polished 8–10 min video with TTS narration, lip-synced avatar disks, glowing waveforms, highlighted subtitles, and auto-fetched stock backgrounds. Deterministic (Remotion render), NOT generative video.
+PROJECT: Video Forge — Handoff v1 URL: https://BYOK-Vid-Creator.stravelakis.com · GitHub live · README live. What it is: Desktop app (Electron) that turns a script into a polished 8–10 min video with TTS narration, lip-synced avatar disks, glowing waveforms, highlighted subtitles, and auto-fetched stock backgrounds. Deterministic (Remotion render), NOT generative video.
 Target machine (RECOMMENDED spec): 8GB NVIDIA GPU, 32GB RAM, AMD CPU. ~1hr render for 10min acceptable. Render at 10fps.
 LOCKED STACK:
 Electron + React + Vite + TypeScript + Tailwind (dark only)
