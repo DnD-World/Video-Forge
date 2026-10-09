@@ -20,6 +20,18 @@ live in the Skilitsa brand pack — see below.
 
 ## Brand packs — 9 Oct 2026 (cloud session)
 
+**Ak's decision, 9 Oct 2026: two versions of the app.**
+
+| Version | For | How |
+|---|---|---|
+| Skilitsa | Ak's own course work, on the laptop | brand pack switched on (`npm run brand -- skilitsa`) — characters, sample, clips all present |
+| Public | to publish for other creators | brand pack off, and `brands/skilitsa/` left out of the published copy |
+
+Cloud sessions are stopped — too costly for what they can reach. All further
+work happens on the laptop. First job there: switch Skilitsa on, run the
+"Check on the laptop" list below, then decide how the public copy is made
+(separate repository, or an installer build that leaves `brands/` out).
+
 **The app no longer carries Skilitsa.** Everything that was the course's —
 the three characters, intro/outro clips, banners, logo, the 1xx–5xx presets,
 the sample project, the Image Forge picture lists — now lives in
