@@ -10,7 +10,7 @@ working state.
 
 The app was called BYOK-Vid-Creator; it is now **Video Forge** (package `video-forge`, appId `com.stravelakis.videoforge`, repo https://github.com/DnD-World/Video-Forge). The folder on disk is still `BYOK-Vid-Creator` (not renamed, so absolute paths in `jobs/` keep working).
 
-- **Saved data:** the app now lives in `%APPDATA%\video-forge`. On first start `electron/migrateUserData.ts` COPIES the old `%APPDATA%\byok-vid-creator` across (settings, key vault, localStorage at once; `media` and `renders` in the background, resumable). The old folder is never touched; delete it by hand once you trust the copy. Tested by `npm test`.
+- **Saved data:** fresh installs use `%APPDATA%ideo-forge`. A computer that already has `%APPDATA%yok-vid-creator` (this laptop, 35 GB) keeps using it in place — no copy, no move (`electron/migrateUserData.ts`, tested by `npm test`).
 - **Kept on purpose, so nothing saved breaks:** `window.byok` (internal bridge name), localStorage keys `byok-*`, project file kind `byok-project` / `.byokproj.json`, vault file `byok.secrets.enc`.
 - **Env vars:** `VIDEOFORGE_SECRETS_DIR` and `VIDEOFORGE_VERTEX_PROJECT` are read first; the old `BYOK_SECRETS_DIR` / `BYOK_VERTEX_PROJECT` still work.
 - **Log lines** are now tagged `[video-forge]` (were `[byok]`).

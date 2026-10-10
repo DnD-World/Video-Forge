@@ -2,7 +2,7 @@ import { app, BrowserWindow, ipcMain, dialog, shell, Menu } from "electron";
 import path from "node:path";
 import fsp from "node:fs/promises";
 import * as keyStore from "./keyStore";
-import { migrateUserData, NEW_APP_NAME } from "./migrateUserData";
+import { resolveUserData, NEW_APP_NAME } from "./migrateUserData";
 import { listPiperVoices, synthesizeWithPiper, shutdownAllPiperServers } from "./tts/piperEngine";
 import { analyzeNarration } from "./audio/analyzeNarration";
 import { listMusic } from "./audio/musicLibrary";
@@ -44,12 +44,10 @@ import {
 // other folder. Setting the name here makes the identity independent of how
 // the process was started.
 app.setName(NEW_APP_NAME);
-app.setPath("userData", path.join(app.getPath("appData"), NEW_APP_NAME));
-
-// The app used to be called BYOK-Vid-Creator and kept its data in a folder of
-// that name. Copy it across once (never move) before anything reads userData.
+// The app used to be called BYOK-Vid-Creator. A computer that already has that
+// data folder keeps using it in place; fresh installs get "video-forge".
 // See electron/migrateUserData.ts.
-migrateUserData(app.getPath("appData"));
+app.setPath("userData", resolveUserData(app.getPath("appData")));
 
 const isDev = !app.isPackaged;
 
