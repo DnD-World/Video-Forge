@@ -69,3 +69,21 @@ Background: [research/how-the-70-videos-were-made.md](research/how-the-70-videos
 | First-minute wow | Live preview with sound, animated look (glass, fluid, particles in stravelakis navy/mint), template gallery that plays on hover |
 | Templates | Lesson/explainer, news desk, podcast/dialogue, promo/ad |
 | Order of work | Make the 70-video workflow easy first; then puppet maker; then shorts; then the new look |
+
+## Voice ranking, round 1 (10 Oct 2026, plain line)
+
+1. Gemini 3.8 Flash-Lite — Love it
+2. Gemini 3.1 Flash — Love it
+3. Gemini 3.8 Flash — OK
+4. Fish Audio S2.1 — OK
+5. Microsoft Athina — OK
+6–7. Piper Joy, Piper Rapunzelina — OK
+8. Mistral Voxtral — No (no Greek at all)
+
+Ak asked for a second round with an emotional line: questions, exclamations, [x] markings.
+
+## Gemini free tier (Ak's AI Studio dashboard, 10 Oct 2026)
+
+- Speech models (2.5 Flash TTS, 3.1 Flash TTS, 3.8 Flash-Lite TTS, 3.8 Flash TTS): **10 requests per day each** — too few for a lesson (~50 lines).
+- Live models (2.5 Native Audio Dialog, 3 Flash Live, 3.8 Live, 3.8 Live Extended Thinking, 3.5 Live Translate, 3.5 Transcribe Live): **unlimited requests**, token-per-minute caps (1M for 2.5 Native Audio, 65K for 3.x Live).
+- Test 10 Oct: Gemini 3.8 Live, told to act as a voice actor, read an emotional line word for word and did not speak the [x] markings (its own transcript). 2.5 Native Audio skipped a sentence. → Live is the candidate free voice engine; round-2 listening page decides.

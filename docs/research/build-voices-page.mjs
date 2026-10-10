@@ -1,9 +1,10 @@
 // Builds voices-listen.html: voices.html with the audio and waveform shapes
 // packed inside, so it plays from any folder or attachment.
-// Run from this folder: node build-voices-page.mjs   (needs ffmpeg on PATH)
+// Run from this folder: node build-voices-page.mjs [voices2.html voices2-listen.html]   (needs ffmpeg on PATH)
 import fs from "node:fs";
 import { execFileSync } from "node:child_process";
-let html = fs.readFileSync("voices.html", "utf8");
+const [src = "voices.html", out = "voices-listen.html"] = process.argv.slice(2);
+let html = fs.readFileSync(src, "utf8");
 const peaks = {};
 // Keyed by sample id, not file name: the file names get replaced by the audio itself below.
 for (const [, id, file] of html.matchAll(/id: "(\w+)", file: "(tts-samples\/[^"]+)"/g)) {
@@ -15,5 +16,5 @@ for (const [, id, file] of html.matchAll(/id: "(\w+)", file: "(tts-samples\/[^"]
 html = html.replace("/*PEAKS*/{}", JSON.stringify(peaks));
 html = html.replace(/"(tts-samples\/[^"]+\.(wav|mp3))"/g, (m, f, ext) =>
   JSON.stringify(`data:audio/${ext === "mp3" ? "mpeg" : "wav"};base64,` + fs.readFileSync(f).toString("base64")));
-fs.writeFileSync("voices-listen.html", html);
-console.log("voices-listen.html", (html.length / 1e6).toFixed(2), "MB");
+fs.writeFileSync(out, html);
+console.log(out, (html.length / 1e6).toFixed(2), "MB");
