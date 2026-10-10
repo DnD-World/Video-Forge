@@ -87,3 +87,21 @@ Ak asked for a second round with an emotional line: questions, exclamations, [x]
 - Speech models (2.5 Flash TTS, 3.1 Flash TTS, 3.8 Flash-Lite TTS, 3.8 Flash TTS): **10 requests per day each** — too few for a lesson (~50 lines).
 - Live models (2.5 Native Audio Dialog, 3 Flash Live, 3.8 Live, 3.8 Live Extended Thinking, 3.5 Live Translate, 3.5 Transcribe Live): **unlimited requests**, token-per-minute caps (1M for 2.5 Native Audio, 65K for 3.x Live).
 - Test 10 Oct: Gemini 3.8 Live, told to act as a voice actor, read an emotional line word for word and did not speak the [x] markings (its own transcript). 2.5 Native Audio skipped a sentence. → Live is the candidate free voice engine; round-2 listening page decides.
+
+## Voice ranking, round 2 (10 Oct 2026, emotional line with [x] markings)
+
+1. Gemini 3.8 Flash TTS — Love it
+2. Gemini 3.1 Flash TTS — Love it
+3. Gemini 3.8 Flash-Lite TTS — Love it
+4. Gemini 2.5 Native Audio (Live) — Love it
+5. Gemini 3.1 Flash Live — Love it
+6. Fish Audio S2.1 — OK
+7. Gemini 3.8 Live — OK
+8. Piper Joy — No
+
+**Decision (Ak):** the two unlimited free Live voices he loves — **Gemini 2.5 Native Audio** and **Gemini 3.1 Flash Live** — are the stars (default engines). The TTS models (10/day free) stay as a premium option. **Fish Audio** stays as a fun option: "a funny foreigner speaking Greek" accent, not a main voice. Piper: offline fallback only.
+Guard needed: Live models can skip or add words (2.5 skipped a sentence in testing), so every line's transcript is compared with the script and re-made if it doesn't match.
+
+## Rendering engine (10 Oct 2026)
+
+Ak asked why not **HyperFrames** (github.com/heygen-com/hyperframes): Apache-2.0, ~60k stars, active, HTML+GSAP → MP4, has a Remotion-port workflow. Removes the Remotion licence risk. Trial port first (see docs/research/hyperframes-trial.md).
