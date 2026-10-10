@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Free Voices — Listen</title>
+<title>Free Voices — Rank</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
     --ink: #071C26; --p900: #0B2837; --p800: #11374A; --p700: #1E465B; --p600: #276075;
-    --mint: #76FFC2; --mint-soft: #82D8B7; --mint-50: #E9FEF5; --navy: #344080;
+    --mint: #76FFC2; --mint-soft: #82D8B7; --navy: #344080;
     --text: #E9FEF5; --muted: #9DB8C4;
   }
   * { box-sizing: border-box; }
@@ -17,149 +17,201 @@
   body {
     font-family: Sora, system-ui, sans-serif; color: var(--text);
     background: radial-gradient(1200px 700px at 15% -10%, #1C4F65 0%, transparent 60%),
-                radial-gradient(900px 600px at 110% 20%, #344080 0%, transparent 55%),
-                var(--ink);
+                radial-gradient(900px 600px at 110% 20%, #344080 0%, transparent 55%), var(--ink);
     overflow-x: hidden;
   }
   canvas#bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
-  main { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 56px 24px 80px; }
-  h1 { font-weight: 400; font-size: clamp(34px, 6vw, 64px); line-height: 1.05; margin: 0 0 12px; letter-spacing: -0.02em; }
+  main { position: relative; z-index: 1; max-width: 920px; margin: 0 auto; padding: 56px 24px 80px; }
+  h1 { font-weight: 400; font-size: clamp(34px, 6vw, 60px); line-height: 1.05; margin: 0 0 12px; letter-spacing: -0.02em; }
   h1 span { background: linear-gradient(90deg, var(--mint), #b6ffe0 40%, var(--mint-soft)); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .lead { color: var(--muted); font-size: 18px; line-height: 1.6; max-width: 720px; margin: 0 0 8px; }
-  .line { font-size: 22px; margin: 18px 0 36px; padding: 18px 24px; border-radius: 40px; background: rgba(233,254,245,.06); border: 1px solid rgba(118,255,194,.18); display: inline-block; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; }
-  .card {
-    position: relative; border-radius: 40px; padding: 26px 26px 22px; display: flex; flex-direction: column;
-    background: linear-gradient(160deg, rgba(30,70,91,.72), rgba(11,40,55,.78));
+  .lead { color: var(--muted); font-size: 17px; line-height: 1.6; max-width: 700px; margin: 0 0 8px; }
+  .line { font-size: 21px; margin: 16px 0 30px; padding: 16px 24px; border-radius: 40px; background: rgba(233,254,245,.06); border: 1px solid rgba(118,255,194,.18); display: inline-block; }
+  #list { display: flex; flex-direction: column; gap: 14px; }
+  .row {
+    position: relative; display: grid; grid-template-columns: 64px 1fr; gap: 0 18px; align-items: center;
+    border-radius: 34px; padding: 18px 22px 18px 14px;
+    background: linear-gradient(160deg, rgba(30,70,91,.78), rgba(11,40,55,.84));
     border: 1px solid rgba(118,255,194,.14);
     backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
     box-shadow: 0 20px 60px -30px rgba(0,0,0,.8), inset 0 1px 0 rgba(255,255,255,.06);
-    transform: translateY(24px); opacity: 0; animation: rise .7s cubic-bezier(.2,.8,.2,1) forwards;
-    transition: border-color .3s, box-shadow .3s, transform .3s;
+    transition: border-color .3s, box-shadow .3s; user-select: none; touch-action: pan-y;
+    animation: rise .6s cubic-bezier(.2,.8,.2,1) both;
   }
-  .card:hover { border-color: rgba(118,255,194,.45); box-shadow: 0 30px 80px -30px rgba(118,255,194,.25), inset 0 1px 0 rgba(255,255,255,.08); }
-  .card.playing { border-color: var(--mint); box-shadow: 0 0 0 1px var(--mint), 0 30px 90px -20px rgba(118,255,194,.45); }
-  @keyframes rise { to { transform: none; opacity: 1; } }
-  .tag { display: inline-block; font-size: 12px; font-weight: 500; padding: 5px 12px; border-radius: 50px; margin: 0 6px 10px 0; }
+  @keyframes rise { from { transform: translateY(20px); opacity: 0; } }
+  .row:hover { border-color: rgba(118,255,194,.4); }
+  .row.playing { border-color: var(--mint); box-shadow: 0 0 0 1px var(--mint), 0 24px 80px -20px rgba(118,255,194,.4); }
+  .row.dragging { z-index: 5; cursor: grabbing; border-color: var(--mint); box-shadow: 0 40px 90px -20px rgba(0,0,0,.9), 0 0 0 2px var(--mint); transition: none; scale: 1.02; }
+  .grip { grid-row: span 3; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: grab; padding: 8px 0; touch-action: none; }
+  .rank { font-size: 38px; font-weight: 300; line-height: 1; color: var(--mint); font-variant-numeric: tabular-nums; }
+  .dots { width: 18px; height: 26px; background: radial-gradient(circle, rgba(233,254,245,.45) 1.6px, transparent 2px) 0 0 / 9px 9px; opacity: .7; }
+  .grip:hover .dots { opacity: 1; }
+  .head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+  .head h3 { font-weight: 500; font-size: 20px; margin: 0 6px 0 0; }
+  .tag { font-size: 12px; font-weight: 500; padding: 4px 11px; border-radius: 50px; }
   .free { background: rgba(118,255,194,.15); color: var(--mint); }
   .local { background: rgba(130,216,183,.12); color: var(--mint-soft); }
   .warn { background: rgba(255,190,120,.14); color: #ffcf9a; }
-  .tags { min-height: 34px; }
-  .card h3 { font-weight: 500; font-size: 21px; margin: 2px 0 6px; }
-  .card p { color: var(--muted); font-size: 14px; line-height: 1.55; margin: 0 0 16px; flex: 1; }
-  .player { display: flex; align-items: center; gap: 14px; }
+  .note { color: var(--muted); font-size: 14px; line-height: 1.5; margin: 6px 0 12px; }
+  .bottom { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
   .play {
-    flex: none; width: 54px; height: 54px; border-radius: 50%; border: 0; cursor: pointer;
+    flex: none; width: 50px; height: 50px; border-radius: 50%; border: 0; cursor: pointer;
     background: var(--mint); color: var(--ink); display: grid; place-items: center;
-    transition: transform .2s, box-shadow .3s; box-shadow: 0 8px 30px -8px rgba(118,255,194,.6);
+    transition: transform .2s; box-shadow: 0 8px 30px -8px rgba(118,255,194,.6);
   }
   .play:hover { transform: scale(1.08); }
-  .play svg { width: 20px; height: 20px; }
-  canvas.wave { flex: 1; height: 54px; width: 100%; }
-  .votes { display: flex; gap: 8px; margin-top: 18px; }
+  .play svg { width: 18px; height: 18px; }
+  .wave { flex: 1 1 220px; height: 44px; display: flex; align-items: center; gap: 2px; cursor: pointer; min-width: 160px; }
+  .wave i { flex: 1; border-radius: 3px; background: rgba(157,184,196,.35); min-height: 3px; transition: background .15s; }
+  .wave i.done { background: linear-gradient(0deg, #276075, var(--mint)); }
+  .votes { display: flex; gap: 6px; }
   .vote {
-    flex: 1; font: 500 14px Sora, sans-serif; padding: 11px 0; border-radius: 50px; cursor: pointer;
-    background: rgba(17,55,74,.8); color: var(--text); border: 1px solid rgba(233,254,245,.12); transition: all .2s;
+    font: 500 13px Sora, sans-serif; padding: 10px 14px; border-radius: 50px; cursor: pointer;
+    background: rgba(17,55,74,.85); color: var(--text); border: 1px solid rgba(233,254,245,.12); transition: all .2s;
   }
   .vote:hover { border-color: var(--mint-soft); }
   .vote.on.good { background: var(--mint); color: var(--ink); border-color: var(--mint); }
   .vote.on.ok { background: #276075; border-color: var(--mint-soft); }
   .vote.on.no { background: #4a2430; border-color: #ff8a9a; color: #ffd0d7; }
-  footer { margin-top: 40px; display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
-  .cta { font: 500 18px Sora, sans-serif; padding: 15px 30px; border-radius: 50px; border: 0; cursor: pointer; background: var(--mint); color: var(--ink); }
+  footer { margin-top: 34px; display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+  .cta { font: 500 18px Sora, sans-serif; padding: 15px 30px; border-radius: 50px; border: 0; cursor: pointer; background: var(--mint); color: var(--ink); box-shadow: 0 10px 40px -10px rgba(118,255,194,.6); }
   .cta:active { transform: scale(.97); }
-  #out { color: var(--muted); font-size: 14px; }
-  @media (max-width: 520px) { main { padding: 36px 16px 60px; } .line { font-size: 18px; } }
-  @media (prefers-reduced-motion: reduce) { .card { animation: none; opacity: 1; transform: none; } }
+  #out { color: var(--muted); font-size: 14px; white-space: pre-line; }
+  @media (max-width: 600px) {
+    main { padding: 36px 16px 60px; } .line { font-size: 17px; }
+    .row { grid-template-columns: 44px 1fr; padding: 16px 16px 16px 8px; } .rank { font-size: 28px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .row { animation: none; } }
 </style>
 </head>
 <body>
 <canvas id="bg"></canvas>
 <main>
-  <h1>Pick the <span>free voice</span></h1>
-  <p class="lead">Same Greek line, every free voice that speaks Greek. Press play, then mark each one. When you're done, press "Copy my votes" and paste it to Claude.</p>
+  <h1>Rank the <span>free voices</span></h1>
+  <p class="lead">Same Greek line in every free voice that speaks Greek. Play each one, mark it, and drag the rows by the number into your order, best at the top. Then press "Copy my ranking" and paste it to Claude.</p>
   <div class="line">«Η σκυλίτσα μου κυνηγάει πεταλούδες. Κάθε μία. Κάθε φορά.»</div>
-  <div class="grid" id="grid"></div>
+  <div id="list"></div>
   <footer>
-    <button class="cta" id="copy">Copy my votes</button>
+    <button class="cta" id="copy">Copy my ranking</button>
     <span id="out"></span>
   </footer>
 </main>
 <script>
+const PEAKS = /*PEAKS*/{};
 const SAMPLES = [
   { id: "gem38", file: "tts-samples/google-gemini-3.8-flash-tts.wav", name: "Gemini 3.8 Flash", tags: [["free","Free tier"],["free","Acts on cue"]], note: "Online, your Gemini key. Can act (laugh, whisper), 2 voices per call. Free-tier limits not published." },
   { id: "gem38lite", file: "tts-samples/google-gemini-3.8-flash-lite-tts.wav", name: "Gemini 3.8 Flash-Lite", tags: [["free","Free tier"]], note: "Lighter, faster version of the above." },
-  { id: "gem31", file: "tts-samples/google-gemini-3.1-flash-tts-preview.wav", name: "Gemini 3.1 Flash (your lessons' voice family)", tags: [["free","Free tier"],["warn","Preview"]], note: "Closest to what made the 70 lessons." },
-  { id: "fish", file: "tts-samples/openrouter-fish-s2.1-pro-free.mp3", name: "Fish Audio S2.1 (via OpenRouter)", tags: [["free","Free"],["free","Emotion tags"]], note: "Online, OpenRouter key. Strong acting. Free limits unknown." },
-  { id: "edge", file: "tts-samples/edge-tts-el-GR-AthinaNeural.mp3", name: "Microsoft Athina (Edge)", tags: [["free","Free"],["warn","Unofficial"]], note: "Edge browser's read-aloud voice. Free, but unofficial and Microsoft blocked a repeat request." },
-  { id: "piperjoy", file: "tts-samples/local-piper-joy.wav", name: "Piper — Joy", tags: [["local","On your laptop"],["free","Free"]], note: "Runs offline, no key, instant. No acting." },
+  { id: "gem31", file: "tts-samples/google-gemini-3.1-flash-tts-preview.wav", name: "Gemini 3.1 Flash", tags: [["free","Free tier"],["warn","Preview"]], note: "Same family as the voices of your 70 lessons." },
+  { id: "fish", file: "tts-samples/openrouter-fish-s2.1-pro-free.mp3", name: "Fish Audio S2.1", tags: [["free","Free"],["free","Emotion tags"]], note: "Online, through OpenRouter. Strong acting. Free limits unknown." },
+  { id: "edge", file: "tts-samples/edge-tts-el-GR-AthinaNeural.mp3", name: "Microsoft Athina", tags: [["free","Free"],["warn","Unofficial"]], note: "The Edge browser's read-aloud voice. Free but unofficial; Microsoft blocked a repeat request." },
+  { id: "piperjoy", file: "tts-samples/local-piper-joy.wav", name: "Piper — Joy", tags: [["local","On your laptop"],["free","Free"]], note: "Offline, no key, instant. No acting." },
   { id: "piperrap", file: "tts-samples/local-piper-rapunzelina.wav", name: "Piper — Rapunzelina", tags: [["local","On your laptop"],["free","Free"]], note: "Second offline Greek voice." },
-  { id: "voxtral", file: "tts-samples/mistral-voxtral-mini-tts-en_paul-GREEK-TEXT.mp3", name: "Mistral Voxtral (English voice)", tags: [["warn","No Greek"],["warn","Paid"]], note: "Proof only: an English voice reading Greek. Shown so you hear why it's out." },
+  { id: "voxtral", file: "tts-samples/mistral-voxtral-mini-tts-en_paul-GREEK-TEXT.mp3", name: "Mistral Voxtral (English voice)", tags: [["warn","No Greek"],["warn","Paid"]], note: "Proof only: an English voice reading Greek, so you can hear why it's out." },
 ];
 const LABELS = { good: "Love it", ok: "OK", no: "No" };
-let votes = {};
-try { votes = JSON.parse(localStorage.getItem("vf-voice-votes") || "{}"); } catch {}
-const save = () => { try { localStorage.setItem("vf-voice-votes", JSON.stringify(votes)); } catch {} };
+const store = { get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
+let votes = store.get("vf-voice-votes", {});
+let order = store.get("vf-voice-order", SAMPLES.map(s => s.id)).filter(id => SAMPLES.some(s => s.id === id));
+SAMPLES.forEach(s => { if (!order.includes(s.id)) order.push(s.id); });
 
-const ctx = new (window.AudioContext || window.webkitAudioContext)();
-let current = null;
-const grid = document.getElementById("grid");
 const PLAY = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg>';
 const STOP = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4.5" height="14" rx="1"/><rect x="13.5" y="5" width="4.5" height="14" rx="1"/></svg>';
+const list = document.getElementById("list");
+let current = null;
+const rows = {};
 
 SAMPLES.forEach((s, i) => {
-  const card = document.createElement("div");
-  card.className = "card"; card.style.animationDelay = (i * 70) + "ms";
-  card.innerHTML = `<div class="tags">${s.tags.map(([c,t]) => `<span class="tag ${c}">${t}</span>`).join("")}</div>
-    <h3>${s.name}</h3><p>${s.note}</p>
-    <div class="player"><button class="play" aria-label="Play">${PLAY}</button><canvas class="wave"></canvas></div>
-    <div class="votes">${Object.entries(LABELS).map(([k,l]) => `<button class="vote ${k}" data-v="${k}">${l}</button>`).join("")}</div>`;
-  grid.appendChild(card);
+  const row = document.createElement("div");
+  row.className = "row"; row.dataset.id = s.id; row.style.animationDelay = (i * 60) + "ms";
+  const peaks = PEAKS[s.id] || Array(56).fill(.3);
+  row.innerHTML = `
+    <div class="grip" title="Drag to rank"><div class="rank"></div><div class="dots"></div></div>
+    <div class="head"><h3>${s.name}</h3>${s.tags.map(([c,t]) => `<span class="tag ${c}">${t}</span>`).join("")}</div>
+    <div class="note">${s.note}</div>
+    <div class="bottom">
+      <button class="play" aria-label="Play ${s.name}">${PLAY}</button>
+      <div class="wave">${peaks.map(p => `<i style="height:${Math.max(6, p * 100)}%"></i>`).join("")}</div>
+      <div class="votes">${Object.entries(LABELS).map(([k,l]) => `<button class="vote ${k}" data-v="${k}">${l}</button>`).join("")}</div>
+    </div>`;
+  rows[s.id] = row;
+
+  // Plain <audio> on purpose: routing sound through an effects graph goes
+  // silent in browsers that keep that graph suspended.
   const audio = new Audio(s.file); audio.preload = "auto";
-  const src = ctx.createMediaElementSource(audio);
-  const an = ctx.createAnalyser(); an.fftSize = 256;
-  src.connect(an); an.connect(ctx.destination);
-  const cv = card.querySelector("canvas.wave"), g = cv.getContext("2d");
-  const data = new Uint8Array(an.frequencyBinCount);
-  let raf = 0, idle = 0;
-  function draw() {
-    const w = cv.width = cv.clientWidth * devicePixelRatio, h = cv.height = cv.clientHeight * devicePixelRatio;
-    an.getByteFrequencyData(data);
-    g.clearRect(0, 0, w, h);
-    const bars = 40, bw = w / bars;
-    for (let b = 0; b < bars; b++) {
-      let v = data[Math.floor(b * data.length / bars / 1.4)] / 255;
-      if (audio.paused) v = 0.08 + 0.06 * Math.sin(idle / 20 + b / 3);
-      const bh = Math.max(3, v * h * 0.95);
-      const grad = g.createLinearGradient(0, h, 0, 0);
-      grad.addColorStop(0, "#276075"); grad.addColorStop(1, "#76FFC2");
-      g.fillStyle = grad;
-      g.beginPath(); g.roundRect(b * bw + bw * 0.2, (h - bh) / 2, bw * 0.6, bh, bw * 0.3); g.fill();
-    }
-    idle++; raf = requestAnimationFrame(draw);
-  }
-  draw();
-  const btn = card.querySelector(".play");
-  btn.onclick = async () => {
-    await ctx.resume();
-    if (current && current.audio !== audio) { current.audio.pause(); current.audio.currentTime = 0; }
-    if (audio.paused) { audio.play(); current = { audio, card, btn }; } else { audio.pause(); audio.currentTime = 0; }
+  const btn = row.querySelector(".play"), bars = [...row.querySelectorAll(".wave i")];
+  const paintProgress = () => { const f = audio.duration ? audio.currentTime / audio.duration : 0; bars.forEach((b, k) => b.classList.toggle("done", k / bars.length < f)); };
+  audio.ontimeupdate = paintProgress;
+  audio.onplay = () => { row.classList.add("playing"); btn.innerHTML = STOP; (function loop(){ if (!audio.paused) { paintProgress(); requestAnimationFrame(loop); } })(); };
+  audio.onpause = audio.onended = () => { row.classList.remove("playing"); btn.innerHTML = PLAY; if (audio.ended) { audio.currentTime = 0; } paintProgress(); };
+  const start = (at) => {
+    if (current && current !== audio) { current.pause(); current.currentTime = 0; }
+    current = audio; if (at != null && audio.duration) audio.currentTime = at * audio.duration;
+    audio.play().catch(e => { document.getElementById("out").textContent = "Your browser blocked playback: " + e.message; });
   };
-  audio.onplay = () => { card.classList.add("playing"); btn.innerHTML = STOP; };
-  audio.onpause = audio.onended = () => { card.classList.remove("playing"); btn.innerHTML = PLAY; };
-  const vb = card.querySelectorAll(".vote");
+  btn.onclick = () => audio.paused ? start() : (audio.pause(), audio.currentTime = 0);
+  row.querySelector(".wave").onclick = (e) => { const r = e.currentTarget.getBoundingClientRect(); start((e.clientX - r.left) / r.width); };
+
+  const vb = row.querySelectorAll(".vote");
   const paint = () => vb.forEach(b => b.classList.toggle("on", votes[s.id] === b.dataset.v));
-  vb.forEach(b => b.onclick = () => { votes[s.id] = b.dataset.v; save(); paint(); });
+  vb.forEach(b => b.onclick = () => { votes[s.id] = b.dataset.v; store.set("vf-voice-votes", votes); paint(); });
   paint();
 });
 
+function render() {
+  order.forEach((id, i) => { list.appendChild(rows[id]); rows[id].querySelector(".rank").textContent = i + 1; });
+}
+render();
+
+// Drag to rank, with the other rows sliding out of the way (FLIP animation).
+function flip(mutate, skip) {
+  const before = new Map([...list.children].map(el => [el, el.getBoundingClientRect().top]));
+  mutate();
+  [...list.children].forEach(el => {
+    if (el === skip) return;
+    const dy = before.get(el) - el.getBoundingClientRect().top;
+    if (!dy) return;
+    el.animate([{ transform: `translateY(${dy}px)` }, { transform: "none" }], { duration: 260, easing: "cubic-bezier(.2,.8,.2,1)" });
+  });
+}
+list.addEventListener("pointerdown", (e) => {
+  const grip = e.target.closest(".grip"); if (!grip) return;
+  const row = grip.closest(".row"); e.preventDefault();
+  try { grip.setPointerCapture(e.pointerId); } catch {}
+  row.classList.add("dragging");
+  let startY = e.clientY, offset = 0;
+  const move = (ev) => {
+    offset = ev.clientY - startY;
+    row.style.transform = `translateY(${offset}px)`;
+    const mid = row.getBoundingClientRect().top + row.offsetHeight / 2;
+    const others = [...list.children].filter(el => el !== row);
+    let target = others.findIndex(el => { const r = el.getBoundingClientRect(); return mid < r.top + r.height / 2; });
+    if (target === -1) target = others.length;
+    const now = [...list.children].indexOf(row);
+    if (target !== now) {
+      const oldTop = row.getBoundingClientRect().top - offset;
+      flip(() => list.insertBefore(row, others[target] || null), row);
+      const newTop = row.getBoundingClientRect().top - offset;
+      startY += newTop - oldTop; offset = ev.clientY - startY;
+      row.style.transform = `translateY(${offset}px)`;
+      [...list.children].forEach((el, i) => el.querySelector(".rank").textContent = i + 1);
+    }
+  };
+  const up = () => {
+    removeEventListener("pointermove", move); removeEventListener("pointerup", up); removeEventListener("pointercancel", up);
+    row.animate([{ transform: row.style.transform }, { transform: "none" }], { duration: 220, easing: "cubic-bezier(.2,.8,.2,1)" });
+    row.style.transform = ""; row.classList.remove("dragging");
+    order = [...list.children].map(el => el.dataset.id); store.set("vf-voice-order", order);
+  };
+  // Listen on the whole window so the drag keeps going when the pointer leaves the handle.
+  addEventListener("pointermove", move); addEventListener("pointerup", up); addEventListener("pointercancel", up);
+});
+
 document.getElementById("copy").onclick = async () => {
-  const lines = SAMPLES.map(s => `${s.name}: ${LABELS[votes[s.id]] ?? "not marked"}`).join("\n");
+  const lines = order.map((id, i) => { const s = SAMPLES.find(x => x.id === id); return `${i + 1}. ${s.name} — ${LABELS[votes[id]] ?? "not marked"}`; }).join("\n");
   try { await navigator.clipboard.writeText(lines); document.getElementById("out").textContent = "Copied — paste it to Claude."; }
   catch { document.getElementById("out").textContent = lines; }
 };
 
-// Floating particles behind everything
+// Floating particles
 const bg = document.getElementById("bg"), b = bg.getContext("2d");
 let P = [];
 function size() { bg.width = innerWidth * devicePixelRatio; bg.height = innerHeight * devicePixelRatio;
