@@ -118,6 +118,20 @@ export async function testProvider(
         return interpret(r.status, r.body);
       }
 
+      case "gemini": {
+        // Listing models is free. A key can list yet be refused for
+        // generation ("project denied access"), so also ask one tiny question.
+        const r = await request(
+          "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent",
+          {
+            method: "POST",
+            headers: { "x-goog-api-key": key, "Content-Type": "application/json" },
+            body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: "Say ok" }] }] }),
+          }
+        );
+        return interpret(r.status, r.body);
+      }
+
       case "pexels": {
         const r = await request("https://api.pexels.com/v1/search?query=dog&per_page=1", {
           headers: { Authorization: key },

@@ -214,12 +214,10 @@ export interface BatchJob {
    *  uses a square frame, and "it uses the same call the boil does" is an
    *  argument, not a check. */
   outlineShape?: OutlineShape;
-  /** A folder of block WAVs already generated on the GPU box — 000.wav, 001.wav
-   *  and so on, one per block in script order.
-   *
-   *  Present because DramaBox does not run on this machine: it needs 24GB and
-   *  the laptop has 8. Narration is made on a rented L4 by
-   *  tools/dramabox-render-blocks.py and the audio comes back as files. */
+  /** A folder of block WAVs made outside the app — 000.wav, 001.wav and so
+   *  on, one per block in script order. The name is historical: it began with
+   *  DramaBox on a rented GPU (scripts now in tools/archive/google-cloud/);
+   *  the 70 course lessons used it for narration made by lms/tts. */
   dramaboxWavDir?: string;
   /** words.json from tools/timestamp-audio-for-puppets-and-subtitles.py — when each word was actually
    *  said. Without it every word time is estimated from letter counts. */

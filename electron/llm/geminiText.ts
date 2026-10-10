@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// Ask Gemini for a JSON answer, through Google Vertex.
+// Ask Gemini for a JSON answer, with a plain API key.
 //
 // WHY GEMINI FOR THE SHOT LIST. It reads a line of the script and writes an
 // English stock-footage search. NVIDIA did this before and became the least
@@ -8,58 +8,54 @@
 // that worked was a reasoning model that thought out loud around its JSON.
 // Gemini answered the same probe in 0.7 seconds with clean JSON.
 //
-// NO NEW KEY. This uses the machine's existing Google sign-in (Application
-// Default Credentials) on project `tier-1-ak` — the same one that made the
-// course's narration and puppet art. A missing sign-in is reported plainly and
-// the planner falls back to NVIDIA.
+// WHY A KEY, NOT GOOGLE CLOUD. Until 10 Oct 2026 this went through Vertex on a
+// Google Cloud project. Ak's rule since then: no Google Cloud unless there is
+// no other way. A Google AI Studio key (aistudio.google.com/apikey) reaches
+// the same models with nothing to set up, and anyone installing the app can
+// get one free. The key lives in the app's vault under "gemini".
 //
-// MODELS VERIFIED LIVE on 16 Sep 2026 against `tier-1-ak`, global location:
-//   gemini-2.5-flash  answered, 0.7s
-//   gemini-3.5-flash  answered, 1.2s
-//   gemini-3-flash, gemini-3-pro, gemini-2.0-flash, gemini-1.5-flash  — 404
-// Tried in order; the first that answers is kept for the rest of the run.
+// MODELS VERIFIED LIVE on 10 Oct 2026 with an AI Studio key: all four below
+// answered 200. Cheapest first — a shot list is a small job. Tried in order;
+// the first that answers is kept for the rest of the run.
 // ---------------------------------------------------------------------------
 
-import { GoogleAuth } from "google-auth-library";
+import * as keyStore from "../keyStore";
 
-const PROJECT = process.env.VIDEOFORGE_VERTEX_PROJECT ?? process.env.BYOK_VERTEX_PROJECT ?? "tier-1-ak";
-const MODELS = ["gemini-2.5-flash", "gemini-3.5-flash"];
+const MODELS = ["gemini-flash-lite-latest", "gemini-3.5-flash-lite", "gemini-flash-latest", "gemini-3.5-flash"];
+const API = "https://generativelanguage.googleapis.com/v1beta/models";
 
-let client: Awaited<ReturnType<GoogleAuth["getClient"]>> | null = null;
 let working: string | null = null;
 
 export async function geminiJson(system: string, user: string): Promise<string> {
-  if (!client) {
-    try {
-      const auth = new GoogleAuth({ scopes: "https://www.googleapis.com/auth/cloud-platform" });
-      client = await auth.getClient();
-    } catch {
-      throw new Error(
-        "This computer is not signed in to Google Cloud, so Gemini cannot plan the footage."
-      );
-    }
+  const key = await keyStore.getKey("gemini");
+  if (!key) {
+    throw new Error("No Gemini key saved (Backend Settings → Gemini), so Gemini cannot plan the footage.");
   }
 
   const order = working ? [working, ...MODELS.filter((m) => m !== working)] : MODELS;
   let lastProblem = "";
   for (const model of order) {
     try {
-      const res = await client.request<{
-        candidates?: { content?: { parts?: { text?: string }[] } }[];
-      }>({
-        url:
-          `https://aiplatform.googleapis.com/v1/projects/${PROJECT}/locations/global` +
-          `/publishers/google/models/${model}:generateContent`,
+      const res = await fetch(`${API}/${model}:generateContent`, {
         method: "POST",
-        timeout: 90000,
-        data: {
+        headers: { "x-goog-api-key": key, "content-type": "application/json" },
+        signal: AbortSignal.timeout(90000),
+        body: JSON.stringify({
           systemInstruction: { parts: [{ text: system }] },
           contents: [{ role: "user", parts: [{ text: user }] }],
           // JSON mode: the answer IS the object, with nothing around it to peel off.
           generationConfig: { responseMimeType: "application/json", temperature: 0.4 },
-        },
+        }),
       });
-      const text = (res.data.candidates?.[0]?.content?.parts ?? []).map((p) => p.text ?? "").join("");
+      const data = (await res.json()) as {
+        candidates?: { content?: { parts?: { text?: string }[] } }[];
+        error?: { message?: string };
+      };
+      if (!res.ok) {
+        lastProblem = `${model}: HTTP ${res.status} ${String(data.error?.message ?? "").slice(0, 120)}`;
+        continue;
+      }
+      const text = (data.candidates?.[0]?.content?.parts ?? []).map((p) => p.text ?? "").join("");
       if (!text.trim()) {
         lastProblem = `${model} returned nothing`;
         continue;
@@ -68,7 +64,7 @@ export async function geminiJson(system: string, user: string): Promise<string> 
       working = model;
       return text;
     } catch (e: any) {
-      lastProblem = `${model}: ${String(e?.response?.data?.error?.message ?? e?.message ?? e).slice(0, 120)}`;
+      lastProblem = `${model}: ${String(e?.message ?? e).slice(0, 120)}`;
     }
   }
   throw new Error(`Gemini could not plan the footage — ${lastProblem}`);

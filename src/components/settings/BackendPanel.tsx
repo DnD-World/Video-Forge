@@ -41,9 +41,17 @@ const PROVIDERS: Provider[] = [
     what:
       "Voices, charged by the character. A lesson is about 4,600 credits, so the " +
       "72-lesson course is roughly 334,000 — one month of Pro, or three of Creator " +
-      "with nothing spare for re-renders. DramaBox does the same course for about " +
-      "five dollars of rented card, but needs a machine started and stopped.",
+      "with nothing spare for re-renders. Paid — the app shows the cost before using it.",
     url: "https://elevenlabs.io/app/settings/api-keys",
+    access: "instant",
+  },
+  {
+    id: "gemini",
+    label: "Gemini",
+    what:
+      "Plans the background footage for every line, and (soon) voices and pictures. " +
+      "A Google AI Studio key — no Google Cloud project needed, and there is a free tier.",
+    url: "https://aistudio.google.com/apikey",
     access: "instant",
   },
   {
