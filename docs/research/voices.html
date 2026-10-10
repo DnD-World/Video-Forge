@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Free Voices — Listen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #071C26; --p900: #0B2837; --p800: #11374A; --p700: #1E465B; --p600: #276075;
+    --mint: #76FFC2; --mint-soft: #82D8B7; --mint-50: #E9FEF5; --navy: #344080;
+    --text: #E9FEF5; --muted: #9DB8C4;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    font-family: Sora, system-ui, sans-serif; color: var(--text);
+    background: radial-gradient(1200px 700px at 15% -10%, #1C4F65 0%, transparent 60%),
+                radial-gradient(900px 600px at 110% 20%, #344080 0%, transparent 55%),
+                var(--ink);
+    overflow-x: hidden;
+  }
+  canvas#bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+  main { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 56px 24px 80px; }
+  h1 { font-weight: 400; font-size: clamp(34px, 6vw, 64px); line-height: 1.05; margin: 0 0 12px; letter-spacing: -0.02em; }
+  h1 span { background: linear-gradient(90deg, var(--mint), #b6ffe0 40%, var(--mint-soft)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .lead { color: var(--muted); font-size: 18px; line-height: 1.6; max-width: 720px; margin: 0 0 8px; }
+  .line { font-size: 22px; margin: 18px 0 36px; padding: 18px 24px; border-radius: 40px; background: rgba(233,254,245,.06); border: 1px solid rgba(118,255,194,.18); display: inline-block; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; }
+  .card {
+    position: relative; border-radius: 40px; padding: 26px 26px 22px; display: flex; flex-direction: column;
+    background: linear-gradient(160deg, rgba(30,70,91,.72), rgba(11,40,55,.78));
+    border: 1px solid rgba(118,255,194,.14);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 20px 60px -30px rgba(0,0,0,.8), inset 0 1px 0 rgba(255,255,255,.06);
+    transform: translateY(24px); opacity: 0; animation: rise .7s cubic-bezier(.2,.8,.2,1) forwards;
+    transition: border-color .3s, box-shadow .3s, transform .3s;
+  }
+  .card:hover { border-color: rgba(118,255,194,.45); box-shadow: 0 30px 80px -30px rgba(118,255,194,.25), inset 0 1px 0 rgba(255,255,255,.08); }
+  .card.playing { border-color: var(--mint); box-shadow: 0 0 0 1px var(--mint), 0 30px 90px -20px rgba(118,255,194,.45); }
+  @keyframes rise { to { transform: none; opacity: 1; } }
+  .tag { display: inline-block; font-size: 12px; font-weight: 500; padding: 5px 12px; border-radius: 50px; margin: 0 6px 10px 0; }
+  .free { background: rgba(118,255,194,.15); color: var(--mint); }
+  .local { background: rgba(130,216,183,.12); color: var(--mint-soft); }
+  .warn { background: rgba(255,190,120,.14); color: #ffcf9a; }
+  .tags { min-height: 34px; }
+  .card h3 { font-weight: 500; font-size: 21px; margin: 2px 0 6px; }
+  .card p { color: var(--muted); font-size: 14px; line-height: 1.55; margin: 0 0 16px; flex: 1; }
+  .player { display: flex; align-items: center; gap: 14px; }
+  .play {
+    flex: none; width: 54px; height: 54px; border-radius: 50%; border: 0; cursor: pointer;
+    background: var(--mint); color: var(--ink); display: grid; place-items: center;
+    transition: transform .2s, box-shadow .3s; box-shadow: 0 8px 30px -8px rgba(118,255,194,.6);
+  }
+  .play:hover { transform: scale(1.08); }
+  .play svg { width: 20px; height: 20px; }
+  canvas.wave { flex: 1; height: 54px; width: 100%; }
+  .votes { display: flex; gap: 8px; margin-top: 18px; }
+  .vote {
+    flex: 1; font: 500 14px Sora, sans-serif; padding: 11px 0; border-radius: 50px; cursor: pointer;
+    background: rgba(17,55,74,.8); color: var(--text); border: 1px solid rgba(233,254,245,.12); transition: all .2s;
+  }
+  .vote:hover { border-color: var(--mint-soft); }
+  .vote.on.good { background: var(--mint); color: var(--ink); border-color: var(--mint); }
+  .vote.on.ok { background: #276075; border-color: var(--mint-soft); }
+  .vote.on.no { background: #4a2430; border-color: #ff8a9a; color: #ffd0d7; }
+  footer { margin-top: 40px; display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+  .cta { font: 500 18px Sora, sans-serif; padding: 15px 30px; border-radius: 50px; border: 0; cursor: pointer; background: var(--mint); color: var(--ink); }
+  .cta:active { transform: scale(.97); }
+  #out { color: var(--muted); font-size: 14px; }
+  @media (max-width: 520px) { main { padding: 36px 16px 60px; } .line { font-size: 18px; } }
+  @media (prefers-reduced-motion: reduce) { .card { animation: none; opacity: 1; transform: none; } }
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<main>
+  <h1>Pick the <span>free voice</span></h1>
+  <p class="lead">Same Greek line, every free voice that speaks Greek. Press play, then mark each one. When you're done, press "Copy my votes" and paste it to Claude.</p>
+  <div class="line">«Η σκυλίτσα μου κυνηγάει πεταλούδες. Κάθε μία. Κάθε φορά.»</div>
+  <div class="grid" id="grid"></div>
+  <footer>
+    <button class="cta" id="copy">Copy my votes</button>
+    <span id="out"></span>
+  </footer>
+</main>
+<script>
+const SAMPLES = [
+  { id: "gem38", file: "tts-samples/google-gemini-3.8-flash-tts.wav", name: "Gemini 3.8 Flash", tags: [["free","Free tier"],["free","Acts on cue"]], note: "Online, your Gemini key. Can act (laugh, whisper), 2 voices per call. Free-tier limits not published." },
+  { id: "gem38lite", file: "tts-samples/google-gemini-3.8-flash-lite-tts.wav", name: "Gemini 3.8 Flash-Lite", tags: [["free","Free tier"]], note: "Lighter, faster version of the above." },
+  { id: "gem31", file: "tts-samples/google-gemini-3.1-flash-tts-preview.wav", name: "Gemini 3.1 Flash (your lessons' voice family)", tags: [["free","Free tier"],["warn","Preview"]], note: "Closest to what made the 70 lessons." },
+  { id: "fish", file: "tts-samples/openrouter-fish-s2.1-pro-free.mp3", name: "Fish Audio S2.1 (via OpenRouter)", tags: [["free","Free"],["free","Emotion tags"]], note: "Online, OpenRouter key. Strong acting. Free limits unknown." },
+  { id: "edge", file: "tts-samples/edge-tts-el-GR-AthinaNeural.mp3", name: "Microsoft Athina (Edge)", tags: [["free","Free"],["warn","Unofficial"]], note: "Edge browser's read-aloud voice. Free, but unofficial and Microsoft blocked a repeat request." },
+  { id: "piperjoy", file: "tts-samples/local-piper-joy.wav", name: "Piper — Joy", tags: [["local","On your laptop"],["free","Free"]], note: "Runs offline, no key, instant. No acting." },
+  { id: "piperrap", file: "tts-samples/local-piper-rapunzelina.wav", name: "Piper — Rapunzelina", tags: [["local","On your laptop"],["free","Free"]], note: "Second offline Greek voice." },
+  { id: "voxtral", file: "tts-samples/mistral-voxtral-mini-tts-en_paul-GREEK-TEXT.mp3", name: "Mistral Voxtral (English voice)", tags: [["warn","No Greek"],["warn","Paid"]], note: "Proof only: an English voice reading Greek. Shown so you hear why it's out." },
+];
+const LABELS = { good: "Love it", ok: "OK", no: "No" };
+let votes = {};
+try { votes = JSON.parse(localStorage.getItem("vf-voice-votes") || "{}"); } catch {}
+const save = () => { try { localStorage.setItem("vf-voice-votes", JSON.stringify(votes)); } catch {} };
+
+const ctx = new (window.AudioContext || window.webkitAudioContext)();
+let current = null;
+const grid = document.getElementById("grid");
+const PLAY = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg>';
+const STOP = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4.5" height="14" rx="1"/><rect x="13.5" y="5" width="4.5" height="14" rx="1"/></svg>';
+
+SAMPLES.forEach((s, i) => {
+  const card = document.createElement("div");
+  card.className = "card"; card.style.animationDelay = (i * 70) + "ms";
+  card.innerHTML = `<div class="tags">${s.tags.map(([c,t]) => `<span class="tag ${c}">${t}</span>`).join("")}</div>
+    <h3>${s.name}</h3><p>${s.note}</p>
+    <div class="player"><button class="play" aria-label="Play">${PLAY}</button><canvas class="wave"></canvas></div>
+    <div class="votes">${Object.entries(LABELS).map(([k,l]) => `<button class="vote ${k}" data-v="${k}">${l}</button>`).join("")}</div>`;
+  grid.appendChild(card);
+  const audio = new Audio(s.file); audio.preload = "auto";
+  const src = ctx.createMediaElementSource(audio);
+  const an = ctx.createAnalyser(); an.fftSize = 256;
+  src.connect(an); an.connect(ctx.destination);
+  const cv = card.querySelector("canvas.wave"), g = cv.getContext("2d");
+  const data = new Uint8Array(an.frequencyBinCount);
+  let raf = 0, idle = 0;
+  function draw() {
+    const w = cv.width = cv.clientWidth * devicePixelRatio, h = cv.height = cv.clientHeight * devicePixelRatio;
+    an.getByteFrequencyData(data);
+    g.clearRect(0, 0, w, h);
+    const bars = 40, bw = w / bars;
+    for (let b = 0; b < bars; b++) {
+      let v = data[Math.floor(b * data.length / bars / 1.4)] / 255;
+      if (audio.paused) v = 0.08 + 0.06 * Math.sin(idle / 20 + b / 3);
+      const bh = Math.max(3, v * h * 0.95);
+      const grad = g.createLinearGradient(0, h, 0, 0);
+      grad.addColorStop(0, "#276075"); grad.addColorStop(1, "#76FFC2");
+      g.fillStyle = grad;
+      g.beginPath(); g.roundRect(b * bw + bw * 0.2, (h - bh) / 2, bw * 0.6, bh, bw * 0.3); g.fill();
+    }
+    idle++; raf = requestAnimationFrame(draw);
+  }
+  draw();
+  const btn = card.querySelector(".play");
+  btn.onclick = async () => {
+    await ctx.resume();
+    if (current && current.audio !== audio) { current.audio.pause(); current.audio.currentTime = 0; }
+    if (audio.paused) { audio.play(); current = { audio, card, btn }; } else { audio.pause(); audio.currentTime = 0; }
+  };
+  audio.onplay = () => { card.classList.add("playing"); btn.innerHTML = STOP; };
+  audio.onpause = audio.onended = () => { card.classList.remove("playing"); btn.innerHTML = PLAY; };
+  const vb = card.querySelectorAll(".vote");
+  const paint = () => vb.forEach(b => b.classList.toggle("on", votes[s.id] === b.dataset.v));
+  vb.forEach(b => b.onclick = () => { votes[s.id] = b.dataset.v; save(); paint(); });
+  paint();
+});
+
+document.getElementById("copy").onclick = async () => {
+  const lines = SAMPLES.map(s => `${s.name}: ${LABELS[votes[s.id]] ?? "not marked"}`).join("\n");
+  try { await navigator.clipboard.writeText(lines); document.getElementById("out").textContent = "Copied — paste it to Claude."; }
+  catch { document.getElementById("out").textContent = lines; }
+};
+
+// Floating particles behind everything
+const bg = document.getElementById("bg"), b = bg.getContext("2d");
+let P = [];
+function size() { bg.width = innerWidth * devicePixelRatio; bg.height = innerHeight * devicePixelRatio;
+  P = Array.from({ length: Math.min(90, innerWidth / 14) }, () => ({ x: Math.random() * bg.width, y: Math.random() * bg.height, r: (Math.random() * 1.8 + .4) * devicePixelRatio, s: Math.random() * .3 + .08, a: Math.random() * .5 + .15 })); }
+size(); addEventListener("resize", size);
+const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+(function tick() {
+  b.clearRect(0, 0, bg.width, bg.height);
+  for (const p of P) { if (!still) { p.y -= p.s * devicePixelRatio; if (p.y < -5) p.y = bg.height + 5; }
+    b.beginPath(); b.arc(p.x, p.y, p.r, 0, 7); b.fillStyle = `rgba(118,255,194,${p.a})`; b.fill(); }
+  requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>
