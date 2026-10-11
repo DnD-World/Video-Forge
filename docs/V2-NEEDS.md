@@ -105,3 +105,14 @@ Guard needed: Live models can skip or add words (2.5 skipped a sentence in testi
 ## Rendering engine (10 Oct 2026)
 
 Ak asked why not **HyperFrames** (github.com/heygen-com/hyperframes): Apache-2.0, ~60k stars, active, HTML+GSAP → MP4, has a Remotion-port workflow. Removes the Remotion licence risk. Trial port first (see docs/research/hyperframes-trial.md).
+
+## The Forge look (11 Oct 2026)
+
+Ak's verdict on docs/design/looks-pick.html: **A Star sparks — Love it**; B Embers — OK; C Anvil button — OK.
+
+- Pure black background; tiny orange-red sparks like the logo's, drifting and twinkling (half the first density).
+- Click: 3–4 tiny orange-red sparks, always flying north-east (up and to the right).
+- stravelakis navy/mint for the interface; Sora font; see-through panels with a navy-to-mint hairline edge.
+- **Render is a pill**, not the anvil (Ak, 11 Oct).
+- Logos: build/brand/video-forge-logo.jpg, image-forge-logo.jpg; symbol crops in docs/design/.
+- The Image Forge switch: options on docs/design/switch-pick.html, verdict pending.
