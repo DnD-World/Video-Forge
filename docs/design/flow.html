@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video Forge — Four Steps</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root { --panel: rgba(11, 40, 55, .18); --navy: #344080; --navy-hi: #5562B8; --mint: #76FFC2; --mint-soft: #82D8B7;
+    --text: #E9FEF5; --muted: #8FA9B5; --dim: #5E7782; --line: rgba(130, 216, 183, .16); --spark: #FF8A30;
+    --edge: linear-gradient(135deg, rgba(85, 98, 184, .55), rgba(118, 255, 194, .22) 45%, rgba(85, 98, 184, .10) 70%, rgba(118, 255, 194, .30)); }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #000; color: var(--text); font-family: Sora, system-ui, sans-serif; }
+  canvas.layer { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  #fx { z-index: 50; }
+  .shell { position: relative; z-index: 1; height: 100%; display: grid; grid-template-rows: auto auto 1fr; gap: 14px; padding: 14px; max-width: 1500px; margin: 0 auto; }
+  .ring { position: relative; background: var(--panel); border-radius: 18px; backdrop-filter: blur(3px); }
+  .ring::before { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; background: var(--edge); pointer-events: none;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
+
+  /* top bar */
+  .bar { display: flex; align-items: center; gap: 14px; padding: 8px 14px; }
+  .twin { display: flex; gap: 4px; padding: 4px; border-radius: 99px; background: rgba(0,0,0,.45); position: relative; }
+  .twin span { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; }
+  .twin img { height: 38px; mix-blend-mode: screen; }
+  .twin span.off { filter: grayscale(.85) brightness(.85); opacity: .85; transform: scale(.82); }
+  .twin::after { content: ""; position: absolute; left: 4px; top: 4px; width: 46px; height: 46px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(118,255,194,.35); background: radial-gradient(circle, rgba(118,255,194,.16), transparent 70%); }
+  .name { font-size: 20px; font-weight: 500; } .name small { display: block; font-size: 10px; letter-spacing: .12em; color: var(--dim); font-weight: 300; }
+  .project { margin-left: 18px; color: var(--muted); font-size: 14px; } .project b { color: var(--text); font-weight: 500; }
+  .gear { margin-left: auto; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); display: grid; place-items: center; color: var(--muted); cursor: pointer; }
+  .gear:hover { color: var(--mint); border-color: var(--mint); }
+
+  /* the four steps */
+  .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .step { display: flex; align-items: center; gap: 12px; padding: 12px 16px; cursor: pointer; border-radius: 16px; transition: background .25s; }
+  .step .n { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 600; font-size: 15px; border: 1px solid var(--line); color: var(--muted); transition: all .25s; flex: none; }
+  .step .t { font-weight: 500; } .step .s { font-size: 12px; color: var(--dim); }
+  .step.done .n { background: rgba(118,255,194,.14); color: var(--mint); border-color: rgba(118,255,194,.4); }
+  .step.on { background: rgba(118, 255, 194, .07); }
+  .step.on .n { background: var(--mint); color: #001a10; border-color: var(--mint); box-shadow: 0 0 22px -4px rgba(118,255,194,.7); }
+  .step:hover .n { border-color: var(--mint); }
+
+  .stage { min-height: 0; display: none; gap: 14px; }
+  .stage.on { display: grid; animation: in .45s cubic-bezier(.2,.8,.2,1); }
+  @keyframes in { from { opacity: 0; transform: translateY(10px); } }
+  .card { padding: 18px; display: flex; flex-direction: column; gap: 14px; min-height: 0; overflow: auto; }
+  h3 { margin: 0; font-weight: 500; font-size: 17px; } .hint { color: var(--muted); font-size: 13px; line-height: 1.55; margin: 0; }
+  .label { font-size: 11px; letter-spacing: .14em; color: var(--dim); text-transform: uppercase; }
+  .pill { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); font-size: 14px; cursor: pointer; transition: all .2s; background: transparent; font-family: inherit; }
+  .pill:hover { color: var(--text); border-color: var(--mint-soft); } .pill.on { background: var(--mint); color: #001a10; border-color: var(--mint); font-weight: 500; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .primary { padding: 14px 26px; border-radius: 99px; border: 0; cursor: pointer; font: 600 16px Sora, sans-serif; color: #001a10; background: linear-gradient(100deg, var(--navy), #3f63a0 45%, var(--mint)); box-shadow: 0 0 26px -6px rgba(118,255,194,.65); }
+  .primary:hover { box-shadow: 0 0 36px -4px rgba(118,255,194,.85); }
+  .next { margin-left: auto; }
+  .more { color: var(--muted); font-size: 13px; cursor: pointer; border-top: 1px dashed var(--line); padding-top: 12px; }
+  .more:hover { color: var(--mint); }
+
+  /* 1 SCRIPT */
+  #s1 { grid-template-columns: 280px 1fr 280px; }
+  .src { display: grid; gap: 10px; }
+  .srcbtn { text-align: left; padding: 14px; border-radius: 14px; border: 1px solid var(--line); cursor: pointer; background: rgba(0,0,0,.35); transition: all .2s; }
+  .srcbtn:hover, .srcbtn.on { border-color: var(--mint); background: rgba(118,255,194,.06); }
+  .srcbtn b { display: block; font-weight: 500; margin-bottom: 3px; } .srcbtn span { font-size: 12px; color: var(--muted); }
+  .script { font-size: 15px; line-height: 1.85; padding: 6px 4px; }
+  .script p { margin: 0 0 6px; } .script .who { font-weight: 600; margin-right: 6px; } .script .tag { color: var(--spark); font-size: 13px; }
+  .stat { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px; } .stat b { font-weight: 500; color: var(--mint); }
+  .ok { color: var(--mint); font-size: 13px; }
+
+  /* 2 CAST */
+  #s2 { grid-template-columns: 1fr 1fr 1fr 220px; }
+  .who { } .face { width: 110px; height: 110px; border-radius: 50%; overflow: hidden; margin: 6px auto 4px; border: 2px solid var(--c); box-shadow: 0 0 26px -6px var(--c); background: #0B2837; }
+  .face img { width: 100%; height: 100%; object-fit: cover; }
+  .cname { text-align: center; font-size: 20px; font-weight: 500; }
+  .field { display: flex; justify-content: space-between; align-items: center; padding: 11px 14px; border-radius: 12px; background: rgba(0,0,0,.45); border: 1px solid var(--line); font-size: 14px; cursor: pointer; }
+  .field i { font-style: normal; color: var(--dim); font-size: 12px; } .field:hover { border-color: var(--mint-soft); }
+  .listen { align-self: center; }
+  .add { display: grid; place-items: center; text-align: center; gap: 10px; border: 1px dashed rgba(118,255,194,.3); border-radius: 18px; padding: 18px; color: var(--muted); }
+
+  /* 3 LOOK */
+  #s3 { grid-template-columns: 1fr 340px; }
+  .tpls { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .tpl { border-radius: 16px; border: 1px solid var(--line); overflow: hidden; cursor: pointer; transition: all .25s; background: rgba(0,0,0,.4); }
+  .tpl:hover { transform: translateY(-3px); border-color: var(--mint-soft); } .tpl.on { border-color: var(--mint); box-shadow: 0 0 0 1px var(--mint), 0 0 30px -8px rgba(118,255,194,.6); }
+  .tpl .scr { aspect-ratio: 9/12; position: relative; background: #03090c; overflow: hidden; }
+  .tpl .lab { padding: 10px 12px; font-size: 14px; } .tpl .lab small { display: block; color: var(--dim); font-size: 11px; }
+  .dot { position: absolute; width: 28%; aspect-ratio: 1; border-radius: 50%; border: 2px solid var(--c); background: #0B2837; overflow: hidden; }
+  .dot img { width: 100%; height: 100%; object-fit: cover; }
+  .tpl:hover .dot, .tpl.on .dot { animation: talk .9s ease-in-out infinite alternate; }
+  .tpl:hover .dot:nth-child(2), .tpl.on .dot:nth-child(2) { animation-delay: .45s; }
+  @keyframes talk { from { box-shadow: 0 0 0 0 var(--c); } to { box-shadow: 0 0 0 6px transparent, 0 0 18px var(--c); transform: scale(1.04); } }
+  .capline { position: absolute; left: 8%; right: 8%; bottom: 8%; height: 6px; border-radius: 4px; background: rgba(233,254,245,.5); }
+  .capline::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 30%; border-radius: inherit; background: var(--mint); }
+  .tpl:hover .capline::after, .tpl.on .capline::after { animation: words 1.8s linear infinite; }
+  @keyframes words { to { left: 70%; } }
+  .desk { position: absolute; left: 0; right: 0; bottom: 22%; height: 16%; background: linear-gradient(#344080, #11374A); }
+  .ticker { position: absolute; left: 0; right: 0; bottom: 0; height: 9%; background: var(--mint); opacity: .85; }
+  .wave { position: absolute; left: 10%; right: 10%; top: 62%; height: 14%; display: flex; gap: 3px; align-items: center; }
+  .wave i { flex: 1; background: var(--mint); border-radius: 2px; height: 30%; }
+  .tpl:hover .wave i, .tpl.on .wave i { animation: bar .5s ease-in-out infinite alternate; }
+  .wave i:nth-child(2n) { animation-delay: .15s !important; } .wave i:nth-child(3n) { animation-delay: .3s !important; }
+  @keyframes bar { to { height: 100%; } }
+  .big { position: absolute; left: 6%; right: 6%; top: 30%; text-align: center; font-weight: 700; font-size: 22px; color: var(--text); text-shadow: 0 2px 10px #000; }
+  .big em { font-style: normal; color: var(--spark); }
+
+  /* 4 MAKE */
+  #s4 { grid-template-columns: 1fr 360px; }
+  .preview { display: grid; place-items: center; position: relative; }
+  .phone { height: min(64vh, 640px); aspect-ratio: 9/16; border-radius: 18px; border: 1px solid rgba(130,216,183,.25); background: #02060a; position: relative; overflow: hidden; }
+  .phone .dot { width: 34%; }
+  .ctrl { display: flex; align-items: center; gap: 12px; margin-top: 14px; }
+  .play { width: 52px; height: 52px; border-radius: 50%; border: 0; background: var(--mint); color: #001a10; font-size: 18px; cursor: pointer; box-shadow: 0 0 24px -6px rgba(118,255,194,.7); }
+  .scrub { width: 320px; height: 5px; border-radius: 4px; background: rgba(130,216,183,.18); position: relative; }
+  .scrub::after { content: ""; position: absolute; inset: 0 70% 0 0; border-radius: inherit; background: linear-gradient(90deg, var(--navy-hi), var(--mint)); }
+  .sound { font-size: 12px; color: var(--mint); }
+  .tabs { display: flex; gap: 18px; border-bottom: 1px solid var(--line); } .tabs b { font-weight: 400; color: var(--muted); padding-bottom: 8px; cursor: pointer; } .tabs b.on { color: var(--text); box-shadow: inset 0 -2px 0 var(--mint); }
+  .pane { display: none; flex-direction: column; gap: 12px; } .pane.on { display: flex; }
+  .drop { border: 1px dashed rgba(118,255,194,.35); border-radius: 14px; padding: 22px; text-align: center; color: var(--muted); font-size: 14px; }
+  .dest { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+  .sw { width: 40px; height: 22px; border-radius: 99px; background: rgba(130,216,183,.2); position: relative; cursor: pointer; transition: background .2s; }
+  .sw::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--muted); transition: all .2s; }
+  .sw.on { background: rgba(118,255,194,.45); } .sw.on::after { left: 21px; background: var(--mint); }
+
+  .note { position: fixed; z-index: 60; left: 18px; bottom: 18px; max-width: 300px; padding: 14px 16px; font-size: 13px; color: var(--muted); line-height: 1.5; }
+  .note b { color: var(--text); font-weight: 500; }
+</style>
+</head>
+<body>
+<canvas id="sky" class="layer"></canvas><canvas id="fx" class="layer"></canvas>
+<div class="shell">
+  <header class="ring bar">
+    <div class="twin"><span><img src="video-mark.jpg" alt=""></span><span class="off"><img src="image-mark.jpg" alt=""></span></div>
+    <div class="name">Video Forge<small>AI VIDEO GENERATOR · BYOK</small></div>
+    <div class="project">Project: <b>Dogs &amp; Butterflies</b> · saved</div>
+    <div class="gear" title="Settings: keys and preferences">⚙</div>
+  </header>
+
+  <nav class="steps">
+    <div class="step ring done" data-go="1"><div class="n">1</div><div><div class="t">Script</div><div class="s">What is said</div></div></div>
+    <div class="step ring" data-go="2"><div class="n">2</div><div><div class="t">Cast</div><div class="s">Who says it</div></div></div>
+    <div class="step ring" data-go="3"><div class="n">3</div><div><div class="t">Look</div><div class="s">How it looks and sounds</div></div></div>
+    <div class="step ring" data-go="4"><div class="n">4</div><div><div class="t">Make</div><div class="s">Preview, render, publish</div></div></div>
+  </nav>
+
+  <!-- 1 SCRIPT -->
+  <section class="stage" id="s1">
+    <div class="ring card">
+      <h3>Start from</h3>
+      <div class="src">
+        <div class="srcbtn on"><b>Write it with AI</b><span>Give a topic or notes. Drafted in your format, with your characters.</span></div>
+        <div class="srcbtn"><b>Paste or type</b><span>One line per speech: <code>Name: words</code>.</span></div>
+        <div class="srcbtn"><b>Import a document</b><span>Google Doc, Word, text, PDF. Each heading becomes a video.</span></div>
+        <div class="srcbtn"><b>From a web page or a whole site</b><span>One video per post, page or breed.</span></div>
+      </div>
+    </div>
+    <div class="ring card">
+      <div class="row"><h3>The script</h3><span class="hint" style="margin-left:auto">[laughs] [whispers] [points] are acted, never read out</span></div>
+      <div class="script">
+        <p><span class="who" style="color:#76FFC2">Καίτη</span>Η σκυλίτσα μου κυνηγάει πεταλούδες. Κάθε μία. Κάθε φορά. <span class="tag">[laughs]</span> Και ποτέ δεν πιάνει καμία.</p>
+        <p><span class="who" style="color:#8a9cff">Σερίφης</span>Δεν κυνηγάει πεταλούδες. Κυνηγάει κάτι που κινείται. <span class="tag">[points]</span> ΑΥΤΟ ΕΙΝΑΙ ΤΟ ΕΝΣΤΙΚΤΟ.</p>
+        <p><span class="who" style="color:#FF8A30">Τσίκα</span><span class="tag">[giggles]</span> Εγώ κυνηγάω τα πάντα! Πεταλούδες, φύλλα, τη σκιά μου!</p>
+        <p><span class="who" style="color:#76FFC2">Καίτη</span>Οπότε δεν φταίει που δεν με ακούει όταν τρέχει;</p>
+        <p><span class="who" style="color:#8a9cff">Σερίφης</span>Πρέπει να γίνεις πιο ενδιαφέρουσα από την πεταλούδα. <span class="tag">[shrugs]</span></p>
+        <p style="color:var(--dim)">+ 7 more lines…</p>
+      </div>
+    </div>
+    <div class="ring card">
+      <h3>Checked</h3>
+      <div class="stat">Lines <b>12</b></div><div class="stat">Characters <b>3</b></div><div class="stat">Length <b>≈ 1 min 40 s</b></div><div class="stat">Sound cues <b>1</b></div>
+      <div class="ok">✓ Every line has a speaker. Nothing will be read out by mistake.</div>
+      <div class="row" style="margin-top:auto"><button class="primary next" data-go="2">Next: Cast →</button></div>
+    </div>
+  </section>
+
+  <!-- 2 CAST -->
+  <section class="stage" id="s2">
+    <div class="ring card who" style="--c:#76FFC2">
+      <div class="face"><img src="face-kaiti.png" alt=""></div><div class="cname">Καίτη</div>
+      <div class="label">Voice</div>
+      <div class="field">Gemini 2.5 · Kore <i>free · acts</i></div>
+      <button class="pill listen">▶ Listen to her first line</button>
+      <div class="more">More: frame, waveform, position…</div>
+    </div>
+    <div class="ring card who" style="--c:#8a9cff">
+      <div class="face"><img src="face-serifis.png" alt=""></div><div class="cname">Σερίφης</div>
+      <div class="label">Voice</div>
+      <div class="field">Gemini 2.5 · Charon <i>free · acts</i></div>
+      <button class="pill listen">▶ Listen to his first line</button>
+      <div class="more">More: frame, waveform, position…</div>
+    </div>
+    <div class="ring card who" style="--c:#FF8A30">
+      <div class="face"><img src="face-tsika.png" alt=""></div><div class="cname">Τσίκα</div>
+      <div class="label">Voice</div>
+      <div class="field">Fish Audio <i>free · funny accent</i></div>
+      <button class="pill listen">▶ Listen to her first line</button>
+      <div class="more">More: frame, waveform, position…</div>
+    </div>
+    <div class="add">
+      <div style="font-size:28px;color:var(--mint)">+</div>
+      <div><b style="color:var(--text);font-weight:500">Add a character</b><br><span style="font-size:13px">From your library, or make a new one with Image Forge</span></div>
+      <button class="primary" data-go="3" style="margin-top:20px">Next: Look →</button>
+    </div>
+  </section>
+
+  <!-- 3 LOOK -->
+  <section class="stage" id="s3">
+    <div class="ring card">
+      <div class="row"><h3>Pick a template</h3><span class="hint" style="margin-left:auto">Hover to see it move. It sets everything; change only what you want on the right.</span></div>
+      <div class="tpls">
+        <div class="tpl on"><div class="scr">
+          <div class="dot" style="--c:#76FFC2;left:36%;top:12%"><img src="face-kaiti.png" alt=""></div>
+          <div class="dot" style="--c:#8a9cff;left:12%;top:44%"><img src="face-serifis.png" alt=""></div>
+          <div class="dot" style="--c:#FF8A30;left:60%;top:44%"><img src="face-tsika.png" alt=""></div>
+          <div class="capline"></div></div><div class="lab">Lesson<small>Characters discuss a topic</small></div></div>
+        <div class="tpl"><div class="scr">
+          <div class="dot" style="--c:#76FFC2;left:36%;top:30%"><img src="face-kaiti.png" alt=""></div>
+          <div class="desk"></div><div class="ticker"></div></div><div class="lab">News desk<small>Anchor, headlines, ticker</small></div></div>
+        <div class="tpl"><div class="scr">
+          <div class="dot" style="--c:#76FFC2;left:14%;top:22%"><img src="face-kaiti.png" alt=""></div>
+          <div class="dot" style="--c:#8a9cff;left:58%;top:22%"><img src="face-serifis.png" alt=""></div>
+          <div class="wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div><div class="lab">Podcast<small>Two heads, big captions</small></div></div>
+        <div class="tpl"><div class="scr">
+          <div class="dot" style="--c:#FF8A30;left:36%;top:8%"><img src="face-tsika.png" alt=""></div>
+          <div class="big">Η ΣΚΙΑ ΜΟΥ <em>ΕΙΝΑΙ</em> Η ΚΑΛΥΤΕΡΗ!</div><div class="capline"></div></div><div class="lab">Promo<small>Short, punchy, logo at the end</small></div></div>
+      </div>
+    </div>
+    <div class="ring card">
+      <div class="label">Background</div>
+      <div class="row"><span class="pill on">Stock footage</span><span class="pill">AI pictures</span><span class="pill">AI clips</span><span class="pill">Plain set</span></div>
+      <p class="hint">Stock clips are picked per line; you see thumbnails and swap any before rendering.</p>
+      <div class="label">Subtitles</div>
+      <div class="row"><span class="pill on">Word highlight</span><span class="pill">Plain</span><span class="pill">Big + emoji</span><span class="pill">None</span></div>
+      <div class="label">Music</div>
+      <div class="row"><span class="pill on">Playful</span><span class="pill">Calm</span><span class="pill">Upbeat</span><span class="pill">My files</span><span class="pill">Envato…</span></div>
+      <div class="label">Intro / outro</div>
+      <div class="row"><span class="pill on">Sofa intro</span><span class="pill on">Waving outro</span><span class="pill">None</span></div>
+      <div class="row" style="margin-top:auto"><button class="primary next" data-go="4">Next: Make →</button></div>
+    </div>
+  </section>
+
+  <!-- 4 MAKE -->
+  <section class="stage" id="s4">
+    <div class="ring card preview">
+      <div>
+        <div class="phone">
+          <div class="dot" style="--c:#76FFC2;left:33%;top:10%"><img src="face-kaiti.png" alt=""></div>
+          <div class="dot" style="--c:#8a9cff;left:8%;top:45%"><img src="face-serifis.png" alt=""></div>
+          <div class="dot" style="--c:#FF8A30;left:58%;top:45%"><img src="face-tsika.png" alt=""></div>
+          <div style="position:absolute;left:8%;right:8%;bottom:7%;text-align:center;font-weight:600;font-size:15px">Η σκυλίτσα μου <span style="color:var(--mint)">κυνηγάει</span> πεταλούδες.</div>
+        </div>
+        <div class="ctrl"><button class="play">▶</button><div class="scrub"></div><span class="sound">♪ with sound, every layer</span></div>
+      </div>
+    </div>
+    <div class="ring card">
+      <div class="tabs"><b class="on" data-pane="p1">Render</b><b data-pane="p2">Batch</b><b data-pane="p3">Publish</b></div>
+      <div class="pane on" id="p1">
+        <div class="label">Shape</div>
+        <div class="row"><span class="pill on">9:16 vertical</span><span class="pill">16:9 wide</span><span class="pill">Both</span></div>
+        <div class="label">Where</div>
+        <div class="row"><span class="pill on">This laptop</span><span class="pill">Mini PC (overnight)</span></div>
+        <p class="hint">About 4 minutes. Cost: free (Gemini Live voices, stock footage).</p>
+        <button class="primary">Render</button>
+      </div>
+      <div class="pane" id="p2">
+        <div class="drop">Drop a spreadsheet here<br><span style="font-size:12px">One row per video: title, script, template, characters</span></div>
+        <p class="hint">Or download the template sheet. Videos render one after another and resume if stopped.</p>
+      </div>
+      <div class="pane" id="p3">
+        <div class="dest">YouTube (private, then scheduled)<span class="sw on"></span></div>
+        <div class="dest">TikTok<span class="sw"></span></div>
+        <div class="dest">Instagram / Facebook<span class="sw"></span></div>
+        <div class="dest">Hand-off folder for n8n / Hermes<span class="sw on"></span></div>
+        <p class="hint">Title, description and transcript filled in from the script.</p>
+      </div>
+    </div>
+  </section>
+</div>
+<div class="ring note" id="note"><span onclick="this.parentElement.remove()" style="float:right;cursor:pointer;color:var(--mint);margin-left:10px">✕</span><b>Mock-up, not the app.</b> Click the four steps (or the Next buttons) and the tabs in step 4. Hover the templates in step 3. Nothing here renders.</div>
+
+<script>
+// steps
+const go = (n) => {
+  document.querySelectorAll(".stage").forEach((s) => s.classList.toggle("on", s.id === "s" + n));
+  document.querySelectorAll(".step").forEach((s) => { const k = +s.dataset.go; s.classList.toggle("on", k === +n); s.classList.toggle("done", k < n); });
+};
+document.querySelectorAll("[data-go]").forEach((el) => el.addEventListener("click", () => go(el.dataset.go)));
+go(1);
+// simple toggles
+document.querySelectorAll(".srcbtn").forEach((b) => b.onclick = () => { document.querySelectorAll(".srcbtn").forEach((x) => x.classList.remove("on")); b.classList.add("on"); });
+document.querySelectorAll(".row").forEach((r) => r.querySelectorAll(".pill").forEach((p) => p.onclick = () => { if (r.closest("#s3") && r.previousElementSibling?.textContent === "Intro / outro") { p.classList.toggle("on"); return; } r.querySelectorAll(".pill").forEach((x) => x.classList.remove("on")); p.classList.add("on"); }));
+document.querySelectorAll(".tpl").forEach((t) => t.onclick = () => { document.querySelectorAll(".tpl").forEach((x) => x.classList.remove("on")); t.classList.add("on"); });
+document.querySelectorAll(".tabs b").forEach((b) => b.onclick = () => { document.querySelectorAll(".tabs b").forEach((x) => x.classList.remove("on")); b.classList.add("on"); document.querySelectorAll(".pane").forEach((p) => p.classList.toggle("on", p.id === b.dataset.pane)); });
+document.querySelectorAll(".sw").forEach((s) => s.onclick = () => s.classList.toggle("on"));
+
+// sparks — the Forge look
+const ember = [255,138,48], hot = [255,196,120], red = [232,64,28], deep = [150,30,12];
+const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
+const sky = document.getElementById("sky"), fx = document.getElementById("fx"), g = sky.getContext("2d"), f = fx.getContext("2d");
+let W, H, P = [], S = [], dpr = Math.min(2, devicePixelRatio || 1); const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+function size() { W = innerWidth; H = innerHeight; for (const c of [sky, fx]) { c.width = W * dpr; c.height = H * dpr; } g.setTransform(dpr,0,0,dpr,0,0); f.setTransform(dpr,0,0,dpr,0,0);
+  P = Array.from({ length: Math.round(W * H / 5200) }, () => { const r = Math.random(); return { x: Math.random() * W, y: Math.random() * H, r: Math.random() < .93 ? .25 + Math.random() * .55 : .8 + Math.random() * .6, c: r < .45 ? ember : r < .75 ? red : r < .92 ? hot : deep, tw: Math.random() * 6.28, ts: .6 + Math.random() * 2.2, vx: (Math.random() - .5) * .04, vy: -.01 - Math.random() * .03, a: .25 + Math.random() * .75 }; }); }
+addEventListener("pointerdown", (e) => { const n = 3 + Math.round(Math.random()); for (let i = 0; i < n; i++) { const a = -Math.PI / 2 * (.12 + Math.random() * .76), sp = 1.5 + Math.random() * 1.7; S.push({ x: e.clientX, y: e.clientY, px: e.clientX, py: e.clientY, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, t: 0, life: 30 + Math.random() * 20, hot: Math.random() < .5 }); } });
+let t = 0; (function tick() { t += 1 / 60; g.clearRect(0, 0, W, H);
+  for (const p of P) { if (!still) { p.x += p.vx; p.y += p.vy; if (p.y < -2) { p.y = H + 2; p.x = Math.random() * W; } } const a = p.a * (.55 + .45 * Math.sin(p.tw + t * p.ts)); g.fillStyle = `rgba(${p.c},${a})`; g.beginPath(); g.arc(p.x, p.y, p.r, 0, 6.283); g.fill(); }
+  f.clearRect(0, 0, W, H); S = S.filter((s) => s.t < s.life);
+  for (const s of S) { s.px = s.x; s.py = s.y; s.x += s.vx; s.y += s.vy; s.vy += .025; s.vx *= .97; s.vy *= .97; s.t++; const k = 1 - s.t / s.life, c = mix(red, s.hot ? hot : ember, k);
+    f.strokeStyle = `rgba(${c},${k})`; f.lineWidth = .9; f.lineCap = "round"; f.beginPath(); f.moveTo(s.px - s.vx * 2.2, s.py - s.vy * 2.2); f.lineTo(s.x, s.y); f.stroke(); f.fillStyle = `rgba(${c},${k})`; f.beginPath(); f.arc(s.x, s.y, .9, 0, 6.283); f.fill(); }
+  requestAnimationFrame(tick); })();
+size(); addEventListener("resize", size);
+</script>
+</body>
+</html>
