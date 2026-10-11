@@ -1,3 +1,4 @@
+import { engineOf, geminiModeOf, DEFAULT_GEMINI_MODEL, DEFAULT_GEMINI_VOICE } from "../../lib/narration/geminiVoices";
 import { useEffect, useState } from "react";
 import { useProjectStore } from "../../store/useProjectStore";
 import { useSettingsStore } from "../../store/useSettingsStore";
@@ -142,16 +143,15 @@ export default function NarrationPanel() {
     }
 
     const speakerById = new Map(speakers.map((s) => [s.id, s]));
+    // Only Piper needs a voice file picked; Gemini falls back to the default
+    // voice, ElevenLabs is checked by its own engine.
     const missingVoice = segments.find((seg) => {
       const sp = speakerById.get(seg.speakerId);
       if (!sp) return true;
-      return !sp.voiceId;
+      return engineOf(sp) === "piper" && !sp.voiceId;
     });
     if (missingVoice) {
-      setGenError(
-        `Speaker "${missingVoice.speakerLabel}" has no Piper voice assigned below. ` +
-          `This button is the Piper path — DramaBox voices are generated on the GPU box.`
-      );
+      setGenError(`Speaker "${missingVoice.speakerLabel}" uses Piper but has no Piper voice picked below.`);
       setGenerating(false);
       return;
     }
@@ -159,14 +159,28 @@ export default function NarrationPanel() {
     try {
       const resolvedSegments = segments.map((seg) => {
         const sp = speakerById.get(seg.speakerId)!;
+        const engine = engineOf(sp);
         return {
           speakerId: seg.speakerId,
           speakerLabel: seg.speakerLabel,
           text: seg.text,
           language,
-          engine: "piper" as const,
+          engine,
+          direction: seg.direction,
           piperPythonPath,
           piperOnnxPath: sp.voiceId,
+          elevenVoiceId: sp.elevenVoiceId,
+          elevenModel: sp.elevenModel,
+          eleven: sp.eleven,
+          gemini:
+            engine === "gemini"
+              ? {
+                  mode: geminiModeOf(sp.geminiModel ?? DEFAULT_GEMINI_MODEL),
+                  model: sp.geminiModel ?? DEFAULT_GEMINI_MODEL,
+                  voice: sp.geminiVoice ?? DEFAULT_GEMINI_VOICE,
+                  persona: sp.openingPhrase,
+                }
+              : undefined,
         };
       });
 
@@ -213,15 +227,16 @@ export default function NarrationPanel() {
             <Picker
               aria-label={`Voice engine for ${sp.label}`}
               className="min-w-[170px]"
-              value={sp.ttsEngine ?? "dramabox"}
+              value={engineOf(sp)}
               options={[
-                { value: "dramabox", label: "DramaBox (acts)" },
-                { value: "piper", label: "Piper (fast)" },
+                { value: "gemini", label: "Gemini (free, acts)" },
+                { value: "elevenlabs", label: "ElevenLabs (paid)" },
+                { value: "piper", label: "Piper (offline)" },
               ]}
-              onChange={(v) => updateSpeaker(sp.id, { ttsEngine: v as "dramabox" | "piper" })}
+              onChange={(v) => updateSpeaker(sp.id, { ttsEngine: v as "gemini" | "elevenlabs" | "piper" })}
             />
 
-            {(sp.ttsEngine ?? "dramabox") === "piper" ? (
+            {engineOf(sp) === "piper" ? (
               <Picker
                 aria-label={`Piper voice for ${sp.label}`}
                 className="flex-1 min-w-[160px]"

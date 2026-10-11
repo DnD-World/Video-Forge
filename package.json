@@ -18,7 +18,7 @@
     "outros": "electron . --add-outros",
     "ask-forge": "node tools/ask-forge.mjs",
     "brand": "node tools/use-brand.mjs",
-    "test": "node --test tools/lib/forgeLink.test.mjs tools/lib/brand.test.mjs tools/lib/migrateUserData.test.mjs",
+    "test": "node --test tools/lib/forgeLink.test.mjs tools/lib/brand.test.mjs tools/lib/migrateUserData.test.mjs tools/lib/scriptMatch.test.mjs",
     "test:link": "node --test tools/lib/forgeLink.test.mjs"
   },
   "dependencies": {

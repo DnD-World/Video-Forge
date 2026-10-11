@@ -72,7 +72,12 @@ export interface JobSpeaker {
    *  are given — the same precedence the preview and the render already use. */
   sheetPath?: string;
   puppetPath?: string;
-  engine: "piper" | "dramabox" | "elevenlabs";
+  engine: "piper" | "dramabox" | "elevenlabs" | "gemini";
+  /** Gemini: `live` (default — unlimited free, checked word by word) or `tts`
+   *  (10 a day free). Model and voice default to Ak's picks (docs/V2-NEEDS.md). */
+  geminiMode?: "live" | "tts";
+  geminiModel?: string;
+  geminiVoice?: string;
   /** ElevenLabs voice id, and this character's settings. */
   elevenVoiceId?: string;
   /** `eleven_v3` (default — acts, reads the script's directions as tags) or
@@ -491,7 +496,21 @@ export async function runBatchJob(
       speakerLabel: seg.speakerLabel,
       text: seg.text,
       language,
-      engine: c.engine === "elevenlabs" ? ("elevenlabs" as const) : ("piper" as const),
+      engine:
+        c.engine === "elevenlabs"
+          ? ("elevenlabs" as const)
+          : c.engine === "gemini"
+          ? ("gemini" as const)
+          : ("piper" as const),
+      gemini:
+        c.engine === "gemini"
+          ? {
+              mode: c.geminiMode ?? "live",
+              model: c.geminiModel ?? "gemini-2.5-flash-native-audio-latest",
+              voice: c.geminiVoice ?? "Kore",
+              persona: c.openingPhrase,
+            }
+          : undefined,
       // The words outside the quotes. On v3 they become the audio tag; every
       // other engine here ignores them.
       direction: seg.direction,

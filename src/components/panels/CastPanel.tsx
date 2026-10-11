@@ -26,6 +26,12 @@ import { usePuppetDefs } from "../../lib/puppets/usePuppets";
 import { builtinPuppetPath, type BrandInfo, type BuiltinCharacter } from "../../store/builtinCast";
 import { defaultTrackWaveform } from "../../lib/waveform/buildTracks";
 import type { OutlineShape } from "../../store/types";
+import { GEMINI_MODELS, GEMINI_VOICES, DEFAULT_GEMINI_MODEL, DEFAULT_GEMINI_VOICE, geminiModeOf, engineOf } from "../../lib/narration/geminiVoices";
+
+/** DramaBox was retired on 10 Oct 2026 (it needed a rented Google Cloud GPU).
+ *  Its per-character knobs stay in the code — the Narration tab can still
+ *  write its block files — but are no longer shown. */
+const SHOW_RETIRED_DRAMABOX = false;
 
 const SHAPES: { id: OutlineShape; label: string }[] = [
   { id: "circle", label: "Circle" },
@@ -155,7 +161,7 @@ export function CastPanel() {
       // without them.
       openingPhrase: c.openingPhrase,
       voiceRef: c.voiceRef,
-      ttsEngine: "dramabox",
+      ttsEngine: "gemini",
       ...(c.dramabox ? { dramabox: c.dramabox } : {}),
       bgColor: "#1a1a1a",
       bgOpacity: 0,
@@ -546,19 +552,39 @@ export function CastPanel() {
               <Picker
                 aria-label="Voice engine"
                 className="w-full"
-                value={speaker.ttsEngine ?? "dramabox"}
+                value={engineOf(speaker)}
                 options={[
-                  { value: "dramabox", label: "DramaBox — acts, runs on the GPU box" },
+                  { value: "gemini", label: "Gemini — free, acts, many languages" },
                   { value: "elevenlabs", label: "ElevenLabs — charged per character" },
-                  { value: "piper", label: "Piper — fast, local, flat" },
+                  { value: "piper", label: "Piper — offline, flat" },
                 ]}
                 onChange={(v) =>
                   updateSpeaker(speaker.id, {
-                    ttsEngine: v as "dramabox" | "elevenlabs" | "piper",
+                    ttsEngine: v as "gemini" | "elevenlabs" | "piper",
                   })
                 }
               />
-              {(speaker.ttsEngine ?? "dramabox") === "piper" && (
+              {engineOf(speaker) === "gemini" && (
+                <>
+                  <Picker
+                    aria-label="Gemini model"
+                    className="w-full"
+                    value={speaker.geminiModel ?? DEFAULT_GEMINI_MODEL}
+                    options={GEMINI_MODELS.map((m) => ({ value: m.id, label: m.label }))}
+                    onChange={(v) =>
+                      updateSpeaker(speaker.id, { geminiModel: v, geminiMode: geminiModeOf(v) })
+                    }
+                  />
+                  <Picker
+                    aria-label="Gemini voice"
+                    className="w-full"
+                    value={speaker.geminiVoice ?? DEFAULT_GEMINI_VOICE}
+                    options={GEMINI_VOICES.map((v) => ({ value: v.name, label: `${v.name} — ${v.feel}` }))}
+                    onChange={(v) => updateSpeaker(speaker.id, { geminiVoice: v })}
+                  />
+                </>
+              )}
+              {engineOf(speaker) === "piper" && (
                 <Picker
                   aria-label="Piper voice"
                   className="w-full"
@@ -581,18 +607,20 @@ export function CastPanel() {
                   onChange={(v) => updateSpeaker(speaker.id, { voiceId: v || undefined })}
                 />
               )}
-              <p className="text-sm text-neutral-500">
-                DramaBox voices come from the reference clip below, and the
-                audio is generated on the GPU box — write its files from the
-                Narration tab.
-              </p>
+              {engineOf(speaker) === "gemini" && (
+                <p className="text-sm text-neutral-500">
+                  Write [laughs], [whispers], [sighs] inside a line to have it
+                  acted, never read out. Free voices are checked word by word and
+                  re-made if they drift from the script.
+                </p>
+              )}
             </section>
 
             {/* Every DramaBox knob, per character. These used to be literals in
                 a Python file on the GPU box, which meant one setting for the
                 whole cast and no way to see what it was. */}
             <section className="space-y-3">
-              <div className="label-etched">DramaBox — this voice</div>
+              <div className="label-etched">Character</div>
               <label className="block">
                 <span className="label-etched text-sm">Opens their blocks with</span>
                 <input
@@ -605,6 +633,7 @@ export function CastPanel() {
                   }
                 />
               </label>
+              {SHOW_RETIRED_DRAMABOX && (
               <label className="block">
                 <span className="label-etched text-sm">Reference clip</span>
                 <input
@@ -617,7 +646,8 @@ export function CastPanel() {
                   }
                 />
               </label>
-              {(speaker.ttsEngine ?? "dramabox") === "elevenlabs" && (
+              )}
+              {engineOf(speaker) === "elevenlabs" && (
                 <div className="space-y-2">
                   <label className="block">
                     <span className="label-etched text-sm">ElevenLabs voice</span>
@@ -718,7 +748,7 @@ export function CastPanel() {
                 </div>
               )}
 
-              {(speaker.ttsEngine ?? "dramabox") !== "elevenlabs" && (
+              {SHOW_RETIRED_DRAMABOX && (
               <VoiceControls
                 value={speaker.dramabox ?? {}}
                 onChange={(dramabox) => updateSpeaker(speaker.id, { dramabox })}

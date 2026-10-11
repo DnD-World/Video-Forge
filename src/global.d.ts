@@ -198,15 +198,7 @@ declare global {
         ) => Promise<{ audioBuffer: ArrayBuffer; durationMs: number }>;
         listElevenVoices: () => Promise<{ id: string; name: string; labels?: string }[]>;
         generateNarration: (
-          segments: {
-            speakerId: string;
-            speakerLabel: string;
-            text: string;
-            language: string;
-            engine?: "piper";
-            piperPythonPath?: string;
-            piperOnnxPath?: string;
-          }[],
+          segments: import("../electron/tts/buildNarration").NarrationInput[],
           speakerOrder: string[],
           pauses?: { sameMs: number; turnMs: number }
         ) => Promise<{

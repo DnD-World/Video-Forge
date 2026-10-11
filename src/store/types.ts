@@ -333,7 +333,12 @@ export interface SpeakerConfig {
    *
    *  `dramabox` generates on a rented GPU rather than here, so the app writes
    *  its two files and the audio comes back as WAVs; `piper` runs locally. */
-  ttsEngine?: "dramabox" | "piper" | "elevenlabs";
+  ttsEngine?: "dramabox" | "piper" | "elevenlabs" | "gemini";
+  /** Gemini (the default since 11 Oct 2026): Live = unlimited free and checked
+   *  word by word; TTS = 10 a day free. See electron/tts/geminiEngine.ts. */
+  geminiMode?: "live" | "tts";
+  geminiModel?: string;
+  geminiVoice?: string;
   voiceId?: string;      // assigned Piper voice's onnxPath, if any
   /** The voice id from the ElevenLabs library or a clone. An id, not a name. */
   elevenVoiceId?: string;

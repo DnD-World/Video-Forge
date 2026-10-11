@@ -137,15 +137,7 @@ const api = {
       ipcRenderer.invoke("tts:listElevenVoices"),
 
     generateNarration: (
-      segments: {
-        speakerId: string;
-        speakerLabel: string;
-        text: string;
-        language: string;
-        engine?: "piper";
-        piperPythonPath?: string;
-        piperOnnxPath?: string;
-      }[],
+      segments: import("./tts/buildNarration").NarrationInput[],
       speakerOrder: string[],
       pauses?: { sameMs: number; turnMs: number }
     ): Promise<{

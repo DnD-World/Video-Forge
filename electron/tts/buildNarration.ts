@@ -17,6 +17,7 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { synthesizeWithPiper } from "./piperEngine";
 import * as elevenlabs from "./elevenlabsEngine";
+import { synthesizeGemini, type GeminiMode } from "./geminiEngine";
 import { concatWavBuffers } from "../audio/concatWav";
 import { analyzeNarration } from "../audio/analyzeNarration";
 import { trimSilence, squeezeSilence } from "../audio/trimSilence";
@@ -35,7 +36,9 @@ export interface NarrationInput {
   speakerLabel: string;
   text: string;
   language: string;
-  engine?: "piper" | "elevenlabs";
+  engine?: "piper" | "elevenlabs" | "gemini";
+  /** Gemini: Live (unlimited free, checked word by word) or TTS (10 a day). */
+  gemini?: { mode: GeminiMode; model: string; voice: string; persona?: string };
   /** How this one line is delivered — the words outside the quotes.
    *
    *  Carried this far ONLY for ElevenLabs v3, which takes its acting from a
@@ -128,6 +131,7 @@ function narrationKey(segments: NarrationInput[], pauses: NarrationPauses): stri
       s.eleven?.similarityBoost,
       s.eleven?.style,
       s.eleven?.speed,
+      s.engine === "gemini" ? [s.gemini?.mode, s.gemini?.model, s.gemini?.voice, s.gemini?.persona, s.direction] : undefined,
     ]),
     pauses.sameMs,
     pauses.turnMs,
@@ -204,7 +208,44 @@ export async function buildNarration(
   /** Only ever spent, never refunded — worth reporting at the end. */
   let credits = 0;
 
-  for (const seg of segments) {
+  // GEMINI LINES ARE MADE FOUR AT A TIME. A Live take plus its check is
+  // 15–20 seconds, so a 50-line lesson one by one is a quarter of an hour.
+  // The free tier caps tokens per minute, not requests; four in flight sits
+  // well inside it. Results land in their own slot, so order is kept.
+  const geminiAudio = new Map<number, Buffer>();
+  const geminiIdx = segments.flatMap((s, i) => (s.engine === "gemini" ? [i] : []));
+  const lowMatches: string[] = [];
+  for (let k = 0; k < geminiIdx.length; k += 4) {
+    await Promise.all(
+      geminiIdx.slice(k, k + 4).map(async (i) => {
+        const seg = segments[i];
+        if (!seg.gemini) throw new Error(`Speaker "${seg.speakerLabel}" has no Gemini voice chosen.`);
+        const take = await synthesizeGemini({
+          text: seg.text,
+          direction: seg.direction,
+          persona: seg.gemini.persona,
+          language: seg.language,
+          mode: seg.gemini.mode,
+          model: seg.gemini.model,
+          voice: seg.gemini.voice,
+        });
+        if (take.match < 0.85) lowMatches.push(`${seg.speakerLabel}: ${seg.text.slice(0, 60)}`);
+        geminiAudio.set(i, take.audioBuffer);
+      })
+    );
+  }
+  if (lowMatches.length) {
+    console.log(
+      `[video-forge] ${lowMatches.length} Gemini line(s) never matched the script after 3 tries — listen to these:\n  ` +
+        lowMatches.join("\n  ")
+    );
+  }
+
+  for (const [i, seg] of segments.entries()) {
+    if (seg.engine === "gemini") {
+      buffers.push(trimmed(geminiAudio.get(i)!));
+      continue;
+    }
     if (seg.engine === "elevenlabs") {
       // THE TAG IS ADDED HERE AND NOWHERE EARLIER. `seg.text` stays the clean
       // Greek the subtitle shows and the aligner is given; only the string
@@ -273,7 +314,8 @@ export async function buildNarration(
     // written with "Hahaha" is spoken as written whichever engine reads it. The
     // subtitle should still say «Χαχαχα». Applied here, after synthesis, so it
     // can never change what was spoken.
-    text: displayLine(seg.text),
+    // [x] markings are performed, never shown.
+    text: displayLine(seg.text.replace(/\[[^\]]*\]\s*/g, "")).trim(),
     startMs: timing[i].startMs,
     endMs: timing[i].endMs,
   }));
