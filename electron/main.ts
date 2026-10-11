@@ -64,10 +64,13 @@ function createWindow() {
     height: 950,
     minWidth: 1280,
     minHeight: 800,
-    backgroundColor: "#0b0b0d",
+    backgroundColor: "#000000",
     show: false,
     autoHideMenuBar: true,
     title: "Video Forge",
+    // The taskbar and title-bar icon. The installed .exe carries its own
+    // (build/icon.png, via electron-builder); this covers the dev build too.
+    icon: path.join(app.getAppPath(), "out", "renderer", "icon-256.png"),
     webPreferences: {
       preload: path.join(__dirname, "../preload/preload.mjs"),
       contextIsolation: true,
