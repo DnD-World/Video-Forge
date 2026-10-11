@@ -166,6 +166,9 @@ export type RenderProps = {
    *  The source is a 16:9 clip with the brand in its middle half, so `cropTop`
    *  and `cropBottom` (fractions of the SOURCE height) cut the empty grey away
    *  and what is left is fitted to the full frame width. */
+  /** True when rendered by HyperFrames: the intro clip, banner and logo are
+   *  native layers in the page there, so the composition leaves them out. */
+  nativeMedia?: boolean;
   bannerVideo?: { fileName: string; cropTop: number; cropBottom: number } | null;
   /** A logo drawn over everything. `fileName` is inside the render's public
    *  dir, like every other asset the composition loads. */

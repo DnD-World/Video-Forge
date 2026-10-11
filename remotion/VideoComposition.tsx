@@ -84,6 +84,7 @@ export function VideoComposition({
   introOverlay = null,
   topScrim = null,
   bannerVideo = null,
+  nativeMedia = false,
 }: RenderProps) {
   const frame = useCurrentFrame();
   const { width, height, fps, durationInFrames } = useVideoConfig();
@@ -455,7 +456,7 @@ export function VideoComposition({
           with the voices to the frame; the lesson's audio — including the
           music swell this covers — plays underneath throughout. Muted, because
           the clip's own sound was stripped and the lesson owns the soundtrack. */}
-      {introOverlay && (
+      {introOverlay && !nativeMedia && (
         <Sequence
           from={0}
           durationInFrames={Math.max(1, Math.round((introOverlay.durationMs / 1000) * fps))}
@@ -475,7 +476,7 @@ export function VideoComposition({
           the video inside is scaled to the frame width and shifted up by the
           cut, so only the middle shows. Looped for the whole lesson, muted —
           the lesson owns the soundtrack. */}
-      {bannerVideo && (() => {
+      {bannerVideo && !nativeMedia && (() => {
         const keep = 1 - bannerVideo.cropTop - bannerVideo.cropBottom;
         const sourceHeight = width * (9 / 16);
         const boxHeight = sourceHeight * keep;
@@ -504,7 +505,7 @@ export function VideoComposition({
       {/* ABOVE EVERYTHING, including the subtitles. A logo that a caption can
           cover is not a logo — the one thing it has to do is be present in
           every frame it is asked for. */}
-      {logo && (
+      {logo && !nativeMedia && (
         <Img
           src={staticFile(logo.fileName)}
           style={{
