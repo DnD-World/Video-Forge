@@ -40,11 +40,11 @@ export function geminiModeOf(modelId: string | undefined): GeminiMode {
   return GEMINI_MODELS.find((m) => m.id === modelId)?.mode ?? "live";
 }
 
-export type VoiceEngine = "gemini" | "elevenlabs" | "piper";
+export type VoiceEngine = "gemini" | "fish" | "elevenlabs" | "piper";
 
 /** Which engine a speaker really uses. DramaBox was retired on 10 Oct 2026
  *  (it needed a rented Google Cloud GPU), so old projects that still say
  *  "dramabox" — or say nothing — get the free default instead. */
 export function engineOf(sp: { ttsEngine?: string }): VoiceEngine {
-  return sp.ttsEngine === "elevenlabs" || sp.ttsEngine === "piper" ? sp.ttsEngine : "gemini";
+  return sp.ttsEngine === "elevenlabs" || sp.ttsEngine === "piper" || sp.ttsEngine === "fish" ? sp.ttsEngine : "gemini";
 }

@@ -55,6 +55,13 @@ const PROVIDERS: Provider[] = [
     access: "instant",
   },
   {
+    id: "openrouter",
+    label: "OpenRouter",
+    what: "Fish Audio, the voice with the funny foreign accent. Free model; the key is free too.",
+    url: "https://openrouter.ai/keys",
+    access: "instant",
+  },
+  {
     id: "nvidia",
     label: "NVIDIA",
     what: "Writes and polishes your script with GLM-5.2. Free to use.",

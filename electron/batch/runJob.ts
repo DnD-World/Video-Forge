@@ -72,7 +72,7 @@ export interface JobSpeaker {
    *  are given — the same precedence the preview and the render already use. */
   sheetPath?: string;
   puppetPath?: string;
-  engine: "piper" | "dramabox" | "elevenlabs" | "gemini";
+  engine: "piper" | "dramabox" | "elevenlabs" | "gemini" | "fish";
   /** Gemini: `live` (default — unlimited free, checked word by word) or `tts`
    *  (10 a day free). Model and voice default to Ak's picks (docs/V2-NEEDS.md). */
   geminiMode?: "live" | "tts";
@@ -501,6 +501,8 @@ export async function runBatchJob(
           ? ("elevenlabs" as const)
           : c.engine === "gemini"
           ? ("gemini" as const)
+          : c.engine === "fish"
+          ? ("fish" as const)
           : ("piper" as const),
       gemini:
         c.engine === "gemini"

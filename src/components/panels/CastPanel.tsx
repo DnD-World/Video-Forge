@@ -555,12 +555,13 @@ export function CastPanel() {
                 value={engineOf(speaker)}
                 options={[
                   { value: "gemini", label: "Gemini — free, acts, many languages" },
+                  { value: "fish", label: "Fish Audio — free, a funny foreign accent" },
                   { value: "elevenlabs", label: "ElevenLabs — charged per character" },
                   { value: "piper", label: "Piper — offline, flat" },
                 ]}
                 onChange={(v) =>
                   updateSpeaker(speaker.id, {
-                    ttsEngine: v as "gemini" | "elevenlabs" | "piper",
+                    ttsEngine: v as "gemini" | "fish" | "elevenlabs" | "piper",
                   })
                 }
               />

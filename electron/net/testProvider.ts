@@ -132,6 +132,12 @@ export async function testProvider(
         return interpret(r.status, r.body);
       }
 
+      case "openrouter": {
+        // Reading your own key's details is free and needs a valid key.
+        const r = await request("https://openrouter.ai/api/v1/key", { headers: { Authorization: `Bearer ${key}` } });
+        return interpret(r.status, r.body);
+      }
+
       case "pexels": {
         const r = await request("https://api.pexels.com/v1/search?query=dog&per_page=1", {
           headers: { Authorization: key },

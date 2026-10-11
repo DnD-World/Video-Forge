@@ -230,10 +230,11 @@ export default function NarrationPanel() {
               value={engineOf(sp)}
               options={[
                 { value: "gemini", label: "Gemini (free, acts)" },
+                { value: "fish", label: "Fish Audio (free, foreign accent)" },
                 { value: "elevenlabs", label: "ElevenLabs (paid)" },
                 { value: "piper", label: "Piper (offline)" },
               ]}
-              onChange={(v) => updateSpeaker(sp.id, { ttsEngine: v as "gemini" | "elevenlabs" | "piper" })}
+              onChange={(v) => updateSpeaker(sp.id, { ttsEngine: v as "gemini" | "fish" | "elevenlabs" | "piper" })}
             />
 
             {engineOf(sp) === "piper" ? (

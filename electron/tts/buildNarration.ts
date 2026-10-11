@@ -18,6 +18,7 @@ import crypto from "node:crypto";
 import { synthesizeWithPiper } from "./piperEngine";
 import * as elevenlabs from "./elevenlabsEngine";
 import { synthesizeGemini, type GeminiMode } from "./geminiEngine";
+import { synthesizeFish } from "./fishEngine";
 import { concatWavBuffers } from "../audio/concatWav";
 import { analyzeNarration } from "../audio/analyzeNarration";
 import { trimSilence, squeezeSilence } from "../audio/trimSilence";
@@ -36,7 +37,7 @@ export interface NarrationInput {
   speakerLabel: string;
   text: string;
   language: string;
-  engine?: "piper" | "elevenlabs" | "gemini";
+  engine?: "piper" | "elevenlabs" | "gemini" | "fish";
   /** Gemini: Live (unlimited free, checked word by word) or TTS (10 a day). */
   gemini?: { mode: GeminiMode; model: string; voice: string; persona?: string };
   /** How this one line is delivered — the words outside the quotes.
@@ -131,7 +132,7 @@ function narrationKey(segments: NarrationInput[], pauses: NarrationPauses): stri
       s.eleven?.similarityBoost,
       s.eleven?.style,
       s.eleven?.speed,
-      s.engine === "gemini" ? [s.gemini?.mode, s.gemini?.model, s.gemini?.voice, s.gemini?.persona, s.direction] : undefined,
+      s.engine === "fish" ? ["fish", s.direction] : s.engine === "gemini" ? [s.gemini?.mode, s.gemini?.model, s.gemini?.voice, s.gemini?.persona, s.direction] : undefined,
     ]),
     pauses.sameMs,
     pauses.turnMs,
@@ -242,6 +243,10 @@ export async function buildNarration(
   }
 
   for (const [i, seg] of segments.entries()) {
+    if (seg.engine === "fish") {
+      buffers.push(trimmed(await synthesizeFish(seg.text, seg.direction)));
+      continue;
+    }
     if (seg.engine === "gemini") {
       buffers.push(trimmed(geminiAudio.get(i)!));
       continue;
