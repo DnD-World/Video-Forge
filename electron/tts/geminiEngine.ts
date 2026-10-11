@@ -18,7 +18,11 @@
 // The Live models are told so; the TTS models understand them natively.
 // ---------------------------------------------------------------------------
 
+import WebSocket from "ws";
 import * as keyStore from "../keyStore";
+// WHY THE `ws` PACKAGE. Electron 31's Node has no built-in WebSocket (Node 22
+// does, which is why this worked when tested outside the app and failed the
+// first time inside it, 11 Oct 2026).
 import { wordMatch } from "./scriptMatch";
 
 import type { GeminiMode } from "../../src/lib/narration/geminiVoices";
@@ -115,8 +119,8 @@ function liveTake(line: GeminiLine, key: string): Promise<{ pcm: Buffer; transcr
           outputAudioTranscription: {},
         },
       }));
-    ws.onmessage = async (e: MessageEvent) => {
-      const raw = typeof e.data === "string" ? e.data : Buffer.from(await (e.data as Blob).arrayBuffer()).toString();
+    ws.onmessage = (e: WebSocket.MessageEvent) => {
+      const raw = typeof e.data === "string" ? e.data : Buffer.from(e.data as Buffer).toString();
       const m = JSON.parse(raw);
       if (m.setupComplete) {
         ws.send(JSON.stringify({ clientContent: { turns: [{ role: "user", parts: [{ text: line.text }] }], turnComplete: true } }));
@@ -130,7 +134,7 @@ function liveTake(line: GeminiLine, key: string): Promise<{ pcm: Buffer; transcr
       if (m.error) finish(new Error(`${line.model}: ${JSON.stringify(m.error).slice(0, 200)}`));
     };
     ws.onerror = () => finish(new Error(`${line.model}: connection failed`));
-    ws.onclose = (e: CloseEvent) =>
+    ws.onclose = (e: WebSocket.CloseEvent) =>
       finish(e.code === 1000 ? undefined : new Error(`${line.model}: closed ${e.code} ${e.reason?.slice(0, 160)}`));
   });
 }
@@ -181,8 +185,8 @@ function listen(wav: Buffer, key: string): Promise<string> {
           realtimeInputConfig: { automaticActivityDetection: { disabled: true } },
         },
       }));
-    ws.onmessage = async (e: MessageEvent) => {
-      const raw = typeof e.data === "string" ? e.data : Buffer.from(await (e.data as Blob).arrayBuffer()).toString();
+    ws.onmessage = (e: WebSocket.MessageEvent) => {
+      const raw = typeof e.data === "string" ? e.data : Buffer.from(e.data as Buffer).toString();
       const m = JSON.parse(raw);
       if (m.setupComplete) {
         ws.send(JSON.stringify({ realtimeInput: { activityStart: {} } }));

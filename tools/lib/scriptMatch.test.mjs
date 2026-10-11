@@ -24,3 +24,8 @@ test("one misheard word still passes", () => {
 test("an added greeting pulls the match down", () => {
   assert.ok(wordMatch("Καλημέρα σας.", "Γεια σας! Είμαι εδώ για να σας πω: Καλημέρα σας.") < 0.85);
 });
+
+test("a misheard rare word counts as said", () => {
+  const script = "Η σκυλίτσα μου κυνηγάει πεταλούδες. Κάθε μία. Κάθε φορά.";
+  assert.ok(wordMatch(script, "Η σκηλίτσα μου κυνηγάει πεταλούδες. Κάθε μία, κάθε φορά.") >= 0.95);
+});
