@@ -163,21 +163,21 @@
 
 <section class="look" id="A">
   <h2><span>A</span>Star sparks</h2>
-  <p class="why">Deep space: hundreds of tiny specks, mostly mint and white, a few ember-orange, drifting and twinkling. Click: 3–4 mint sparks with hair-thin trails.</p>
+  <p class="why">Deep space: tiny orange-red specks, like the logo's sparks, drifting and twinkling. Click: 3–4 sparks fly up and to the right.</p>
   <div class="host" data-mode="stars"></div>
   <div class="verdict" data-id="A"></div>
 </section>
 
 <section class="look" id="B">
   <h2><span>B</span>Embers</h2>
-  <p class="why">The forge: tiny embers rise from the bottom, flicker and cool from orange to mint as they climb. Click: 3–4 ember sparks that arc and fall.</p>
+  <p class="why">The forge: tiny embers rise from the bottom, flicker and cool from orange to deep red as they climb. Click: 3–4 sparks fly up and to the right.</p>
   <div class="host" data-mode="embers"></div>
   <div class="verdict" data-id="B"></div>
 </section>
 
 <section class="look" id="C">
   <h2><span>C</span>Anvil button</h2>
-  <p class="why">Star sparks, plus the anvil from the logos as the Render button. Clicking it strikes the anvil: sparks fly off the horn.</p>
+  <p class="why">Star sparks, plus the anvil from the logos as the Render button. Clicking it strikes the anvil: sparks fly up and to the right off the horn.</p>
   <div class="host" data-mode="stars" data-anvil="1"></div>
   <div class="verdict" data-id="C"></div>
 </section>
@@ -192,7 +192,7 @@ const ANVIL_SVG = `<svg viewBox="0 0 300 70" preserveAspectRatio="none"><defs><l
 <path d="M4 6 H232 Q262 6 296 14 Q270 22 246 24 Q226 26 220 34 L214 46 Q214 54 232 56 L236 66 H70 L74 56 Q92 54 92 46 L86 34 Q80 24 54 22 Q22 20 4 6 Z" fill="url(#ag)"/>
 <path d="M8 7 H232 Q258 7 286 13" stroke="rgba(255,255,255,.55)" stroke-width="1.2" fill="none"/></svg>`;
 
-const ember = [255, 154, 77], mint = [118, 255, 194], mintSoft = [130, 216, 183], white = [233, 254, 245], navy = [85, 98, 184];
+const ember = [255, 138, 48], hot = [255, 196, 120], red = [232, 64, 28], deep = [150, 30, 12], mint = [118, 255, 194], mintSoft = [130, 216, 183], white = [233, 254, 245], navy = [85, 98, 184];
 const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
 const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -203,7 +203,7 @@ function Look(host) {
   if (host.dataset.anvil) {
     const a = document.createElement("div"); a.className = "anvil"; a.innerHTML = ANVIL_SVG + "<b>RENDER</b>";
     node.querySelector(".slot").replaceWith(a);
-    a.addEventListener("click", (e) => { e.stopPropagation(); const r = node.getBoundingClientRect(), ar = a.getBoundingClientRect(); burst(ar.right - r.left - ar.width * 0.03, ar.top - r.top + ar.height * 0.15, 5, true); });
+    a.addEventListener("click", (e) => { e.stopPropagation(); const r = node.getBoundingClientRect(), ar = a.getBoundingClientRect(); burst(ar.right - r.left - ar.width * 0.03, ar.top - r.top + ar.height * 0.15, 4); });
   } else {
     const b = document.createElement("div"); b.className = "btn primary"; b.textContent = "Render";
     node.querySelector(".slot").replaceWith(b);
@@ -215,26 +215,27 @@ function Look(host) {
     W = node.clientWidth; H = node.clientHeight;
     for (const c of [sky, fx]) { c.width = W * dpr; c.height = H * dpr; }
     g.setTransform(dpr, 0, 0, dpr, 0, 0); f.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const n = Math.round((W * H) / (mode === "stars" ? 2600 : 5200));
+    const n = Math.round((W * H) / (mode === "stars" ? 5200 : 10400));
     P = Array.from({ length: n }, () => spawn(true));
   }
   function spawn(anywhere) {
     if (mode === "stars") {
       const r = Math.random();
       return { x: Math.random() * W, y: Math.random() * H, r: Math.random() < .93 ? .25 + Math.random() * .55 : .8 + Math.random() * .6,
-        c: r < .55 ? white : r < .88 ? mint : r < .95 ? navy : ember, tw: Math.random() * 6.28, ts: .6 + Math.random() * 2.2,
+        c: r < .45 ? ember : r < .75 ? red : r < .92 ? hot : deep, tw: Math.random() * 6.28, ts: .6 + Math.random() * 2.2,
         vx: (Math.random() - .5) * .04, vy: -.01 - Math.random() * .03, a: .25 + Math.random() * .75 };
     }
     return { x: Math.random() * W, y: anywhere ? Math.random() * H : H + 4, r: .3 + Math.random() * .9, life: anywhere ? Math.random() : 0,
       vy: -(.12 + Math.random() * .45), sway: Math.random() * 6.28, ss: .5 + Math.random() * 1.5, fl: Math.random() * 6.28 };
   }
-  function burst(x, y, n, up) {
+  function burst(x, y, n) {
     const count = n ?? 3 + Math.round(Math.random());
     for (let i = 0; i < count; i++) {
-      const ang = up ? -Math.PI * (.15 + Math.random() * .45) : Math.random() * Math.PI * 2;
-      const sp = (mode === "embers" || up ? 1.6 : 1.3) + Math.random() * 1.6;
-      S.push({ x, y, px: x, py: y, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp - (mode === "embers" ? .8 : 0), t: 0, life: 32 + Math.random() * 20,
-        c: mode === "embers" || up ? ember : mint, grav: mode === "embers" || up ? .07 : 0 });
+      // north-east only: straight up (-90°) to straight right (0°), kept off the edges
+      const ang = -Math.PI / 2 * (.12 + Math.random() * .76);
+      const sp = 1.5 + Math.random() * 1.7;
+      S.push({ x, y, px: x, py: y, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp, t: 0, life: 30 + Math.random() * 20,
+        hot: Math.random() < .5, grav: .025 });
     }
   }
   node.addEventListener("click", (e) => { const r = node.getBoundingClientRect(); burst(e.clientX - r.left, e.clientY - r.top); });
@@ -256,7 +257,7 @@ function Look(host) {
         if (!still) { p.y += p.vy; p.x += Math.sin(p.sway + t * p.ss) * .18; p.life += .0016 * (1 + Math.abs(p.vy)); }
         if (p.y < -4 || p.life > 1) Object.assign(p, spawn(false));
         const h = 1 - p.y / H; // 0 bottom -> 1 top
-        const c = mix(ember, mintSoft, Math.min(1, h * 1.15));
+        const c = mix(ember, red, Math.min(1, h * 1.2));
         const a = Math.max(0, (1 - p.life) * (.55 + .45 * Math.sin(p.fl + t * 9))) * (.35 + .65 * (1 - h * .6));
         g.fillStyle = `rgba(${c},${a})`; g.beginPath(); g.arc(p.x, p.y, p.r, 0, 6.283); g.fill();
         g.fillStyle = `rgba(${c},${a * .15})`; g.beginPath(); g.arc(p.x, p.y, p.r * 3, 0, 6.283); g.fill();
@@ -266,7 +267,7 @@ function Look(host) {
     S = S.filter((s) => s.t < s.life);
     for (const s of S) {
       s.px = s.x; s.py = s.y; s.x += s.vx; s.y += s.vy; s.vy += s.grav; s.vx *= .97; s.vy *= .97; s.t++;
-      const k = 1 - s.t / s.life, c = s.c === ember ? mix(ember, [255, 220, 150], k * .6) : mix(mint, white, k * .5);
+      const k = 1 - s.t / s.life, c = mix(red, s.hot ? hot : ember, k);  // born hot, cooling to red
       f.strokeStyle = `rgba(${c},${k})`; f.lineWidth = .9; f.lineCap = "round";
       f.beginPath(); f.moveTo(s.px - s.vx * 2.2, s.py - s.vy * 2.2); f.lineTo(s.x, s.y); f.stroke();
       f.fillStyle = `rgba(${c},${k})`; f.beginPath(); f.arc(s.x, s.y, .9, 0, 6.283); f.fill();
