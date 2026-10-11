@@ -28,6 +28,9 @@ import {
 } from "./lib/motion/facePerformance";
 import { sampleAnalysis } from "./lib/waveform/audioAnalysis";
 import { useCornerFlare } from "./lib/motion/useCornerFlare";
+import { SparkField } from "./components/ui/SparkField";
+import videoMark from "./assets/video-mark.jpg";
+import imageMark from "./assets/image-mark.jpg";
 import { VISEME } from "./lib/visemes/visemeMap";
 
 /** Two corner-bracket accents — the recurring HUD-panel detail. Drop this
@@ -86,11 +89,13 @@ function Rail({
         // window, and the one you reach for most on a 1280px screen. 36px with
         // its own chamfered plate, so it reads as a control rather than as a
         // stray glyph floating in the corner of the panel.
-        className={`absolute top-2 z-20 h-9 w-9 grid place-items-center text-lg leading-none
-          text-accent-bright/80 hover:text-accent-bright cut-sm
-          bg-[color-mix(in_srgb,var(--accent)_16%,var(--metal-lo))]
-          hover:bg-[color-mix(in_srgb,var(--accent)_30%,var(--metal-lo))]
-          transition-colors ${side === "left" ? "right-2" : "left-2"}`}
+        // The Forge look: a round tab on the panel's inner edge, half over the
+        // gap, so it never sits on top of a panel's title (it did, in the
+        // top corner, once the chamfer that used to make room for it went).
+        className={`absolute top-1/2 -translate-y-1/2 z-20 h-8 w-8 rounded-full grid place-items-center text-base leading-none
+          text-accent bg-black border border-[rgba(118,255,194,.35)]
+          hover:border-accent hover:shadow-[0_0_14px_-2px_rgba(118,255,194,.6)]
+          transition ${side === "left" ? "-right-4" : "-left-4"}`}
       >
         {glyph}
       </button>
@@ -202,6 +207,7 @@ export default function App() {
   );
   const accentColor = useSettingsStore((s) => s.accentColor);
   const motionEnabled = useSettingsStore((s) => s.motionEnabled);
+  const [forgeGoing, setForgeGoing] = useState(false);
 
   const isPortrait = render.format === "9:16";
 
@@ -296,9 +302,10 @@ export default function App() {
     window.DecoNoir?.init({
       // One ground, tinted from --accent, so it follows the Appearance picker
       // instead of being a fixed steel or gold that fights a chosen colour.
-      ground: "on",
-      grain: true,
-      glow: true,
+      // The Forge look replaces the ground and grain with SparkField.
+      ground: "off",
+      grain: false,
+      glow: false,
       spark: false,
       reveal: false,
     });
@@ -318,7 +325,6 @@ export default function App() {
     document.documentElement.setAttribute("data-hud-motion", motionEnabled ? "on" : "off");
   }, [motionEnabled]);
 
-  const headerFlare = useCornerFlare<HTMLElement>();
   const asideFlare = useCornerFlare<HTMLElement>();
   const mainFlare = useCornerFlare<HTMLElement>();
   const sceneFlare = useCornerFlare<HTMLElement>();
@@ -382,45 +388,47 @@ export default function App() {
     // position:relative, but loose text in a static container would not. The
     // library's own demo lifts its wrapper the same way.
     <div className="relative z-[1] h-full w-full flex flex-col text-neutral-200">
-      <div className="scanlines" />
 
-      {/* Top bar */}
-      <header
-        ref={headerFlare.ref}
-        onClick={headerFlare.fire}
-        className="panel-hud hud-flare-target relative m-3 px-6 py-3 flex items-center justify-between"
-      >
-        <HudCorners />
-        <h1 className="title-deco uppercase text-2xl">
-          Video Forge
-        </h1>
-        <div className="flex items-center gap-3">
-          <span className="label-etched hidden sm:inline mr-2">Deterministic Video Studio</span>
-          <button
-            onClick={() => setView("canvas")}
-            className={`label-etched px-3 py-1.5 border ${
-              view === "canvas" ? "border-accent text-accent-bright" : "border-accent/30 hover:border-accent hover:text-accent-bright"
-            }`}
-          >
-            Canvas
+      <SparkField moving={motionEnabled} />
+
+      {/* Top bar — the Forge look (11 Oct 2026). The twin marks are the switch
+          between the two Forges: this app's mark is lit, Image Forge's is
+          greyed, and clicking it slides the light over and opens Image Forge. */}
+      <header className="panel-hud forge-bar relative m-3 px-4 py-2 flex items-center gap-4">
+        <div className={`forge-twin ${forgeGoing ? "going" : ""}`}>
+          <div className="lamp" />
+          <button className="slot-mark" title="Video Forge" aria-label="Video Forge (this app)" tabIndex={-1}>
+            <img src={videoMark} alt="" />
           </button>
           <button
-            onClick={() => setView("narration")}
-            className={`label-etched px-3 py-1.5 border ${
-              view === "narration" ? "border-accent text-accent-bright" : "border-accent/30 hover:border-accent hover:text-accent-bright"
-            }`}
+            className="slot-mark off"
+            title="Open Image Forge"
+            aria-label="Open Image Forge"
+            onClick={async () => {
+              setForgeGoing(true);
+              const ok = await window.byok.forge.openImageForge();
+              setTimeout(() => setForgeGoing(false), 900);
+              if (!ok) alert("Image Forge isn't installed on this computer yet.");
+            }}
           >
-            Narration
-          </button>
-          <button
-            onClick={() => setView("settings")}
-            className={`label-etched px-3 py-1.5 border ${
-              view === "settings" ? "border-accent text-accent-bright" : "border-accent/30 hover:border-accent hover:text-accent-bright"
-            }`}
-          >
-            ⚙ Backend Settings
+            <img src={imageMark} alt="" />
           </button>
         </div>
+        <div className="forge-name">
+          Video Forge
+          <small>AI video generator · BYOK</small>
+        </div>
+        <nav className="forge-nav ml-auto">
+          {([
+            ["canvas", "Canvas"],
+            ["narration", "Narration"],
+            ["settings", "Settings"],
+          ] as const).map(([id, label]) => (
+            <button key={id} onClick={() => setView(id)} className={`forge-pill ${view === id ? "on" : ""}`}>
+              {label}
+            </button>
+          ))}
+        </nav>
       </header>
 
       <div className="flex flex-1 gap-3 px-3 pb-3 min-h-0">

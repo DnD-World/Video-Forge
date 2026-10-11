@@ -116,3 +116,4 @@ Ak's verdict on docs/design/looks-pick.html: **A Star sparks — Love it**; B Em
 - **Render is a pill**, not the anvil (Ak, 11 Oct).
 - Logos: build/brand/video-forge-logo.jpg, image-forge-logo.jpg; symbol crops in docs/design/.
 - The Image Forge switch: options on docs/design/switch-pick.html, verdict pending.
+- **Forge switch: 1 Twin marks — Love it** (both logos in one capsule; current lit, other greyed; click slides the light and opens the other app). 4 Logo dock — OK; 2 and 3 — No.

@@ -43,7 +43,7 @@ export const useSettingsStore = create<SettingsState>()(
       setDefault: (k, v) =>
         set((s) => ({ defaults: { ...s.defaults, [k]: v } })),
 
-      accentColor: "#e8a24a",
+      accentColor: "#76FFC2", // Forge mint (stravelakis mint-400)
       setAccentColor: (hex) => set({ accentColor: hex }),
 
       motionEnabled: true,
@@ -51,7 +51,7 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: "byok-settings", // saved to localStorage, survives restarts
-      version: 1,
+      version: 2,
 
       // persist's default merge is SHALLOW, so the whole `defaults` object came
       // from localStorage and every value added or changed since that blob was
@@ -72,6 +72,11 @@ export const useSettingsStore = create<SettingsState>()(
       // v0 blobs carry stale bundled-Piper paths. Dropping them lets the current
       // defaults apply once; anything the user sets afterwards persists normally.
       migrate: (persisted, version) => {
+        // v2 = the Forge look. Every saved accent was one of the Deco Noir
+        // golds or blues; the new identity is mint, so it starts there once.
+        if (version < 2 && persisted && typeof persisted === "object") {
+          (persisted as { accentColor?: string }).accentColor = "#76FFC2";
+        }
         if (version === 0 && persisted && typeof persisted === "object") {
           const state = persisted as { defaults?: Partial<BackendDefaults> };
           if (state.defaults) {

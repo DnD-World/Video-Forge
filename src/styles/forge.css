@@ -1,0 +1,173 @@
+/* =============================================================================
+   THE FORGE LOOK — shared by Video Forge and Image Forge.
+   Chosen by Ak on 11 Oct 2026 from docs/design/looks-pick.html (look A,
+   "Star sparks"): pure black, tiny orange-red sparks like the logos', the
+   stravelakis.com navy and mint for the interface, Sora for every word.
+
+   HOW IT IS BUILT. The app's screens were written against the Deco Noir
+   system (src/styles/deco-noir.css), which is token-driven. This file is
+   loaded AFTER it and after index.css, and does three things:
+     1. replaces the tokens — colour, type, the corner size;
+     2. undoes the Deco Noir signature, the chamfered corner, everywhere,
+        and rounds things instead (panels 18px, controls into pills);
+     3. switches off its brushed-metal ground and grain — the sparks in
+        src/components/ui/SparkField.tsx are the ground now.
+   Nothing in a component had to change for the look to switch, which is
+   also how to switch it back: remove the import in main.tsx.
+   ============================================================================= */
+
+:root {
+  /* ---- colour: stravelakis.com tokens meeting the Forge logos ---- */
+  --bg: #000;
+  --bg-2: #03080b;
+  --metal-hi: rgba(39, 96, 117, .42);   /* panel-600 #276075 */
+  --metal: rgba(11, 40, 55, .30);       /* panel-900 #0B2837 */
+  --metal-lo: rgba(7, 28, 38, .22);     /* ink #071C26 */
+  --line: rgba(130, 216, 183, .16);
+  --line-hot: rgba(118, 255, 194, .45);
+  --ink: #E9FEF5;                       /* mint-50 */
+  --ink-2: #A9C3CE;
+  --ink-3: #7F9BA7;
+  --accent: #76FFC2;                    /* mint-400 */
+  --accent-hi: #D4FFEC;
+  --accent-lo: #344080;                 /* the brand navy — gradients run navy → mint */
+  --accent-rgb: 118 255 194;
+  --accent-2: #5562B8;
+  --navy: #344080;
+  --navy-hi: #5562B8;
+  --spark: #FF8A30;                     /* the logos' sparks */
+  --spark-red: #E8401C;
+  --good: #76FFC2; --warn: #FFB547; --crit: #FF5A4A;
+  --glow: .3;
+
+  /* the hairline that runs navy into mint, like the logos' metal */
+  --edge: linear-gradient(135deg, rgba(85, 98, 184, .55), rgba(118, 255, 194, .22) 45%,
+    rgba(85, 98, 184, .10) 70%, rgba(118, 255, 194, .30));
+
+  /* ---- type: Sora everywhere (bundled, works offline) ---- */
+  --display-deco: "Sora", system-ui, sans-serif;
+  --display: "Sora", system-ui, sans-serif;
+  --body: "Sora", system-ui, sans-serif;
+  --data: "Sora", ui-monospace, monospace;
+
+  /* ---- geometry: no chamfers ---- */
+  --cut: 0px; --cut-sm: 0px; --cut-lg: 0px;
+  --plate: 0; --orn: 0; --bevel: 0;
+  --radius: 18px;
+}
+
+html, body { background: #000; }
+body { font-family: "Sora", system-ui, sans-serif; letter-spacing: 0; }
+
+/* ---- the Deco Noir ground and grain: off; SparkField is the ground ---- */
+#dn-field, #dn-grain, .scanlines { display: none !important; }
+
+/* ---- 2. corners: every chamfer becomes a curve ---- */
+.cut, .cut-sm, .cut-lg, .panel-hud, .panel-hud::before, .panel-hud::after,
+.btn::before, .btn::after, .slot, .paddle, .check .box, .check .box::after,
+.seg, .barrow .bar, .hud-flare-target::after, ::-webkit-scrollbar-thumb,
+.frame, .frame > .bevel, .frame > .bevel > .face {
+  clip-path: none !important;
+}
+.plate, .orn, .fan, .flute, .zig, .hud-corner { display: none !important; }
+
+/* Panels: see-through so the sparks show, with the gradient hairline drawn
+   as a ring only (the mask cuts the middle out). */
+.panel-hud {
+  background: rgba(11, 40, 55, .16) !important;
+  border-radius: var(--radius);
+  box-shadow: none;
+  backdrop-filter: blur(3px);
+}
+/* Breathing room inside panels. :where() keeps this at zero specificity, so
+   a panel that sets its own padding (the header's px-4 py-2) still wins. */
+:where(.panel-hud) { padding: 10px 12px; }
+.panel-hud::before {
+  inset: 0 !important;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--edge) !important;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  z-index: 0 !important;
+}
+.panel-hud::after { display: none; }
+.frame { border-radius: var(--radius); background: var(--edge); }
+.frame > .bevel, .frame > .bevel > .face { border-radius: calc(var(--radius) - 1px); background: #000; }
+.cut, .cut-sm { border-radius: 12px; }
+.cut-lg { border-radius: var(--radius); }
+
+/* ---- controls into pills ---- */
+.btn {
+  border-radius: 999px !important;
+  font-family: "Sora", sans-serif !important;
+  letter-spacing: .02em !important;
+  text-transform: none !important;
+  font-weight: 500;
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--ink-2);
+  transition: color .2s, border-color .2s, box-shadow .3s, transform .15s;
+}
+.btn::before { inset: 0 !important; border-radius: inherit; background: rgba(0, 0, 0, .35) !important; box-shadow: none !important; }
+.btn::after { display: none !important; }
+.btn:hover { color: var(--ink); border-color: var(--accent); }
+.btn[aria-pressed="true"], .btn-primary {
+  color: #001a10 !important;
+  border-color: transparent;
+  box-shadow: 0 0 22px -6px rgba(118, 255, 194, .6);
+}
+.btn[aria-pressed="true"]::before { background: var(--accent) !important; }
+.btn-primary::before { background: linear-gradient(100deg, var(--navy), #3f63a0 45%, var(--accent)) !important; }
+.btn-primary:hover { box-shadow: 0 0 34px -4px rgba(118, 255, 194, .75); }
+
+.seg { border-radius: 999px; background: rgba(0, 0, 0, .45); }
+.seg button { border-radius: 999px; font-family: "Sora", sans-serif; letter-spacing: .02em; text-transform: none; }
+.seg button[aria-pressed="true"] { background: var(--accent) !important; color: #001a10 !important; box-shadow: none; }
+
+.slot { border-radius: 999px; background: rgba(0, 0, 0, .55); }
+.paddle { border-radius: 50%; background: var(--ink-2); }
+.lever input:checked + .slot .paddle { background: var(--accent); }
+.check .box { border-radius: 6px; background: rgba(0, 0, 0, .55); }
+.check .box::after { border-radius: 3px; }
+
+input, select, textarea { font-family: "Sora", sans-serif; border-radius: 10px; }
+
+/* ---- type ---- */
+.title-deco { font-family: "Sora", sans-serif; letter-spacing: 0; font-weight: 500; text-transform: none; }
+.label-etched { font-family: "Sora", sans-serif !important; letter-spacing: .12em !important; font-size: .74rem !important; color: var(--ink-3); }
+.label-lit { font-family: "Sora", sans-serif !important; letter-spacing: .12em !important; font-size: .8rem !important; color: var(--accent); text-shadow: none; }
+
+/* ---- scrollbars: thin mint thread ---- */
+::-webkit-scrollbar-track { background: transparent; box-shadow: none; }
+::-webkit-scrollbar-thumb { border-radius: 99px; background: rgba(118, 255, 194, .28); background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background: rgba(118, 255, 194, .55); background-clip: padding-box; }
+
+/* =============================================================================
+   The top bar and the Forge switch (twin marks — Ak's pick, 11 Oct 2026)
+   ============================================================================= */
+.forge-bar { border-radius: var(--radius); }
+.forge-name { font-size: 1.35rem; font-weight: 500; line-height: 1.1; color: var(--ink); }
+.forge-name small { display: block; font-size: .66rem; font-weight: 300; color: var(--ink-3); letter-spacing: .12em; margin-top: 3px; text-transform: uppercase; }
+
+.forge-twin { position: relative; display: flex; align-items: center; gap: 4px; padding: 4px; border-radius: 999px; background: rgba(0, 0, 0, .45); }
+.forge-twin .slot-mark { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; position: relative; z-index: 1;
+  transition: filter .35s, opacity .35s, transform .35s; border: 0; background: none; padding: 0; cursor: default; }
+.forge-twin .slot-mark img { height: 44px; mix-blend-mode: screen; pointer-events: none; }
+.forge-twin .slot-mark.off { filter: grayscale(.85) brightness(.85); opacity: .85; transform: scale(.82); cursor: pointer; }
+.forge-twin .slot-mark.off:hover { filter: grayscale(.15) brightness(.95); opacity: 1; transform: scale(.9); }
+.forge-twin .lamp { position: absolute; top: 4px; left: 4px; width: 52px; height: 52px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(118, 255, 194, .18), transparent 70%); box-shadow: inset 0 0 0 1px rgba(118, 255, 194, .35);
+  transition: transform .45s cubic-bezier(.2, .8, .2, 1); }
+.forge-twin.going .lamp { transform: translateX(56px); }
+
+.forge-nav { display: flex; gap: 8px; }
+.forge-pill { padding: 8px 18px; border-radius: 999px; border: 1px solid var(--line); color: var(--ink-2); font-size: .9rem; background: transparent;
+  transition: color .2s, border-color .2s, background .2s; cursor: pointer; }
+.forge-pill:hover { color: var(--ink); border-color: var(--accent); }
+.forge-pill.on { background: var(--accent); color: #001a10; border-color: var(--accent); font-weight: 500; }
+
+@media (prefers-reduced-motion: reduce) {
+  .forge-twin .lamp, .forge-twin .slot-mark { transition: none; }
+}

@@ -12,16 +12,16 @@ import TtsTestPanel from "./TtsTestPanel";
 /** The shipped accent. Kept beside the picker rather than imported from the
  *  settings store's initial state, so "Default" means a stated value rather
  *  than whatever the store happened to be constructed with. */
-const DEFAULT_ACCENT = "#e8a24a";
+const DEFAULT_ACCENT = "#76FFC2";
 
-/** The four colourways the identity system ships, offered as one click each.
+/** The Forge colours (stravelakis mint and navy, the logos' spark), offered as one click each.
  *  A freeform picker is still there — this is for the common case. */
 const ACCENT_PRESETS = [
-  { name: "Brass", hex: "#c9a227" },
-  { name: "Amber", hex: "#e8a24a" },
-  { name: "Nickel", hex: "#9fc6d8" },
-  { name: "Jade", hex: "#5fc9a5" },
-  { name: "Oxblood", hex: "#d8c39b" },
+  { name: "Mint", hex: "#76FFC2" },
+  { name: "Soft mint", hex: "#82D8B7" },
+  { name: "Navy", hex: "#5562B8" },
+  { name: "Spark", hex: "#FF8A30" },
+  { name: "Ice", hex: "#9FC6D8" },
 ];
 
 type Access = "instant" | "approval";

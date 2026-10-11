@@ -5,12 +5,13 @@ export default {
   theme: {
     extend: {
       colors: {
+        // The Forge look: near-black with the stravelakis panel blues in it.
         metal: {
-          900: "#07080a",
-          800: "#0c0e12",
-          700: "#141519",
-          600: "#1c1e22",
-          500: "#26282d",
+          900: "#000000",
+          800: "#03090c",
+          700: "#071C26",
+          600: "#0B2837",
+          500: "#11374A",
         },
         // Accent glow — reads live CSS variables (set in index.css / by the
         // Appearance color picker) instead of a fixed hex, so switching the
@@ -24,9 +25,10 @@ export default {
         speaker2: "#4ac2e8",
       },
       fontFamily: {
-        display: ["'Rajdhani'", "system-ui", "sans-serif"],
-        mono: ["'Share Tech Mono'", "monospace"],
-        body: ["'Inter'", "system-ui", "sans-serif"],
+        // Sora for every word — the Forge look (11 Oct 2026).
+        display: ["'Sora'", "system-ui", "sans-serif"],
+        mono: ["'Sora'", "ui-monospace", "monospace"],
+        body: ["'Sora'", "system-ui", "sans-serif"],
       },
       boxShadow: {
         glow: "0 0 12px rgb(var(--accent-rgb) / 0.55), 0 0 2px rgb(var(--accent-bright-rgb) / 0.9)",

@@ -210,6 +210,9 @@ declare global {
       project: {
         startup: () => Promise<unknown>;
       };
+      forge: {
+        openImageForge: () => Promise<boolean>;
+      };
       llm: {
         draftScript: (opts: {
           topic: string;

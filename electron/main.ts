@@ -47,7 +47,9 @@ app.setName(NEW_APP_NAME);
 // The app used to be called BYOK-Vid-Creator. A computer that already has that
 // data folder keeps using it in place; fresh installs get "video-forge".
 // See electron/migrateUserData.ts.
-app.setPath("userData", resolveUserData(app.getPath("appData")));
+// VIDEOFORGE_USER_DATA: a separate data folder, for running a test copy while
+// the real app is open (two copies sharing one folder lock each other out).
+app.setPath("userData", process.env.VIDEOFORGE_USER_DATA || resolveUserData(app.getPath("appData")));
 
 const isDev = !app.isPackaged;
 
@@ -207,6 +209,20 @@ ipcMain.handle("dialog:saveFile", async (_e, defaultName: string, filters?: Elec
 ipcMain.handle("storage:outputDir", async () => {
   await fsp.mkdir(outputDir(), { recursive: true });
   return outputDir();
+});
+
+/** The Forge switch: open Image Forge, Video Forge's sister app.
+ *  Looked for where its installer puts it (per-user install). Returns false
+ *  when it is not installed, so the UI can say so instead of doing nothing. */
+ipcMain.handle("forge:openImageForge", async () => {
+  const exe = path.join(process.env.LOCALAPPDATA ?? "", "Programs", "Image Forge", "Image Forge.exe");
+  try {
+    await fsp.access(exe);
+  } catch {
+    return false;
+  }
+  const err = await shell.openPath(exe);
+  return err === "";
 });
 
 ipcMain.handle("storage:openOutputDir", async () => {

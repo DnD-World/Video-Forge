@@ -152,6 +152,10 @@ const api = {
     startup: (): Promise<unknown> => ipcRenderer.invoke("project:startup"),
   },
 
+  forge: {
+    /** Open Image Forge. False when it is not installed on this computer. */
+    openImageForge: (): Promise<boolean> => ipcRenderer.invoke("forge:openImageForge"),
+  },
   llm: {
     draftScript: (opts: {
       topic: string;
