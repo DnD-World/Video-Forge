@@ -197,3 +197,38 @@ input, select, textarea { font-family: "Sora", sans-serif; border-radius: 10px; 
   box-shadow: 0 0 26px -6px rgba(118, 255, 194, .65); transition: box-shadow .3s, transform .15s; }
 .forge-next:hover { box-shadow: 0 0 36px -4px rgba(118, 255, 194, .85); }
 .forge-next:active { transform: scale(.97); }
+
+/* ---- the template gallery (Look step) ---- */
+.forge-tpls { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.forge-tpl { display: flex; flex-direction: column; text-align: left; padding: 0; border-radius: 14px; overflow: hidden; cursor: pointer;
+  border: 1px solid var(--line); background: rgba(0, 0, 0, .45); color: var(--ink); transition: transform .25s, border-color .25s, box-shadow .25s; }
+.forge-tpl:hover { transform: translateY(-2px); border-color: var(--mint-soft, #82D8B7); }
+.forge-tpl.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 0 26px -8px rgba(118, 255, 194, .6); }
+.forge-tpl:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.forge-tpl .scr { position: relative; width: 100%; aspect-ratio: 9 / 11; background: #03090c; overflow: hidden; display: block; }
+.forge-tpl .lab { width: 100%; padding: 8px 10px; font-size: .85rem; font-weight: 500; }
+.forge-tpl .lab small { display: block; font-weight: 300; font-size: .68rem; color: var(--ink-3); line-height: 1.35; margin-top: 2px; }
+.forge-tpl .dot { position: absolute; width: 30%; aspect-ratio: 1; border-radius: 50%; background: #0B2837; border: 2px solid var(--c); }
+.forge-tpl .d1-0 { left: 35%; top: 22%; }
+.forge-tpl .d2-0 { left: 14%; top: 26%; } .forge-tpl .d2-1 { left: 56%; top: 26%; }
+.forge-tpl .d3-0 { left: 35%; top: 10%; } .forge-tpl .d3-1 { left: 12%; top: 44%; } .forge-tpl .d3-2 { left: 58%; top: 44%; }
+/* halo: a ring of bars around each face */
+.forge-tpl .halo .dot::before { content: ""; position: absolute; inset: -22%; border-radius: 50%;
+  background: repeating-conic-gradient(var(--c) 0 3deg, transparent 3deg 10deg);
+  -webkit-mask: radial-gradient(circle, transparent 57%, #000 58%, #000 72%, transparent 73%); mask: radial-gradient(circle, transparent 57%, #000 58%, #000 72%, transparent 73%); opacity: .7; }
+/* broadcast: a frosted slab with flat bars along the bottom */
+.forge-tpl .broadcast .slab { position: absolute; left: 0; right: 0; bottom: 18%; height: 14%; background: linear-gradient(90deg, rgba(52,64,128,.7), rgba(17,55,74,.7));
+  background-image: repeating-linear-gradient(90deg, rgba(118,255,194,.75) 0 3px, transparent 3px 7px); background-size: 100% 40%; background-repeat: no-repeat; background-position: bottom; }
+/* orbit: frameless faces with a bloom behind */
+.forge-tpl .orbit .dot { border-color: transparent; box-shadow: 0 0 18px 4px color-mix(in srgb, var(--c) 55%, transparent); }
+.forge-tpl .cap { position: absolute; left: 10%; right: 10%; bottom: 7%; height: 5px; border-radius: 3px; background: rgba(233,254,245,.45); }
+.forge-tpl .cap::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 28%; border-radius: inherit; background: var(--accent); }
+@media (prefers-reduced-motion: no-preference) {
+  [data-hud-motion="on"] .forge-tpl:hover .dot, [data-hud-motion="on"] .forge-tpl.on .dot { animation: forge-talk .8s ease-in-out infinite alternate; }
+  [data-hud-motion="on"] .forge-tpl:hover .dot:nth-child(2), [data-hud-motion="on"] .forge-tpl.on .dot:nth-child(2) { animation-delay: .4s; }
+  [data-hud-motion="on"] .forge-tpl:hover .cap::after, [data-hud-motion="on"] .forge-tpl.on .cap::after { animation: forge-words 1.8s linear infinite; }
+  [data-hud-motion="on"] .forge-tpl:hover .halo .dot::before { animation: forge-spin 6s linear infinite; }
+}
+@keyframes forge-talk { to { transform: scale(1.06); filter: brightness(1.25); } }
+@keyframes forge-words { to { left: 72%; } }
+@keyframes forge-spin { to { transform: rotate(360deg); } }

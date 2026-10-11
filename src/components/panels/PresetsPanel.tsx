@@ -24,6 +24,7 @@ import { migrateSurface } from "../../store/types";
 
 export function PresetsPanel() {
   const speakers = useProjectStore((s) => s.speakers);
+  const [appliedName, setAppliedName] = useState<string | null>(null);
   const updateSpeaker = useProjectStore((s) => s.updateSpeaker);
   const setSpeakerWaveform = useProjectStore((s) => s.setSpeakerWaveform);
   const setMusicWaveform = useProjectStore((s) => s.setMusicWaveform);
@@ -216,16 +217,39 @@ export function PresetsPanel() {
   return (
     <div className="space-y-6">
       <section className="space-y-3">
-        <div className="label-etched">Built-in looks</div>
-        {BUILT_INS.filter((b) => b.speakerCount === Math.min(3, Math.max(1, speakers.length || 2))).map((b) => (
-          <div key={b.name} className="border border-accent/25 bg-metal-800/60 p-3 space-y-2">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-base text-neutral-200">{b.name}</span>
-              <HudButton onClick={() => applyBuiltIn(b)}>Apply</HudButton>
-            </div>
-            <p className="text-sm text-neutral-500">{b.description}</p>
-          </div>
-        ))}
+        <div className="label-etched">Templates</div>
+        {/* A GALLERY THAT MOVES (Ak's "first-minute wow", 10 Oct 2026). Each
+            tile is a tiny live sketch of its look in the cast's own colours;
+            hover makes it talk, click applies it. */}
+        <div className="forge-tpls">
+          {BUILT_INS.filter((b) => b.speakerCount === Math.min(3, Math.max(1, speakers.length || 2))).map((b) => {
+            const kind = b.name.split(" ")[0].toLowerCase(); // halo | broadcast | orbit
+            const colors = speakers.length ? speakers.map((sp) => sp.borderColor) : ["#76FFC2", "#5562B8"];
+            return (
+              <button
+                key={b.name}
+                className={`forge-tpl ${appliedName === b.name ? "on" : ""}`}
+                onClick={() => {
+                  applyBuiltIn(b);
+                  setAppliedName(b.name);
+                }}
+                title={b.description}
+              >
+                <span className={`scr ${kind}`}>
+                  {colors.slice(0, b.speakerCount).map((c, i) => (
+                    <i key={i} className={`dot d${b.speakerCount}-${i}`} style={{ ["--c" as string]: c }} />
+                  ))}
+                  {kind === "broadcast" && <i className="slab" />}
+                  <i className="cap" />
+                </span>
+                <span className="lab">
+                  {b.name.split(" · ")[0]}
+                  <small>{(b.description ?? "").split(".")[0]}.</small>
+                </span>
+              </button>
+            );
+          })}
+        </div>
         <p className="text-sm text-neutral-500">
           Showing the {Math.min(3, Math.max(1, speakers.length || 2))}-speaker
           versions, matching your cast. Each look has a solo, duo and trio
