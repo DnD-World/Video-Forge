@@ -19,13 +19,29 @@ import { buildCues } from "../../lib/subtitles/wordTiming";
 import { toSrt } from "../../lib/subtitles/srt";
 import type { Fps, SubtitleConfig } from "../../store/types";
 
-type Tab = "frame" | "background" | "subtitles" | "render" | "presets";
+export type SceneTab = "frame" | "background" | "subtitles" | "render" | "presets";
+type Tab = SceneTab;
+
+const TAB_LABELS: Record<Tab, string> = {
+  presets: "Templates",
+  frame: "Frame",
+  background: "Background",
+  subtitles: "Subtitles",
+  render: "Render",
+};
 
 const FPS_OPTIONS: Fps[] = [10, 24, 30];
 const SUB_POS: SubtitleConfig["position"][] = ["top", "center", "bottom"];
 
-export function ScenePanel() {
-  const [tab, setTab] = useState<Tab>("frame");
+/** The four-step layout (11 Oct 2026) shows a different slice of this panel
+ *  in each step: Look gets templates, frame, background and subtitles; Make
+ *  gets render. `tabs` picks the slice; the first one opens. */
+export function ScenePanel({
+  title = "Scene",
+  tabs = ["frame", "background", "subtitles", "render", "presets"],
+}: { title?: string; tabs?: Tab[] } = {}) {
+  const [picked, setTab] = useState<Tab>(tabs[0]);
+  const tab = tabs.includes(picked) ? picked : tabs[0];
 
   const fps = useProjectStore((s) => s.fps);
   const setFps = useProjectStore((s) => s.setFps);
@@ -67,19 +83,11 @@ export function ScenePanel() {
 
   return (
     <div className="flex flex-col h-full">
-      <h2 className="title-deco uppercase text-lg mb-3">Scene</h2>
+      <h2 className="title-deco uppercase text-lg mb-3">{title}</h2>
 
-      <Tabs
-        tabs={[
-          { id: "frame", label: "Frame" },
-          { id: "background", label: "Background" },
-          { id: "subtitles", label: "Subtitles" },
-          { id: "render", label: "Render" },
-          { id: "presets", label: "Presets" },
-        ]}
-        active={tab}
-        onChange={setTab}
-      />
+      {tabs.length > 1 && (
+        <Tabs tabs={tabs.map((id) => ({ id, label: TAB_LABELS[id] }))} active={tab} onChange={setTab} />
+      )}
 
       <div className="flex-1 overflow-y-auto pr-1 space-y-6">
         {tab === "frame" && (

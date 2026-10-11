@@ -117,8 +117,22 @@ function Rail({
   );
 }
 
+type Step = "cast" | "script" | "look" | "make";
+const STEPS: { id: Step; title: string; sub: string }[] = [
+  { id: "cast", title: "Cast", sub: "Who speaks" },
+  { id: "script", title: "Script", sub: "What they say" },
+  { id: "look", title: "Look", sub: "How it looks and sounds" },
+  { id: "make", title: "Make", sub: "Preview, render, publish" },
+];
+
 export default function App() {
-  const [view, setView] = useState<"canvas" | "settings" | "narration">("canvas");
+  // THE FOUR STEPS (Ak, 11 Oct 2026): Cast → Script → Look → Make, with
+  // Settings behind a gear. `view` is what the centre shows; it follows the
+  // step, so the rest of this file keeps reading one value.
+  const [step, setStep] = useState<Step>("cast");
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const view: "canvas" | "settings" | "narration" = settingsOpen ? "settings" : step === "script" ? "narration" : "canvas";
+  const goStep = (s: Step) => { setSettingsOpen(false); setStep(s); };
   const canvasRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const [stageSize, setStageSize] = useState({ w: 0, h: 0 });
@@ -418,21 +432,33 @@ export default function App() {
           Video Forge
           <small>AI video generator · BYOK</small>
         </div>
-        <nav className="forge-nav ml-auto">
-          {([
-            ["canvas", "Canvas"],
-            ["narration", "Narration"],
-            ["settings", "Settings"],
-          ] as const).map(([id, label]) => (
-            <button key={id} onClick={() => setView(id)} className={`forge-pill ${view === id ? "on" : ""}`}>
-              {label}
-            </button>
-          ))}
-        </nav>
+        <button
+          className={`forge-gear ml-auto ${settingsOpen ? "on" : ""}`}
+          title="Settings — keys and preferences"
+          aria-label="Settings"
+          aria-pressed={settingsOpen}
+          onClick={() => setSettingsOpen((v) => !v)}
+        >
+          ⚙
+        </button>
       </header>
 
+      <nav className="forge-steps mx-3 mb-3" aria-label="Steps">
+        {STEPS.map((st, i) => {
+          const at = STEPS.findIndex((x) => x.id === step);
+          const state = !settingsOpen && st.id === step ? "on" : i < at ? "done" : "";
+          return (
+            <button key={st.id} className={`forge-step panel-hud ${state}`} onClick={() => goStep(st.id)} aria-current={state === "on" ? "step" : undefined}>
+              <span className="n">{i + 1}</span>
+              <span className="t">{st.title}<small>{st.sub}</small></span>
+            </button>
+          );
+        })}
+      </nav>
+
       <div className="flex flex-1 gap-3 px-3 pb-3 min-h-0">
-        {/* LEFT: the cast — one tab per speaker, plus music */}
+        {/* LEFT: the cast — step 1 only */}
+        {view === "canvas" && step === "cast" && (
         <Rail
           title="Cast"
           side="left"
@@ -443,6 +469,7 @@ export default function App() {
         >
           <CastPanel />
         </Rail>
+        )}
 
         {/* CENTER: preview canvas, narration, or backend settings */}
         <main
@@ -611,19 +638,33 @@ export default function App() {
             </div>
             </div>
           )}
+          {!settingsOpen && step !== "make" && (
+            <button
+              className="forge-next"
+              onClick={() => goStep(STEPS[STEPS.findIndex((x) => x.id === step) + 1].id)}
+            >
+              Next: {STEPS[STEPS.findIndex((x) => x.id === step) + 1].title} →
+            </button>
+          )}
         </main>
 
-        {/* RIGHT: the scene — frame, subtitles, render, presets */}
+        {/* RIGHT: Look shows templates and the scene; Make shows render */}
+        {view === "canvas" && (step === "look" || step === "make") && (
         <Rail
-          title="Scene"
+          title={step === "look" ? "Look" : "Make"}
           side="right"
           open={sceneOpen}
           onToggle={() => setSceneOpen((v) => !v)}
           flareRef={sceneFlare.ref}
           onFlare={sceneFlare.fire}
         >
-          <ScenePanel />
+          {step === "look" ? (
+            <ScenePanel key="look" title="Look" tabs={["presets", "frame", "background", "subtitles"]} />
+          ) : (
+            <ScenePanel key="make" title="Make" tabs={["render"]} />
+          )}
         </Rail>
+        )}
       </div>
     </div>
   );

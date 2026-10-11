@@ -121,3 +121,8 @@ Ak's verdict on docs/design/looks-pick.html: **A Star sparks — Love it**; B Em
 ## Licence (11 Oct 2026)
 
 **MIT** (Ak prefers it over Apache-2.0), plus a custom closing note: a friendly, **non-mandatory** request to mention Video Forge in the credits of videos made with it.
+
+## Layout and engine (11 Oct 2026)
+
+- **Yes** to the four-step layout — with **Cast first**: Cast → Script → Look → Make.
+- **Yes** to switching the video engine to HyperFrames.
