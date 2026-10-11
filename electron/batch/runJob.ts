@@ -24,6 +24,7 @@ import fsp from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
 import { parseDramaboxScript } from "../../src/lib/narration/parseDramaboxScript";
+import { parseScript } from "../../src/lib/narration/parseScript";
 import type { DramaboxParams } from "../../src/lib/narration/dramaboxParams";
 import type { ExpressionOptions } from "../../src/lib/narration/expression";
 import { checkScript } from "../tts/checkScript";
@@ -451,7 +452,7 @@ export async function runBatchJob(
   const castPhrases = job.cast.map(
     (c, i) => c.openingPhrase ?? `Speaker ${i + 1}`
   );
-  const { segments, unmatchedLines, cues, blocks }: ReturnType<typeof parseDramaboxScript> = lesson
+  const prose: ReturnType<typeof parseDramaboxScript> = lesson
     ? { segments: [], unmatchedLines: [], cues: [], blocks: [], badVoiceLines: [] }
     : parseDramaboxScript(
         scriptText,
@@ -461,6 +462,21 @@ export async function runBatchJob(
           openingPhrase: castPhrases[i],
         }))
       );
+  // TWO SCRIPT FORMATS. The prose one ("A bright woman speaks warmly, "…"")
+  // was DramaBox's, and DramaBox is retired; the "Name: line" one is what the
+  // Narration tab writes. A script in the second format matched nothing above
+  // and the job died with "No line matched a cast member" (11 Oct 2026), so
+  // it is tried when the first finds nothing.
+  const labelled =
+    !lesson && prose.segments.length === 0
+      ? parseScript(
+          scriptText,
+          speakers.map((s, i) => ({ id: s.id, label: s.label, aliases: job.cast[i].aliases }))
+        )
+      : null;
+  const { segments, unmatchedLines, cues, blocks } = labelled
+    ? { ...labelled, blocks: [] as typeof prose.blocks }
+    : prose;
   if (!lesson && segments.length === 0) {
     throw new Error(
       `No line in ${path.basename(job.scriptPath!)} matched a cast member. ` +
@@ -472,7 +488,8 @@ export async function runBatchJob(
   // double quote silently swallows the rest of a line, a direction naming its
   // own subject produces a broken sentence. None of it throws on its own, and
   // all of it survives into a render that reports success.
-  const problems = lesson ? [] : checkScript(scriptText, castPhrases);
+  // The prose-format checks; a "Name: line" script has none of those traps.
+  const problems = lesson || labelled ? [] : checkScript(scriptText, castPhrases);
   if (problems.length) {
     const detail = problems
       .map((p) => `  line ${p.line}: ${p.problem}\n            ${p.fix}\n            > ${p.text}`)
