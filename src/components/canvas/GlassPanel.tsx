@@ -257,13 +257,21 @@ export function GlassFilterDefs({
 
 /** What makes an element BE the glass: it bends whatever was painted under it,
  *  and nothing drawn inside or after. */
+/** Under HyperFrames the capture browser does not apply an SVG filter inside
+ *  backdrop-filter — it showed the raw red/green displacement map on the face
+ *  instead (11 Oct 2026). There the glass is frosted (blur + saturation)
+ *  without the bend. remotion/hf/hfEntry.tsx sets the flag. */
+const refract = () =>
+  !(typeof window !== "undefined" && (window as unknown as { __VF_NO_REFRACT?: boolean }).__VF_NO_REFRACT);
+const bend = (id: string) => (refract() ? `url(#${id}) ` : "");
+
 export function glassBackdropStyle(
   id: string,
   glass: GlassConfig,
   frameWidth: number
 ): CSSProperties {
   const k = frameWidth / 1080;
-  const f = `url(#glass-${id}) blur(${glass.frost * frameWidth}px) saturate(${glass.saturation})`;
+  const f = `${bend(`glass-${id}`)}blur(${glass.frost * frameWidth}px) saturate(${glass.saturation})`;
   return {
     backdropFilter: f,
     WebkitBackdropFilter: f,
@@ -425,8 +433,8 @@ export function GlassPanel({
           position: "absolute",
           inset: 0,
           borderRadius: radiusPx,
-          backdropFilter: `url(#${filterId}) blur(${glass.frost * frameWidth}px) saturate(${glass.saturation})`,
-          WebkitBackdropFilter: `url(#${filterId}) blur(${glass.frost * frameWidth}px) saturate(${glass.saturation})`,
+          backdropFilter: `${bend(filterId)}blur(${glass.frost * frameWidth}px) saturate(${glass.saturation})`,
+          WebkitBackdropFilter: `${bend(filterId)}blur(${glass.frost * frameWidth}px) saturate(${glass.saturation})`,
           backgroundColor: withAlpha(glass.tint, glass.tintOpacity),
           // NO BORDER, and the shadows are almost invisible on purpose.
           //

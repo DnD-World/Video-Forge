@@ -1,5 +1,8 @@
 # HyperFrames trial — 11 Oct 2026
 
+> **Update, same day: switched.** Video Forge now renders with HyperFrames by default (`engine: "remotion"` still works for comparisons). Checked on three test jobs against Remotion: smoke (faces, waveforms, subtitles), lms-smoke (intro clip, logo, 3D puppets, lesson audio), glass-test (stock footage, crossfades, glass). Frames match except one known difference: **glass is frosted, not refracting**, because HyperFrames' capture browser ignores the SVG bend. Needed along the way: Electron 31 → 43 (HyperFrames needs Node 22+), the composition made see-through over native footage, telemetry off on every render.
+
+
 **Verdict: RECOMMENDED — switch Video Forge's video engine from Remotion to HyperFrames**, after the simpler layout lands. It removes the Remotion licence question for good (Apache-2.0, free for everyone, companies included) and our existing frame-driven React screens plug in without a rewrite.
 
 ## What was tested

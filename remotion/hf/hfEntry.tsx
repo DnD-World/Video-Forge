@@ -22,6 +22,9 @@ declare global {
   }
 }
 
+// See GlassPanel.tsx: no SVG refraction in HyperFrames' capture browser.
+(window as unknown as { __VF_NO_REFRACT: boolean }).__VF_NO_REFRACT = true;
+
 const { props, config } = window.__VF__;
 const root = createRoot(document.getElementById("vf-react")!);
 let frame = 0;

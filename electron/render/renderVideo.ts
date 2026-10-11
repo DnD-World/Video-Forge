@@ -20,6 +20,7 @@ import fsp from "node:fs/promises";
 import os from "node:os";
 import { bundle } from "@remotion/bundler";
 import { selectComposition, renderMedia, ensureBrowser } from "@remotion/renderer";
+import { renderHyperframes } from "./hyperframes/renderHyperframes";
 import {
   COMPOSITION_ID,
   type RenderBackground,
@@ -85,6 +86,8 @@ export interface RenderJob {
    *  a batch can trade size against quality per row — a social cut and an LMS
    *  master do not want the same file. */
   crf?: number;
+  /** Which engine draws the frames. Default "hyperframes"; "remotion" for comparisons. */
+  engine?: "hyperframes" | "remotion";
   /** A short card welded onto the front and the back after rendering.
    *
    *  JOINED AFTERWARDS, NOT PLACED INSIDE. A card in the composition would move
@@ -475,13 +478,6 @@ export async function renderVideo(
       }
     }
 
-    const serveUrl = await bundle({
-      entryPoint,
-      publicDir,
-      onProgress: (percent) => {
-        onProgress(lerp(STAGE.bundle, percent / 100), "Building render bundle…");
-      },
-    });
 
     const inputProps: RenderProps = {
       musicWaveform: job.musicWaveform,
@@ -548,6 +544,7 @@ export async function renderVideo(
       "backgrounds",        // clips copied in, rewritten to file names
       "subtitleFont",       // fetched and forwarded as files
       "crf",                // encoder setting, never reaches the composition
+      "engine",             // chooses the renderer, never reaches the composition
       "introPath",          // joined on after the render, or overlaid — see below
       "introOverMs",        // forwarded as `introOverlay` in inputProps
       "bannerVideo",        // copied in, forwarded as `bannerVideo`
@@ -568,67 +565,64 @@ export async function renderVideo(
       );
     }
 
-    const composition = await selectComposition({
-      serveUrl,
-      id: COMPOSITION_ID,
-      inputProps,
-    });
-
     await fsp.mkdir(outputDir, { recursive: true });
     const outputPath = path.join(outputDir, `render-${Date.now()}.mp4`);
+    const frames = Math.max(1, Math.round(job.durationSec * job.fps));
 
-    onProgress(STAGE.render.from, "Rendering frames…");
-    await renderMedia({
-      composition,
-      serveUrl,
-      codec: "h264",
-      outputLocation: outputPath,
-      inputProps,
-      // MEASURED: the first nine-minute render came out at 668 MB — about
-      // 10 Mbit/s — because nothing here set a quality and Remotion's default
-      // is deliberately generous. That is not a decision anyone made, and no
-      // LMS wants a 668 MB lesson.
-      //
-      // CRF is a quality target, not a bitrate: the encoder spends bits where
-      // the picture needs them and saves them where it doesn't, which suits
-      // this material well since long stretches are a near-static frame with a
-      // moving mouth and a waveform. 23 is x264's own default and the usual
-      // "visually transparent" mark for delivery.
-      //
-      // `medium` rather than `veryfast` because rendering frames already
-      // dominates the clock at two thirds of the total — spending a little
-      // more time in the encoder to make the file substantially smaller is the
-      // right side of that trade.
-      crf: job.crf ?? 23,
-      x264Preset: "medium",
-      // Audio at a real bitrate rather than whatever falls out. Narration is
-      // the one thing a lesson cannot afford to sound cheap.
-      audioCodec: "aac",
-      audioBitrate: "192k",
-      // The composition can't talk back except through the browser console, and
-      // the one thing it needs to say — "I couldn't load the spectrum, this
-      // video is silently worse than it should be" — is invisible otherwise.
-      onBrowserLog: (log) => {
-        // Deduped, because these come from inside the composition and the
-        // composition runs once per frame across several workers. Without this
-        // one missing eyebrow is six hundred identical lines.
-        if (log.text.includes("[video-forge]") && !warnings.includes(log.text)) {
-          warnings.push(log.text);
-        }
-      },
-      onProgress: ({ progress }) => {
-        onProgress(lerp(STAGE.render, progress), "Rendering frames…");
-      },
-    });
+    // THE ENGINE. HyperFrames by default since 11 Oct 2026 (licence-free for
+    // everyone; docs/research/hyperframes-trial.md). Remotion stays selectable
+    // with `engine: "remotion"` for side-by-side checks until the switch has
+    // proven itself on real lessons — then it goes.
+    if ((job.engine ?? "hyperframes") === "hyperframes") {
+      onProgress(STAGE.bundle.from, "Preparing the HyperFrames render…");
+      await renderHyperframes({
+        dir: publicDir,
+        props: inputProps,
+        appRoot: projectRoot,
+        crf: job.crf ?? 23,
+        outputPath,
+        onProgress: (f, note) => onProgress(lerp({ from: STAGE.bundle.from, to: 99 }, f), note),
+      });
+    } else {
+      const serveUrl = await bundle({
+        entryPoint,
+        publicDir,
+        onProgress: (percent) => {
+          onProgress(lerp(STAGE.bundle, percent / 100), "Building render bundle…");
+        },
+      });
 
-    // EVERY warning, not just the first.
-    //
-    // This line used to read `warnings[0]`, so a render that dropped four
-    // different things reported one of them and called the rest done. That is
-    // this project's actual failure mode — not crashing, but succeeding while
-    // quietly leaving something out — and it has happened with the spectrum,
-    // backgroundBlur, subtitle surfaces and transitions. A wrong video that
-    // reports success is the one thing that can reach a student.
+      const composition = await selectComposition({
+        serveUrl,
+        id: COMPOSITION_ID,
+        inputProps,
+      });
+      if (composition.durationInFrames !== frames) {
+        warnings.push(`[video-forge] frame count differs: Remotion ${composition.durationInFrames}, expected ${frames}`);
+      }
+
+      onProgress(STAGE.render.from, "Rendering frames…");
+      await renderMedia({
+        composition,
+        serveUrl,
+        codec: "h264",
+        outputLocation: outputPath,
+        inputProps,
+        crf: job.crf ?? 23,
+        x264Preset: "medium",
+        audioCodec: "aac",
+        audioBitrate: "192k",
+        onBrowserLog: (log) => {
+          if (log.text.includes("[video-forge]") && !warnings.includes(log.text)) {
+            warnings.push(log.text);
+          }
+        },
+        onProgress: ({ progress }) => {
+          onProgress(lerp(STAGE.render, progress), "Rendering frames…");
+        },
+      });
+    }
+
     for (const w of warnings) onProgress(99, w);
     onProgress(
       100,
@@ -653,7 +647,7 @@ export async function renderVideo(
     return {
       outputPath: joined.outputPath,
       durationSec: job.durationSec + joined.introSec + joined.outroSec,
-      frames: composition.durationInFrames,
+      frames,
       warnings,
     };
   } finally {

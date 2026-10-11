@@ -249,7 +249,9 @@ export function VideoComposition({
   })();
 
   return (
-    <AbsoluteFill style={{ backgroundColor: "#0b0b0d" }}>
+    // Under HyperFrames the footage is a native layer BELOW this one and the
+    // page supplies the same dark ground, so this must be see-through.
+    <AbsoluteFill style={{ backgroundColor: nativeMedia ? "transparent" : "#0b0b0d" }}>
       {audioFileName ? <Audio src={staticFile(audioFileName)} /> : null}
 
       <MusicTrack

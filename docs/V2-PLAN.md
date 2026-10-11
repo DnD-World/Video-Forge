@@ -42,10 +42,10 @@ Ak, 11 Oct: the 70 videos are done. The goal now is **polishing the maker** — 
 
 | # | Item | Notes |
 |---|---|---|
-| A1 | **Four-step layout** in the app: Script → Cast → Look → Make, Settings behind a gear | after Ak OKs the mock-up |
-| A2 | **Template gallery** that moves on hover (lesson, news desk, podcast, promo); a template sets everything | part of Look |
+| A1 | ~~Four-step layout~~ **done 11 Oct** — Cast → Script → Look → Make, Settings behind a gear | |
+| A2 | Template gallery — **first version done** (Halo/Broadcast/Orbit as moving tiles); lesson/news/podcast/promo templates still to make | part of Look |
 | A3 | **Preview with sound and every layer** | best done with HyperFrames' player — needs the switch decision |
-| A4 | **Switch to HyperFrames** (licence-free for everyone) | 32–52 h, docs/research/hyperframes-trial.md |
+| A4 | ~~Switch to HyperFrames~~ **done 11 Oct** — default engine; glass frosted, not refracting | docs/research/hyperframes-trial.md |
 | B1 | First run that works with **no keys at all** (offline voice, plain set), then explains each free key in one line with a link | |
 | B2 | **Projects**: name, save, open recent, autosave, undo/redo | |
 | B3 | **Script editor**: speaker colours, name autocomplete, a picker for [laughs] / [points] tags, live check as you type | |
