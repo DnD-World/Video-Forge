@@ -117,3 +117,7 @@ Ak's verdict on docs/design/looks-pick.html: **A Star sparks — Love it**; B Em
 - Logos: build/brand/video-forge-logo.jpg, image-forge-logo.jpg; symbol crops in docs/design/.
 - The Image Forge switch: options on docs/design/switch-pick.html, verdict pending.
 - **Forge switch: 1 Twin marks — Love it** (both logos in one capsule; current lit, other greyed; click slides the light and opens the other app). 4 Logo dock — OK; 2 and 3 — No.
+
+## Licence (11 Oct 2026)
+
+**MIT** (Ak prefers it over Apache-2.0), plus a custom closing note: a friendly, **non-mandatory** request to mention Video Forge in the credits of videos made with it.

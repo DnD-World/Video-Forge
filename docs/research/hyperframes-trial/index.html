@@ -1,0 +1,21 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+  html,body{margin:0;background:#000}
+  #stage{position:relative;width:1080px;height:1920px;overflow:hidden;background:#000}
+  .clip{position:absolute;inset:0}
+  #bg{position:absolute;left:0;top:0;width:1080px;height:1920px;object-fit:cover;opacity:.55}
+</style></head>
+<body>
+<div id="stage" data-composition-id="vf-proof" data-start="0" data-width="1080" data-height="1920" data-duration="10" data-fps="30">
+  <video id="bg" class="clip" src="bg.mp4" data-start="0" data-duration="10" data-track-index="0" muted playsinline></video>
+  <audio id="narr" src="narration.wav" data-start="0" data-duration="10" data-track-index="2"></audio>
+  <audio id="music" src="music.mp3" data-start="0" data-duration="10" data-track-index="3" data-volume="0.25"></audio>
+  <div id="react" class="clip" data-start="0" data-duration="10" data-track-index="1"><div id="react-layer" style="position:absolute;inset:0"></div></div>
+</div>
+<script src="puppet.js"></script>
+<script>
+  window.__timelines = window.__timelines || {};
+  window.__timelines["vf-proof"] = window.vfTimeline;
+</script>
+</body></html>
