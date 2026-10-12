@@ -152,6 +152,11 @@ const api = {
     startup: (): Promise<unknown> => ipcRenderer.invoke("project:startup"),
   },
 
+  mediaCache: {
+    stats: (): Promise<{ dir: string; files: number; bytes: number }> => ipcRenderer.invoke("media:cacheStats"),
+    cleanUp: (limitBytes: number, keep: string[]): Promise<{ removed: number; freedBytes: number; left: { files: number; bytes: number } }> =>
+      ipcRenderer.invoke("media:cleanUp", limitBytes, keep),
+  },
   forge: {
     /** Open Image Forge. False when it is not installed on this computer. */
     openImageForge: (): Promise<boolean> => ipcRenderer.invoke("forge:openImageForge"),

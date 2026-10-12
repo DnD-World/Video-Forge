@@ -29,6 +29,7 @@ import {
 import { sampleAnalysis } from "./lib/waveform/audioAnalysis";
 import { useCornerFlare } from "./lib/motion/useCornerFlare";
 import { SparkField } from "./components/ui/SparkField";
+import { autoClean } from "./lib/media/autoClean";
 import videoMark from "./assets/video-mark.jpg";
 import imageMark from "./assets/image-mark.jpg";
 import { VISEME } from "./lib/visemes/visemeMap";
@@ -326,6 +327,11 @@ export default function App() {
   // an app where clicking is constant work rather than an occasional flourish,
   // and reveal-on-scroll belongs to a marketing page, not a control surface
   // the user is already looking at.
+  // Downloaded background clips are trimmed to the Settings limit at start-up.
+  useEffect(() => {
+    void autoClean().then((msg) => msg && console.log(`[video-forge] ${msg}`));
+  }, []);
+
   useEffect(() => {
     window.DecoNoir?.init({
       // One ground, tinted from --accent, so it follows the Appearance picker

@@ -210,6 +210,10 @@ declare global {
       project: {
         startup: () => Promise<unknown>;
       };
+      mediaCache: {
+        stats: () => Promise<{ dir: string; files: number; bytes: number }>;
+        cleanUp: (limitBytes: number, keep: string[]) => Promise<{ removed: number; freedBytes: number; left: { files: number; bytes: number } }>;
+      };
       forge: {
         openImageForge: () => Promise<boolean>;
       };

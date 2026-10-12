@@ -3,6 +3,8 @@ import { useSettingsStore } from "../../store/useSettingsStore";
 import { Toggle } from "../ui/Toggle";
 import { HudButton } from "../ui/HudButton";
 import TtsTestPanel from "./TtsTestPanel";
+import { Slider } from "../ui/Slider";
+import { projectClipPaths } from "../../lib/media/autoClean";
 
 // Every provider carries its own plain-English explanation and a direct link
 // to the page that issues the key. The `access` field is the important one:
@@ -125,6 +127,53 @@ interface TestState {
   result?: { ok: boolean; message: string };
 }
 
+/** Downloaded background clips: size, limit, automatic clean-up, and a
+ *  button for now. Ak, 12 Oct 2026: 450 clips / 2.7 GB had piled up. */
+function ClipStorage() {
+  const limit = useSettingsStore((s) => s.mediaLimitGb);
+  const setLimit = useSettingsStore((s) => s.setMediaLimitGb);
+  const auto = useSettingsStore((s) => s.mediaAutoClean);
+  const setAuto = useSettingsStore((s) => s.setMediaAutoClean);
+  const [stats, setStats] = useState<{ files: number; bytes: number } | null>(null);
+  const [note, setNote] = useState<string | null>(null);
+  const refresh = () => void window.byok.mediaCache.stats().then(setStats);
+  useEffect(refresh, []);
+  const gb = (b: number) => `${(b / 1e9).toFixed(1)} GB`;
+  const over = stats && stats.bytes > limit * 1e9;
+  return (
+    <div className="border border-accent/25 bg-metal-800/60 p-4 space-y-3">
+      <h3 className="label-lit text-sm">Downloaded background clips</h3>
+      <p className="text-sm text-neutral-400" title="Stock clips are downloaded for each video's background and kept so re-renders are fast.">
+        {stats ? `${stats.files} clips, ${gb(stats.bytes)}` : "Counting…"}
+        {over && !auto ? " — over your limit. Clean up, or switch on automatic clean-up." : ""}
+      </p>
+      <Slider
+        label="Keep at most"
+        value={limit}
+        min={0.5} max={20} step={0.5}
+        format={(v) => `${v} GB`}
+        onChange={setLimit}
+      />
+      <div className="flex items-center gap-3" title="After every render and when the app starts, the clips used longest ago are removed until the folder is under this limit. Clips your open project uses are kept. A removed clip downloads again if a video needs it.">
+        <Toggle label="Clean up automatically" checked={auto} onChange={setAuto} />
+      </div>
+      <div className="flex items-center gap-3">
+        <HudButton
+          onClick={async () => {
+            if (!window.confirm("Remove every downloaded background clip except the ones this project uses? They download again if a video needs them.")) return;
+            const r = await window.byok.mediaCache.cleanUp(0, projectClipPaths());
+            setNote(`Removed ${r.removed} clips, freed ${gb(r.freedBytes)}.`);
+            refresh();
+          }}
+        >
+          Clean up now
+        </HudButton>
+        {note && <span className="text-sm text-neutral-400">{note}</span>}
+      </div>
+    </div>
+  );
+}
+
 export default function BackendPanel() {
   const [saved, setSaved] = useState<string[]>([]);
   const [draft, setDraft] = useState<Record<string, string>>({});
@@ -195,6 +244,8 @@ export default function BackendPanel() {
         Paste a key, press Save, then press Test to confirm it actually works —
         Test makes one real call to the provider.
       </p>
+
+      <ClipStorage />
 
       <div className="border border-accent/25 bg-metal-800/60 p-4 space-y-3">
         <h3 className="label-lit text-sm">Appearance</h3>

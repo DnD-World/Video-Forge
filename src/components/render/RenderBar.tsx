@@ -16,6 +16,7 @@ import { useEffect, useRef, useState } from "react";
 import { NumberField } from "../ui/NumberField";
 import { HudButton } from "../ui/HudButton";
 import { Toggle } from "../ui/Toggle";
+import { autoClean } from "../../lib/media/autoClean";
 import { useProjectStore } from "../../store/useProjectStore";
 
 interface RenderResult {
@@ -194,6 +195,8 @@ export function RenderBar() {
         setResult({ outputPath: res.outputPath, frames: res.frames });
         setNote("Done");
         setPct(100);
+        // Old background clips go once the video is safely out (Settings limit).
+        void autoClean().then((msg) => msg && setNote(`Done. ${msg}`));
       } else {
         setError(res.error ?? "Render failed.");
       }

@@ -16,6 +16,12 @@ interface SettingsState {
   /** Hex string, e.g. "#e8a24a". Drives the --accent-*-rgb CSS variables
    *  applied in App.tsx, which every accent-* Tailwind class reads from. */
   accentColor: string;
+  /** Downloaded background clips: the most they may take, in GB, and
+   *  whether the app trims them by itself (electron/media/mediaCache.ts). */
+  mediaLimitGb: number;
+  setMediaLimitGb: (gb: number) => void;
+  mediaAutoClean: boolean;
+  setMediaAutoClean: (v: boolean) => void;
   setAccentColor: (hex: string) => void;
   /** Gates the breathing glow / click flash / corner flare motion effects,
    *  independent of the OS-level prefers-reduced-motion (which always wins
@@ -44,6 +50,10 @@ export const useSettingsStore = create<SettingsState>()(
         set((s) => ({ defaults: { ...s.defaults, [k]: v } })),
 
       accentColor: "#76FFC2", // Forge mint (stravelakis mint-400)
+      mediaLimitGb: 2,
+      setMediaLimitGb: (gb) => set({ mediaLimitGb: gb }),
+      mediaAutoClean: true,
+      setMediaAutoClean: (v) => set({ mediaAutoClean: v }),
       setAccentColor: (hex) => set({ accentColor: hex }),
 
       motionEnabled: true,

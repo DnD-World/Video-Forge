@@ -15,6 +15,7 @@ import { ensureFont, SUBTITLE_FONTS } from "./net/fonts";
 import { searchSounds } from "./net/soundSearch";
 import { planBackgrounds, pickBackgrounds } from "./llm/backgroundPlanner";
 import { renderVideo, type RenderJob } from "./render/renderVideo";
+import { cacheStats, cleanUp, touch } from "./media/mediaCache";
 import { installExitHandlers, reapOrphansFromLastSession } from "./process/childTree";
 import { buildNarration, type NarrationInput } from "./tts/buildNarration";
 import { runBatchJob, type BatchJob } from "./batch/runJob";
@@ -228,6 +229,12 @@ ipcMain.handle("forge:openImageForge", async () => {
   return err === "";
 });
 
+/** Downloaded background clips: how much room they take, and clearing them
+ *  (electron/media/mediaCache.ts). `keep` = clips the open project uses. */
+const mediaDir = () => path.join(app.getPath("userData"), "media");
+ipcMain.handle("media:cacheStats", async () => cacheStats(mediaDir()));
+ipcMain.handle("media:cleanUp", async (_e, limitBytes: number, keep: string[] = []) => cleanUp(mediaDir(), limitBytes, keep));
+
 ipcMain.handle("storage:openOutputDir", async () => {
   await fsp.mkdir(outputDir(), { recursive: true });
   await shell.openPath(outputDir());
@@ -394,6 +401,9 @@ ipcMain.handle("render:start", async (_e, job: RenderJob) => {
       mainWindow.webContents.send("render:progress", { jobId, pct, note });
     }
   };
+
+  // The clips this render uses count as "just used", so a clean-up keeps them.
+  await touch((job.backgrounds ?? []).map((b) => b.filePath).filter((p): p is string => !!p));
 
   try {
     const result = await renderVideo(job, {
