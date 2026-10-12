@@ -1,16 +1,15 @@
 // ---------------------------------------------------------------------------
-// LEFT PANEL — the cast.
-//
-// Three sections: Speakers (who they are and how they look), Music, and
-// Waveforms (every track together). Waveforms get their own tab rather than
-// living inside each speaker because tuning them is comparative work — you
-// judge one track against the others, so they need to be side by side.
+// STEP 1 — the cast. One tab per speaker (Ak, 12 Oct 2026), and inside it
+// everything that belongs to that speaker alone: who they are, their voice
+// (with pitch, speed and breath), their look, their waveform and their place
+// in the frame. Music and sound effects belong to the whole video and live
+// in the Look step.
 //
 // The colour rule worth knowing: a speaker's outline colour IS their waveform
 // colour. There is no second control, because two controls would drift.
 // ---------------------------------------------------------------------------
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Empty } from "../ui/Empty";
 import { Picker } from "../ui/Picker";
 import { HudButton } from "../ui/HudButton";
@@ -109,9 +108,6 @@ export function CastPanel() {
   const saveToLibrary = useSpeakerLibraryStore((s) => s.save);
   const removeFromLibrary = useSpeakerLibraryStore((s) => s.remove);
 
-  const [section, setSection] = useState<"speakers" | "music" | "sfx" | "waveforms">(
-    "speakers"
-  );
   const [active, setActive] = useState<string>("");
   const [saved, setSaved] = useState<string | null>(null);
 
@@ -175,33 +171,18 @@ export function CastPanel() {
     });
   }
 
+  const sp = speaker;
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="title-deco uppercase text-lg">Cast</h2>
-        <button onClick={addSpeaker} className="label-etched underline hover:text-accent-bright">
-          + Add speaker
-        </button>
-      </div>
-
-      <div className="mb-3">
-        {castError && <p className="text-sm text-red-400 mt-1.5">{castError}</p>}
-      </div>
-
-      {/* Recall a saved speaker. A face, a voice and a look are properties of a
-          character, not of one video — picking them again every time is the
-          most repetitive thing in the app. */}
-      {musicLibrary.length > 0 && (
-        <div className="flex items-center gap-2 mb-3">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="title-deco text-lg">Cast</h2>
+        {library.length > 0 && (
           <Picker
-            aria-label="Add a saved speaker from the library"
-            className="flex-1 min-w-0"
+            aria-label="Add a saved character"
+            className="w-44"
             value=""
-            placeholder="Add from library…"
-            options={[
-              { value: "", label: "Add from library…" },
-              ...library.map((l) => ({ value: l.savedId, label: l.label })),
-            ]}
+            placeholder="From library…"
+            options={[{ value: "", label: "From library…" }, ...library.map((l) => ({ value: l.savedId, label: l.label }))]}
             onChange={(v) => {
               const entry = library.find((l) => l.savedId === v);
               if (!entry) return;
@@ -209,571 +190,253 @@ export function CastPanel() {
               addSpeakerFrom(rest);
             }}
           />
-        </div>
-      )}
+        )}
+      </div>
+      {castError && <p className="text-sm text-red-400 mb-2">{castError}</p>}
 
-      <Tabs
-        tabs={[
-          { id: "speakers" as const, label: "Speakers" },
-          { id: "music" as const, label: "♪ Music" },
-          { id: "sfx" as const, label: "SFX" },
-          { id: "waveforms" as const, label: "Waveforms" },
-        ]}
-        active={section}
-        onChange={setSection}
-      />
+      {/* ONE TAB PER SPEAKER, in their own colour, and a + for a new one. */}
+      <div className="forge-who" role="tablist" aria-label="Speakers">
+        {speakers.map((s) => (
+          <button
+            key={s.id}
+            role="tab"
+            aria-selected={s.id === active}
+            className={`who ${s.id === active ? "on" : ""}`}
+            style={{ ["--c" as string]: s.borderColor }}
+            onClick={() => setActive(s.id)}
+            data-tip={`Everything about ${s.label}: voice, look, waveform and place.`}
+          >
+            <i />
+            {s.label}
+          </button>
+        ))}
+        <button className="who add" onClick={addSpeaker} data-tip="Add a new speaker to this video.">
+          +
+        </button>
+      </div>
 
-      {/* Which speaker the Speakers tab is editing. Only shown when it's
-          relevant, so a single-speaker project has no redundant strip. */}
-      {section === "speakers" && speakers.length > 1 && (
-        <Tabs
-          tabs={speakers.map((s) => ({ id: s.id, label: s.label }))}
-          active={active}
-          onChange={setActive}
-        />
-      )}
-
-      <div className="flex-1 overflow-y-auto pr-1 space-y-6">
-        {section === "waveforms" ? (
-          <>
-            <p className="text-sm text-neutral-500">
-              Every track in one place, so you can tune them against each other
-              instead of hopping between tabs. Each speaker's waveform takes its
-              colour from that speaker's outline.
-            </p>
-            {speakers.map((sp) => (
-              <section key={sp.id} className="space-y-3 border-t border-accent/15 pt-5 first:border-0 first:pt-0">
-                <div className="flex items-center gap-2">
-                  <span className="inline-block h-3 w-3 rounded-full" style={{ background: sp.borderColor }} />
-                  <span className="label-etched">{sp.label}</span>
-                </div>
-                <WaveformControls
-                  label={`Show ${sp.label}'s waveform`}
-                  value={sp.waveform}
-                  onChange={(patch) => setSpeakerWaveform(sp.id, patch)}
-                />
-              </section>
-            ))}
-            <section className="space-y-3 border-t border-accent/15 pt-5">
-              <div className="flex items-center gap-2">
-                <span className="inline-block h-3 w-3 rounded-full" style={{ background: musicColor }} />
-                <span className="label-etched">Music</span>
-              </div>
-              <WaveformControls
-                label="Show music waveform"
-                value={musicWaveform}
-                onChange={setMusicWaveform}
-                canAnchorToFace={false}
-              />
-            </section>
-            {speakers.length === 0 && (
-              <p className="text-sm text-neutral-500">Add a speaker to get a speaker waveform.</p>
-            )}
-          </>
-        ) : section === "sfx" ? (
-          <SfxPanel />
-        ) : section === "music" ? (
-          <>
-            {/* The loops that ship with the app. A batch picks from these by
-                itself; this is for choosing one by hand on a single video. */}
-            {musicLibrary.length > 0 && (
-              <div className="space-y-2">
-                <div className="label-etched">Library</div>
-                <div className="flex flex-wrap gap-2">
-                  {musicLibrary.map((t) => (
-                    <HudButton
-                      key={t.filePath}
-                      active={music?.filePath === t.filePath}
-                      onClick={() => loadMusicFile(t.filePath)}
-                    >
-                      {t.name.replace(/\.wav$/i, "").replace(/[_-]+/g, " ").slice(0, 28)}
-                    </HudButton>
-                  ))}
-                </div>
-                <p className="text-sm text-neutral-500">
-                  All loopable and cleared for use. A batch gives each lesson one
-                  of these on rotation, so the same lesson always gets the same
-                  bed and the next one gets the next track along.
-                </p>
-              </div>
-            )}
-
-            <div className="flex items-center gap-2">
-              <HudButton onClick={pickMusic} disabled={musicBusy}>
-                {musicBusy ? "Analysing…" : music ? "Change Track" : "Load Music"}
-              </HudButton>
-              {music && (
-                <button
-                  onClick={() => {
-                    setMusic(null);
-                    setMusicNote(null);
-                  }}
-                  className="label-etched underline hover:text-red-400"
-                >
-                  remove
-                </button>
-              )}
-            </div>
-            {music && (
-              <p className="text-xs text-neutral-500 break-all">
-                {music.filePath.split(/[\\/]/).pop()}
-                {music.analysis
-                  ? ` · ${Math.round(music.analysis.durationMs / 1000)}s`
-                  : " · not analysed"}
-              </p>
-            )}
-            {musicNote && <p className="text-sm text-amber-400">{musicNote}</p>}
-
-            <Slider
-              label="Music level"
-              value={musicVolume}
-              min={0} max={1} step={0.02}
-              format={(v) => (v === 0 ? "silent" : `${Math.round(v * 100)}%`)}
-              onChange={(volume) => setMusicMix({ volume })}
-            />
-            <Slider
-              label="Duck under speech"
-              value={musicDuck}
-              min={0} max={1} step={0.05}
-              format={(v) => (v === 0 ? "off" : `−${Math.round(v * 100)}%`)}
-              onChange={(duck) => setMusicMix({ duck })}
-            />
-            <p className="text-sm text-neutral-500">
-              The bed drops out of the way just before each line and comes back
-              slowly after it — early, because a duck that arrives with the voice
-              always sounds late. A track shorter than the video repeats.
-            </p>
-
-            <div className="flex items-center gap-3 border-t border-accent/15 pt-4">
-              <input
-                type="color" value={musicColor}
-                onChange={(e) => setMusicColor(e.target.value)}
-                className="h-9 w-9 border border-accent/30 bg-transparent p-0"
-              />
-              <span className="text-sm text-neutral-400">Music colour</span>
-            </div>
-            <p className="text-sm text-neutral-500">
-              The music track always animates — music doesn't take turns the way
-              speakers do. With a track loaded it animates to the music itself;
-              without one it borrows the narration. Its waveform is on the
-              Waveforms tab.
-            </p>
-          </>
-        ) : !speaker ? (
-          <Empty>No speakers yet. Add one to give your video a voice.</Empty>
+      <div className="flex-1 overflow-y-auto pr-1 space-y-3 mt-3">
+        {!sp ? (
+          <Empty>No speakers yet. Press + to give your video a voice.</Empty>
         ) : (
           <>
-            <div className="flex items-center gap-2">
-              <input
-                type="text" value={speaker.label}
-                onChange={(e) => updateSpeaker(speaker.id, { label: e.target.value })}
-                className="flex-1 min-w-0 bg-metal-900 border border-accent/25 px-3 py-2 text-base text-neutral-100 outline-none focus:border-accent"
-              />
-              <button
-                onClick={() => removeSpeaker(speaker.id)}
-                className="label-etched underline text-neutral-500 hover:text-red-400"
-              >
-                Remove
-              </button>
-            </div>
-            <p className="text-sm text-neutral-500 -mt-4">
-              This name must match the label used in your script lines.
-            </p>
-
-            <div className="flex items-center gap-3 -mt-2">
-              <button
-                onClick={() => {
-                  saveToLibrary(speaker);
-                  setSaved(speaker.label);
-                  window.setTimeout(() => setSaved(null), 2000);
-                }}
-                className="label-etched underline hover:text-accent-bright"
-              >
-                Save to library
-              </button>
-              {library.some(
-                (l) => l.label.trim().toLowerCase() === speaker.label.trim().toLowerCase()
-              ) && (
+            <Section title="Who" tip="The name and the character behind it.">
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={sp.label}
+                  onChange={(e) => updateSpeaker(sp.id, { label: e.target.value })}
+                  className="flex-1 min-w-0"
+                  aria-label="Speaker name"
+                  data-tip="The name you write in the script before their lines, e.g. «Καίτη: …»."
+                />
+                <button className="btn" onClick={() => removeSpeaker(sp.id)} data-tip="Take this speaker out of the video. A saved copy in the library stays.">
+                  Remove
+                </button>
+              </div>
+              <label className="block" data-tip="How the script introduces them, e.g. «A grave man». Lets story-style scripts find the right voice, and tells the voice who to be.">
+                <span className="label-etched">Character</span>
+                <input
+                  type="text"
+                  className="w-full mt-1"
+                  placeholder="A grave man"
+                  value={sp.openingPhrase ?? ""}
+                  onChange={(e) => updateSpeaker(sp.id, { openingPhrase: e.target.value || undefined })}
+                />
+              </label>
+              <div className="flex items-center gap-3">
                 <button
+                  className="btn"
                   onClick={() => {
-                    const hit = library.find(
-                      (l) => l.label.trim().toLowerCase() === speaker.label.trim().toLowerCase()
-                    );
-                    if (hit) removeFromLibrary(hit.savedId);
+                    saveToLibrary(sp);
+                    setSaved(sp.label);
+                    window.setTimeout(() => setSaved(null), 2000);
                   }}
-                  className="label-etched underline text-neutral-500 hover:text-red-400"
+                  data-tip="Keep this character (face, voice, colours, waveform) to reuse in other videos."
                 >
-                  forget
+                  Save to library
                 </button>
-              )}
-              {saved === speaker.label && (
-                <span className="text-sm text-emerald-400">saved ✓</span>
-              )}
-            </div>
-            <p className="text-sm text-neutral-500 -mt-4">
-              Keeps the face, voice, colours and waveform — not where they stand.
-            </p>
-
-            {/* Two kinds of face, listed puppet-first because it is the better
-                one and the one being chosen from here on. The flattened sheet
-                stays for every project that already has one — and it is still
-                the only option for a character nobody has cut into layers. */}
-            <section className="space-y-3">
-              <div className="label-etched">Face</div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={async () => {
-                    const p = await window.byok.dialog.openFile([
-                      { name: "Puppet", extensions: ["json"] },
-                    ]);
-                    if (p) updateSpeaker(speaker.id, { puppetPath: p });
-                  }}
-                  className="label-etched underline hover:text-accent-bright"
-                >
-                  {speaker.puppetPath ? "Change puppet" : "Choose puppet…"}
-                </button>
-                {speaker.puppetPath && (
-                  <button
-                    onClick={() => updateSpeaker(speaker.id, { puppetPath: undefined })}
-                    className="label-etched underline text-neutral-500 hover:text-red-400"
-                  >
-                    clear
-                  </button>
-                )}
+                {saved === sp.label && <span className="text-sm text-emerald-400">saved ✓</span>}
               </div>
-              {speaker.puppetPath && (
-                <p className="text-sm text-neutral-500 truncate" title={speaker.puppetPath}>
-                  {speaker.puppetPath.split(/[\\/]/).pop()}
-                  {puppetErrors[speaker.puppetPath] && (
-                    <span className="text-red-400"> — {puppetErrors[speaker.puppetPath]}</span>
-                  )}
-                </p>
-              )}
+            </Section>
 
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={async () => {
-                    const p = await window.byok.dialog.openFile([
-                      { name: "Viseme sheet", extensions: ["png"] },
-                    ]);
-                    if (p) updateSpeaker(speaker.id, { sheetPath: p });
-                  }}
-                  className="label-etched underline hover:text-accent-bright"
-                >
-                  {speaker.sheetPath ? "Change sheet" : "Choose sheet…"}
-                </button>
-                {speaker.sheetPath && (
-                  <button
-                    onClick={() => updateSpeaker(speaker.id, { sheetPath: undefined })}
-                    className="label-etched underline text-neutral-500 hover:text-red-400"
-                  >
-                    clear
-                  </button>
-                )}
+            <Section title="Voice" tip="How they sound.">
+              <div data-tip="Which voice service speaks for them. Gemini and Fish are free.">
+                <Picker
+                  aria-label="Voice engine"
+                  className="w-full"
+                  value={engineOf(sp)}
+                  options={[
+                    { value: "gemini", label: "Gemini — free, acts, many languages" },
+                    { value: "fish", label: "Fish Audio — free, a funny foreign accent" },
+                    { value: "elevenlabs", label: "ElevenLabs — charged per character" },
+                    { value: "piper", label: "Piper — offline, flat" },
+                  ]}
+                  onChange={(v) => updateSpeaker(sp.id, { ttsEngine: v as "gemini" | "fish" | "elevenlabs" | "piper" })}
+                />
               </div>
-              {speaker.sheetPath && (
-                <p className="text-sm text-neutral-500 truncate" title={speaker.sheetPath}>
-                  {speaker.sheetPath.split(/[\\/]/).pop()}
-                  {/* Silently ignoring the sheet would read as the picker being
-                      broken — say which one is actually on screen. */}
-                  {speaker.puppetPath && !puppetErrors[speaker.puppetPath] && (
-                    <span className="text-neutral-600"> — unused, the puppet is drawn</span>
-                  )}
-                </p>
-              )}
-            </section>
-
-            <section className="space-y-3">
-              <div className="label-etched">Frame</div>
-              <div className="flex flex-wrap gap-2">
-                {SHAPES.map((s) => (
-                  <HudButton
-                    key={s.id}
-                    active={speaker.outlineShape === s.id}
-                    onClick={() => updateSpeaker(speaker.id, { outlineShape: s.id })}
-                  >
-                    {s.label}
-                  </HudButton>
-                ))}
-              </div>
-              <div className="flex items-center gap-4">
-                <label className="flex flex-col items-center gap-1.5">
-                  <input
-                    type="color" value={speaker.borderColor}
-                    onChange={(e) => updateSpeaker(speaker.id, { borderColor: e.target.value })}
-                    className="h-9 w-9 border border-accent/30 bg-transparent p-0"
-                  />
-                  <span className="text-sm text-neutral-400">Outline</span>
-                </label>
-                <label className="flex flex-col items-center gap-1.5">
-                  <input
-                    type="color" value={speaker.bgColor}
-                    onChange={(e) => updateSpeaker(speaker.id, { bgColor: e.target.value })}
-                    className="h-9 w-9 border border-accent/30 bg-transparent p-0"
-                  />
-                  <span className="text-sm text-neutral-400">Fill</span>
-                </label>
-                <p className="text-sm text-neutral-500 flex-1">
-                  The outline colour is also this speaker's waveform colour.
-                </p>
-              </div>
-              <Slider
-                label="Outline Opacity" value={speaker.borderOpacity} min={0} max={1} step={0.05}
-                onChange={(v) => updateSpeaker(speaker.id, { borderOpacity: v })}
-                format={(v) => `${Math.round(v * 100)}%`}
-              />
-              <Slider
-                label="Fill Opacity" value={speaker.bgOpacity} min={0} max={1} step={0.05}
-                onChange={(v) => updateSpeaker(speaker.id, { bgOpacity: v })}
-                format={(v) => (v === 0 ? "transparent" : `${Math.round(v * 100)}%`)}
-              />
-            </section>
-
-            <section className="space-y-3">
-              <div className="label-etched">Placement</div>
-              <Slider
-                label="Size" value={speaker.size} min={0.05} max={0.9} step={0.01}
-                onChange={(v) => updateSpeaker(speaker.id, { size: v })}
-                format={(v) => `${Math.round(v * 100)}%`}
-              />
-              <Slider
-                label="Position X" value={speaker.x} min={0} max={1} step={0.01}
-                onChange={(v) => updateSpeaker(speaker.id, { x: v })}
-                format={(v) => `${Math.round(v * 100)}%`}
-              />
-              <Slider
-                label="Position Y" value={speaker.y} min={0} max={1} step={0.01}
-                onChange={(v) => updateSpeaker(speaker.id, { y: v })}
-                format={(v) => `${Math.round(v * 100)}%`}
-              />
-              <p className="text-sm text-neutral-500">Or just drag them on the canvas.</p>
-            </section>
-
-            <section className="space-y-3">
-              <div className="label-etched">Voice</div>
-              <Picker
-                aria-label="Voice engine"
-                className="w-full"
-                value={engineOf(speaker)}
-                options={[
-                  { value: "gemini", label: "Gemini — free, acts, many languages" },
-                  { value: "fish", label: "Fish Audio — free, a funny foreign accent" },
-                  { value: "elevenlabs", label: "ElevenLabs — charged per character" },
-                  { value: "piper", label: "Piper — offline, flat" },
-                ]}
-                onChange={(v) =>
-                  updateSpeaker(speaker.id, {
-                    ttsEngine: v as "gemini" | "fish" | "elevenlabs" | "piper",
-                  })
-                }
-              />
-              {engineOf(speaker) === "gemini" && (
+              {engineOf(sp) === "gemini" && (
                 <>
-                  <Picker
-                    aria-label="Gemini model"
-                    className="w-full"
-                    value={speaker.geminiModel ?? DEFAULT_GEMINI_MODEL}
-                    options={GEMINI_MODELS.map((m) => ({ value: m.id, label: m.label }))}
-                    onChange={(v) =>
-                      updateSpeaker(speaker.id, { geminiModel: v, geminiMode: geminiModeOf(v) })
-                    }
-                  />
-                  <Picker
-                    aria-label="Gemini voice"
-                    className="w-full"
-                    value={speaker.geminiVoice ?? DEFAULT_GEMINI_VOICE}
-                    options={GEMINI_VOICES.map((v) => ({ value: v.name, label: `${v.name} — ${v.feel}` }))}
-                    onChange={(v) => updateSpeaker(speaker.id, { geminiVoice: v })}
-                  />
+                  <div data-tip="Live models are free with no daily limit. TTS models sound a little better, but only 10 lines a day are free.">
+                    <Picker
+                      aria-label="Gemini model"
+                      className="w-full"
+                      value={sp.geminiModel ?? DEFAULT_GEMINI_MODEL}
+                      options={GEMINI_MODELS.map((m) => ({ value: m.id, label: m.label }))}
+                      onChange={(v) => updateSpeaker(sp.id, { geminiModel: v, geminiMode: geminiModeOf(v) })}
+                    />
+                  </div>
+                  <div data-tip="Which of Google's voices. The word after the name is how Google describes it.">
+                    <Picker
+                      aria-label="Gemini voice"
+                      className="w-full"
+                      value={sp.geminiVoice ?? DEFAULT_GEMINI_VOICE}
+                      options={GEMINI_VOICES.map((v) => ({ value: v.name, label: `${v.name} — ${v.feel}` }))}
+                      onChange={(v) => updateSpeaker(sp.id, { geminiVoice: v })}
+                    />
+                  </div>
                 </>
               )}
-              {engineOf(speaker) === "piper" && (
+              {engineOf(sp) === "piper" && (
                 <Picker
                   aria-label="Piper voice"
                   className="w-full"
-                  placeholder={
-                    voices.length === 0
-                      ? "No voices — scan in Backend Settings"
-                      : "Saved voice not found — pick another"
-                  }
-                  value={speaker.voiceId ?? ""}
+                  placeholder={voices.length === 0 ? "No voices — scan in Settings" : "Saved voice not found — pick another"}
+                  value={sp.voiceId ?? ""}
                   options={[
-                    {
-                      value: "",
-                      label:
-                        voices.length === 0
-                          ? "No voices — scan in Backend Settings"
-                          : "No voice assigned",
-                    },
+                    { value: "", label: voices.length === 0 ? "No voices — scan in Settings" : "No voice assigned" },
                     ...voices.map((v) => ({ value: v.onnxPath, label: v.name })),
                   ]}
-                  onChange={(v) => updateSpeaker(speaker.id, { voiceId: v || undefined })}
+                  onChange={(v) => updateSpeaker(sp.id, { voiceId: v || undefined })}
                 />
               )}
-              <Slider
-                label="Pitch"
-                value={speaker.pitch ?? 0}
-                min={-6} max={6} step={1}
-                format={(v) => (v === 0 ? "as is" : `${v > 0 ? "+" : "−"}${Math.abs(v)} semitone${Math.abs(v) === 1 ? "" : "s"}`)}
-                onChange={(pitch) => updateSpeaker(speaker.id, { pitch })}
-              />
-              {engineOf(speaker) === "gemini" && (
+              {engineOf(sp) === "elevenlabs" && (
+                <Picker
+                  aria-label="ElevenLabs voice"
+                  className="w-full"
+                  placeholder={elevenVoices.length === 0 ? "No voices — save a key in Settings" : "Pick a voice"}
+                  value={sp.elevenVoiceId ?? ""}
+                  options={[{ value: "", label: "No voice chosen" }, ...elevenVoices.map((v) => ({ value: v.id, label: v.name }))]}
+                  onChange={(v) => updateSpeaker(sp.id, { elevenVoiceId: v || undefined })}
+                />
+              )}
+              <div data-tip="Higher or lower voice, without changing how fast they talk.">
+                <Slider
+                  label="Pitch"
+                  value={sp.pitch ?? 0}
+                  min={-6} max={6} step={1}
+                  format={(v) => (v === 0 ? "as is" : `${v > 0 ? "+" : "−"}${Math.abs(v)} step${Math.abs(v) === 1 ? "" : "s"}`)}
+                  onChange={(pitch) => updateSpeaker(sp.id, { pitch })}
+                />
+              </div>
+              <div data-tip="How fast they talk. 1× is as the voice made it.">
+                <Slider
+                  label="Speed"
+                  value={sp.speed ?? 1}
+                  min={0.8} max={1.25} step={0.05}
+                  format={(v) => `${v.toFixed(2)}×`}
+                  onChange={(speed) => updateSpeaker(sp.id, { speed })}
+                />
+              </div>
+              <div data-tip="The little pause when they say two lines in a row. Until you move it, the video's own setting (Script step) is used.">
+                <Slider
+                  label="Breath between their lines"
+                  value={sp.breathMs ?? 120}
+                  min={0} max={800} step={20}
+                  format={(v) => (sp.breathMs === undefined ? "video's setting" : `${(v / 1000).toFixed(2)} s`)}
+                  onChange={(breathMs) => updateSpeaker(sp.id, { breathMs })}
+                />
+              </div>
+              {engineOf(sp) === "gemini" && (
                 <p className="text-sm text-neutral-500">
-                  Write [laughs], [whispers], [sighs] inside a line to have it
-                  acted, never read out. Free voices are checked word by word and
-                  re-made if they drift from the script.
+                  Write [laughs], [whispers], [sighs] inside a line to have it acted, never read out. Each line is
+                  checked word by word and re-made if it drifts from the script.
                 </p>
               )}
-            </section>
+            </Section>
 
-            {/* Every DramaBox knob, per character. These used to be literals in
-                a Python file on the GPU box, which meant one setting for the
-                whole cast and no way to see what it was. */}
-            <section className="space-y-3">
-              <div className="label-etched">Character</div>
-              <label className="block">
-                <span className="label-etched text-sm">Opens their blocks with</span>
-                <input
-                  type="text"
-                  className="w-full mt-1 bg-black/30 border border-accent/20 rounded px-2 py-1 text-sm"
-                  placeholder="A grave man"
-                  value={speaker.openingPhrase ?? ""}
-                  onChange={(e) =>
-                    updateSpeaker(speaker.id, { openingPhrase: e.target.value || undefined })
-                  }
-                />
-              </label>
-              {SHOW_RETIRED_DRAMABOX && (
-              <label className="block">
-                <span className="label-etched text-sm">Reference clip</span>
-                <input
-                  type="text"
-                  className="w-full mt-1 bg-black/30 border border-accent/20 rounded px-2 py-1 text-sm"
-                  placeholder="voice.wav"
-                  value={speaker.voiceRef ?? ""}
-                  onChange={(e) =>
-                    updateSpeaker(speaker.id, { voiceRef: e.target.value || undefined })
-                  }
-                />
-              </label>
-              )}
-              {engineOf(speaker) === "elevenlabs" && (
-                <div className="space-y-2">
-                  <label className="block">
-                    <span className="label-etched text-sm">ElevenLabs voice</span>
-                    <Picker
-                      aria-label="ElevenLabs voice"
-                      className="mt-1 w-full"
-                      placeholder={
-                        elevenVoices.length === 0
-                          ? "No voices — save a key in Backend Settings"
-                          : "Pick a voice"
-                      }
-                      value={speaker.elevenVoiceId ?? ""}
-                      options={[
-                        { value: "", label: "No voice chosen" },
-                        ...elevenVoices.map((v) => ({ value: v.id, label: v.name })),
-                      ]}
-                      onChange={(v) =>
-                        updateSpeaker(speaker.id, { elevenVoiceId: v || undefined })
-                      }
-                    />
-                  </label>
-                  <label className="block">
-                    <span className="label-etched text-sm">Model</span>
-                    <Picker
-                      aria-label="ElevenLabs model"
-                      className="mt-1 w-full"
-                      value={speaker.elevenModel ?? "eleven_v3"}
-                      options={[
-                        { value: "eleven_v3", label: "v3 — acts on the script's directions" },
-                        { value: "eleven_multilingual_v2", label: "Multilingual v2 — flatter, has a speed dial" },
-                      ]}
-                      onChange={(v) =>
-                        updateSpeaker(speaker.id, {
-                          elevenModel: v as "eleven_v3" | "eleven_multilingual_v2",
-                        })
-                      }
-                    />
-                  </label>
+            <Section title="Look" tip="Their face and the frame around it.">
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  className="btn"
+                  onClick={async () => {
+                    const p = await window.byok.dialog.openFile([{ name: "Puppet", extensions: ["json"] }]);
+                    if (p) updateSpeaker(sp.id, { puppetPath: p });
+                  }}
+                  data-tip="The talking face: a puppet file (.puppet.json) with mouths, eyes and brows."
+                >
+                  {sp.puppetPath ? "Change face" : "Choose face…"}
+                </button>
+                <span className="text-sm text-neutral-500 truncate flex-1" title={sp.puppetPath ?? sp.sheetPath}>
+                  {fileName(sp.puppetPath ?? sp.sheetPath) ?? "no face"}
+                  {sp.puppetPath && puppetErrors[sp.puppetPath] && <span className="text-red-400"> — {puppetErrors[sp.puppetPath]}</span>}
+                </span>
+              </div>
+              <div className="label-etched" data-tip="The shape around the face. The waveform follows it.">
+                Frame
+              </div>
+              <div className="forge-shapes">
+                {SHAPES.map((sh) => (
+                  <button
+                    key={sh.id}
+                    className={`shape ${sp.outlineShape === sh.id ? "on" : ""}`}
+                    onClick={() => updateSpeaker(sp.id, { outlineShape: sh.id })}
+                    aria-label={sh.label}
+                    style={{ ["--c" as string]: sp.borderColor }}
+                  >
+                    <i className={sh.id} />
+                    <span>{sh.label}</span>
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2" data-tip="Their colour: the frame and their waveform use it.">
+                  <input type="color" value={sp.borderColor} onChange={(e) => updateSpeaker(sp.id, { borderColor: e.target.value })} className="forge-swatch" />
+                  <span className="text-sm text-neutral-400">Colour</span>
+                </label>
+                <label className="flex items-center gap-2" data-tip="The colour inside the frame, behind the face.">
+                  <input type="color" value={sp.bgColor} onChange={(e) => updateSpeaker(sp.id, { bgColor: e.target.value })} className="forge-swatch" />
+                  <span className="text-sm text-neutral-400">Fill</span>
+                </label>
+              </div>
+              <div data-tip="How strongly the frame line shows.">
+                <Slider label="Frame strength" value={sp.borderOpacity} min={0} max={1} step={0.05} onChange={(v) => updateSpeaker(sp.id, { borderOpacity: v })} format={(v) => `${Math.round(v * 100)}%`} />
+              </div>
+              <div data-tip="How solid the fill behind the face is. 0 lets the background show through.">
+                <Slider label="Fill strength" value={sp.bgOpacity} min={0} max={1} step={0.05} onChange={(v) => updateSpeaker(sp.id, { bgOpacity: v })} format={(v) => (v === 0 ? "see-through" : `${Math.round(v * 100)}%`)} />
+              </div>
+            </Section>
 
-                  {(speaker.elevenModel ?? "eleven_v3") === "eleven_v3" ? (
-                    <>
-                      {/* Three positions, not a slider — v3 accepts 0, 0.5 and 1
-                          and rejects everything between. A slider here would be
-                          a control that fails the lesson at line one. */}
-                      <label className="block">
-                        <span className="label-etched text-sm">Steadiness</span>
-                        <Picker
-                          aria-label="Steadiness"
-                          className="mt-1 w-full"
-                          value={String(speaker.eleven?.stability ?? 0.5)}
-                          options={[
-                            { value: "0", label: "Creative — most expressive, can wander" },
-                            { value: "0.5", label: "Natural — the balance" },
-                            { value: "1", label: "Robust — steady, ignores direction more" },
-                          ]}
-                          onChange={(v) =>
-                            updateSpeaker(speaker.id, {
-                              eleven: { ...speaker.eleven, stability: Number(v) },
-                            })
-                          }
-                        />
-                      </label>
-                      <p className="text-sm text-neutral-500">
-                        v3 acts on the words <em>outside</em> the quotes: «She sighs
-                        heavily,» is sent as <code>[sighs]</code> in front of the line.
-                        The same script still works on DramaBox — nothing is rewritten,
-                        and the subtitle never shows the tag. There is no speed dial;
-                        speed is a direction («slows right down»).
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <Slider
-                        label="Speed" value={speaker.eleven?.speed ?? 1} min={0.7} max={1.2} step={0.05}
-                        onChange={(v) =>
-                          updateSpeaker(speaker.id, { eleven: { ...speaker.eleven, speed: v } })
-                        }
-                        format={(v) => `${v.toFixed(2)}x`}
-                      />
-                      <Slider
-                        label="Steadiness" value={speaker.eleven?.stability ?? 0.5} min={0} max={1} step={0.05}
-                        onChange={(v) =>
-                          updateSpeaker(speaker.id, { eleven: { ...speaker.eleven, stability: v } })
-                        }
-                        format={(v) => `${Math.round(v * 100)}%`}
-                      />
-                      <p className="text-sm text-neutral-500">
-                        Low steadiness wanders and is more expressive; high is even and
-                        flatter. v2 does not read acting tags — it reads them out — so a
-                        script's directions do nothing here.
-                      </p>
-                    </>
-                  )}
-                  <p className="text-sm text-neutral-500">
-                    Every generation is charged by the character, and a re-render is
-                    charged again.
-                  </p>
-                </div>
-              )}
+            <Section title="Waveform" tip="The moving bars that show when they speak." open={false}>
+              <WaveformControls label={`Show ${sp.label}'s waveform`} value={sp.waveform} onChange={(patch) => setSpeakerWaveform(sp.id, patch)} />
+            </Section>
 
-              {SHOW_RETIRED_DRAMABOX && (
-              <VoiceControls
-                value={speaker.dramabox ?? {}}
-                onChange={(dramabox) => updateSpeaker(speaker.id, { dramabox })}
-                expression={speaker.expression ?? {}}
-                onExpressionChange={(expression) =>
-                  updateSpeaker(speaker.id, { expression })
-                }
-              />
-              )}
-            </section>
-
+            <Section title="Place" tip="Where they stand in the picture. You can also drag them on the preview." open={false}>
+              <div data-tip="How big their face is, compared with the width of the video.">
+                <Slider label="Size" value={sp.size} min={0.05} max={0.9} step={0.01} onChange={(v) => updateSpeaker(sp.id, { size: v })} format={(v) => `${Math.round(v * 100)}%`} />
+              </div>
+              <div data-tip="Left (0%) to right (100%).">
+                <Slider label="Across" value={sp.x} min={0} max={1} step={0.01} onChange={(v) => updateSpeaker(sp.id, { x: v })} format={(v) => `${Math.round(v * 100)}%`} />
+              </div>
+              <div data-tip="Top (0%) to bottom (100%).">
+                <Slider label="Up / down" value={sp.y} min={0} max={1} step={0.01} onChange={(v) => updateSpeaker(sp.id, { y: v })} format={(v) => `${Math.round(v * 100)}%`} />
+              </div>
+            </Section>
           </>
         )}
       </div>
     </div>
+  );
+}
+
+const fileName = (p?: string) => (p ? p.split(/[\\/]/).pop() : undefined);
+
+/** A collapsible section of a speaker's tab. */
+function Section({ title, tip, open = true, children }: { title: string; tip: string; open?: boolean; children: ReactNode }) {
+  return (
+    <details className="forge-sec" open={open}>
+      <summary data-tip={tip}>{title}</summary>
+      <div className="space-y-3 pt-3">{children}</div>
+    </details>
   );
 }

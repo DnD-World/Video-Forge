@@ -330,3 +330,36 @@ input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-of
 [data-tip]:hover::after { content: attr(data-tip); position: absolute; z-index: 60; left: 0; top: calc(100% + 6px); width: max-content; max-width: 280px;
   padding: 8px 11px; border-radius: 10px; background: #071C26; border: 1px solid rgba(118, 255, 194, .3); color: var(--ink);
   font: 400 12px/1.45 "Sora", sans-serif; letter-spacing: 0; text-transform: none; box-shadow: 0 10px 30px -8px rgba(0, 0, 0, .9); pointer-events: none; white-space: normal; }
+
+/* =============================================================================
+   CAST: one tab per speaker (12 Oct 2026)
+   ============================================================================= */
+.forge-who { display: flex; flex-wrap: wrap; gap: 6px; }
+.forge-who .who { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--line); background: rgba(0, 0, 0, .35); color: var(--ink-2); font: 500 .9rem "Sora", sans-serif; transition: all .2s; }
+.forge-who .who i { width: 10px; height: 10px; border-radius: 50%; background: var(--c); box-shadow: 0 0 8px var(--c); }
+.forge-who .who:hover { color: var(--ink); border-color: var(--c, var(--accent)); }
+.forge-who .who.on { color: #001a10; background: var(--c); border-color: var(--c); box-shadow: 0 0 22px -6px var(--c); }
+.forge-who .who.on i { background: #001a10; box-shadow: none; }
+.forge-who .add { width: 38px; justify-content: center; padding: 8px 0; font-size: 1.1rem; color: var(--accent); }
+
+.forge-sec { border-radius: 14px; background: rgba(0, 0, 0, .28); border: 1px solid var(--line); padding: 10px 14px 14px; }
+.forge-sec > summary { list-style: none; cursor: pointer; font: 500 .95rem "Sora", sans-serif; color: var(--ink); display: flex; align-items: center; gap: 8px; }
+.forge-sec > summary::-webkit-details-marker { display: none; }
+.forge-sec > summary::before { content: "›"; color: var(--accent); transition: transform .2s; display: inline-block; width: 10px; }
+.forge-sec[open] > summary::before { transform: rotate(90deg); }
+
+.forge-shapes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.forge-shapes .shape { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 4px 8px; border-radius: 12px; cursor: pointer;
+  border: 1px solid var(--line); background: rgba(0, 0, 0, .35); color: var(--ink-3); font: 400 .72rem "Sora", sans-serif; transition: all .2s; }
+.forge-shapes .shape:hover { border-color: var(--c); color: var(--ink); }
+.forge-shapes .shape.on { border-color: var(--c); color: var(--ink); box-shadow: 0 0 0 1px var(--c), 0 0 18px -6px var(--c); }
+.forge-shapes .shape i { width: 34px; height: 34px; border: 2px solid var(--c); background: rgba(11, 40, 55, .6); }
+.forge-shapes .shape i.circle { border-radius: 50%; }
+.forge-shapes .shape i.rounded { border-radius: 10px; }
+.forge-shapes .shape i.square { border-radius: 2px; }
+.forge-shapes .shape i.none { border-style: dashed; border-color: rgba(233, 254, 245, .25); border-radius: 50%; }
+
+.forge-swatch { width: 34px; height: 34px; border-radius: 50% !important; border: 2px solid var(--line) !important; padding: 0 !important; cursor: pointer; background: none !important; overflow: hidden; }
+.forge-swatch::-webkit-color-swatch-wrapper { padding: 0; }
+.forge-swatch::-webkit-color-swatch { border: 0; border-radius: 50%; }

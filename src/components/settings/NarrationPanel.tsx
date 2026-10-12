@@ -181,6 +181,8 @@ export default function NarrationPanel() {
           language,
           engine,
           pitch: sp.pitch ?? 0,
+          speed: sp.speed ?? 1,
+          breathMs: sp.breathMs,
           direction: seg.direction,
           piperPythonPath,
           piperOnnxPath: sp.voiceId,

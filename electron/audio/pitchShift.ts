@@ -13,14 +13,16 @@
 import { spawn } from "node:child_process";
 import { ffmpegBin } from "../process/ffmpegPath";
 
-export function pitchShift(wav: Buffer, semitones: number): Promise<Buffer> {
-  if (!semitones) return Promise.resolve(wav);
+/** Pitch in semitones, and `speed` as a multiplier (1 = as made, 1.1 = 10%
+ *  faster) — both a speaker's own settings, from the Cast step. */
+export function pitchShift(wav: Buffer, semitones: number, speed = 1): Promise<Buffer> {
+  if (!semitones && (!speed || speed === 1)) return Promise.resolve(wav);
   const rate = wav.readUInt32LE(24);
-  const f = Math.pow(2, semitones / 12);
+  const f = Math.pow(2, (semitones || 0) / 12);
   return new Promise((resolve, reject) => {
     const p = spawn(ffmpegBin(), [
       "-v", "error", "-i", "pipe:0",
-      "-af", `asetrate=${Math.round(rate * f)},aresample=${rate},atempo=${(1 / f).toFixed(6)}`,
+      "-af", `asetrate=${Math.round(rate * f)},aresample=${rate},atempo=${((speed || 1) / f).toFixed(6)}`,
       "-ac", "1", "-c:a", "pcm_s16le", "-f", "wav", "pipe:1",
     ], { windowsHide: true });
     const out: Buffer[] = [];

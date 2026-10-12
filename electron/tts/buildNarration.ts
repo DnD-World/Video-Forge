@@ -42,6 +42,11 @@ export interface NarrationInput {
   engine?: "piper" | "elevenlabs" | "gemini" | "fish";
   /** Semitones up (+) or down (−), applied after the voice is made. 0 = as is. */
   pitch?: number;
+  /** Speaking speed, 1 = as made (Cast step). */
+  speed?: number;
+  /** Pause before this speaker's next line when they keep talking, ms.
+   *  Overrides the project's 'breath'. */
+  breathMs?: number;
   /** Gemini: Live (unlimited free, checked word by word) or TTS (10 a day). */
   gemini?: { mode: GeminiMode; model: string; voice: string; persona?: string };
   /** How this one line is delivered — the words outside the quotes.
@@ -137,6 +142,8 @@ function narrationKey(segments: NarrationInput[], pauses: NarrationPauses): stri
       s.eleven?.style,
       s.eleven?.speed,
       s.pitch || 0,
+      s.speed || 1,
+      s.breathMs ?? null,
       s.engine === "fish" ? ["fish", s.direction] : s.engine === "gemini" ? [s.gemini?.mode, s.gemini?.model, s.gemini?.voice, s.gemini?.persona, s.direction] : undefined,
     ]),
     pauses.sameMs,
@@ -257,11 +264,11 @@ export async function buildNarration(
 
   for (const [i, seg] of segments.entries()) {
     if (seg.engine === "fish") {
-      buffers.push(trimmed(await pitchShift(await synthesizeFish(spoken(seg.text), seg.direction), seg.pitch ?? 0)));
+      buffers.push(trimmed(await pitchShift(await synthesizeFish(spoken(seg.text), seg.direction), seg.pitch ?? 0, seg.speed ?? 1)));
       continue;
     }
     if (seg.engine === "gemini") {
-      buffers.push(trimmed(await pitchShift(geminiAudio.get(i)!, seg.pitch ?? 0)));
+      buffers.push(trimmed(await pitchShift(geminiAudio.get(i)!, seg.pitch ?? 0, seg.speed ?? 1)));
       continue;
     }
     if (seg.engine === "elevenlabs") {
@@ -285,7 +292,7 @@ export async function buildNarration(
         },
       });
       credits += spent;
-      buffers.push(trimmed(await pitchShift(Buffer.from(audioBuffer), seg.pitch ?? 0)));
+      buffers.push(trimmed(await pitchShift(Buffer.from(audioBuffer), seg.pitch ?? 0, seg.speed ?? 1)));
       continue;
     }
 
@@ -300,7 +307,7 @@ export async function buildNarration(
       seg.piperOnnxPath,
       spoken(seg.text)
     );
-    buffers.push(trimmed(await pitchShift(Buffer.from(audioBuffer), seg.pitch ?? 0)));
+    buffers.push(trimmed(await pitchShift(Buffer.from(audioBuffer), seg.pitch ?? 0, seg.speed ?? 1)));
   }
 
   // Nothing in front of the first line — leading silence only delays the video.
@@ -316,7 +323,7 @@ export async function buildNarration(
   }
 
   const gaps = segments.map((seg, i) =>
-    i === 0 ? 0 : seg.speakerId === segments[i - 1].speakerId ? pauses.sameMs : pauses.turnMs
+    i === 0 ? 0 : seg.speakerId === segments[i - 1].speakerId ? seg.breathMs ?? pauses.sameMs : pauses.turnMs
   );
   const { buffer, segments: timing } = concatWavBuffers(buffers, gaps);
 

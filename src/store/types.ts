@@ -341,6 +341,10 @@ export interface SpeakerConfig {
   geminiVoice?: string;
   /** Voice pitch in semitones, applied after the voice is made (−6…+6). */
   pitch?: number;
+  /** Speaking speed, 1 = as made (0.8–1.25). */
+  speed?: number;
+  /** Pause between two of this speaker's own lines, ms. Unset = the project's. */
+  breathMs?: number;
   voiceId?: string;      // assigned Piper voice's onnxPath, if any
   /** The voice id from the ElevenLabs library or a clone. An id, not a name. */
   elevenVoiceId?: string;
