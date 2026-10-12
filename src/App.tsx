@@ -464,6 +464,7 @@ export default function App() {
         </button>
       </header>
 
+      {!settingsOpen && (
       <nav className="forge-steps mx-3 mb-3" aria-label="Steps">
         {STEPS.map((st, i) => {
           const at = STEPS.findIndex((x) => x.id === step);
@@ -476,6 +477,7 @@ export default function App() {
           );
         })}
       </nav>
+      )}
 
       <div className="flex flex-1 gap-3 px-3 pb-3 min-h-0">
         {/* LEFT: the cast — step 1 only */}
@@ -512,7 +514,10 @@ export default function App() {
         >
           <HudCorners />
           {view === "settings" ? (
-            <div className="w-full h-full">
+            <div className="w-full h-full flex flex-col">
+              <button className="btn self-start mb-3" onClick={() => setSettingsOpen(false)} data-tip="Back to the step you were on">
+                ← Back to {STEPS.find((x) => x.id === step)?.title}
+              </button>
               <BackendPanel />
             </div>
           ) : view === "narration" ? (
