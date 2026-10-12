@@ -152,6 +152,16 @@ function narrationKey(segments: NarrationInput[], pauses: NarrationPauses): stri
   return crypto.createHash("sha256").update(material).digest("hex").slice(0, 16);
 }
 
+/** Tags about pace, not feeling — the voice already did those. */
+const PACE_TAGS = new Set(["short pause", "long pause", "slow", "very slow", "fast", "very fast", "whispers", "shouting"]);
+export function moodTag(text: string): string | undefined {
+  for (const m of text.matchAll(/\[([^\]]+)\]/g)) {
+    const t = m[1].trim().toLowerCase();
+    if (!PACE_TAGS.has(t)) return t;
+  }
+  return undefined;
+}
+
 export async function buildNarration(
   segments: NarrationInput[],
   /** Speaker ids in the order the canvas draws them, so the analysis's
@@ -343,6 +353,10 @@ export async function buildNarration(
     text: displayLine(seg.text.replace(/\[[^\]]*\]\s*/g, "")).trim(),
     startMs: timing[i].startMs,
     endMs: timing[i].endMs,
+    // The first feeling tag drives the face: [laughs] bobs the head, [nods]
+    // nods, [shakes head] shakes. Until 12 Oct 2026 the tags were stripped
+    // here and the face never heard about them outside the course lessons.
+    mood: moodTag(seg.text),
   }));
 
   // Written after the real file, and failures are swallowed: a cache that

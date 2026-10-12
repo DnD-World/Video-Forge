@@ -252,6 +252,15 @@ const MOOD: Record<string, MoodFace> = {
   curious: { head: "tilt" },
   interest: { head: "tilt" },
   confusion: { brow: "confused", head: "tilt" },
+  // Yes and no, asked for in the script (Ak, 12 Oct 2026): [nods], [shakes head].
+  nods: { head: "nod" },
+  nod: { head: "nod" },
+  agrees: { head: "nod" },
+  yes: { head: "nod" },
+  "shakes head": { head: "shake" },
+  shakes: { head: "shake" },
+  disagrees: { head: "shake" },
+  no: { brow: "firm", head: "shake" },
   // Settled.
   neutral: {},
   tired: { lid: "half" },
@@ -378,7 +387,7 @@ export interface HeadPose {
 
 export const HEAD_STILL: HeadPose = { rotateDeg: 0, dx: 0, dy: 0 };
 
-export type HeadGestureKind = "tilt" | "shake" | "droop" | "bob";
+export type HeadGestureKind = "tilt" | "shake" | "droop" | "bob" | "nod";
 
 export interface HeadSpan {
   startMs: number;
@@ -399,6 +408,10 @@ const HEAD_FOR: { test: RegExp; kind: HeadGestureKind }[] = [
   // `!` rule below would otherwise claim it. Both the Greek χα and the Latin
   // ha are matched, because a Greek script routinely carries both.
   { test: /^(χα|χά|χο|ha|he){2,}[!.…]*$/i, kind: "bob" },
+  // A spoken yes nods and a spoken no shakes — the word alone, not "nothing"
+  // or "Νοέμβριος".
+  { test: /^(ναι|ναί|yes|yeah|yep|μάλιστα|βεβαίως)[!.,…]*$/i, kind: "nod" },
+  { test: /^(όχι|οχι|no|nope)[!.,…]*$/i, kind: "shake" },
   { test: /(…|\.\.\.)$/, kind: "droop" },
   { test: /[;?]$/, kind: "tilt" },
   { test: /!$/, kind: "shake" },
@@ -522,6 +535,12 @@ export function headPoseAt(
       const local = (timeMs - s.startMs) / 1000;
       rotateDeg += -3.5 * a + Math.sin(local * Math.PI * 2 * 3.2) * 2.2 * a;
       dy += -0.014 * a + Math.abs(Math.sin(local * Math.PI * 2 * 6.4)) * 0.02 * a;
+    } else if (s.kind === "nod") {
+      // Yes: the head dips twice and comes back up, the second dip smaller.
+      // Down and up only — a nod that also turns reads as a "maybe".
+      const local = (timeMs - s.startMs) / 1000;
+      dy += Math.max(0, Math.sin(local * Math.PI * 2 * 2.4)) * 0.03 * a * Math.exp(-local * 1.6);
+      rotateDeg += Math.max(0, Math.sin(local * Math.PI * 2 * 2.4)) * 1.2 * a * Math.exp(-local * 1.6);
     } else {
       // Droop: down and slightly forward, the trailing-off gesture.
       rotateDeg += 3 * a;

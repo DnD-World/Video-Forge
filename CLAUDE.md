@@ -66,7 +66,12 @@ Hermes and to other agents as much as to us.
 This is the part that actually broke things, and no amount of file discipline
 fixes it. The card is a laptop RTX 3070 with 8 GB, and there is only one of it.
 
-**Hermes is the other claimant, through Ollama.** `Ollama.lnk` and
+**Checked 12 Oct 2026: this is out of date.** Ollama was not running, it is
+no longer in the startup folder, and the card had 0 MiB in use. Hermes is now
+cloud-based. The heat rule below still stands. What follows is the old
+picture, kept for history.
+
+**Hermes was the other claimant, through Ollama.** `Ollama.lnk` and
 `Hermes_Gateway.vbs` are both in the Windows startup folder, so Ollama is
 running from login, and the models it holds are not small — `gemma4:12b-it-qat`
 is 7.2 GB, `qwen3.5:9b` is 6.6 GB. Either one is most of the card by itself.
