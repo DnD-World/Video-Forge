@@ -62,7 +62,8 @@ declare global {
       media: {
         searchVideos: (
           query: string,
-          providers?: ("pixabay" | "pexels")[]
+          providers?: ("pixabay" | "pexels")[],
+          orientation?: "portrait" | "landscape"
         ) => Promise<{
           hits: {
             id: string;

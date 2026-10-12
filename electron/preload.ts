@@ -46,8 +46,8 @@ const api = {
   },
 
   media: {
-    searchVideos: (query: string, providers?: ("pixabay" | "pexels")[]) =>
-      ipcRenderer.invoke("media:searchVideos", query, providers),
+    searchVideos: (query: string, providers?: ("pixabay" | "pexels")[], orientation?: "portrait" | "landscape") =>
+      ipcRenderer.invoke("media:searchVideos", query, providers, orientation),
     download: (id: string, url: string): Promise<string> =>
       ipcRenderer.invoke("media:download", id, url),
     autoBackgrounds: (opts: unknown) => ipcRenderer.invoke("media:autoBackgrounds", opts),

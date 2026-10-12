@@ -12,6 +12,7 @@
 // already drawing a 24-band FFT at 60Hz.
 // ---------------------------------------------------------------------------
 
+import { colorLookCss } from "../../lib/background/colorLook";
 import { useEffect, useMemo, useRef } from "react";
 import {
   backgroundLayersAt,
@@ -69,6 +70,9 @@ export function BackgroundScene({
   fps,
   crossfadeMs,
   dim,
+  blurPx = 0,
+  colorLook,
+  sampleUrl,
 }: {
   clips: (BackgroundClip & { filePath?: string })[];
   /** filePath -> blob URL. A clip whose file hasn't loaded yet is skipped
@@ -78,6 +82,13 @@ export function BackgroundScene({
   fps: number;
   crossfadeMs: number;
   dim: number;
+  /** Blur in preview pixels (the render's blur × preview width). */
+  blurPx?: number;
+  /** Colour effect id (src/lib/background/colorLook.ts). */
+  colorLook?: string;
+  /** A stand-in clip while the video has no backgrounds yet, so dim, blur
+   *  and colour can be judged by eye (Ak, 12 Oct 2026). */
+  sampleUrl?: string | null;
 }) {
   const timing = useMemo(
     () => backgroundTiming(clips, crossfadeMs, fps),
@@ -91,24 +102,38 @@ export function BackgroundScene({
     return p && urls[p];
   });
 
-  if (visible.length === 0) return null;
+  const filter = [blurPx > 0 ? `blur(${blurPx}px)` : "", colorLookCss(colorLook)].filter(Boolean).join(" ");
+  const look = { filter: filter || undefined, transform: blurPx > 0 ? "scale(1.1)" : undefined };
+  const dimLayer = dim > 0 && (
+    <div className="absolute inset-0" style={{ backgroundColor: `rgba(0, 0, 0, ${Math.min(1, dim)})` }} />
+  );
+
+  if (visible.length === 0) {
+    if (!sampleUrl) return null;
+    return (
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute inset-0" style={look}>
+          <video src={sampleUrl} muted loop autoPlay playsInline className="absolute inset-0 w-full h-full object-cover" />
+        </div>
+        {dimLayer}
+        <span className="absolute left-2 top-2 text-[10px] px-2 py-0.5 rounded-full bg-black/60 text-neutral-300">sample background</span>
+      </div>
+    );
+  }
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {visible.map((l) => (
-        <ClipVideo
-          key={l.index}
-          src={urls[clips[l.index].filePath!]}
-          sourceSec={l.sourceSec}
-          opacity={l.opacity}
-        />
-      ))}
-      {dim > 0 && (
-        <div
-          className="absolute inset-0"
-          style={{ backgroundColor: `rgba(0, 0, 0, ${Math.min(1, dim)})` }}
-        />
-      )}
+      <div className="absolute inset-0" style={look}>
+        {visible.map((l) => (
+          <ClipVideo
+            key={l.index}
+            src={urls[clips[l.index].filePath!]}
+            sourceSec={l.sourceSec}
+            opacity={l.opacity}
+          />
+        ))}
+      </div>
+      {dimLayer}
     </div>
   );
 }

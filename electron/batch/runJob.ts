@@ -204,6 +204,8 @@ export interface BatchJob {
    *  shows a blurred video either way, and says nothing about the glass. */
   backgroundDim?: number;
   backgroundBlur?: number;
+  /** Colour effect: none, sepia, bw, warm, cool, vivid, faded. */
+  backgroundColorLook?: string;
   /** Background clips per minute of finished video. 3.5 by default, clamped
    *  2-6. The first long render cut every 8 seconds, which is a music video,
    *  not a lesson. */
@@ -847,6 +849,7 @@ export async function runBatchJob(
     backgrounds,
     backgroundDim: job.backgroundDim ?? preset.backgroundDim ?? defaultProject.backgroundDim,
     backgroundBlur: job.backgroundBlur ?? preset.backgroundBlur ?? defaultProject.backgroundBlur,
+    backgroundColorLook: job.backgroundColorLook,
     backgroundBand: preset.backgroundBand ?? null,
     backgroundCrossfadeMs: preset.backgroundCrossfadeMs ?? defaultProject.backgroundCrossfadeMs,
     // MERGED, not chosen between. A preset is partial by contract — its own

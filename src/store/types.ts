@@ -498,6 +498,8 @@ export interface ProjectState {
    *  the avatars and subtitles carry their own surfaces. Both at once is
    *  allowed — over nine minutes of busy stock footage it may be needed. */
   backgroundBlur: number;
+  /** Colour effect on the footage — an id from src/lib/background/colorLook.ts. */
+  backgroundColorLook?: string;
   /** Crossfade between one background clip and the next, in ms. 0 = hard cut.
    *  Capped at half the shortest clip when it is applied. */
   backgroundCrossfadeMs: number;

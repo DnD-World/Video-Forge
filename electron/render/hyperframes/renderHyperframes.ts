@@ -33,6 +33,7 @@ import { createRequire } from "node:module";
 import { ffmpegBin } from "../../process/ffmpegPath";
 import { backgroundTiming } from "../../../src/lib/background/backgroundTiming";
 import { musicGainAt } from "../../../src/lib/audio/ducking";
+import { colorLookCss } from "../../../src/lib/background/colorLook";
 import type { RenderProps } from "../../../remotion/types";
 
 const require_ = createRequire(import.meta.url);
@@ -202,6 +203,7 @@ function writePage(input: HyperframesInput, parts: { bg: Awaited<ReturnType<type
   const W = props.width, H = props.height, T = parts.totalSec.toFixed(4);
   const band = props.backgroundBand;
   const blurPx = (props.backgroundBlur ?? 0) * W;
+  const bgFilter = [blurPx > 0 ? `blur(${blurPx}px)` : "", colorLookCss(props.backgroundColorLook)].filter(Boolean).join(" ");
   const bgWrap = band
     ? `top:${band.top * 100}%;height:${(band.bottom - band.top) * 100}%;bottom:auto;overflow:hidden;` +
       `-webkit-mask-image:linear-gradient(to bottom,transparent 0%,black 12%,black 88%,transparent 100%);mask-image:linear-gradient(to bottom,transparent 0%,black 12%,black 88%,transparent 100%);`
@@ -211,7 +213,7 @@ function writePage(input: HyperframesInput, parts: { bg: Awaited<ReturnType<type
     // The React layer draws the dim over this exactly as BackgroundLayer did.
     layers.push(
       `<div class="vf-layer" style="${bgWrap}"><video id="vf-bg" class="clip" src="${parts.bg.file}" data-start="${parts.bg.startSec.toFixed(4)}" data-duration="${parts.bg.durSec.toFixed(4)}" data-track-index="0" muted playsinline ` +
-        `style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;${blurPx > 0 ? `filter:blur(${blurPx}px);transform:scale(1.1);` : ""}"></video></div>`
+        `style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;${bgFilter ? `filter:${bgFilter};` : ""}${blurPx > 0 ? "transform:scale(1.1);" : ""}"></video></div>`
     );
   }
   layers.push(`<div id="vf-react-clip" class="clip" data-start="0" data-duration="${T}" data-track-index="1"><div id="vf-react" style="position:absolute;inset:0"></div></div>`);

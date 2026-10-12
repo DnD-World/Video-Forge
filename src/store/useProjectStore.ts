@@ -134,7 +134,7 @@ interface Actions {
   /** The two knobs that decide how the clips *look*, as opposed to which ones
    *  they are. One setter because they are always adjusted from the same place
    *  and neither is meaningful without the other. */
-  setBackgroundStyle: (p: { dim?: number; crossfadeMs?: number }) => void;
+  setBackgroundStyle: (p: { dim?: number; crossfadeMs?: number; blur?: number; colorLook?: string }) => void;
   removeSpeaker: (id: string) => void;
   updateSpeaker: (id: string, patch: Partial<SpeakerConfig>) => void;
   loadSnapshot: (snap: ProjectPreset) => void;
@@ -219,6 +219,8 @@ export const useProjectStore = create<ProjectState & Actions>()(
     set((s) => ({
       backgroundDim: p.dim ?? s.backgroundDim,
       backgroundCrossfadeMs: p.crossfadeMs ?? s.backgroundCrossfadeMs,
+      backgroundBlur: p.blur ?? s.backgroundBlur,
+      backgroundColorLook: p.colorLook ?? s.backgroundColorLook,
     })),
 
   setAttachedAudio: (attachedAudio) => set({ attachedAudio }),

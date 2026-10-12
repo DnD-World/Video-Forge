@@ -265,7 +265,14 @@ ipcMain.handle(
 
 ipcMain.handle(
   "media:searchVideos",
-  async (_e, query: string, providers?: MediaProvider[]) => searchVideos(query, { providers })
+  // Shape-filtered (Ak, 12 Oct 2026): a vertical video is only offered
+  // vertical clips, a wide one only wide ones — checked by size as well, since
+  // not every library filters at the source.
+  async (_e, query: string, providers?: MediaProvider[], orientation?: "portrait" | "landscape") => {
+    const res = await searchVideos(query, { providers, orientation });
+    if (!orientation) return res;
+    return { ...res, hits: res.hits.filter((h) => (orientation === "portrait" ? h.height >= h.width : h.width >= h.height)) };
+  }
 );
 
 /** Sound effects. CC0 only — the filter lives in searchSounds and is not a

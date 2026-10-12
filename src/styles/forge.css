@@ -363,3 +363,13 @@ input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-of
 .forge-swatch { width: 34px; height: 34px; border-radius: 50% !important; border: 2px solid var(--line) !important; padding: 0 !important; cursor: pointer; background: none !important; overflow: hidden; }
 .forge-swatch::-webkit-color-swatch-wrapper { padding: 0; }
 .forge-swatch::-webkit-color-swatch { border: 0; border-radius: 50%; }
+
+/* ---- colour moods for the background (Look → Background) ---- */
+.forge-looks { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.forge-looks .look { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 6px 4px 7px; border-radius: 12px; cursor: pointer;
+  border: 1px solid var(--line); background: rgba(0, 0, 0, .35); color: var(--ink-3); font: 400 .7rem "Sora", sans-serif; transition: all .2s; }
+.forge-looks .look:hover { border-color: var(--mint-soft, #82D8B7); color: var(--ink); }
+.forge-looks .look.on { border-color: var(--accent); color: var(--ink); box-shadow: 0 0 0 1px var(--accent), 0 0 16px -6px rgba(118, 255, 194, .7); }
+/* a little landscape, so each mood shows what it does to colour */
+.forge-looks .look i { width: 100%; height: 30px; border-radius: 8px;
+  background: linear-gradient(180deg, #7ec8ff 0%, #bfe6ff 45%, #3f9b4a 46%, #2d6e33 70%, #c9a46a 71%, #e4c38f 100%); }

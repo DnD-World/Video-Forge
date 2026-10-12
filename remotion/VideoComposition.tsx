@@ -71,6 +71,7 @@ export function VideoComposition({
   backgrounds,
   backgroundDim,
   backgroundBlur,
+  backgroundColorLook,
   backgroundBand = null,
   glass,
   backgroundCrossfadeMs,
@@ -189,6 +190,7 @@ export function VideoComposition({
         crossfadeMs={backgroundCrossfadeMs}
         dim={backgroundDim}
         blur={backgroundBlur ?? 0}
+        colorLook={backgroundColorLook}
         width={width}
         band={backgroundBand}
       />

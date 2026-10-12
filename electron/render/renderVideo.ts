@@ -86,6 +86,8 @@ export interface RenderJob {
    *  a batch can trade size against quality per row — a social cut and an LMS
    *  master do not want the same file. */
   crf?: number;
+  /** Colour effect on the footage (src/lib/background/colorLook.ts). */
+  backgroundColorLook?: string;
   /** Which engine draws the frames. Default "hyperframes"; "remotion" for comparisons. */
   engine?: "hyperframes" | "remotion";
   /** A short card welded onto the front and the back after rendering.
@@ -504,6 +506,7 @@ export async function renderVideo(
       backgrounds,
       backgroundDim: job.backgroundDim ?? 0,
       backgroundBlur: job.backgroundBlur ?? 0,
+      backgroundColorLook: job.backgroundColorLook ?? "none",
       backgroundBand: job.backgroundBand ?? null,
       logo: logoProps,
       introOverlay,

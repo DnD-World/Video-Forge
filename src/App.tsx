@@ -201,6 +201,22 @@ export default function App() {
     [narration, fps]
   );
   const sheetUrls = useFileUrls(speakers.map((sp) => sp.sheetPath));
+  // A stand-in background for the Look step while the video has none yet,
+  // so dim, blur and colour can be judged by eye: the newest downloaded clip
+  // in the right shape (Ak, 12 Oct 2026).
+  const backgroundBlur = useProjectStore((s) => s.backgroundBlur);
+  const backgroundColorLook = useProjectStore((s) => s.backgroundColorLook);
+  const [sampleClip, setSampleClip] = useState<string | null>(null);
+  useEffect(() => {
+    if (step !== "look" || backgrounds.length > 0) return;
+    let alive = true;
+    window.byok?.media?.library?.().then((items) => {
+      const vids = items.filter((i) => i.kind === "video").sort((a, b) => b.modifiedMs - a.modifiedMs);
+      if (alive) setSampleClip(vids[0]?.filePath ?? null);
+    }).catch(() => {});
+    return () => { alive = false; };
+  }, [step, backgrounds.length]);
+  const sampleUrls = useFileUrls(sampleClip ? [sampleClip] : [], "video/mp4");
   const backgroundUrls = useFileUrls(
     backgrounds.map((b) => b.filePath),
     "video/mp4"
@@ -539,6 +555,9 @@ export default function App() {
                 fps={fps}
                 crossfadeMs={backgroundCrossfadeMs}
                 dim={backgroundDim}
+                blurPx={backgroundBlur * canvasSize.w}
+                colorLook={backgroundColorLook}
+                sampleUrl={step === "look" ? sampleUrls[sampleClip ?? ""] ?? null : null}
               />
 
               <WaveformScene

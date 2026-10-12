@@ -17,6 +17,7 @@ import { createPortal } from "react-dom";
 import { Empty } from "../ui/Empty";
 import { HudButton } from "../ui/HudButton";
 import { Slider } from "../ui/Slider";
+import { COLOR_LOOKS } from "../../lib/background/colorLook";
 import { useProjectStore } from "../../store/useProjectStore";
 
 type Hit = Awaited<ReturnType<typeof window.byok.media.searchVideos>>["hits"][number];
@@ -33,6 +34,8 @@ export function BackgroundPanel() {
   const backgroundDim = useProjectStore((s) => s.backgroundDim);
   const backgroundCrossfadeMs = useProjectStore((s) => s.backgroundCrossfadeMs);
   const setBackgroundStyle = useProjectStore((s) => s.setBackgroundStyle);
+  const backgroundBlur = useProjectStore((s) => s.backgroundBlur);
+  const backgroundColorLook = useProjectStore((s) => s.backgroundColorLook);
 
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -100,7 +103,7 @@ export function BackgroundPanel() {
     setBusy("Searching…");
     setError(null);
     try {
-      const res = await window.byok.media.searchVideos(query.trim());
+      const res = await window.byok.media.searchVideos(query.trim(), undefined, portrait ? "portrait" : "landscape");
       setHits(res.hits);
       setNotes(res.notes);
     } catch (e) {
@@ -183,6 +186,31 @@ export function BackgroundPanel() {
           format={(v) => `${Math.round(v * 100)}%`}
           onChange={(dim) => setBackgroundStyle({ dim })}
         />
+        <div data-tip="Softens the footage so faces and words stand out. 0 = sharp.">
+          <Slider
+            label="Blur"
+            value={backgroundBlur}
+            min={0}
+            max={0.03}
+            step={0.002}
+            format={(v) => (v === 0 ? "sharp" : `${Math.round((v / 0.03) * 100)}%`)}
+            onChange={(blur) => setBackgroundStyle({ blur })}
+          />
+        </div>
+        <div className="label-etched" data-tip="A colour mood for the footage. The preview shows it.">Colour</div>
+        <div className="forge-looks">
+          {COLOR_LOOKS.map((l) => (
+            <button
+              key={l.id}
+              className={`look ${((backgroundColorLook ?? "none") === l.id) ? "on" : ""}`}
+              onClick={() => setBackgroundStyle({ colorLook: l.id })}
+              data-tip={l.tip}
+            >
+              <i style={{ filter: l.css || undefined }} />
+              <span>{l.label}</span>
+            </button>
+          ))}
+        </div>
         <Slider
           label="Crossfade"
           value={backgroundCrossfadeMs}

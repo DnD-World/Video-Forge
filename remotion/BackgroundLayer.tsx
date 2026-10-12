@@ -20,6 +20,7 @@ import { TransitionSeries, linearTiming } from "@remotion/transitions";
 import { fade } from "@remotion/transitions/fade";
 import { backgroundTiming } from "../src/lib/background/backgroundTiming";
 import type { RenderBackground } from "./types";
+import { colorLookCss } from "../src/lib/background/colorLook";
 
 function Clip({ fileName, loopInFrames }: { fileName: string; loopInFrames: number }) {
   const video = (
@@ -48,6 +49,7 @@ export function BackgroundLayer({
   blur,
   width,
   band,
+  colorLook,
 }: {
   backgrounds: RenderBackground[];
   fps: number;
@@ -61,6 +63,7 @@ export function BackgroundLayer({
   width: number;
   /** Fractions of frame height; absent = the whole frame. */
   band?: { top: number; bottom: number } | null;
+  colorLook?: string;
 }) {
   const timing = useMemo(
     () => backgroundTiming(backgrounds, crossfadeMs, fps),
@@ -123,14 +126,14 @@ export function BackgroundLayer({
       >
       <AbsoluteFill
         style={
-          blur > 0
+          blur > 0 || colorLookCss(colorLook)
             ? {
-                filter: `blur(${blur * width}px)`,
+                filter: [blur > 0 ? `blur(${blur * width}px)` : "", colorLookCss(colorLook)].filter(Boolean).join(" "),
                 // Blur samples beyond the edge and leaves a soft transparent
                 // border where there is nothing to sample. Scaling up pushes
                 // that band off-frame; 1.1 covers the widest blur the UI
                 // allows without visibly cropping the clip.
-                transform: "scale(1.1)",
+                transform: blur > 0 ? "scale(1.1)" : undefined,
               }
             : undefined
         }

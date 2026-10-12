@@ -143,6 +143,8 @@ export type RenderProps = {
    *  footage back without darkening it, so avatars and text can carry their
    *  own surfaces over a bright clip. */
   backgroundBlur: number;
+  /** Colour effect on the footage (src/lib/background/colorLook.ts). */
+  backgroundColorLook?: string;
   /** Where the footage sits, as fractions of frame HEIGHT — `{ top: 1/3,
    *  bottom: 2/3 }` is the middle third. Absent means the whole frame.
    *
