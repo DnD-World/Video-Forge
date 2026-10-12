@@ -6,7 +6,7 @@ import { PuppetAvatar } from "./components/canvas/PuppetAvatar";
 import { WaveformScene } from "./components/canvas/WaveformScene";
 import { BackgroundScene } from "./components/canvas/BackgroundScene";
 import { SubtitleScene } from "./components/canvas/SubtitleScene";
-import { usePreviewClock } from "./lib/motion/usePreviewClock";
+import { usePreviewPlayer } from "./lib/motion/usePreviewPlayer";
 import { buildCues } from "./lib/subtitles/wordTiming";
 import { buildSpeakerVisemeTracks } from "./lib/visemes/speakerTracks";
 import { visemeBlendAt } from "./lib/visemes/timeline";
@@ -117,6 +117,11 @@ function Rail({
   );
 }
 
+const fmtTime = (ms: number) => {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+};
+
 type Step = "cast" | "script" | "look" | "make";
 const STEPS: { id: Step; title: string; sub: string }[] = [
   { id: "cast", title: "Cast", sub: "Who speaks" },
@@ -164,9 +169,18 @@ export default function App() {
   // video is what the preview animates to.
   const activeAnalysis = attachedAudio?.analysis ?? narration?.analysis ?? null;
 
-  // One clock shared by every canvas overlay. Loops over the narration so the
-  // preview shows the real audio cycling rather than drifting into silence.
-  const previewTimeMs = usePreviewClock(activeAnalysis?.durationMs);
+  // One clock shared by every canvas overlay — the narration's own audio
+  // while it plays, so lips, subtitles and voices cannot drift apart.
+  const musicVolume = useProjectStore((s) => s.musicVolume);
+  const musicDuck = useProjectStore((s) => s.musicDuck);
+  const player = usePreviewPlayer({
+    voicePath: attachedAudio?.filePath ?? narration?.filePath ?? null,
+    voiceAnalysis: activeAnalysis,
+    musicPath: music?.filePath ?? null,
+    musicVolume,
+    musicDuck,
+  });
+  const previewTimeMs = player.timeMs;
 
   // Who is talking right now, for the "speaking heads move a little more" cue.
   // Read from the same analysis the waveform uses so the two never disagree.
@@ -362,7 +376,8 @@ export default function App() {
 
   const canvasSize = useMemo(() => {
     const ratio = isPortrait ? 9 / 16 : 16 / 9;
-    const w = Math.floor(Math.min(stageSize.w, stageSize.h * ratio));
+    // 58px is kept free under the frame for the transport bar.
+    const w = Math.floor(Math.min(stageSize.w, Math.max(0, stageSize.h - 58) * ratio));
     return { w: Math.max(0, w), h: Math.max(0, Math.floor(w / ratio)) };
   }, [stageSize, isPortrait]);
 
@@ -499,7 +514,7 @@ export default function App() {
               <NarrationPanel />
             </div>
           ) : (
-            <div ref={stageRef} className="min-w-0 min-h-0 grid place-items-center">
+            <div ref={stageRef} className="min-w-0 min-h-0 flex flex-col items-center justify-center gap-3">
             <div
               ref={canvasRef}
               className="slot-recessed relative grid place-items-center overflow-hidden"
@@ -538,11 +553,15 @@ export default function App() {
                 />
               )}
 
-              <span className="label-etched text-center leading-relaxed relative z-10">
-                {render.format} · {fps} FPS
-                <br />
-                {render.width}×{render.height}
-              </span>
+              {/* Only on an empty frame — once there is narration it sat behind
+                  the subtitles and read as part of them. */}
+              {!narration && !attachedAudio && (
+                <span className="label-etched text-center leading-relaxed relative z-10">
+                  {render.format} · {fps} FPS
+                  <br />
+                  {render.width}×{render.height}
+                </span>
+              )}
 
               {speakers.map((sp) => {
                 // The puppet wins when a speaker has both. Resolved once here
@@ -635,6 +654,35 @@ export default function App() {
                 timeMs={previewTimeMs}
                 speakerColors={speakerColors}
               />
+            </div>
+            {/* The transport: play with sound, scrub, time. Space bar too. */}
+            <div className="forge-transport">
+              <button
+                className="play"
+                onClick={player.toggle}
+                disabled={!player.hasSound}
+                aria-label={player.playing ? "Pause" : "Play with sound"}
+                title={player.hasSound ? "Play with sound (space bar)" : "Make the narration in the Script step to hear it here"}
+              >
+                {player.playing ? "❚❚" : "▶"}
+              </button>
+              <input
+                type="range"
+                min={0}
+                max={Math.max(1, Math.round(player.durationMs))}
+                value={Math.round(Math.min(player.timeMs, player.durationMs || player.timeMs))}
+                onChange={(e) => player.seek(Number(e.target.value))}
+                disabled={!player.hasSound}
+                style={{ ["--p" as string]: `${player.durationMs ? (100 * player.timeMs) / player.durationMs : 0}%` }}
+                aria-label="Position in the video"
+              />
+              {player.hasSound ? (
+                <span className="time">
+                  {fmtTime(player.timeMs)} / {fmtTime(player.durationMs)}
+                </span>
+              ) : (
+                <span className="hint">No narration yet — make it in Script to hear it here</span>
+              )}
             </div>
             </div>
           )}

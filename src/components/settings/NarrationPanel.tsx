@@ -4,6 +4,7 @@ import { useProjectStore } from "../../store/useProjectStore";
 import { useSettingsStore } from "../../store/useSettingsStore";
 import { useVoicesStore } from "../../store/useVoicesStore";
 import { parseScript } from "../../lib/narration/parseScript";
+import { parseDramaboxScript } from "../../lib/narration/parseDramaboxScript";
 import { Slider } from "../ui/Slider";
 import { Picker } from "../ui/Picker";
 
@@ -133,11 +134,24 @@ export default function NarrationPanel() {
     setResult(null);
     setAudioUrl(null);
 
-    const { segments, unmatchedLines: unmatched } = parseScript(script, speakers);
+    // TWO SCRIPT STYLES, as in the batch runner: "Name: line", or the prose
+    // style the course was written in (A bright woman speaks warmly, "…"),
+    // where each character is found by the phrase they open with.
+    let { segments, unmatchedLines: unmatched } = parseScript(script, speakers);
+    if (segments.length === 0) {
+      const prose = parseDramaboxScript(
+        script,
+        speakers.map((sp, i) => ({ id: sp.id, label: sp.label, openingPhrase: sp.openingPhrase ?? `Speaker ${i + 1}` }))
+      );
+      if (prose.segments.length > 0) ({ segments, unmatchedLines: unmatched } = prose);
+    }
     setUnmatchedLines(unmatched);
 
     if (segments.length === 0) {
-      setGenError("No script lines matched a speaker label — check the format is \"Label: text\" per line.");
+      setGenError(
+        "No line matched a character. Write each line as \"Name: words\" using the names from the Cast step, " +
+          "or start each line with the character's opening phrase (set in Cast → Character)."
+      );
       setGenerating(false);
       return;
     }
