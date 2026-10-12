@@ -126,3 +126,37 @@ Ak's verdict on docs/design/looks-pick.html: **A Star sparks — Love it**; B Em
 
 - **Yes** to the four-step layout — with **Cast first**: Cast → Script → Look → Make.
 - **Yes** to switching the video engine to HyperFrames.
+
+## UI review of the installed app (Ak, 12 Oct 2026)
+
+General
+- [ ] Desktop/app icon: transparent background, not black.
+- [ ] Rounded corners everywhere — no sharp corners left.
+- [ ] Two button kinds only: **glow + colour** (primary) and **outline, simpler** (secondary). No "frame line + glow" mix.
+- [ ] Sliders: replace the Deco Noir ones with something soft and round.
+- [ ] Drop-down menus must not be fully transparent.
+- [ ] Every choice and field gets a hover explanation, ELI5 (repo standards).
+- [ ] Settings page without the Cast/Script/Look/Make steps above it.
+- [ ] Templates at every step, with friendly names: cast, script, look, make.
+
+Cast
+- [ ] One tab per speaker. Inside it, everything that belongs to that speaker: voice type, appearance, frame, waveform, position, and pacing/breath.
+
+Script
+- [ ] Tidy up the screen.
+
+Look (needs a lot of work)
+- [ ] Only what is NOT per-speaker (per-speaker moves to Cast).
+- [ ] The preview shows the background, so dim, blur and colour effects (sepia…) can be judged by eye.
+- [ ] Media library: organised by need; explain why it is there. Honest count: see below.
+- [ ] Background picker (manual and automatic) filtered by orientation.
+- [ ] Subtitles tab: a 5–8 word sample line on screen so style choices are visible.
+- [ ] More templates, matched to the number of speakers.
+- [ ] Waveforms follow the frame shape (square / rounded); choose by seeing, not from a list.
+
+Make
+- [ ] Intro / outro / inserts here.
+- [ ] Length automatic (no manual box); drop "Attach audio" here.
+- [ ] Fast draft preview: low resolution, ~3 frames a second, full sound.
+
+Media library, checked 12 Oct 2026: **450 video clips (2.7 GB)** downloaded from Pexels/Pixabay while making the 70 lessons. Nothing records which of them actually show dogs — the planner judged by the providers' tags and file names, and many picks were off-topic.
