@@ -11,7 +11,10 @@
 import { HudButton } from "../ui/HudButton";
 import { Slider } from "../ui/Slider";
 import { Toggle } from "../ui/Toggle";
-import { WAVEFORM_STYLES, type TrackWaveform } from "../../store/types";
+import { WAVEFORM_STYLES, type TrackWaveform, type OutlineShape } from "../../store/types";
+import { useEffect, useState } from "react";
+import { WaveformScene } from "../canvas/WaveformScene";
+import { buildTracks } from "../../lib/waveform/buildTracks";
 
 // Read from the one list in types.ts rather than repeated here. The lab styles
 // rendered correctly for a week and could not be selected, because the union
@@ -49,9 +52,55 @@ interface Props {
   label: string;
   /** Music has no face to ring, so it doesn't get the "around face" option. */
   canAnchorToFace?: boolean;
+  /** The speaker's colour and frame shape: when given, styles are chosen from
+   *  live picture tiles drawn on that frame, not from a list of names (Ak,
+   *  12 Oct 2026: "the visuals are the way to understand which to choose"). */
+  face?: { color: string; shape: OutlineShape };
 }
 
-export function WaveformControls({ value, onChange, label, canAnchorToFace = true }: Props) {
+/** One clock for all the tiles, so they move together and cost one loop. */
+function useTileClock() {
+  const [t, setT] = useState(0);
+  useEffect(() => {
+    let raf = 0;
+    const start = performance.now();
+    const tick = (now: number) => {
+      setT(now - start);
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+  return t;
+}
+
+const TILE = 96;
+
+function StyleTiles({ value, onChange, face }: { value: TrackWaveform; onChange: (p: Partial<TrackWaveform>) => void; face: { color: string; shape: OutlineShape } }) {
+  const t = useTileClock();
+  return (
+    <div className="forge-waves">
+      {STYLES.filter((s) => !isOrbit(s)).map((s) => {
+        const tracks = buildTracks(
+          [{ borderColor: face.color, outlineShape: face.shape, x: 0.5, y: 0.5, size: 0.42, waveform: { ...value, style: s, enabled: true, position: "speaker" } }],
+          { ...value, enabled: false },
+          face.color
+        );
+        return (
+          <button key={s} className={`wave ${value.style === s ? "on" : ""}`} onClick={() => onChange({ style: s })} aria-label={STYLE_LABEL[s] ?? s}>
+            <span className="pic" style={{ width: TILE, height: TILE }}>
+              <i className={`frame ${face.shape}`} style={{ borderColor: face.shape === "none" ? "transparent" : face.color }} />
+              <WaveformScene tracks={tracks} width={TILE} height={TILE} timeMs={t} analysis={null} musicAnalysis={null} />
+            </span>
+            <span className="name">{STYLE_LABEL[s] ?? s}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+export function WaveformControls({ value, onChange, label, canAnchorToFace = true, face }: Props) {
   return (
     <div className="space-y-4">
       <Toggle label={label} checked={value.enabled} onChange={(v) => onChange({ enabled: v })} />
@@ -59,14 +108,18 @@ export function WaveformControls({ value, onChange, label, canAnchorToFace = tru
       {value.enabled && (
         <>
           <div>
-            <div className="label-etched mb-2">Style</div>
-            <div className="flex flex-wrap gap-2">
-              {STYLES.map((s) => (
-                <HudButton key={s} active={value.style === s} onClick={() => onChange({ style: s })}>
-                  {STYLE_LABEL[s] ?? s}
-                </HudButton>
-              ))}
-            </div>
+            <div className="label-etched mb-2" data-tip="How the moving bars look. Each picture is drawn on this speaker's own frame.">Style</div>
+            {face ? (
+              <StyleTiles value={value} onChange={onChange} face={face} />
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {STYLES.map((s) => (
+                  <HudButton key={s} active={value.style === s} onClick={() => onChange({ style: s })}>
+                    {STYLE_LABEL[s] ?? s}
+                  </HudButton>
+                ))}
+              </div>
+            )}
           </div>
 
           {!isOrbit(value.style) && (

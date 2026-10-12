@@ -402,3 +402,14 @@ input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-of
 .forge-clips .clip .use { position: absolute; left: 6px; right: 6px; bottom: 6px; padding: 4px 0; font-size: .72rem; background: rgba(0, 0, 0, .65) !important; opacity: 0; transition: opacity .2s; }
 .forge-clips .clip:hover .use { opacity: 1; }
 .forge-clips .clip.wide { aspect-ratio: 16 / 9; }
+
+/* ---- waveform styles as live pictures (Cast → Waveform) ---- */
+.forge-waves { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.forge-waves .wave { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 2px 6px; border-radius: 12px; cursor: pointer;
+  border: 1px solid var(--line); background: rgba(0, 0, 0, .4); color: var(--ink-3); font: 400 .7rem "Sora", sans-serif; transition: all .2s; }
+.forge-waves .wave:hover { border-color: var(--mint-soft, #82D8B7); color: var(--ink); }
+.forge-waves .wave.on { border-color: var(--accent); color: var(--ink); box-shadow: 0 0 0 1px var(--accent), 0 0 16px -6px rgba(118, 255, 194, .7); }
+.forge-waves .pic { position: relative; display: block; }
+.forge-waves .pic > div, .forge-waves .pic > svg, .forge-waves .pic > canvas { position: absolute; inset: 0; }
+.forge-waves .frame { position: absolute; left: 29%; top: 29%; width: 42%; height: 42%; border: 2px solid; background: rgba(11, 40, 55, .7); }
+.forge-waves .frame.circle { border-radius: 50%; } .forge-waves .frame.rounded { border-radius: 24%; } .forge-waves .frame.square { border-radius: 3px; } .forge-waves .frame.none { border-radius: 50%; }

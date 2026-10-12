@@ -1,3 +1,4 @@
+import { shapeRadius } from "./superellipse";
 import type { TrackWaveform } from "../../store/types";
 
 export interface PathPoint {
@@ -32,7 +33,11 @@ export function samplePath(
   edgeFlush = false,
   /** Explicit centre and radius for a closed ring, used by the "speaker"
    *  position so a halo can sit around a face instead of the frame. */
-  ring?: RingOverride
+  ring?: RingOverride,
+  /** Superellipse exponent of the speaker's frame (superellipse.ts): 2 is a
+   *  circle. Bars, wave, mirror and dots took their ring from here and it was
+   *  always a circle — round bars round a square frame (Ak, 12 Oct 2026). */
+  exponent = 2
 ): PathPoint[] {
   const pts: PathPoint[] = [];
   const margin = edgeFlush ? 0.01 : 0.08;
@@ -43,9 +48,10 @@ export function samplePath(
     const r = ring ? ring.r : Math.min(w, h) * (edgeFlush ? 0.48 : 0.34);
     for (let i = 0; i < count; i++) {
       const a = (i / count) * Math.PI * 2 - Math.PI / 2;
+      const k = shapeRadius(a, exponent);
       pts.push({
-        x: cx + Math.cos(a) * r,
-        y: cy + Math.sin(a) * r,
+        x: cx + Math.cos(a) * r * k,
+        y: cy + Math.sin(a) * r * k,
         nx: Math.cos(a),
         ny: Math.sin(a),
       });

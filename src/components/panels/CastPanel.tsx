@@ -408,7 +408,7 @@ export function CastPanel() {
             </Section>
 
             <Section title="Waveform" tip="The moving bars that show when they speak." open={false}>
-              <WaveformControls label={`Show ${sp.label}'s waveform`} value={sp.waveform} onChange={(patch) => setSpeakerWaveform(sp.id, patch)} />
+              <WaveformControls label={`Show ${sp.label}'s waveform`} value={sp.waveform} onChange={(patch) => setSpeakerWaveform(sp.id, patch)} face={{ color: sp.borderColor, shape: sp.outlineShape }} />
             </Section>
 
             <Section title="Place" tip="Where they stand in the picture. You can also drag them on the preview." open={false}>

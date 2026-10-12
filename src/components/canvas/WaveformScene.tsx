@@ -753,7 +753,10 @@ export function WaveformScene({
           );
         }
 
-        const base = samplePath(cfg.position, width, height, density, cfg.edgeFlush, halo);
+        const base = samplePath(
+          cfg.position, width, height, density, cfg.edgeFlush, halo,
+          cfg.position === "speaker" ? exponentFor(track.outlineShape ?? undefined) : 2
+        );
         // Lane gaps are proportional to the frame, which would throw a halo
         // clear across the screen — around a face they scale with the face.
         const points = offsetPoints(
