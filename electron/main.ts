@@ -235,6 +235,14 @@ const mediaDir = () => path.join(app.getPath("userData"), "media");
 ipcMain.handle("media:cacheStats", async () => cacheStats(mediaDir()));
 ipcMain.handle("media:cleanUp", async (_e, limitBytes: number, keep: string[] = []) => cleanUp(mediaDir(), limitBytes, keep));
 
+/** Open a finished video in the computer's own player. Only files inside the
+ *  app's output folder, so a page can never ask to run something else. */
+ipcMain.handle("storage:openPath", async (_e, p: string) => {
+  const full = path.resolve(p);
+  if (!full.toLowerCase().startsWith(path.resolve(outputDir()).toLowerCase())) return false;
+  return (await shell.openPath(full)) === "";
+});
+
 ipcMain.handle("storage:openOutputDir", async () => {
   await fsp.mkdir(outputDir(), { recursive: true });
   await shell.openPath(outputDir());

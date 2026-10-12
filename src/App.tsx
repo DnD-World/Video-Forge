@@ -737,9 +737,9 @@ export default function App() {
           onFlare={sceneFlare.fire}
         >
           {step === "look" ? (
-            <ScenePanel key="look" title="Look" tabs={["presets", "frame", "background", "subtitles"]} />
+            <ScenePanel key="look" title="Look" tabs={["presets", "background", "subtitles", "music", "sfx", "motion"]} />
           ) : (
-            <ScenePanel key="make" title="Make" tabs={["render"]} />
+            <ScenePanel key="make" title="Make" tabs={["render", "extras", "shape"]} />
           )}
         </Rail>
         )}

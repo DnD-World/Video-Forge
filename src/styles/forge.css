@@ -373,3 +373,10 @@ input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-of
 /* a little landscape, so each mood shows what it does to colour */
 .forge-looks .look i { width: 100%; height: 30px; border-radius: 8px;
   background: linear-gradient(180deg, #7ec8ff 0%, #bfe6ff 45%, #3f9b4a 46%, #2d6e33 70%, #c9a46a 71%, #e4c38f 100%); }
+
+/* ---- Make: summary + progress ---- */
+.forge-make-sum { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; border-radius: 14px; background: rgba(0, 0, 0, .3); border: 1px solid var(--line); }
+.forge-make-sum b { font-size: 1.6rem; font-weight: 500; color: var(--ink); font-variant-numeric: tabular-nums; }
+.forge-make-sum small { color: var(--ink-3); font-size: .75rem; }
+.forge-progress { height: 8px; border-radius: 99px; background: rgba(130, 216, 183, .14); overflow: hidden; }
+.forge-progress i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--navy-hi), var(--accent)); box-shadow: 0 0 12px rgba(118, 255, 194, .6); transition: width .25s; }

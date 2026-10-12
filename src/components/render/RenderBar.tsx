@@ -110,7 +110,9 @@ export function RenderBar() {
     }
   }
 
-  async function start() {
+  /** draft: a quick look — a third of the size, 3 pictures a second, full
+   *  sound — opened by itself when ready (Ak, 12 Oct 2026). */
+  async function start(draft = false) {
     setBusy(true);
     setError(null);
     setResult(null);
@@ -146,9 +148,10 @@ export function RenderBar() {
           sheetPath: sp.sheetPath,
           puppetPath: sp.puppetPath,
         })),
-        width: render.width,
-        height: render.height,
-        fps,
+        width: draft ? even(render.width / 3) : render.width,
+        height: draft ? even(render.height / 3) : render.height,
+        fps: draft ? 3 : fps,
+        crf: draft ? 32 : undefined,
         durationSec: effectiveDuration,
         audioFilePath: effectiveAudioPath,
         // Whichever audio is actually in the video is the one that drives the
@@ -198,8 +201,9 @@ export function RenderBar() {
 
       if (res.ok) {
         setResult({ outputPath: res.outputPath, frames: res.frames });
-        setNote("Done");
+        setNote(draft ? "Draft ready — opening it" : "Done");
         setPct(100);
+        if (draft) void window.byok.storage.openPath(res.outputPath);
         // Old background clips go once the video is safely out (Settings limit).
         void autoClean().then((msg) => msg && setNote(`Done. ${msg}`));
       } else {
@@ -212,96 +216,55 @@ export function RenderBar() {
     }
   }
 
+  const lengthText = effectiveDuration ? `${Math.floor(effectiveDuration / 60)}:${String(Math.round(effectiveDuration % 60)).padStart(2, "0")}` : "—";
+  const ready = !!(narration || audioPath);
   return (
-    <section className="flex flex-col gap-3">
-      <h2 className="label-etched">Render</h2>
-
-      {narration && narrationSec && (
-        <div className="border border-accent/25 bg-metal-800/60 px-3 py-2 space-y-2">
-          <p className="text-sm text-neutral-300">
-            Narration ready — {narrationSec}s, {narration.segments.length} lines.
-            {audioPath ? " (overridden below)" : " Attached automatically."}
-          </p>
-          <Toggle
-            label="Match video length to narration"
-            checked={matchNarration}
-            onChange={setMatchNarration}
-          />
-        </div>
-      )}
-
-      <label className="flex items-center gap-3">
-        <span className="label-etched whitespace-nowrap">Length</span>
-        <NumberField
-          aria-label="Video length in seconds"
-          className="w-28"
-          min={1}
-          max={600}
-          value={effectiveDuration}
-          disabled={busy || (matchNarration && !!narrationSec && !audioPath)}
-          onChange={(n) => setDurationSec(Math.max(1, Math.min(600, Math.round(n))))}
-        />
-        <span className="label-etched">sec</span>
-      </label>
-
-      <div className="flex items-center gap-2">
-        <HudButton onClick={pickAudio}>
-          {analyzing
-            ? "Analysing…"
-            : audioPath
-              ? "Change Audio"
-              : narration
-                ? "Use Different Audio"
-                : "Attach Audio"}
-        </HudButton>
-        {audioPath && (
-          <button
-            onClick={() => {
-              setAudioPath(null);
-              setAttachedAudio(null);
-            }}
-            className="label-etched underline hover:text-accent-bright"
-          >
-            clear
-          </button>
-        )}
+    <section className="flex flex-col gap-4">
+      <div className="forge-make-sum" data-tip="The video is exactly as long as the narration — nothing to set by hand.">
+        <span className="label-etched">Length</span>
+        <b>{ready ? lengthText : "—"}</b>
+        <small>{ready ? `follows the narration · ${narration?.segments.length ?? 0} lines` : "make the narration in the Script step first"}</small>
       </div>
-      {audioPath && (
-        <p className="text-xs text-neutral-500 break-all">{audioPath}</p>
-      )}
 
-      <HudButton active={!busy} onClick={busy ? undefined : start}>
-        {busy ? "Rendering…" : "▶ Render Video"}
-      </HudButton>
+      <div className="flex flex-col gap-2">
+        <button
+          className="btn"
+          disabled={busy || !ready}
+          onClick={() => start(true)}
+          data-tip="A quick look: small, 3 pictures a second, with the full sound. Ready in a fraction of the time, and opens by itself."
+        >
+          Quick draft
+        </button>
+        <button
+          className="btn btn-primary"
+          disabled={busy || !ready}
+          onClick={() => start(false)}
+          data-tip="The finished video, full quality. Shape and frame rate are in the Shape tab; intro and outro in Intro & outro."
+        >
+          {busy ? "Rendering…" : "Render video"}
+        </button>
+      </div>
 
       {busy && (
         <div className="flex flex-col gap-1">
-          <div className="h-2 bg-black/50 border border-accent/30">
-            <div
-              className="h-full bg-accent transition-[width] duration-200"
-              style={{ width: `${pct}%` }}
-            />
-          </div>
-          <p className="text-xs text-neutral-400">
-            {pct}% · {note}
-          </p>
+          <div className="forge-progress"><i style={{ width: `${pct}%` }} /></div>
+          <p className="text-xs text-neutral-400">{pct}% · {note}</p>
         </div>
       )}
 
-      {error && (
-        <p className="text-xs text-red-400 break-words">{error}</p>
-      )}
+      {error && <p className="text-xs text-red-400 break-words">{error}</p>}
 
       {result && !busy && (
         <div className="flex flex-col gap-2">
-          <p className="text-xs text-neutral-400 break-all">
-            {result.frames} frames → {result.outputPath}
-          </p>
-          <HudButton onClick={() => window.byok.storage.openOutputDir()}>
-            Open Folder
-          </HudButton>
+          <p className="text-xs text-neutral-400 break-all">{note} — {result.outputPath.split(/[\\/]/).pop()}</p>
+          <div className="flex gap-2">
+            <button className="btn" onClick={() => window.byok.storage.openPath(result.outputPath)} data-tip="Play the video in your usual player.">Play it</button>
+            <button className="btn" onClick={() => window.byok.storage.openOutputDir()} data-tip="Open the folder where your videos are saved.">Open folder</button>
+          </div>
         </div>
       )}
     </section>
   );
 }
+
+const even = (n: number) => Math.max(2, Math.round(n / 2) * 2);

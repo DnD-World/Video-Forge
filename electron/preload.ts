@@ -73,6 +73,7 @@ const api = {
 
   storage: {
     outputDir: (): Promise<string> => ipcRenderer.invoke("storage:outputDir"),
+    openPath: (p: string): Promise<boolean> => ipcRenderer.invoke("storage:openPath", p),
     openOutputDir: (): Promise<boolean> =>
       ipcRenderer.invoke("storage:openOutputDir"),
     readFile: (filePath: string): Promise<ArrayBuffer> =>

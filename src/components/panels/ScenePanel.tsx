@@ -13,18 +13,24 @@ import { BackgroundPanel } from "./BackgroundPanel";
 import { SubtitleFontPicker } from "./SubtitleFontPicker";
 import { RenderBar } from "../render/RenderBar";
 import { PresetsPanel } from "./PresetsPanel";
+import { MusicPanel } from "./MusicPanel";
+import { SfxPanel } from "./SfxPanel";
 import { RoadmapSection } from "../canvas/RoadmapSection";
 import { useProjectStore } from "../../store/useProjectStore";
 import { buildCues } from "../../lib/subtitles/wordTiming";
 import { toSrt } from "../../lib/subtitles/srt";
 import type { Fps, SubtitleConfig } from "../../store/types";
 
-export type SceneTab = "frame" | "background" | "subtitles" | "render" | "presets";
+export type SceneTab = "extras" | "shape" | "motion" | "background" | "subtitles" | "music" | "sfx" | "render" | "presets";
 type Tab = SceneTab;
 
 const TAB_LABELS: Record<Tab, string> = {
   presets: "Templates",
-  frame: "Frame",
+  extras: "Intro & outro",
+  shape: "Shape",
+  motion: "Motion",
+  music: "Music",
+  sfx: "Sounds",
   background: "Background",
   subtitles: "Subtitles",
   render: "Render",
@@ -38,7 +44,7 @@ const SUB_POS: SubtitleConfig["position"][] = ["top", "center", "bottom"];
  *  gets render. `tabs` picks the slice; the first one opens. */
 export function ScenePanel({
   title = "Scene",
-  tabs = ["frame", "background", "subtitles", "render", "presets"],
+  tabs = ["presets", "background", "subtitles", "music", "sfx", "motion", "render", "extras", "shape"],
 }: { title?: string; tabs?: Tab[] } = {}) {
   const [picked, setTab] = useState<Tab>(tabs[0]);
   const tab = tabs.includes(picked) ? picked : tabs[0];
@@ -90,7 +96,7 @@ export function ScenePanel({
       )}
 
       <div className="flex-1 overflow-y-auto pr-1 space-y-6">
-        {tab === "frame" && (
+        {tab === "extras" && (
           <>
             {/* Joined on AFTER the render, so nothing inside the lesson moves.
                 A card placed in the composition would shift the narration and
@@ -200,6 +206,11 @@ export function ScenePanel({
               )}
             </section>
 
+          </>
+        )}
+
+        {tab === "shape" && (
+          <>
             <section>
               <div className="label-etched mb-2">Aspect Ratio</div>
               <div className="flex gap-2">
@@ -232,6 +243,11 @@ export function ScenePanel({
               </p>
             </section>
 
+          </>
+        )}
+
+        {tab === "motion" && (
+          <>
             <section>
               <div className="label-etched mb-2">Lip-sync</div>
               <Slider
@@ -257,9 +273,12 @@ export function ScenePanel({
               </div>
             </section>
 
-            <RoadmapSection />
           </>
         )}
+
+        {tab === "music" && <MusicPanel />}
+
+        {tab === "sfx" && <SfxPanel />}
 
         {tab === "background" && (
           <>

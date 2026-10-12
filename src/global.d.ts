@@ -149,6 +149,7 @@ declare global {
       storage: {
         outputDir: () => Promise<string>;
         openOutputDir: () => Promise<boolean>;
+        openPath: (p: string) => Promise<boolean>;
         readFile: (filePath: string) => Promise<ArrayBuffer>;
         writeFile: (filePath: string, data: ArrayBuffer) => Promise<boolean>;
       };
