@@ -168,6 +168,7 @@ const api = {
       speakerLabels: string[];
       languageName: string;
       tone?: string;
+      characters?: string[];
     }): Promise<string> => ipcRenderer.invoke("llm:draftScript", opts),
   },
 };

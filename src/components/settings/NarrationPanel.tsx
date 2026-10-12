@@ -5,6 +5,7 @@ import { useSettingsStore } from "../../store/useSettingsStore";
 import { useVoicesStore } from "../../store/useVoicesStore";
 import { parseScript } from "../../lib/narration/parseScript";
 import { parseDramaboxScript } from "../../lib/narration/parseDramaboxScript";
+import { SCRIPT_STARTERS } from "../../lib/narration/scriptStarters";
 import { Slider } from "../ui/Slider";
 import { Picker } from "../ui/Picker";
 
@@ -84,6 +85,7 @@ export default function NarrationPanel() {
       const draft = await window.byok.llm.draftScript({
         topic,
         speakerLabels: speakers.map((s) => s.label),
+        characters: speakers.map((s) => `${s.label}: ${s.openingPhrase ?? "a speaker"}`),
         languageName,
         tone: tone.trim() || undefined,
       });
@@ -225,203 +227,124 @@ export default function NarrationPanel() {
     }
   };
 
+  const names = speakers.map((s) => s.label);
+  const lines = script.split("\n").filter((l) => l.trim()).length;
   return (
-    <div className="p-6 space-y-4 overflow-y-auto h-full">
-      <h2 className="label-lit text-base">Narration</h2>
-      <p className="text-sm">
-        Write your script as one line per speech, formatted "Label: text" — the label must match a
-        speaker's label exactly (case-insensitive). Generates one combined audio file, with each
-        segment's timing preserved for later subtitle/lip-sync work.
-      </p>
+    <div className="forge-script h-full">
+      {/* LEFT: where the words come from, and the words */}
+      <div className="flex flex-col gap-4 min-h-0 overflow-y-auto pr-2">
+        <div>
+          <div className="label-etched mb-2" data-tip="A skeleton for the kind of video you're making, with your speakers' names filled in. «…» marks where your own words go.">
+            Start from
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {SCRIPT_STARTERS.map((st) => (
+              <button
+                key={st.id}
+                className="btn"
+                data-tip={st.tip}
+                onClick={() => {
+                  if (script.trim() && !window.confirm("Replace the current script with this starter?")) return;
+                  setScript(st.build(names, language));
+                }}
+              >
+                {st.label}
+              </button>
+            ))}
+          </div>
+        </div>
 
-      <div className="border border-accent/25 bg-metal-800/60 p-4 space-y-3">
-        <h3 className="label-lit text-sm">Speaker Voices</h3>
-        {speakers.length === 0 && <p className="text-sm text-neutral-500">No speakers yet — add some from the left rail.</p>}
-        {speakers.map((sp) => (
-          <div key={sp.id} className="flex flex-wrap items-center gap-3 border-b border-accent/10 pb-3 last:border-0 last:pb-0">
-            <span className="text-base text-neutral-200 min-w-[100px]">{sp.label}</span>
+        <details className="forge-sec">
+          <summary data-tip="Describe the video and get a first draft in the right format, using your speakers. You can edit everything after.">
+            Write it with AI
+          </summary>
+          <div className="space-y-2 pt-3">
+            <input type="text" placeholder="What is it about? e.g. 'why dogs chase butterflies'" value={topic} onChange={(e) => setTopic(e.target.value)} className="w-full" />
+            <input type="text" placeholder="Tone (optional), e.g. playful, calm, serious" value={tone} onChange={(e) => setTone(e.target.value)} className="w-full" />
+            <button onClick={runDraft} disabled={drafting} className="btn">
+              {drafting ? `Writing… ${draftSec}s` : "Write a draft"}
+            </button>
+            {draftError && <p className="text-sm text-red-400 whitespace-pre-wrap">{draftError}</p>}
+          </div>
+        </details>
 
+        <div className="flex flex-col gap-2 flex-1 min-h-[300px]">
+          <div className="flex items-center justify-between">
+            <span className="label-etched" data-tip="One line per speech: the speaker's name, a colon, their words. [laughs], [whispers], [points] are acted, never read out.">
+              The script
+            </span>
+            <span className="text-xs text-neutral-500">{lines} line{lines === 1 ? "" : "s"}</span>
+          </div>
+          <textarea
+            value={script}
+            onChange={(e) => setScript(e.target.value)}
+            placeholder={`${names[0] ?? "Speaker 1"}: Hello there!\n${names[1] ?? "Speaker 2"}: [laughs] Hi, good to see you.`}
+            className="forge-script-text flex-1 resize-none"
+            spellCheck={false}
+          />
+          {unmatchedLines.length > 0 && (
+            <div className="text-sm text-amber-300 rounded-xl border border-amber-400/30 bg-amber-400/5 px-3 py-2">
+              {unmatchedLines.length} line(s) didn't match a speaker and were skipped:
+              <ul className="list-disc pl-5 mt-1">
+                {unmatchedLines.map((l, i) => (
+                  <li key={i}>{l}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* RIGHT: settings for the whole narration, and making it */}
+      <div className="flex flex-col gap-4 min-h-0 overflow-y-auto">
+        <div className="forge-sec space-y-3">
+          <div data-tip="The language the voices speak and the subtitles are written in.">
+            <span className="label-etched">Language</span>
             <Picker
-              aria-label={`Voice engine for ${sp.label}`}
-              className="min-w-[170px]"
-              value={engineOf(sp)}
-              options={[
-                { value: "gemini", label: "Gemini (free, acts)" },
-                { value: "fish", label: "Fish Audio (free, foreign accent)" },
-                { value: "elevenlabs", label: "ElevenLabs (paid)" },
-                { value: "piper", label: "Piper (offline)" },
-              ]}
-              onChange={(v) => updateSpeaker(sp.id, { ttsEngine: v as "gemini" | "fish" | "elevenlabs" | "piper" })}
+              aria-label="Language"
+              className="w-full mt-1"
+              value={language}
+              options={LANGUAGES.map((l) => ({ value: l.code, label: l.label }))}
+              onChange={setLanguage}
             />
-
-            {engineOf(sp) === "piper" ? (
-              <Picker
-                aria-label={`Piper voice for ${sp.label}`}
-                className="flex-1 min-w-[160px]"
-                placeholder={
-                  piperVoices.length === 0
-                    ? "No voices — scan in Backend Settings"
-                    : "Saved voice not found — pick another"
-                }
-                value={sp.voiceId ?? ""}
-                options={[
-                  {
-                    value: "",
-                    label:
-                      piperVoices.length === 0
-                        ? "No voices — scan in Backend Settings"
-                        : "No voice assigned",
-                  },
-                  ...piperVoices.map((v) => ({ value: v.onnxPath, label: v.name })),
-                ]}
-                onChange={(v) => updateSpeaker(sp.id, { voiceId: v || undefined })}
-              />
-            ) : (
-              <span className="flex-1 min-w-[160px] text-sm text-neutral-500">
-                {sp.voiceRef
-                  ? `Reference clip: ${sp.voiceRef}`
-                  : "No reference clip — set one in the Cast panel."}
-              </span>
-            )}
           </div>
-        ))}
-      </div>
-
-      <div className="flex items-center gap-3">
-        <span className="label-etched text-sm">Language</span>
-        <Picker
-          aria-label="Language"
-          className="min-w-[180px]"
-          value={language}
-          options={LANGUAGES.map((l) => ({ value: l.code, label: l.label }))}
-          onChange={setLanguage}
-        />
-      </div>
-
-      <div className="border border-accent/25 bg-metal-800/60 p-4 space-y-3">
-        <h3 className="label-lit text-sm">Pacing</h3>
-        <p className="text-sm">
-          Silence inserted between lines. Two people swapping turns with no gap
-          at all is the clearest tell that a conversation was assembled rather
-          than recorded. Takes effect the next time you generate.
-        </p>
-        <Slider
-          label="Breath (same speaker)" value={pauseSameMs} min={0} max={800} step={10}
-          onChange={(v) => setPauses({ sameMs: Math.round(v) })}
-          format={(v) => `${Math.round(v)} ms`}
-        />
-        <Slider
-          label="Beat (speaker changes)" value={pauseTurnMs} min={0} max={1500} step={10}
-          onChange={(v) => setPauses({ turnMs: Math.round(v) })}
-          format={(v) => `${Math.round(v)} ms`}
-        />
-      </div>
-
-      <div className="border border-accent/25 bg-metal-800/60 p-4 space-y-2">
-        <h3 className="label-lit text-sm">Draft Script with GLM-5.2</h3>
-        <p className="text-sm">
-          Optional — describe what the video should be about and get a starting draft in the right
-          format, which you can then edit freely below. Needs an NVIDIA key in Backend Settings.
-        </p>
-        <input
-          type="text"
-          placeholder="Topic, e.g. 'why dogs love belly rubs'…"
-          value={topic}
-          onChange={(e) => setTopic(e.target.value)}
-          className="w-full bg-metal-900 border border-accent/25 px-3 py-2 text-base text-neutral-100 outline-none focus:border-accent"
-        />
-        <input
-          type="text"
-          placeholder="Tone (optional), e.g. 'playful', 'informative'…"
-          value={tone}
-          onChange={(e) => setTone(e.target.value)}
-          className="w-full bg-metal-900 border border-accent/25 px-3 py-2 text-base text-neutral-100 outline-none focus:border-accent"
-        />
-        <button
-          onClick={runDraft}
-          // Only ever disabled while a request is in flight. Disabling it for
-          // missing input is what hid the reason from the user.
-          disabled={drafting}
-          className="btn cut-sm px-4 py-2 text-sm font-display uppercase tracking-[0.1em] hover:text-accent-bright disabled:opacity-40"
-        >
-          {drafting ? `Drafting… ${draftSec}s` : "Generate Draft"}
-        </button>
-        {drafting && (
-          <p className="text-sm text-neutral-500">
-            GLM-5.2 is slow — a few minutes is normal, and it gives up at five.
-          </p>
-        )}
-        {draftError && <p className="text-sm text-red-400 whitespace-pre-wrap">{draftError}</p>}
-      </div>
-
-      <textarea
-        value={script}
-        onChange={(e) => setScript(e.target.value)}
-        rows={8}
-        placeholder={`${speakers[0]?.label ?? "Speaker 1"}: Hello there!\n${speakers[1]?.label ?? "Speaker 2"}: Hi, good to see you.`}
-        className="w-full bg-metal-900 border border-accent/25 px-3 py-2 text-base text-neutral-100 outline-none focus:border-accent resize-none font-mono"
-      />
-
-      {unmatchedLines.length > 0 && (
-        <div className="text-sm text-accent-bright border border-accent-deep/40 bg-accent-deep/10 px-3 py-2">
-          {unmatchedLines.length} line(s) didn't match a speaker and were skipped:
-          <ul className="list-disc pl-5 mt-1">
-            {unmatchedLines.map((l, i) => (
-              <li key={i}>{l}</li>
-            ))}
-          </ul>
+          <div data-tip="The short pause when the same person says two lines in a row. A speaker can have their own in Cast → Voice.">
+            <Slider label="Breath" value={pauseSameMs} min={0} max={800} step={10} onChange={(v) => setPauses({ sameMs: Math.round(v) })} format={(v) => `${(v / 1000).toFixed(2)} s`} />
+          </div>
+          <div data-tip="The pause when the next person starts talking. Too short sounds stitched together.">
+            <Slider label="Turn pause" value={pauseTurnMs} min={0} max={1500} step={10} onChange={(v) => setPauses({ turnMs: Math.round(v) })} format={(v) => `${(v / 1000).toFixed(2)} s`} />
+          </div>
         </div>
-      )}
 
-      <button
-        onClick={generate}
-        disabled={generating || !script.trim()}
-        className="btn cut-sm btn-primary px-4 py-2 text-sm font-display font-semibold uppercase tracking-[0.1em] text-accent-bright disabled:opacity-40"
-      >
-        {generating ? "Generating…" : "Generate Narration"}
-      </button>
-      {genError && <p className="text-sm text-red-400 whitespace-pre-wrap">{genError}</p>}
-
-      {/* DramaBox runs on a rented GPU, not here, so the app's job is to write
-          the two files that box reads — carrying each speaker's voice settings
-          with them. Until this existed those settings could not leave the app. */}
-      <div className="border-t border-accent/15 pt-4 space-y-2">
         <button
-          onClick={writeBlocks}
-          disabled={!script.trim()}
-          className="btn cut-sm px-4 py-2 text-sm font-display font-semibold uppercase tracking-[0.1em] text-accent-bright disabled:opacity-40"
+          onClick={generate}
+          disabled={generating || !script.trim()}
+          className="btn btn-primary"
+          data-tip="Makes every line with each speaker's voice, checks it, and joins them. Free voices take about 10–20 seconds a line."
         >
-          Write DramaBox files…
+          {generating ? "Making the narration…" : "Make the narration"}
         </button>
-        <p className="text-sm text-neutral-500">
-          Saves blocks.json and align.json for the GPU box, with each speaker's
-          voice settings and reference clip. Say what it changed before you send it.
-        </p>
-        {blocksNote && (
-          <pre className="text-sm text-neutral-400 whitespace-pre-wrap font-mono">
-            {blocksNote}
-          </pre>
-        )}
-      </div>
+        {genError && <p className="text-sm text-red-400 whitespace-pre-wrap">{genError}</p>}
 
-      {audioUrl && result && (
-        <div className="border border-accent/25 bg-metal-800/60 p-4 space-y-3">
-          <h3 className="label-lit text-sm">Result</h3>
-          <audio src={audioUrl} controls className="w-full" />
-          <p className="text-sm text-neutral-500">Saved to: {result.filePath}</p>
-          <div className="space-y-1">
-            {result.segments.map((seg, i) => (
-              <div key={i} className="text-sm flex gap-2">
-                <span className="text-accent-bright shrink-0">
-                  {(seg.startMs / 1000).toFixed(1)}s–{(seg.endMs / 1000).toFixed(1)}s
-                </span>
-                <span className="shrink-0">{seg.speakerLabel}:</span>
-                <span>{seg.text}</span>
+        {audioUrl && result && (
+          <div className="forge-sec space-y-3">
+            <div className="label-etched">The narration</div>
+            <audio src={audioUrl} controls className="w-full" />
+            <details>
+              <summary className="text-sm text-neutral-400 cursor-pointer">{result.segments.length} lines — show timings</summary>
+              <div className="space-y-1 mt-2">
+                {result.segments.map((seg, i) => (
+                  <div key={i} className="text-xs flex gap-2">
+                    <span className="text-accent shrink-0 tabular-nums">{(seg.startMs / 1000).toFixed(1)}s</span>
+                    <span className="shrink-0 text-neutral-400">{seg.speakerLabel}</span>
+                    <span>{seg.text}</span>
+                  </div>
+                ))}
               </div>
-            ))}
+            </details>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

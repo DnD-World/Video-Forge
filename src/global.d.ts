@@ -225,6 +225,7 @@ declare global {
           speakerLabels: string[];
           languageName: string;
           tone?: string;
+          characters?: string[];
         }) => Promise<string>;
       };
     };

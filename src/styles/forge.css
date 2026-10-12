@@ -389,3 +389,7 @@ input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-of
 .forge-tpl .podcast .dot, .forge-tpl .promo .dot { box-shadow: 0 0 14px -2px var(--c); }
 .forge-tpl .lab { padding: 6px 8px; font-size: .78rem; }
 .forge-tpl .lab small { font-size: .62rem; }
+
+/* ---- Script step: two columns ---- */
+.forge-script { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 18px; }
+.forge-script-text { min-height: 300px; font: 400 .95rem/1.75 "Sora", sans-serif !important; padding: 14px 16px !important; }

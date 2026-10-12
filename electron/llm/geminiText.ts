@@ -67,5 +67,5 @@ export async function geminiJson(system: string, user: string): Promise<string> 
       lastProblem = `${model}: ${String(e?.message ?? e).slice(0, 120)}`;
     }
   }
-  throw new Error(`Gemini could not plan the footage — ${lastProblem}`);
+  throw new Error(`Gemini did not answer — ${lastProblem}`);
 }
