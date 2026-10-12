@@ -58,5 +58,5 @@ Ak, 11 Oct: the 70 videos are done. The goal now is **polishing the maker** — 
 | B10 | **Built-in help**: short guide per step, a neutral sample project, hover hints instead of long paragraphs | |
 | C1 | **Puppet maker** linked to Image Forge (approved) | Phase 2 |
 | C2 | **Top-moments shorts** (approved) | Phase 3 |
-| C3 | **Image Forge pair**: shared keys, Forge look, icons, twin switch back (approved) | |
+| C3 | ~~Image Forge pair~~ **done 12 Oct** — shared keys (`tools/lib/forgeKeys.mjs`, DPAPI file `%APPDATA%/Forge/shared-keys.bin`), sparks on black, transparent camera icon, twin switch back. Image Forge branch `forge-twins` (not merged) | |
 | D1 | Public release | Ak works out what it should be for his advancement |

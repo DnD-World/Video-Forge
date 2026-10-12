@@ -574,6 +574,8 @@ app.whenReady().then(async () => {
   }
 
   createWindow();
+  // Give Image Forge the keys typed here before it existed (in the background).
+  void keyStore.syncShared();
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });

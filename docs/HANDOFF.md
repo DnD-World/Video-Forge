@@ -6,6 +6,18 @@ working state.
 ---
 
 
+## Keys shared with Image Forge — 12 Oct 2026
+
+Gemini, OpenRouter, NVIDIA (and Mistral, Cloudflare, Pollinations for Image
+Forge) are shared between the two apps through one file only this Windows user
+can read: `%APPDATA%/Forge/shared-keys.bin`, locked with Windows' DPAPI via
+PowerShell (stdin, never the command line). Code: `tools/lib/forgeKeys.mjs`
+(identical copy in Image Forge as `electron/forgeKeys.mjs`), used by
+`electron/keyStore.ts`: reading prefers the shared copy (cached 30 s), saving
+or deleting writes both, and `syncShared()` at start-up hands over keys the
+file lacks. Tested end to end on 12 Oct: Image Forge filled Gemini and NVIDIA
+from Video Forge by itself. Full status of the V2 work: `docs/V2-PLAN.md`.
+
 ## Renamed: Video Forge (9 Oct 2026)
 
 The app was called BYOK-Vid-Creator; it is now **Video Forge** (package `video-forge`, appId `com.stravelakis.videoforge`, repo https://github.com/DnD-World/Video-Forge). The folder on disk is still `BYOK-Vid-Creator` (not renamed, so absolute paths in `jobs/` keep working).
