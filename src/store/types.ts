@@ -339,6 +339,8 @@ export interface SpeakerConfig {
   geminiMode?: "live" | "tts";
   geminiModel?: string;
   geminiVoice?: string;
+  /** Voice pitch in semitones, applied after the voice is made (−6…+6). */
+  pitch?: number;
   voiceId?: string;      // assigned Piper voice's onnxPath, if any
   /** The voice id from the ElevenLabs library or a clone. An id, not a name. */
   elevenVoiceId?: string;

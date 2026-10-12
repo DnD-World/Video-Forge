@@ -164,6 +164,7 @@ export function CastPanel() {
       ttsEngine: c.voice?.engine ?? "gemini",
       geminiModel: c.voice?.geminiModel,
       geminiVoice: c.voice?.geminiVoice,
+      pitch: c.voice?.pitch,
       ...(c.dramabox ? { dramabox: c.dramabox } : {}),
       bgColor: "#1a1a1a",
       bgOpacity: 0,
@@ -610,6 +611,13 @@ export function CastPanel() {
                   onChange={(v) => updateSpeaker(speaker.id, { voiceId: v || undefined })}
                 />
               )}
+              <Slider
+                label="Pitch"
+                value={speaker.pitch ?? 0}
+                min={-6} max={6} step={1}
+                format={(v) => (v === 0 ? "as is" : `${v > 0 ? "+" : "−"}${Math.abs(v)} semitone${Math.abs(v) === 1 ? "" : "s"}`)}
+                onChange={(pitch) => updateSpeaker(speaker.id, { pitch })}
+              />
               {engineOf(speaker) === "gemini" && (
                 <p className="text-sm text-neutral-500">
                   Write [laughs], [whispers], [sighs] inside a line to have it

@@ -46,6 +46,7 @@ export function sampleProject(brand: BrandInfo): Partial<ProjectState> | null {
     ttsEngine: (c.voice?.engine ?? "gemini") as "gemini",
     geminiModel: c.voice?.geminiModel,
     geminiVoice: c.voice?.geminiVoice,
+      pitch: c.voice?.pitch,
     ...(c.dramabox ? { dramabox: c.dramabox } : {}),
     borderColor: c.borderColor,
     bgColor: "#1a1a1a",

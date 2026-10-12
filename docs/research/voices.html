@@ -41,7 +41,10 @@
   .row:hover { border-color: rgba(118,255,194,.4); }
   .row.playing { border-color: var(--mint); box-shadow: 0 0 0 1px var(--mint), 0 24px 80px -20px rgba(118,255,194,.4); }
   .row.dragging { z-index: 5; cursor: grabbing; border-color: var(--mint); box-shadow: 0 40px 90px -20px rgba(0,0,0,.9), 0 0 0 2px var(--mint); transition: none; scale: 1.02; }
-  .grip { grid-row: span 3; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: grab; padding: 8px 0; touch-action: none; }
+  .grip { grid-row: span 3; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 4px 0; }
+  .mv { width: 34px; height: 30px; border-radius: 10px; border: 1px solid var(--line, rgba(130,216,183,.16)); background: rgba(0,0,0,.35); color: var(--mint); cursor: pointer; font-size: 14px; display: grid; place-items: center; transition: all .2s; }
+  .mv:hover:not(:disabled) { border-color: var(--mint); box-shadow: 0 0 14px -4px rgba(118,255,194,.6); }
+  .mv:disabled { opacity: .25; cursor: default; }
   .rank { font-size: 38px; font-weight: 300; line-height: 1; color: var(--mint); font-variant-numeric: tabular-nums; }
   .dots { width: 18px; height: 26px; background: radial-gradient(circle, rgba(233,254,245,.45) 1.6px, transparent 2px) 0 0 / 9px 9px; opacity: .7; }
   .grip:hover .dots { opacity: 1; }
@@ -87,7 +90,7 @@
 <canvas id="bg"></canvas>
 <main>
   <h1>Rank the <span>free voices</span></h1>
-  <p class="lead">Same Greek line in every free voice that speaks Greek. Play each one, mark it, and drag the rows by the number into your order, best at the top. Then press "Copy my ranking" and paste it to Claude.</p>
+  <p class="lead">Same Greek line in every free voice that speaks Greek. Play each one, mark it, and use ▲ ▼ to put them in your order, best at the top. Then press "Copy my ranking" and paste it to Claude.</p>
   <div class="line">«Η σκυλίτσα μου κυνηγάει πεταλούδες. Κάθε μία. Κάθε φορά.»</div>
   <div id="list"></div>
   <footer>
@@ -107,10 +110,11 @@ const SAMPLES = [
   { id: "piperrap", file: "tts-samples/local-piper-rapunzelina.wav", name: "Piper — Rapunzelina", tags: [["local","On your laptop"],["free","Free"]], note: "Second offline Greek voice." },
   { id: "voxtral", file: "tts-samples/mistral-voxtral-mini-tts-en_paul-GREEK-TEXT.mp3", name: "Mistral Voxtral (English voice)", tags: [["warn","No Greek"],["warn","Paid"]], note: "Proof only: an English voice reading Greek, so you can hear why it's out." },
 ];
+const STORE_ORDER = "vf-voice-order";
 const LABELS = { good: "Love it", ok: "OK", no: "No" };
 const store = { get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
 let votes = store.get("vf-voice-votes", {});
-let order = store.get("vf-voice-order", SAMPLES.map(s => s.id)).filter(id => SAMPLES.some(s => s.id === id));
+let order = store.get(STORE_ORDER, SAMPLES.map(s => s.id)).filter(id => SAMPLES.some(s => s.id === id));
 SAMPLES.forEach(s => { if (!order.includes(s.id)) order.push(s.id); });
 
 const PLAY = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg>';
@@ -124,7 +128,7 @@ SAMPLES.forEach((s, i) => {
   row.className = "row"; row.dataset.id = s.id; row.style.animationDelay = (i * 60) + "ms";
   const peaks = PEAKS[s.id] || Array(56).fill(.3);
   row.innerHTML = `
-    <div class="grip" title="Drag to rank"><div class="rank"></div><div class="dots"></div></div>
+    <div class="grip"><button class="mv up" title="Move up one place" aria-label="Move up">▲</button><div class="rank"></div><button class="mv down" title="Move down one place" aria-label="Move down">▼</button></div>
     <div class="head"><h3>${s.name}</h3>${s.tags.map(([c,t]) => `<span class="tag ${c}">${t}</span>`).join("")}</div>
     <div class="note">${s.note}</div>
     <div class="bottom">
@@ -162,7 +166,7 @@ function render() {
 render();
 
 // Drag to rank, with the other rows sliding out of the way (FLIP animation).
-function flip(mutate, skip) {
+function flip(mutate, skip = null) {
   const before = new Map([...list.children].map(el => [el, el.getBoundingClientRect().top]));
   mutate();
   [...list.children].forEach(el => {
@@ -172,38 +176,24 @@ function flip(mutate, skip) {
     el.animate([{ transform: `translateY(${dy}px)` }, { transform: "none" }], { duration: 260, easing: "cubic-bezier(.2,.8,.2,1)" });
   });
 }
-list.addEventListener("pointerdown", (e) => {
-  const grip = e.target.closest(".grip"); if (!grip) return;
-  const row = grip.closest(".row"); e.preventDefault();
-  try { grip.setPointerCapture(e.pointerId); } catch {}
-  row.classList.add("dragging");
-  let startY = e.clientY, offset = 0;
-  const move = (ev) => {
-    offset = ev.clientY - startY;
-    row.style.transform = `translateY(${offset}px)`;
-    const mid = row.getBoundingClientRect().top + row.offsetHeight / 2;
-    const others = [...list.children].filter(el => el !== row);
-    let target = others.findIndex(el => { const r = el.getBoundingClientRect(); return mid < r.top + r.height / 2; });
-    if (target === -1) target = others.length;
-    const now = [...list.children].indexOf(row);
-    if (target !== now) {
-      const oldTop = row.getBoundingClientRect().top - offset;
-      flip(() => list.insertBefore(row, others[target] || null), row);
-      const newTop = row.getBoundingClientRect().top - offset;
-      startY += newTop - oldTop; offset = ev.clientY - startY;
-      row.style.transform = `translateY(${offset}px)`;
-      [...list.children].forEach((el, i) => el.querySelector(".rank").textContent = i + 1);
-    }
-  };
-  const up = () => {
-    removeEventListener("pointermove", move); removeEventListener("pointerup", up); removeEventListener("pointercancel", up);
-    row.animate([{ transform: row.style.transform }, { transform: "none" }], { duration: 220, easing: "cubic-bezier(.2,.8,.2,1)" });
-    row.style.transform = ""; row.classList.remove("dragging");
-    order = [...list.children].map(el => el.dataset.id); store.set("vf-voice-order", order);
-  };
-  // Listen on the whole window so the drag keeps going when the pointer leaves the handle.
-  addEventListener("pointermove", move); addEventListener("pointerup", up); addEventListener("pointercancel", up);
+// ▲ ▼ move a row one place, with the neighbours sliding (FLIP animation).
+// (Drag-to-rank was replaced 12 Oct 2026: Ak found it unreliable.)
+function move(row, dir) {
+  const rows = [...list.children], i = rows.indexOf(row), j = i + dir;
+  if (j < 0 || j >= rows.length) return;
+  flip(() => dir < 0 ? list.insertBefore(row, rows[j]) : list.insertBefore(row, rows[j].nextSibling));
+  order = [...list.children].map(el => el.dataset.id); store.set(STORE_ORDER, order);
+  paintRanks();
+}
+function paintRanks() {
+  const rows = [...list.children];
+  rows.forEach((el, i) => { el.querySelector(".rank").textContent = i + 1; el.querySelector(".up").disabled = i === 0; el.querySelector(".down").disabled = i === rows.length - 1; });
+}
+list.addEventListener("click", (e) => {
+  const b = e.target.closest(".mv"); if (!b) return;
+  move(b.closest(".row"), b.classList.contains("up") ? -1 : 1);
 });
+paintRanks();
 
 document.getElementById("copy").onclick = async () => {
   const lines = order.map((id, i) => { const s = SAMPLES.find(x => x.id === id); return `${i + 1}. ${s.name} — ${LABELS[votes[id]] ?? "not marked"}`; }).join("\n");

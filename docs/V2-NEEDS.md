@@ -160,3 +160,11 @@ Make
 - [ ] Fast draft preview: low resolution, ~3 frames a second, full sound.
 
 Media library, checked 12 Oct 2026: **450 video clips (2.7 GB)** downloaded from Pexels/Pixabay while making the 70 lessons. Nothing records which of them actually show dogs — the planner judged by the providers' tags and file names, and many picks were off-topic.
+
+## Σερίφης' voice (12 Oct 2026)
+
+1. Charon — Love it ("if there is a way to add a lower pitch, that would be nice")
+2. Algenib — OK · 5. Alnilam — OK · Rasalgethi, Orus — No
+→ Charon, with a per-character pitch setting (lowered for Σερίφης).
+
+Also from Ak, 12 Oct: Greek ALL-CAPS words need their accent (τόνος) or the voice stresses them wrongly («ΕΝΣΤΙΚΤΟ»). Downloaded background clips must be cleaned up automatically or with a reminder — not enough disk. Ranking pages: ▲▼ arrows instead of dragging.

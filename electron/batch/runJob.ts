@@ -79,6 +79,8 @@ export interface JobSpeaker {
   geminiMode?: "live" | "tts";
   geminiModel?: string;
   geminiVoice?: string;
+  /** Voice pitch in semitones (−6…+6), applied after synthesis. */
+  pitch?: number;
   /** ElevenLabs voice id, and this character's settings. */
   elevenVoiceId?: string;
   /** `eleven_v3` (default — acts, reads the script's directions as tags) or
@@ -521,6 +523,7 @@ export async function runBatchJob(
           : c.engine === "fish"
           ? ("fish" as const)
           : ("piper" as const),
+      pitch: c.pitch ?? 0,
       gemini:
         c.engine === "gemini"
           ? {

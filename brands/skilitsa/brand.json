@@ -32,7 +32,8 @@
       "voice": {
         "engine": "gemini",
         "geminiModel": "gemini-2.5-flash-native-audio-latest",
-        "geminiVoice": "Charon"
+        "geminiVoice": "Charon",
+        "pitch": -2
       }
     },
     {

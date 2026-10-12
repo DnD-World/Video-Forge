@@ -180,6 +180,7 @@ export default function NarrationPanel() {
           text: seg.text,
           language,
           engine,
+          pitch: sp.pitch ?? 0,
           direction: seg.direction,
           piperPythonPath,
           piperOnnxPath: sp.voiceId,
