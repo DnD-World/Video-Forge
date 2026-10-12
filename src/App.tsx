@@ -190,10 +190,19 @@ export default function App() {
     if (!m || m.speaker < 0) return null;
     return speakers[m.speaker]?.id ?? null;
   }, [activeAnalysis, previewTimeMs, speakers]);
-  const cues = useMemo(
-    () => buildCues(narration?.segments ?? [], subtitles.maxChars),
-    [narration, subtitles.maxChars]
-  );
+  // With no narration yet, a sample line — so subtitle choices show on screen
+  // while you make them (Ak, 12 Oct 2026). Never rendered: the render has its
+  // own segments.
+  const projectLanguage = useProjectStore((s) => s.language);
+  const cues = useMemo(() => {
+    if (narration?.segments?.length) return buildCues(narration.segments, subtitles.maxChars);
+    const text = projectLanguage === "el" ? "Έτσι θα φαίνονται οι υπότιτλοί σου στο βίντεο." : "This is how your subtitles will look in the video.";
+    const first = speakers[0];
+    return buildCues(
+      [{ speakerId: first?.id ?? "sample", speakerLabel: first?.label ?? "", text, startMs: 0, endMs: 4000 }],
+      subtitles.maxChars
+    );
+  }, [narration, subtitles.maxChars, projectLanguage, speakers]);
 
   // Lip-sync, driven by exactly the same word timings as the subtitles.
   const visemeTracks = useMemo(

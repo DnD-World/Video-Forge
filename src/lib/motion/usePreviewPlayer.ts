@@ -106,7 +106,9 @@ export function usePreviewPlayer(opts: {
       } else {
         // Nothing to play yet: the old silent loop.
         const t = now - start;
-        setTimeMs(durationMs > 0 ? t % durationMs : t);
+        // With no narration at all, loop 4.5 s so the sample subtitle line
+        // (App.tsx) keeps coming round.
+        setTimeMs(t % (durationMs > 0 ? durationMs : 4500));
       }
       raf = requestAnimationFrame(tick);
     };
