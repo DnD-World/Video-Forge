@@ -393,3 +393,12 @@ input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-of
 /* ---- Script step: two columns ---- */
 .forge-script { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 18px; }
 .forge-script-text { min-height: 300px; font: 400 .95rem/1.75 "Sora", sans-serif !important; padding: 14px 16px !important; }
+
+/* ---- clips on this computer (Look → Background) ---- */
+.forge-clips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-height: 460px; overflow-y: auto; padding-right: 2px; }
+.forge-clips .clip { position: relative; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); background: #000; aspect-ratio: 9 / 16; }
+.forge-clips .clip video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.forge-clips .clip:hover { border-color: var(--accent); }
+.forge-clips .clip .use { position: absolute; left: 6px; right: 6px; bottom: 6px; padding: 4px 0; font-size: .72rem; background: rgba(0, 0, 0, .65) !important; opacity: 0; transition: opacity .2s; }
+.forge-clips .clip:hover .use { opacity: 1; }
+.forge-clips .clip.wide { aspect-ratio: 16 / 9; }

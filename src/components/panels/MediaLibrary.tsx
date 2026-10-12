@@ -1,17 +1,15 @@
 // ---------------------------------------------------------------------------
-// Everything already on this machine, browsable.
+// Clips already on this computer (rebuilt 12 Oct 2026).
 //
-// 177 clips had accumulated in the download cache and nothing could look at
-// them. Every render went back to the stock providers and fetched again — API
-// quota spent on files already on the disk, and no way to reuse a clip you
-// liked in an earlier lesson except by remembering its name.
-//
-// Deliberately plain: a list, a filter, and a preview on hover. The picture is
-// the point, so each row shows the actual first frame rather than an icon.
+// Ak couldn't tell why the library was there — it was a list of file names
+// with nothing to do. Now it says what it is, shows only clips in the video's
+// own shape (a vertical video is never offered a wide clip), shows them as
+// moving thumbnails, and has one clear action: use a clip as the background
+// for the whole video. Using a clip already here costs no search quota and no
+// download. Sounds have their own tab.
 // ---------------------------------------------------------------------------
 
 import { useEffect, useMemo, useState } from "react";
-import { HudButton } from "../ui/HudButton";
 
 interface MediaItem {
   fileName: string;
@@ -23,128 +21,93 @@ interface MediaItem {
 }
 
 interface Props {
-  /** What to do with the one that was chosen. Given the absolute path. */
-  onPick?: (filePath: string, kind: "video" | "audio") => void;
-  /** Narrow the list before it is shown. */
-  only?: "video" | "audio";
+  /** Called with the chosen clip. Without it the library only shows. */
+  onPick?: (filePath: string, info: { width: number; height: number; durationSec: number }) => void;
+  /** Only clips of this shape are offered. */
+  shape?: "portrait" | "landscape";
 }
 
-export function MediaLibrary({ onPick, only }: Props) {
+export function MediaLibrary({ onPick, shape }: Props) {
   const [items, setItems] = useState<MediaItem[]>([]);
-  const [filter, setFilter] = useState("");
-  const [kind, setKind] = useState<"all" | "video" | "audio">(only ?? "all");
   const [loading, setLoading] = useState(true);
+  // Measured from each clip as its thumbnail loads — the library itself does
+  // not store sizes.
+  const [dims, setDims] = useState<Record<string, { w: number; h: number; d: number }>>({});
 
   const load = () => {
     setLoading(true);
     window.byok?.media
       ?.library()
-      .then(setItems)
+      .then((all) => setItems(all.filter((i) => i.kind === "video").sort((a, b) => b.modifiedMs - a.modifiedMs)))
       .catch(() => setItems([]))
       .finally(() => setLoading(false));
   };
   useEffect(load, []);
 
-  const shown = useMemo(() => {
-    const q = filter.trim().toLowerCase();
-    return items.filter(
-      (i) =>
-        (kind === "all" || i.kind === kind) &&
-        (!q || i.fileName.toLowerCase().includes(q))
-    );
-  }, [items, filter, kind]);
-
-  const mb = (b: number) => `${(b / 1024 / 1024).toFixed(1)} MB`;
+  const fits = (p: string) => {
+    const d = dims[p];
+    if (!d || !shape) return true; // not measured yet: show, then hide if wrong
+    return shape === "portrait" ? d.h >= d.w : d.w >= d.h;
+  };
+  const shown = useMemo(() => items.filter((i) => fits(i.filePath)), [items, dims, shape]);
+  const gb = items.reduce((a, i) => a + i.bytes, 0) / 1e9;
 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-2">
-        <div className="label-etched">Media library</div>
-        <button
-          onClick={load}
-          className="text-sm text-accent-bright/70 hover:text-accent-bright"
-        >
+        <div className="label-etched" data-tip="Background clips already downloaded for earlier videos. Re-using one is instant and free.">
+          Clips on this computer
+        </div>
+        <button onClick={load} className="btn" data-tip="Look again for downloaded clips.">
           Refresh
         </button>
       </div>
-
       <p className="text-sm text-neutral-500">
-        Everything already downloaded to this machine, newest first. Using one
-        of these costs no search quota and no waiting.
+        {loading
+          ? "Looking…"
+          : `${shown.length} ${shape === "portrait" ? "vertical" : shape === "landscape" ? "wide" : ""} clip(s) that fit this video · ${items.length} in all, ${gb.toFixed(1)} GB. Hover to play; “Use” makes it the background of the whole video. Old clips are cleared automatically (Settings).`}
       </p>
 
-      <div className="flex gap-2">
-        <input
-          type="text"
-          placeholder="Filter by name…"
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className="flex-1 min-w-0 bg-metal-900 border border-accent/25 px-3 py-1.5 text-sm text-neutral-100 outline-none focus:border-accent"
-        />
-        {!only &&
-          (["all", "video", "audio"] as const).map((k) => (
-            <HudButton key={k} active={kind === k} onClick={() => setKind(k)}>
-              {k}
-            </HudButton>
-          ))}
-      </div>
-
-      <div className="text-sm text-neutral-500">
-        {loading
-          ? "Reading…"
-          : `${shown.length} of ${items.length} file(s)`}
-      </div>
-
-      <div className="max-h-[420px] overflow-y-auto space-y-1 pr-1">
+      <div className="forge-clips">
         {shown.map((item) => (
-          <div
-            key={item.filePath}
-            className="flex items-center gap-3 border border-accent/15 bg-metal-900/50 px-2 py-1.5"
-          >
-            {/* The actual frame, not an icon. Which clip this is cannot be told
-                from "pexels-10117444.mp4". */}
-            {item.kind === "video" ? (
-              <video
-                src={`file://${item.filePath.replace(/\\/g, "/")}`}
-                className="w-16 h-10 object-cover bg-black shrink-0"
-                muted
-                preload="metadata"
-                onMouseEnter={(e) => void e.currentTarget.play().catch(() => {})}
-                onMouseLeave={(e) => {
-                  e.currentTarget.pause();
-                  e.currentTarget.currentTime = 0;
-                }}
-              />
-            ) : (
-              <div className="w-16 h-10 shrink-0 bg-black/60 flex items-center justify-center text-accent-bright/70 text-sm">
-                ♪
-              </div>
-            )}
-
-            <div className="min-w-0 flex-1">
-              <div className="text-sm text-neutral-200 truncate">{item.fileName}</div>
-              <div className="text-sm text-neutral-500">
-                {mb(item.bytes)}
-                {item.source ? ` · ${item.source}` : ""}
-              </div>
-            </div>
-
+          <div key={item.filePath} className={`clip ${shape === "landscape" ? "wide" : ""}`} title={item.fileName}>
+            <video
+              src={`file://${item.filePath.replace(/\\/g, "/")}`}
+              muted
+              loop
+              preload="metadata"
+              onLoadedMetadata={(e) => {
+                const v = e.currentTarget;
+                setDims((d) => ({ ...d, [item.filePath]: { w: v.videoWidth, h: v.videoHeight, d: v.duration } }));
+              }}
+              onMouseEnter={(e) => void e.currentTarget.play().catch(() => {})}
+              onMouseLeave={(e) => {
+                e.currentTarget.pause();
+                e.currentTarget.currentTime = 0;
+              }}
+            />
             {onPick && (
-              <HudButton onClick={() => onPick(item.filePath, item.kind)}>
+              <button
+                className="btn use"
+                onClick={() => {
+                  const d = dims[item.filePath];
+                  onPick(item.filePath, { width: d?.w ?? 0, height: d?.h ?? 0, durationSec: d?.d ?? 0 });
+                }}
+                data-tip="Use this clip as the background for the whole video."
+              >
                 Use
-              </HudButton>
+              </button>
             )}
           </div>
         ))}
-
-        {!loading && shown.length === 0 && (
-          <p className="text-sm text-neutral-500">
-            {items.length === 0
-              ? "Nothing downloaded yet. Clips arrive here when a render fetches backgrounds."
-              : "Nothing matches that filter."}
-          </p>
-        )}
       </div>
+      {!loading && shown.length === 0 && (
+        <p className="text-sm text-neutral-500">
+          {items.length === 0
+            ? "Nothing downloaded yet. Clips arrive here when you choose backgrounds automatically or by search."
+            : "None of the downloaded clips has this video's shape."}
+        </p>
+      )}
     </div>
   );
 }

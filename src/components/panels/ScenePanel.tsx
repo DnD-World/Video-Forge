@@ -60,6 +60,8 @@ export function ScenePanel({
   const subtitles = useProjectStore((s) => s.subtitles);
   const setSubtitles = useProjectStore((s) => s.setSubtitles);
   const narration = useProjectStore((s) => s.narration);
+  const setBackgrounds = useProjectStore((s) => s.setBackgrounds);
+  const backgroundsNow = () => useProjectStore.getState().backgrounds;
   const visemeFadeMs = useProjectStore((s) => s.visemeFadeMs);
   const setVisemeFadeMs = useProjectStore((s) => s.setVisemeFadeMs);
   const idleMotion = useProjectStore((s) => s.idleMotion);
@@ -211,6 +213,30 @@ export function ScenePanel({
 
         {tab === "shape" && (
           <>
+            {/* MAKE TEMPLATES ("where is it going?") — one click sets the shape
+                and smoothness for the place the video will live. */}
+            <section>
+              <div className="label-etched mb-2" data-tip="Pick where the video is going; it sets the shape and smoothness for you.">Made for</div>
+              <div className="flex flex-wrap gap-2">
+                {([
+                  { id: "shorts", label: "Shorts · TikTok · Reels", tip: "Vertical (9:16), 30 pictures a second — phones.", format: "9:16" as const, w: 1080, h: 1920, fps: 30 as Fps },
+                  { id: "youtube", label: "YouTube", tip: "Wide (16:9), 30 pictures a second — computers and TVs.", format: "16:9" as const, w: 1920, h: 1080, fps: 30 as Fps },
+                  { id: "lesson", label: "Course lesson", tip: "Vertical (9:16), 24 pictures a second — like the 70 lessons. Smaller files, faster renders.", format: "9:16" as const, w: 1080, h: 1920, fps: 24 as Fps },
+                ]).map((m) => (
+                  <HudButton
+                    key={m.id}
+                    title={m.tip}
+                    active={render.format === m.format && fps === m.fps}
+                    onClick={() => {
+                      setRender({ format: m.format, width: m.w, height: m.h });
+                      setFps(m.fps);
+                    }}
+                  >
+                    {m.label}
+                  </HudButton>
+                ))}
+              </div>
+            </section>
             <section>
               <div className="label-etched mb-2">Aspect Ratio</div>
               <div className="flex gap-2">
@@ -287,7 +313,23 @@ export function ScenePanel({
                 purpose: reaching for what is already here should be the first
                 thing offered, not a thing you have to know about. */}
             <div className="border-t border-accent/15 pt-5">
-              <MediaLibrary />
+              <MediaLibrary
+                shape={render.format === "9:16" ? "portrait" : "landscape"}
+                onPick={(filePath, info) => {
+                  const endMs = Math.max(1000, (narration?.analysis?.durationMs ?? 60000));
+                  if (backgroundsNow().length && !window.confirm("Replace the planned backgrounds with this one clip for the whole video?")) return;
+                  setBackgrounds([
+                    {
+                      startMs: 0,
+                      endMs,
+                      query: "chosen by hand",
+                      reason: "Picked from the clips on this computer",
+                      filePath,
+                      hit: { id: filePath, provider: "pexels", url: "", thumbUrl: "", width: info.width, height: info.height, durationSec: info.durationSec },
+                    } as never,
+                  ]);
+                }}
+              />
             </div>
           </>
         )}
