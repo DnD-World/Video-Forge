@@ -161,7 +161,9 @@ export function CastPanel() {
       // without them.
       openingPhrase: c.openingPhrase,
       voiceRef: c.voiceRef,
-      ttsEngine: "gemini",
+      ttsEngine: c.voice?.engine ?? "gemini",
+      geminiModel: c.voice?.geminiModel,
+      geminiVoice: c.voice?.geminiVoice,
       ...(c.dramabox ? { dramabox: c.dramabox } : {}),
       bgColor: "#1a1a1a",
       bgOpacity: 0,

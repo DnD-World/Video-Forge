@@ -36,6 +36,10 @@ export interface BuiltinCharacter {
   voiceRef: string;
   /** Engine settings — only what differs from the defaults. */
   dramabox?: Partial<DramaboxParams>;
+  /** The character's voice: engine, and for Gemini the model and voice name.
+   *  Without it every character gets the same default voice — Σερίφης came
+   *  out as a woman (12 Oct 2026). */
+  voice?: { engine?: "gemini" | "fish" | "elevenlabs" | "piper"; geminiModel?: string; geminiVoice?: string };
 }
 
 /** A brand's sample project: a whole finished video, in a click. */
