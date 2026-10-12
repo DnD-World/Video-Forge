@@ -20,6 +20,7 @@ import * as elevenlabs from "./elevenlabsEngine";
 import { synthesizeGemini, type GeminiMode } from "./geminiEngine";
 import { synthesizeFish } from "./fishEngine";
 import { pitchShift } from "../audio/pitchShift";
+import { accentMap, withAccents } from "./greekAccents";
 import { concatWavBuffers } from "../audio/concatWav";
 import { analyzeNarration } from "../audio/analyzeNarration";
 import { trimSilence, squeezeSilence } from "../audio/trimSilence";
@@ -217,6 +218,14 @@ export async function buildNarration(
   // 15–20 seconds, so a 50-line lesson one by one is a quarter of an hour.
   // The free tier caps tokens per minute, not requests; four in flight sits
   // well inside it. Results land in their own slot, so order is kept.
+  // Capitalised Greek words get their accent back before any voice reads
+  // them (greekAccents.ts). Spoken text only; subtitles use seg.text as is.
+  const accents = await accentMap(segments.map((x) => x.text));
+  if (accents.size) {
+    console.log(`[video-forge] accents restored for ${accents.size} capitalised word(s): ${[...accents.values()].slice(0, 8).join(", ")}`);
+  }
+  const spoken = (t: string) => withAccents(t, accents);
+
   const geminiAudio = new Map<number, Buffer>();
   const geminiIdx = segments.flatMap((s, i) => (s.engine === "gemini" ? [i] : []));
   const lowMatches: string[] = [];
@@ -226,7 +235,7 @@ export async function buildNarration(
         const seg = segments[i];
         if (!seg.gemini) throw new Error(`Speaker "${seg.speakerLabel}" has no Gemini voice chosen.`);
         const take = await synthesizeGemini({
-          text: seg.text,
+          text: spoken(seg.text),
           direction: seg.direction,
           persona: seg.gemini.persona,
           language: seg.language,
@@ -248,7 +257,7 @@ export async function buildNarration(
 
   for (const [i, seg] of segments.entries()) {
     if (seg.engine === "fish") {
-      buffers.push(trimmed(await pitchShift(await synthesizeFish(seg.text, seg.direction), seg.pitch ?? 0)));
+      buffers.push(trimmed(await pitchShift(await synthesizeFish(spoken(seg.text), seg.direction), seg.pitch ?? 0)));
       continue;
     }
     if (seg.engine === "gemini") {
@@ -260,12 +269,12 @@ export async function buildNarration(
       // Greek the subtitle shows and the aligner is given; only the string
       // handed to the API carries "[sighs] ". A tag that leaked into the
       // segment would be drawn on screen and looked for in the audio.
-      const spoken =
+      const elevenText =
         (seg.elevenModel ?? "eleven_v3").startsWith("eleven_v3")
-          ? withAudioTags(seg.text, seg.direction)
-          : seg.text;
+          ? withAudioTags(spoken(seg.text), seg.direction)
+          : spoken(seg.text);
       const { audioBuffer, credits: spent } = await elevenlabs.synthesize({
-        text: spoken,
+        text: elevenText,
         voiceId: seg.elevenVoiceId ?? "",
         modelId: seg.elevenModel,
         settings: {
@@ -289,7 +298,7 @@ export async function buildNarration(
     const { audioBuffer } = await synthesizeWithPiper(
       seg.piperPythonPath,
       seg.piperOnnxPath,
-      seg.text
+      spoken(seg.text)
     );
     buffers.push(trimmed(await pitchShift(Buffer.from(audioBuffer), seg.pitch ?? 0)));
   }

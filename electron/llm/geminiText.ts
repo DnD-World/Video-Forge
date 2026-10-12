@@ -60,7 +60,7 @@ export async function geminiJson(system: string, user: string): Promise<string> 
         lastProblem = `${model} returned nothing`;
         continue;
       }
-      if (working !== model) console.log(`[video-forge] Gemini model for planning: ${model}`);
+      if (working !== model) console.log(`[video-forge] Gemini text model: ${model}`);
       working = model;
       return text;
     } catch (e: any) {
