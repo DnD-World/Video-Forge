@@ -223,7 +223,7 @@ export function PresetsPanel() {
             hover makes it talk, click applies it. */}
         <div className="forge-tpls">
           {BUILT_INS.filter((b) => b.speakerCount === Math.min(3, Math.max(1, speakers.length || 2))).map((b) => {
-            const kind = b.name.split(" ")[0].toLowerCase(); // halo | broadcast | orbit
+            const kind = b.name.split(" ")[0].toLowerCase(); // halo, broadcast, orbit, news, podcast, promo, interview
             const colors = speakers.length ? speakers.map((sp) => sp.borderColor) : ["#76FFC2", "#5562B8"];
             return (
               <button
@@ -236,11 +236,22 @@ export function PresetsPanel() {
                 title={b.description}
               >
                 <span className={`scr ${kind}`}>
-                  {colors.slice(0, b.speakerCount).map((c, i) => (
-                    <i key={i} className={`dot d${b.speakerCount}-${i}`} style={{ ["--c" as string]: c }} />
+                  {/* Each face where this template really puts it: x, y and
+                      size are fractions of the frame, drawn on a 9:16 tile. */}
+                  {(b.slots ?? []).map((sl, i) => (
+                    <i
+                      key={i}
+                      className="dot"
+                      style={{
+                        ["--c" as string]: colors[i % colors.length],
+                        left: `${(sl.x - sl.size / 2) * 100}%`,
+                        top: `${(sl.y - (sl.size * 9) / 16 / 2) * 100}%`,
+                        width: `${sl.size * 100}%`,
+                      }}
+                    />
                   ))}
-                  {kind === "broadcast" && <i className="slab" />}
-                  <i className="cap" />
+                  {(kind === "broadcast" || kind === "news") && <i className="slab" />}
+                  <i className={`cap ${b.subtitles?.position === "bottom" ? "low" : ""} ${b.subtitles?.uppercase ? "bold" : ""}`} />
                 </span>
                 <span className="lab">
                   {b.name.split(" · ")[0]}

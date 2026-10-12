@@ -54,6 +54,8 @@ interface Style {
   subtitles: Partial<SubtitleConfig>;
   backgroundDim: number;
   backgroundBlur: number;
+  /** Where the speakers stand, per cast size. Falls back to LAYOUTS. */
+  layout?: Partial<Record<1 | 2 | 3, { x: number; y: number; size: number }[]>>;
 }
 
 const STYLES: Style[] = [
@@ -142,10 +144,71 @@ const STYLES: Style[] = [
     backgroundDim: 0.3,
     backgroundBlur: 0.012,
   },
+  // ---- added 12 Oct 2026 (Ak: "the templates are too few") ----
+  {
+    name: "News desk",
+    description: "Anchors side by side low in the frame, subtitles on a solid lower-third strip. Reads as news.",
+    outlineShape: "rounded",
+    waveform: (i) => ({ enabled: true, style: "bars", position: "speaker", scale: 0.75, density: 96, thickness: 0.7, smoothing: 0.25, edgeFlush: true, lane: i === 0 ? 0 : i % 2 === 1 ? 1 : -1 }),
+    surface: { style: "solid", color: "#071C26", opacity: 0.7 },
+    subtitles: { position: "bottom", fontSize: 0.07, strokeWidth: 0.12, activeGlow: 0.15, activeEmphasis: "lift" as const, maxChars: 34, uppercase: false },
+    backgroundDim: 0.25,
+    backgroundBlur: 0,
+    layout: {
+      1: [{ x: 0.5, y: 0.52, size: 0.46 }],
+      2: [{ x: 0.28, y: 0.55, size: 0.36 }, { x: 0.72, y: 0.55, size: 0.36 }],
+      3: [{ x: 0.5, y: 0.47, size: 0.32 }, { x: 0.2, y: 0.62, size: 0.26 }, { x: 0.8, y: 0.62, size: 0.26 }],
+    },
+  },
+  {
+    name: "Podcast",
+    description: "Big faces, one above the other, with large word-by-word captions between them. For conversations.",
+    outlineShape: "circle",
+    waveform: () => ({ enabled: true, style: "bars", position: "speaker", scale: 1.2, density: 72, thickness: 1.1, smoothing: 0.3 }),
+    surface: { style: "none" },
+    subtitles: { position: "center", fontSize: 0.1, strokeWidth: 0.25, activeGlow: 0.35, activeEmphasis: "lift" as const, maxChars: 22, uppercase: false, emoji: true },
+    backgroundDim: 0.55,
+    backgroundBlur: 0.015,
+    layout: {
+      1: [{ x: 0.5, y: 0.3, size: 0.5 }],
+      2: [{ x: 0.5, y: 0.22, size: 0.4 }, { x: 0.5, y: 0.78, size: 0.4 }],
+      3: [{ x: 0.5, y: 0.2, size: 0.34 }, { x: 0.27, y: 0.8, size: 0.3 }, { x: 0.73, y: 0.8, size: 0.3 }],
+    },
+  },
+  {
+    name: "Promo",
+    description: "Small faces along the top, big bold captions in the middle, punchy footage. For ads and shorts.",
+    outlineShape: "circle",
+    waveform: () => ({ enabled: true, style: "bloomBars", position: "speaker", scale: 1.2, density: 48, thickness: 1.2, smoothing: 0.4, ringInnerRadius: 0.28, ringSize: 1.05 }),
+    surface: { style: "none" },
+    subtitles: { position: "center", fontSize: 0.12, strokeWidth: 0.3, activeGlow: 0.45, activeEmphasis: "lift" as const, maxChars: 16, uppercase: true, emoji: true },
+    backgroundDim: 0.2,
+    backgroundBlur: 0,
+    layout: {
+      1: [{ x: 0.5, y: 0.15, size: 0.3 }],
+      2: [{ x: 0.3, y: 0.15, size: 0.26 }, { x: 0.7, y: 0.15, size: 0.26 }],
+      3: [{ x: 0.2, y: 0.14, size: 0.22 }, { x: 0.5, y: 0.14, size: 0.22 }, { x: 0.8, y: 0.14, size: 0.22 }],
+    },
+  },
+  {
+    name: "Interview",
+    description: "Speakers on a diagonal, as if facing each other. Questions and answers, guests and hosts.",
+    outlineShape: "rounded",
+    waveform: () => ({ enabled: true, style: "bars", position: "speaker", scale: 1, density: 64, thickness: 1, smoothing: 0.25 }),
+    surface: { style: "none" },
+    subtitles: { position: "center", fontSize: 0.085, strokeWidth: 0.22, activeGlow: 0.25, activeEmphasis: "lift" as const, maxChars: 28, uppercase: false },
+    backgroundDim: 0.4,
+    backgroundBlur: 0.008,
+    layout: {
+      1: [{ x: 0.35, y: 0.35, size: 0.44 }],
+      2: [{ x: 0.28, y: 0.25, size: 0.36 }, { x: 0.72, y: 0.72, size: 0.36 }],
+      3: [{ x: 0.25, y: 0.22, size: 0.3 }, { x: 0.72, y: 0.45, size: 0.3 }, { x: 0.3, y: 0.76, size: 0.3 }],
+    },
+  },
 ];
 
 function slotsFor(style: Style, count: 1 | 2 | 3): SpeakerSlot[] {
-  return LAYOUTS[count].map((place, i) => ({
+  return (style.layout?.[count] ?? LAYOUTS[count]).map((place, i) => ({
     ...place,
     outlineShape: style.outlineShape,
     waveform: { ...defaultTrackWaveform(i), ...style.waveform(i) } as TrackWaveform,
