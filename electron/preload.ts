@@ -169,6 +169,19 @@ const api = {
     ): Promise<{ ok: boolean; id?: string; opened?: boolean; problem?: string }> => ipcRenderer.invoke("forge:orderPuppet", order, pictures),
     orderResult: (id: string): Promise<{ slug: string | null; problem: string | null } | null> => ipcRenderer.invoke("forge:orderResult", id),
   },
+  local: {
+    models: (base: string): Promise<{ ok: boolean; models?: string[]; problem?: string }> => ipcRenderer.invoke("local:models", base),
+  },
+  batch: {
+    readSheet: (source: { url?: string; file?: string }): Promise<Record<string, string>[]> => ipcRenderer.invoke("batch:readSheet", source),
+    runMany: (req: unknown): Promise<{ ok: boolean; problem?: string }> => ipcRenderer.invoke("batch:runMany", req),
+    stopMany: (): Promise<boolean> => ipcRenderer.invoke("batch:stopMany"),
+    onEvent: (cb: (e: unknown) => void) => {
+      const h = (_e: Electron.IpcRendererEvent, ev: unknown) => cb(ev);
+      ipcRenderer.on("batch:event", h);
+      return () => ipcRenderer.removeListener("batch:event", h);
+    },
+  },
   llm: {
     draftScript: (opts: {
       topic: string;

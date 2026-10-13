@@ -225,6 +225,15 @@ declare global {
         ) => Promise<{ ok: boolean; id?: string; opened?: boolean; problem?: string }>;
         orderResult: (id: string) => Promise<{ slug: string | null; problem: string | null } | null>;
       };
+      local: {
+        models: (base: string) => Promise<{ ok: boolean; models?: string[]; problem?: string }>;
+      };
+      batch: {
+        readSheet: (source: { url?: string; file?: string }) => Promise<Record<string, string>[]>;
+        runMany: (req: unknown) => Promise<{ ok: boolean; problem?: string }>;
+        stopMany: () => Promise<boolean>;
+        onEvent: (cb: (e: unknown) => void) => () => void;
+      };
       llm: {
         draftScript: (opts: {
           topic: string;

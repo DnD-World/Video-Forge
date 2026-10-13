@@ -2,7 +2,9 @@ import { app, BrowserWindow, ipcMain, dialog, shell, Menu } from "electron";
 import path from "node:path";
 import fsp from "node:fs/promises";
 import * as keyStore from "./keyStore";
+import { request } from "./net/http";
 import { listPuppets, orderResult, placeOrder, shelfRoot } from "../tools/lib/forgeShelf.mjs";
+import { fetchSheet, parseCsv, runMany, type ManyEvent, type ManyRequest } from "./batch/manyVideos";
 import { resolveUserData, NEW_APP_NAME } from "./migrateUserData";
 import { listPiperVoices, synthesizeWithPiper, shutdownAllPiperServers } from "./tts/piperEngine";
 import { analyzeNarration } from "./audio/analyzeNarration";
@@ -254,6 +256,50 @@ ipcMain.handle(
   }
 );
 ipcMain.handle("forge:orderResult", async (_e, id: string) => orderResult(shelfRoot(), id));
+
+/** Many videos from one sheet (electron/batch/manyVideos.ts). One run at a
+ *  time; progress goes to the window as "batch:event". */
+let manyStop = false;
+let manyRunning = false;
+ipcMain.handle("batch:readSheet", async (_e, source: { url?: string; file?: string }) => {
+  const text = source.file ? await fsp.readFile(source.file, "utf8") : await fetchSheet(source.url ?? "");
+  return parseCsv(text);
+});
+ipcMain.handle("batch:runMany", async (e, req: ManyRequest) => {
+  if (manyRunning) return { ok: false, problem: "A batch is already running." };
+  manyRunning = true;
+  manyStop = false;
+  const send = (ev: ManyEvent) => !e.sender.isDestroyed() && e.sender.send("batch:event", ev);
+  void runMany(
+    req,
+    { projectRoot: app.getAppPath(), outputDir: outputDir(), fontsDir: fontsDir(), mediaDir: path.join(app.getPath("userData"), "media") },
+    send,
+    () => manyStop
+  ).finally(() => {
+    manyRunning = false;
+  });
+  return { ok: true };
+});
+/** What a LocalAI on this computer (or on Tailscale) offers. Only those
+ *  addresses: this is a settings check, not a way to call any server. */
+ipcMain.handle("local:models", async (_e, base: string) => {
+  const b = String(base || "").trim().replace(/\/+$/, "").replace(/\/v1$/, "");
+  if (!/^https?:\/\/(127\.0\.0\.1|localhost|\[::1\]|100\.\d+\.\d+\.\d+)(:\d+)?$/i.test(b)) {
+    return { ok: false, problem: "Only an address on this computer (127.0.0.1) or on Tailscale (100.x.x.x)." };
+  }
+  try {
+    const res = await request(`${b}/v1/models`, { method: "GET", timeoutMs: 8000 });
+    if (res.status >= 400) return { ok: false, problem: `It answered ${res.status}.` };
+    const ids = ((JSON.parse(res.body) as { data?: { id?: string }[] }).data ?? []).map((d) => d.id ?? "").filter(Boolean);
+    return { ok: true, models: ids };
+  } catch (e) {
+    return { ok: false, problem: `Nothing answered at ${b}. Is LocalAI running?` };
+  }
+});
+ipcMain.handle("batch:stopMany", async () => {
+  manyStop = true;
+  return true;
+});
 
 /** Downloaded background clips: how much room they take, and clearing them
  *  (electron/media/mediaCache.ts). `keep` = clips the open project uses. */

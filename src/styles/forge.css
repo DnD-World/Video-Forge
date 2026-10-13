@@ -450,3 +450,14 @@ html[data-motion="off"] body::before { animation: none; }
 .forge-who .who.add.on { border-color: var(--accent); color: var(--accent); }
 .shelf-face .initial { width: 100%; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; font: 600 22px "Sora", sans-serif; color: var(--ink);
   border: 2px solid var(--line); background: radial-gradient(circle at 50% 35%, #1b3a4a, #04121a 70%); }
+
+/* ---- Make → Many videos ---- */
+.forge-many { display: flex; flex-direction: column; gap: 6px; max-height: 340px; overflow-y: auto; }
+.forge-many .row { position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 2px; padding: 9px 12px; border-radius: 14px; border: 1px solid var(--line); background: rgba(0, 0, 0, .35); font-size: 12.5px; }
+.forge-many .row b { font-weight: 500; color: var(--ink); }
+.forge-many .row span { color: var(--ink-3); }
+.forge-many .row.bad span, .forge-many .row.failed span { color: #ffb547; }
+.forge-many .row.done { border-color: rgba(118, 255, 194, .4); }
+.forge-many .row.done span { color: var(--accent); }
+.forge-many .row.working { border-color: var(--line-hot); }
+.forge-many .row i { position: absolute; left: 0; bottom: 0; height: 2px; background: var(--accent); transition: width .4s; }

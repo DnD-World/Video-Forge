@@ -19,6 +19,9 @@ interface SettingsState {
   /** Downloaded background clips: the most they may take, in GB, and
    *  whether the app trims them by itself (electron/media/mediaCache.ts). */
   mediaLimitGb: number;
+  /** LocalAI (or similar) on this computer — shared with Image Forge. */
+  localAiBase: string;
+  setLocalAiBase: (v: string) => void;
   setMediaLimitGb: (gb: number) => void;
   mediaAutoClean: boolean;
   setMediaAutoClean: (v: boolean) => void;
@@ -51,6 +54,8 @@ export const useSettingsStore = create<SettingsState>()(
 
       accentColor: "#76FFC2", // Forge mint (stravelakis mint-400)
       mediaLimitGb: 2,
+      localAiBase: "http://127.0.0.1:8080",
+      setLocalAiBase: (v) => set({ localAiBase: v }),
       setMediaLimitGb: (gb) => set({ mediaLimitGb: gb }),
       mediaAutoClean: true,
       setMediaAutoClean: (v) => set({ mediaAutoClean: v }),

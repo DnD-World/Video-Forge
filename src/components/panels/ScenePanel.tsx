@@ -3,6 +3,7 @@
 // Frame settings, subtitles, render, and presets.
 // ---------------------------------------------------------------------------
 
+import { ManyVideos } from "../render/ManyVideos";
 import { useState } from "react";
 import { HudButton } from "../ui/HudButton";
 import { MediaLibrary } from "./MediaLibrary";
@@ -21,7 +22,7 @@ import { buildCues } from "../../lib/subtitles/wordTiming";
 import { toSrt } from "../../lib/subtitles/srt";
 import type { Fps, SubtitleConfig } from "../../store/types";
 
-export type SceneTab = "extras" | "shape" | "motion" | "background" | "subtitles" | "music" | "sfx" | "render" | "presets";
+export type SceneTab = "extras" | "shape" | "motion" | "background" | "subtitles" | "music" | "sfx" | "render" | "presets" | "many";
 type Tab = SceneTab;
 
 const TAB_LABELS: Record<Tab, string> = {
@@ -34,6 +35,7 @@ const TAB_LABELS: Record<Tab, string> = {
   background: "Background",
   subtitles: "Subtitles",
   render: "Render",
+  many: "Many videos",
 };
 
 const FPS_OPTIONS: Fps[] = [10, 24, 30];
@@ -460,6 +462,7 @@ export function ScenePanel({
         )}
 
         {tab === "render" && <RenderBar />}
+        {tab === "many" && <ManyVideos />}
 
         {tab === "presets" && <PresetsPanel />}
       </div>

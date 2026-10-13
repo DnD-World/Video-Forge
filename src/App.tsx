@@ -755,7 +755,7 @@ export default function App() {
           {step === "look" ? (
             <ScenePanel key="look" title="Look" tabs={["presets", "background", "subtitles", "music", "sfx", "motion"]} />
           ) : (
-            <ScenePanel key="make" title="Make" tabs={["render", "extras", "shape"]} />
+            <ScenePanel key="make" title="Make" tabs={["render", "many", "extras", "shape"]} />
           )}
         </Rail>
         )}

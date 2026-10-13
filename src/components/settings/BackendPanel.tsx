@@ -129,6 +129,55 @@ interface TestState {
 
 /** Downloaded background clips: size, limit, automatic clean-up, and a
  *  button for now. Ak, 12 Oct 2026: 450 clips / 2.7 GB had piled up. */
+/** LocalAI on this computer — the free picture and sound models Image Forge
+ *  also uses. Shows what is there, sorted by kind. */
+function LocalAiCard() {
+  const base = useSettingsStore((s) => s.localAiBase);
+  const setBase = useSettingsStore((s) => s.setLocalAiBase);
+  const [state, setState] = useState<{ ok: boolean; models?: string[]; problem?: string } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const test = async () => {
+    setBusy(true);
+    setState(await window.byok.local.models(base));
+    setBusy(false);
+  };
+  useEffect(() => {
+    void test();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const kind = (id: string) =>
+    /image|flux|sdxl|stable-diffusion|dreamshaper|kontext/i.test(id) && !/audio|sfx/i.test(id)
+      ? "Pictures"
+      : /audio|sfx|tts|whisper|piper|bark|voice/i.test(id)
+        ? "Sound and voice"
+        : "Text";
+  const groups = (state?.models ?? []).reduce<Record<string, string[]>>((g, id) => ((g[kind(id)] ??= []).push(id), g), {});
+  return (
+    <div className="forge-sec space-y-3">
+      <div className="label-etched" data-tip="Free models running on this computer (LocalAI, in Docker). Image Forge's puppet maker draws with them; nothing is sent to the internet.">
+        Your own machine (LocalAI)
+      </div>
+      <div className="flex gap-2">
+        <input type="text" value={base} onChange={(e) => setBase(e.target.value)} className="flex-1 min-w-0" data-tip="Where LocalAI answers. Usually http://127.0.0.1:8080." />
+        <button className="btn" onClick={() => void test()} disabled={busy} data-tip="Ask LocalAI what it has.">
+          {busy ? "Testing…" : "Test"}
+        </button>
+      </div>
+      {state && !state.ok && <p className="text-sm text-amber-300">{state.problem}</p>}
+      {state?.ok && (
+        <div className="space-y-1 text-sm">
+          <p className="text-emerald-300">✓ Answering · {state.models?.length ?? 0} models</p>
+          {Object.entries(groups).map(([k, ids]) => (
+            <p key={k} className="text-neutral-400">
+              <b className="text-neutral-200 font-medium">{k}:</b> {ids.join(", ")}
+            </p>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ClipStorage() {
   const limit = useSettingsStore((s) => s.mediaLimitGb);
   const setLimit = useSettingsStore((s) => s.setMediaLimitGb);
@@ -245,6 +294,7 @@ export default function BackendPanel() {
         Test makes one real call to the provider.
       </p>
 
+      <LocalAiCard />
       <ClipStorage />
 
       {/* Appearance was here — removed 13 Oct 2026 (Ak): the Forge look is the
