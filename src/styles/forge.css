@@ -327,9 +327,13 @@ input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-of
 
 /* ---- ELI5 hover help: a [data-tip] gets a soft bubble ---- */
 [data-tip] { position: relative; }
-[data-tip]:hover::after { content: attr(data-tip); position: absolute; z-index: 60; left: 0; top: calc(100% + 6px); width: max-content; max-width: 280px;
-  padding: 8px 11px; border-radius: 10px; background: #071C26; border: 1px solid rgba(118, 255, 194, .3); color: var(--ink);
-  font: 400 12px/1.45 "Sora", sans-serif; letter-spacing: 0; text-transform: none; box-shadow: 0 10px 30px -8px rgba(0, 0, 0, .9); pointer-events: none; white-space: normal; }
+/* The bubble itself is drawn by components/ui/TipLayer.tsx, once for the
+   whole window: drawn inside its panel (the first version) it was cut off by
+   the panel's scroll edge — the lowest choices had no help at all (Ak, 13 Oct). */
+.forge-tip { position: fixed; z-index: 10000; max-width: 280px; padding: 8px 11px; border-radius: 12px; background: #071C26;
+  border: 1px solid rgba(118, 255, 194, .3); color: var(--ink); font: 400 12px/1.45 "Sora", sans-serif; letter-spacing: 0;
+  text-transform: none; box-shadow: 0 10px 30px -8px rgba(0, 0, 0, .9); pointer-events: none; white-space: normal; animation: forge-tip-in .12s ease-out; }
+@keyframes forge-tip-in { from { opacity: 0; transform: translateY(2px); } }
 
 /* =============================================================================
    CAST: one tab per speaker (12 Oct 2026)
@@ -440,3 +444,9 @@ body::before {
 }
 @media (prefers-reduced-motion: reduce) { body::before { animation: none; } }
 html[data-motion="off"] body::before { animation: none; }
+
+/* ---- Cast "+" menu (13 Oct 2026) ---- */
+.forge-add { margin-top: 10px; padding: 12px; border-radius: 20px; border: 1px solid var(--line); background: rgba(3, 8, 11, .7); display: flex; flex-direction: column; gap: 8px; }
+.forge-who .who.add.on { border-color: var(--accent); color: var(--accent); }
+.shelf-face .initial { width: 100%; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; font: 600 22px "Sora", sans-serif; color: var(--ink);
+  border: 2px solid var(--line); background: radial-gradient(circle at 50% 35%, #1b3a4a, #04121a 70%); }

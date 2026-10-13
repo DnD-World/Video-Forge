@@ -387,6 +387,8 @@ export function VideoComposition({
                 bgColor={sp.bgColor}
                 borderColor={sp.borderColor}
                 outlineShape={sp.outlineShape}
+                frameWidth={sp.frameWidth}
+                sizeFraction={sp.size}
               />
             ) : (
               <SpeakerAvatar

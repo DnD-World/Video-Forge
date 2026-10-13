@@ -59,6 +59,11 @@ export function samplePath(
     return pts;
   }
 
+  if (position === "frame") {
+    for (let i = 0; i < count; i++) pts.push(frameEdgeAt(i / count, w, h, edgeFlush));
+    return pts;
+  }
+
   if (position === "top" || position === "bottom") {
     const y = position === "top" ? h * margin : h * (1 - margin);
     const ny = position === "top" ? 1 : -1; // bars grow inward, toward center
@@ -77,4 +82,26 @@ export function samplePath(
     pts.push({ x, y, nx, ny: 0 });
   }
   return pts;
+}
+
+/**
+ * A point on the edge of the whole video, `t` = 0–1 once round (clockwise from
+ * the top-left), with its normal pointing INTO the picture — the "around the
+ * video" position: bars, bubbles and sparks come from the frame's edge and
+ * reach inward (Ak, 13 Oct 2026). Spaced by distance along the edge, so the
+ * long sides of a vertical video get more of them than the short ones.
+ */
+export function frameEdgeAt(t: number, w: number, h: number, edgeFlush = false): PathPoint {
+  const m = Math.min(w, h) * (edgeFlush ? 0.004 : 0.022);
+  const iw = w - 2 * m;
+  const ih = h - 2 * m;
+  const per = 2 * (iw + ih);
+  let d = (((t % 1) + 1) % 1) * per;
+  if (d < iw) return { x: m + d, y: m, nx: 0, ny: 1 };
+  d -= iw;
+  if (d < ih) return { x: w - m, y: m + d, nx: -1, ny: 0 };
+  d -= ih;
+  if (d < iw) return { x: w - m - d, y: h - m, nx: 0, ny: -1 };
+  d -= iw;
+  return { x: m, y: h - m - d, nx: 1, ny: 0 };
 }

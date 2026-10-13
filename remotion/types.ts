@@ -38,6 +38,8 @@ export type RenderSpeaker = {
   bgOpacity: number;
   borderOpacity: number;
   outlineShape: OutlineShape;
+  /** Frame line thickness in px on a 1080-wide video; unset = automatic. */
+  frameWidth?: number;
   /** The backdrop behind this face. When its style is "glass" the composition
    *  draws a real refracting pane sized to the avatar — a disc when the
    *  outline is a circle, a rounded square otherwise. */

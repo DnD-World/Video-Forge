@@ -140,6 +140,7 @@ export function RenderBar() {
           bgOpacity: sp.bgOpacity,
           borderOpacity: sp.borderOpacity,
           outlineShape: sp.outlineShape,
+          frameWidth: sp.frameWidth,
           waveform: sp.waveform,
           // Paths, not URLs — main copies the files into the render's public
           // dir. The puppet wins over the sheet there, as it does in the

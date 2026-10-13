@@ -68,7 +68,8 @@ export function defaultTrackWaveform(lane = 0): TrackWaveform {
   return {
     enabled: true,
     style: "bars",
-    position: "circular",
+    // Around the face, following the frame's shape (Ak, 13 Oct 2026).
+    position: "speaker",
     scale: 1,
     density: 56,
     thickness: 1,

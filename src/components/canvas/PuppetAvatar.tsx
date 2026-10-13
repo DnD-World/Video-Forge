@@ -86,6 +86,10 @@ interface Props {
   bgColor?: string;
   borderColor?: string;
   outlineShape?: OutlineShape;
+  /** Frame line thickness in px on a 1080-wide video, with the face's size as
+   *  a fraction of the video's width, so it can be scaled. */
+  frameWidth?: number;
+  sizeFraction?: number;
 }
 
 const SHAPE_RADIUS: Record<OutlineShape, string> = {
@@ -112,7 +116,16 @@ export function PuppetAvatar({
   bgOpacity, borderOpacity,
   bgColor = "#1a1a1a", borderColor = "#d98a3d",
   outlineShape = "circle",
+  frameWidth,
+  sizeFraction,
 }: Props) {
+  // Pixels on a 1080-wide video, scaled to whatever this is drawn at: the
+  // face's size is a fraction of the video's width, so the video's width here
+  // is size / sizeFraction.
+  const frameLinePx =
+    frameWidth !== undefined && sizeFraction
+      ? `${Math.max(0, (frameWidth * size) / (sizeFraction * 1080)).toFixed(2)}px`
+      : `${Math.max(1, size * 0.015)}px`;
   const fill = outlineShape === "circle" || outlineShape === "none" ? 0.9 : 0.97;
 
   // `zoom` is opt-in and defaults to no change.
@@ -290,7 +303,7 @@ export function PuppetAvatar({
       borderRadius: SHAPE_RADIUS[outlineShape],
       display: "grid", placeItems: "center",
       background: hexA(bgColor, bgOpacity),
-      border: outlineShape === "none" ? "none" : `${Math.max(1, size * 0.015)}px solid ${hexA(borderColor, borderOpacity)}`,
+      border: outlineShape === "none" ? "none" : `${frameLinePx} solid ${hexA(borderColor, borderOpacity)}`,
       boxShadow:
         outlineShape !== "none" && borderOpacity > 0
           ? `0 0 ${size * 0.06}px ${hexA(borderColor, borderOpacity * 0.6)}`

@@ -247,48 +247,9 @@ export default function BackendPanel() {
 
       <ClipStorage />
 
-      <div className="border border-accent/25 bg-metal-800/60 p-4 space-y-3">
-        <h3 className="label-lit text-sm">Appearance</h3>
-        <div className="flex items-center gap-3 flex-wrap">
-          <input
-            type="color"
-            value={accentColor}
-            onChange={(e) => setAccentColor(e.target.value)}
-            className="h-9 w-9 border border-accent/30 bg-transparent p-0"
-          />
-          <span className="text-sm flex-1 min-w-[16rem]">
-            Accent color — recolors glows, highlights, and active states everywhere
-          </span>
-          {/* A colour picker with no way back is a trap: pick something unusable
-              and the control you would use to fix it is now unreadable. */}
-          <HudButton
-            onClick={() => setAccentColor(DEFAULT_ACCENT)}
-            disabled={accentColor.toLowerCase() === DEFAULT_ACCENT}
-            title={`Back to the default brass (${DEFAULT_ACCENT})`}
-          >
-            Default
-          </HudButton>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="label-etched">Presets</span>
-          {ACCENT_PRESETS.map((p) => (
-            <button
-              key={p.hex}
-              onClick={() => setAccentColor(p.hex)}
-              title={`${p.name} — ${p.hex}`}
-              aria-label={p.name}
-              className="h-7 w-7 cut-sm border border-white/15 hover:border-white/50 transition-colors"
-              style={{ background: p.hex }}
-            />
-          ))}
-        </div>
-        <Toggle
-          label="Interface motion (breathing glow & click effects)"
-          checked={motionEnabled}
-          onChange={setMotionEnabled}
-        />
-      </div>
-
+      {/* Appearance was here — removed 13 Oct 2026 (Ak): the Forge look is the
+          look, and motion is always on (the system's reduced-motion setting is
+          still respected). */}
       {!encryptionAvailable && (
         <p className="text-sm text-accent-bright border border-accent-deep/40 bg-accent-deep/10 px-3 py-2">
           Your OS keychain isn't available, so keys are being saved to a

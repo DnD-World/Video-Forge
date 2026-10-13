@@ -57,7 +57,8 @@ export interface TrackWaveform {
   style: WaveformStyle;
   /** "speaker" rings the owning speaker's own face rather than the frame —
    *  the halo look. Music has no face, so it falls back to "circular". */
-  position: "circular" | "speaker" | "top" | "bottom" | "left" | "right";
+  /** "frame" runs round the edge of the whole video, working inward (13 Oct 2026). */
+  position: "circular" | "speaker" | "top" | "bottom" | "left" | "right" | "frame";
   scale: number;       // 0.2–2.5, amplitude-extension multiplier
   density: number;     // sample/bar count, 8–160
   thickness: number;   // 0.2–3, bar/stroke width multiplier
@@ -314,6 +315,9 @@ export interface SpeakerConfig {
   /** Outline colour — and, by construction, this speaker's waveform colour. */
   borderColor: string;
   outlineShape: OutlineShape;
+  /** Frame line thickness in pixels on a 1080-wide video (13 Oct 2026).
+   *  Unset = the old automatic thickness (1.5% of the face's size). */
+  frameWidth?: number;
   /** This speaker's own waveform. Animates only while they are speaking. */
   waveform: TrackWaveform;
   x: number;

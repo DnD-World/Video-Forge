@@ -25,9 +25,12 @@ const STYLES = [
 
 const fileUrl = (p: string) => `file:///${p.replace(/\\/g, "/").replace(/^\/+/, "")}`;
 
-export function PuppetShelf({ current, onPick }: { current?: string; onPick: (rigPath: string, name: string) => void }) {
+export function PuppetShelf({ current, onPick, startOrdering = false }: { current?: string; onPick: (rigPath: string, name: string) => void; startOrdering?: boolean }) {
   const [puppets, setPuppets] = useState<ShelfPuppet[]>([]);
-  const [ordering, setOrdering] = useState(false);
+  const [ordering, setOrdering] = useState(startOrdering);
+  useEffect(() => {
+    if (startOrdering) setOrdering(true);
+  }, [startOrdering]);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [style, setStyle] = useState("pixar");

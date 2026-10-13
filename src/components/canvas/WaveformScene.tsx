@@ -15,7 +15,7 @@
 
 import { useMemo } from "react";
 import type { AudioAnalysis } from "../../store/types";
-import { samplePath, type PathPoint } from "../../lib/waveform/samplePath";
+import { samplePath, frameEdgeAt, type PathPoint } from "../../lib/waveform/samplePath";
 import type { RenderTrack } from "../../lib/waveform/buildTracks";
 import {
   placeholderAmplitude,
@@ -24,7 +24,7 @@ import {
   bandAmplitude,
 } from "../../lib/waveform/amplitude";
 import { sparklesFor } from "../../lib/waveform/sparkle";
-import { bubblesAt, surfaceAt, findBursts, particlesAt } from "../../lib/waveform/emitters";
+import { bubblesAt, surfaceAt, findBursts, particlesAt, type Burst } from "../../lib/waveform/emitters";
 import { exponentFor, shapeRadius } from "../../lib/waveform/superellipse";
 import { ribbonTwistAt, backFaceColor, litFaceColor } from "../../lib/waveform/ribbon";
 import { sampleAnalysis, type DecodedSpectrum } from "../../lib/waveform/audioAnalysis";
@@ -211,13 +211,19 @@ export function WaveformScene({
   // ONSETS, found once. Every particle style needs to know when the voice
   // struck, and every frame needs the same answer — so this is derived from the
   // analysis rather than from whatever the current frame happens to see.
-  const bursts = useMemo(() => {
+  const realBursts = useMemo(() => {
     if (!analysis) return [];
     return findBursts(
       analysis.durationMs,
       (ms) => sampleAnalysis(analysis, ms, spectrum)?.level ?? 0
     );
   }, [analysis, spectrum]);
+
+  // NO NARRATION YET (the style tiles, an empty project): a pretend voice, so
+  // every style shows what it does. Particles, sparks and the boil only move
+  // when someone talks — without this the tiles showed particles as plain
+  // bars, sparks as nothing and the boil as a still glow (Ak, 13 Oct 2026).
+  const bursts = analysis ? realBursts : demoBursts(timeMs);
 
   return (
     <svg
@@ -241,10 +247,11 @@ export function WaveformScene({
                 r: ((track.anchor.size * width) / 2) * (1.14 * cfg.ringSize),
               }
             : undefined;
-        const closed = cfg.position === "circular" || cfg.position === "speaker";
+        const closed = cfg.position === "circular" || cfg.position === "speaker" || cfg.position === "frame";
+        const onFrame = cfg.position === "frame";
         // Bars around a small face have to be measured against the face, not
         // the frame — 14% of a 1080px frame is longer than the head it rings.
-        const maxLen = halo ? halo.r * 0.6 * cfg.scale : frameMin * 0.14 * cfg.scale;
+        const maxLen = halo ? halo.r * 0.6 * cfg.scale : onFrame ? frameMin * 0.09 * cfg.scale : frameMin * 0.14 * cfg.scale;
 
         // Music is always live. A speaker's waveform animates only on their own
         // lines — except when the audio has no speaker attribution at all
@@ -258,7 +265,7 @@ export function WaveformScene({
         // The music track animates to the music when there is any, and to the
         // narration when there isn't — which is what it has always done, and is
         // still better than a placeholder sine.
-        const src = isMusic && musicMoment ? musicMoment : moment;
+        const src = isMusic && musicMoment ? musicMoment : moment ?? (demoMoment(timeMs) as unknown as NonNullable<ReturnType<typeof sampleAnalysis>>);
 
         // Three sources, in order of how real they are: the spectrum, the bare
         // loudness envelope, and the placeholder animation.
@@ -302,38 +309,49 @@ export function WaveformScene({
           const base = halo ? halo.r : frameMin * 0.28;
           const expo = exponentFor(track.outlineShape ?? undefined);
           const sparks = cfg.style === "sparks";
+          const particles = cfg.style === "particles";
+          // Where a particle at angle `a`, `out` from the ring, sits. On the
+          // video's frame the angle becomes a place along the edge and "out"
+          // means inward, into the picture.
+          const at = (a: number, out: number) => {
+            if (onFrame) {
+              const e = frameEdgeAt(((a + Math.PI / 2) / (Math.PI * 2) + 1) % 1, width, height, cfg.edgeFlush);
+              return { x: e.x + e.nx * out, y: e.y + e.ny * out };
+            }
+            const k = shapeRadius(a, expo);
+            const r = (base + out) * k;
+            return { x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r };
+          };
 
           // Sparks scatter far and wide; particles stay a tidier corona.
           const live = active
             ? particlesAt(bursts, timeMs, {
                 ringRadius: base,
-                lifeMs: sparks ? 1100 : 900,
-                perBurst: sparks ? 44 : 16,
-                speed: sparks ? 0.9 : 0.55,
-                spread: sparks ? 1.7 : 0.5,
-                swirl: sparks ? 0.9 : 0.25,
+                lifeMs: sparks ? 1200 : 1400,
+                perBurst: sparks ? 44 : 22,
+                speed: sparks ? 0.9 : 0.35,
+                spread: sparks ? 1.7 : 0.6,
+                swirl: sparks ? 0.9 : 0.45,
               })
             : [];
 
+          // THREE DIFFERENT THINGS. They all drew the same bars once (Ak: "particles,
+          // bars and bloom bars look the same"). Now: bloom bars = thick bars in
+          // a strong glow; particles = a floating corona of soft dots, no bars;
+          // sparks = bright scattered sparks, no bars.
           const bars =
-            cfg.style !== "sparks" ? (
-              <g
-                // The bloom is the whole point of bloomBars, and it scales with
-                // the moment rather than being a constant halo.
-                filter={cfg.style === "bloomBars" ? `url(#glow-${ti})` : undefined}
-              >
+            cfg.style === "bloomBars" ? (
+              <g filter={`url(#glow-${ti})`}>
                 {[...Array(density)].map((_, i) => {
                   const a = (i / density) * Math.PI * 2 - Math.PI / 2;
-                  const k = shapeRadius(a, expo);
-                  const r1 = base * k;
-                  const r2 = r1 + Math.min(1, ampAt(i, density, true)) * maxLen;
+                  const p1 = at(a, 0);
+                  const p2 = at(a, Math.min(1, ampAt(i, density, true)) * maxLen);
                   return (
                     <line
                       key={i}
-                      x1={cx + Math.cos(a) * r1} y1={cy + Math.sin(a) * r1}
-                      x2={cx + Math.cos(a) * r2} y2={cy + Math.sin(a) * r2}
+                      x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y}
                       stroke={track.color}
-                      strokeWidth={Math.max(1.5, frameMin * 0.004 * cfg.thickness)}
+                      strokeWidth={Math.max(2.5, frameMin * 0.008 * cfg.thickness)}
                       strokeLinecap="round"
                     />
                   );
@@ -341,40 +359,84 @@ export function WaveformScene({
               </g>
             ) : null;
 
+          // The corona's resting ring: faint dots that brighten with the voice,
+          // so particles still read as particles between bursts.
+          const rest = particles
+            ? [...Array(Math.max(12, Math.round(density / 2)))].map((_, i, all) => {
+                const a = (i / all.length) * Math.PI * 2 - Math.PI / 2;
+                const lift = Math.min(1, ampAt(i, all.length, true));
+                const p = at(a, lift * maxLen * 0.5);
+                return (
+                  <circle key={`r${i}`} cx={p.x} cy={p.y} r={Math.max(1, frameMin * 0.004 * cfg.dotSize * (0.6 + lift))} fill={track.color} opacity={0.35 + lift * 0.5} />
+                );
+              })
+            : null;
+
           return (
             <g key={ti} opacity={opacity}>
-              {cfg.style === "bloomBars" && (
-                <defs>
-                  <filter id={`glow-${ti}`} x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation={frameMin * 0.006 * (0.4 + (src?.level ?? 0))} result="b" />
-                    <feMerge>
-                      <feMergeNode in="b" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-                </defs>
-              )}
+              <defs>
+                <filter id={`glow-${ti}`} x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation={frameMin * (cfg.style === "bloomBars" ? 0.014 : 0.004) * (0.5 + (src?.level ?? 0))} result="b" />
+                  <feMerge>
+                    <feMergeNode in="b" />
+                    <feMergeNode in="b" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
               {bars}
-              {live.map((p, i) => {
-                // Born on the shape, not on a circle, so a square frame throws
-                // its sparks from its own edge.
-                const k = shapeRadius(p.angle, expo);
-                const scale = 1 / p.z;
-                const size = Math.max(
-                  0.8,
-                  (sparks ? 1.8 : 3.2) * scale * (frameMin / 900) * cfg.dotSize
-                );
-                return (
-                  <circle
-                    key={i}
-                    cx={cx + Math.cos(p.angle) * p.radius * k}
-                    cy={cy + Math.sin(p.angle) * p.radius * k}
-                    r={size}
-                    fill={sparks && p.seed > 0.65 ? "#ffffff" : track.color}
-                    opacity={p.life * p.life * Math.min(1, scale)}
-                  />
-                );
-              })}
+              {rest}
+              <g filter={sparks ? `url(#glow-${ti})` : undefined}>
+                {live.map((p, i) => {
+                  const scale = 1 / p.z;
+                  // Bigger than before (Ak: "sparks should be more visible");
+                  // "Particle size" scales them further.
+                  const size = Math.max(1, (sparks ? 3 : 3.6) * scale * (frameMin / 900) * cfg.dotSize);
+                  const pt = at(p.angle, p.radius - base);
+                  return (
+                    <circle
+                      key={i}
+                      cx={pt.x}
+                      cy={pt.y}
+                      r={size}
+                      fill={sparks && p.seed > 0.55 ? "#ffffff" : track.color}
+                      opacity={Math.min(1, p.life * (sparks ? 1.4 : 1)) * Math.min(1, scale)}
+                    />
+                  );
+                })}
+              </g>
+            </g>
+          );
+        }
+
+        // ON THE VIDEO'S FRAME, the boil and the ribbon become a band along
+        // the edge that swells inward with the voice.
+        if ((cfg.style === "boil" || cfg.style === "ribbon") && onFrame) {
+          const levelAt = (ms: number) => (analysis ? sampleAnalysis(analysis, ms, spectrum)?.level ?? 0.25 : demoLevel(ms));
+          const bubbles = bubblesAt(timeMs, levelAt);
+          const here = active ? src?.level ?? 0 : 0;
+          const gain = active ? 0.45 + here * 0.85 : 0.06;
+          const band = frameMin * 0.07 * cfg.scale;
+          const STEPS = 220;
+          const outer: string[] = [];
+          const inner: string[] = [];
+          for (let i = 0; i <= STEPS; i++) {
+            const t = i / STEPS;
+            const e = frameEdgeAt(t, width, height, cfg.edgeFlush);
+            const swell = Math.pow(Math.min(1, surfaceAt(bubbles, t * Math.PI * 2) * gain), 1.6);
+            const d = band * (0.15 + swell);
+            outer.push(`${e.x.toFixed(1)} ${e.y.toFixed(1)}`);
+            inner.push(`${(e.x + e.nx * d).toFixed(1)} ${(e.y + e.ny * d).toFixed(1)}`);
+          }
+          return (
+            <g key={ti} opacity={opacity}>
+              <defs>
+                <filter id={`edge-${ti}`} x="-10%" y="-10%" width="120%" height="120%">
+                  <feGaussianBlur stdDeviation={frameMin * 0.006} />
+                </filter>
+              </defs>
+              <path d={`M ${outer.join(" L ")} L ${inner.reverse().join(" L ")} Z`} fill={track.color} opacity={0.55} filter={`url(#edge-${ti})`} />
+              <path d={`M ${outer.join(" L ")}`} fill="none" stroke={track.color} strokeWidth={Math.max(1.5, frameMin * 0.003)} opacity={0.9} />
             </g>
           );
         }
@@ -399,7 +461,7 @@ export function WaveformScene({
           // whole mix, so `active` is the only thing that knows whose turn it
           // is, and it has to gate the SWELL rather than only the colour.
           const here = active ? src?.level ?? 0 : 0;
-          const levelAt = (ms: number) => sampleAnalysis(analysis, ms, spectrum)?.level ?? 0.25;
+          const levelAt = (ms: number) => (analysis ? sampleAnalysis(analysis, ms, spectrum)?.level ?? 0.25 : demoLevel(ms));
           const bubbles = bubblesAt(timeMs, levelAt);
           const shape = (v: number) => Math.pow(Math.min(1, v), 1.9);
           const gain = active ? 0.45 + here * 0.85 : 0.06;
@@ -904,4 +966,30 @@ export function WaveformScene({
       })}
     </svg>
   );
+}
+
+/* ---------------- a pretend voice, for when nothing is narrated ---------------- */
+
+/** Loudness of the pretend voice: syllables in phrases, with pauses. */
+export function demoLevel(ms: number): number {
+  const syll = Math.max(0, Math.sin(ms / 140)) ** 2;
+  const phrase = Math.max(0, Math.sin(ms / 900 + 0.6));
+  return 0.12 + 0.7 * syll * phrase;
+}
+
+function demoMoment(ms: number) {
+  return { level: demoLevel(ms), speaker: -1 };
+}
+
+/** Bursts on the pretend voice's syllables, from the clock alone. */
+function demoBursts(ms: number): Burst[] {
+  const out: Burst[] = [];
+  const every = 280;
+  for (let n = Math.floor((ms - 2000) / every); n <= Math.floor(ms / every); n++) {
+    if (n < 0) continue;
+    const at = n * every;
+    if (demoLevel(at) < 0.3) continue;
+    out.push({ atMs: at, power: 0.5 + 0.5 * Math.abs(Math.sin(n * 12.9898)) });
+  }
+  return out;
 }

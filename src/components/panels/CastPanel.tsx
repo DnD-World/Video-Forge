@@ -110,6 +110,13 @@ export function CastPanel() {
   const removeFromLibrary = useSpeakerLibraryStore((s) => s.remove);
 
   const [active, setActive] = useState<string>("");
+  // The "+" menu, and which speaker should open with the puppet order form.
+  const [adding, setAdding] = useState(false);
+  const [orderFor, setOrderFor] = useState<string | null>(null);
+  const [shelf, setShelf] = useState<Awaited<ReturnType<NonNullable<Window["byok"]>["forge"]["shelfPuppets"]>>>([]);
+  useEffect(() => {
+    if (adding) void window.byok?.forge?.shelfPuppets().then(setShelf).catch(() => setShelf([]));
+  }, [adding]);
   const [saved, setSaved] = useState<string | null>(null);
 
   // Never leave the panel pointing at a speaker that has just been deleted.
@@ -118,6 +125,13 @@ export function CastPanel() {
       setActive(speakers[0].id);
     }
   }, [speakers, active]);
+
+  useEffect(() => {
+    if (orderFor !== "__new__" || !speakers.length) return;
+    const newest = speakers[speakers.length - 1];
+    setActive(newest.id);
+    setOrderFor(newest.id);
+  }, [speakers, orderFor]);
 
   const speaker = speakers.find((s) => s.id === active);
 
@@ -211,10 +225,76 @@ export function CastPanel() {
             {s.label}
           </button>
         ))}
-        <button className="who add" onClick={addSpeaker} data-tip="Add a new speaker to this video.">
+        <button className={`who add ${adding ? "on" : ""}`} onClick={() => setAdding((v) => !v)} data-tip="Add a speaker: a ready-made puppet, or a new one." aria-expanded={adding}>
           +
         </button>
       </div>
+      {adding && (
+        <div className="forge-add">
+          <div className="label-etched">Ready-made</div>
+          <div className="forge-shelf">
+            {brand?.cast.map((c) => (
+              <button
+                key={c.file}
+                className="shelf-face"
+                onClick={() => {
+                  addBuiltin(c);
+                  setAdding(false);
+                }}
+                data-tip={`Add ${c.label}, with their face and voice.`}
+              >
+                <span className="initial" style={{ borderColor: c.borderColor }}>{c.label.slice(0, 1)}</span>
+                <span>{c.label}</span>
+              </button>
+            ))}
+            {library.map((l) => (
+              <button
+                key={l.savedId}
+                className="shelf-face"
+                onClick={() => {
+                  const { savedId: _s, savedAt: _a, ...rest } = l;
+                  addSpeakerFrom(rest);
+                  setAdding(false);
+                }}
+                data-tip={`Add ${l.label} from your library.`}
+              >
+                <span className="initial" style={{ borderColor: l.borderColor }}>{l.label.slice(0, 1)}</span>
+                <span>{l.label}</span>
+              </button>
+            ))}
+            {shelf.map((p) => (
+              <button
+                key={p.slug}
+                className="shelf-face"
+                onClick={() => {
+                  addSpeakerFrom({ label: p.name, puppetPath: p.rigPath, borderColor: "#76FFC2", bgColor: "#1a1a1a", bgOpacity: 0, borderOpacity: 1, outlineShape: "circle", size: 0.28, waveform: defaultTrackWaveform(speakers.length % 2 === 1 ? 1 : -1) });
+                  setAdding(false);
+                }}
+                data-tip={`Add ${p.name}, made in Image Forge. Choose a voice in Voice.`}
+              >
+                <img src={`file:///${p.basePath.replace(/\\/g, "/")}`} alt="" />
+                <span>{p.name}</span>
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-2 pt-1">
+            <button
+              className="btn btn-primary"
+              onClick={() => {
+                addSpeaker();
+                setOrderFor("__new__");
+                setAdding(false);
+              }}
+              data-tip="A new speaker: name them, then describe their puppet and Image Forge makes it."
+            >
+              Create a new one
+            </button>
+            <button className="btn" onClick={() => setAdding(false)}>
+              Never mind
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="flex-1 overflow-y-auto pr-1 space-y-3 mt-3">
         {!sp ? (
@@ -258,6 +338,70 @@ export function CastPanel() {
                   Save to library
                 </button>
                 {saved === sp.label && <span className="text-sm text-emerald-400">saved ✓</span>}
+              </div>
+            </Section>
+
+            <Section title="Puppet" tip="Their face — a ready-made puppet or a new one — and the frame around it.">
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  className="btn"
+                  onClick={async () => {
+                    const p = await window.byok.dialog.openFile([{ name: "Puppet", extensions: ["json"] }]);
+                    if (p) updateSpeaker(sp.id, { puppetPath: p });
+                  }}
+                  data-tip="The talking face: a puppet file (.puppet.json) with mouths, eyes and brows."
+                >
+                  {sp.puppetPath ? "Change face" : "Choose face…"}
+                </button>
+                <span className="text-sm text-neutral-500 truncate flex-1" title={sp.puppetPath ?? sp.sheetPath}>
+                  {fileName(sp.puppetPath ?? sp.sheetPath) ?? "no face"}
+                  {sp.puppetPath && puppetErrors[sp.puppetPath] && <span className="text-red-400"> — {puppetErrors[sp.puppetPath]}</span>}
+                </span>
+              </div>
+              <PuppetShelf current={sp.puppetPath} startOrdering={orderFor === sp.id} onPick={(rigPath) => updateSpeaker(sp.id, { puppetPath: rigPath })} />
+              <div className="label-etched" data-tip="The shape around the face. The waveform follows it.">
+                Frame
+              </div>
+              <div className="forge-shapes">
+                {SHAPES.map((sh) => (
+                  <button
+                    key={sh.id}
+                    className={`shape ${sp.outlineShape === sh.id ? "on" : ""}`}
+                    onClick={() => updateSpeaker(sp.id, { outlineShape: sh.id })}
+                    aria-label={sh.label}
+                    style={{ ["--c" as string]: sp.borderColor }}
+                  >
+                    <i className={sh.id} />
+                    <span>{sh.label}</span>
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2" data-tip="Their colour: the frame and their waveform use it.">
+                  <input type="color" value={sp.borderColor} onChange={(e) => updateSpeaker(sp.id, { borderColor: e.target.value })} className="forge-swatch" />
+                  <span className="text-sm text-neutral-400">Colour</span>
+                </label>
+                <label className="flex items-center gap-2" data-tip="The colour inside the frame, behind the face.">
+                  <input type="color" value={sp.bgColor} onChange={(e) => updateSpeaker(sp.id, { bgColor: e.target.value })} className="forge-swatch" />
+                  <span className="text-sm text-neutral-400">Fill</span>
+                </label>
+              </div>
+              <div data-tip="How thick the frame line is, in pixels on a 1080-wide video. 0 hides it.">
+                <Slider
+                  label="Frame thickness"
+                  value={sp.frameWidth ?? Math.round(sp.size * 1080 * 0.015)}
+                  min={0}
+                  max={24}
+                  step={1}
+                  onChange={(v) => updateSpeaker(sp.id, { frameWidth: Math.round(v) })}
+                  format={(v) => `${Math.round(v)} px`}
+                />
+              </div>
+              <div data-tip="How strongly the frame line shows.">
+                <Slider label="Frame strength" value={sp.borderOpacity} min={0} max={1} step={0.05} onChange={(v) => updateSpeaker(sp.id, { borderOpacity: v })} format={(v) => `${Math.round(v * 100)}%`} />
+              </div>
+              <div data-tip="How solid the fill behind the face is. 0 lets the background show through.">
+                <Slider label="Fill strength" value={sp.bgOpacity} min={0} max={1} step={0.05} onChange={(v) => updateSpeaker(sp.id, { bgOpacity: v })} format={(v) => (v === 0 ? "see-through" : `${Math.round(v * 100)}%`)} />
               </div>
             </Section>
 
@@ -354,59 +498,6 @@ export function CastPanel() {
                   checked word by word and re-made if it drifts from the script.
                 </p>
               )}
-            </Section>
-
-            <Section title="Look" tip="Their face and the frame around it.">
-              <div className="flex items-center gap-2 flex-wrap">
-                <button
-                  className="btn"
-                  onClick={async () => {
-                    const p = await window.byok.dialog.openFile([{ name: "Puppet", extensions: ["json"] }]);
-                    if (p) updateSpeaker(sp.id, { puppetPath: p });
-                  }}
-                  data-tip="The talking face: a puppet file (.puppet.json) with mouths, eyes and brows."
-                >
-                  {sp.puppetPath ? "Change face" : "Choose face…"}
-                </button>
-                <span className="text-sm text-neutral-500 truncate flex-1" title={sp.puppetPath ?? sp.sheetPath}>
-                  {fileName(sp.puppetPath ?? sp.sheetPath) ?? "no face"}
-                  {sp.puppetPath && puppetErrors[sp.puppetPath] && <span className="text-red-400"> — {puppetErrors[sp.puppetPath]}</span>}
-                </span>
-              </div>
-              <PuppetShelf current={sp.puppetPath} onPick={(rigPath) => updateSpeaker(sp.id, { puppetPath: rigPath })} />
-              <div className="label-etched" data-tip="The shape around the face. The waveform follows it.">
-                Frame
-              </div>
-              <div className="forge-shapes">
-                {SHAPES.map((sh) => (
-                  <button
-                    key={sh.id}
-                    className={`shape ${sp.outlineShape === sh.id ? "on" : ""}`}
-                    onClick={() => updateSpeaker(sp.id, { outlineShape: sh.id })}
-                    aria-label={sh.label}
-                    style={{ ["--c" as string]: sp.borderColor }}
-                  >
-                    <i className={sh.id} />
-                    <span>{sh.label}</span>
-                  </button>
-                ))}
-              </div>
-              <div className="flex items-center gap-4">
-                <label className="flex items-center gap-2" data-tip="Their colour: the frame and their waveform use it.">
-                  <input type="color" value={sp.borderColor} onChange={(e) => updateSpeaker(sp.id, { borderColor: e.target.value })} className="forge-swatch" />
-                  <span className="text-sm text-neutral-400">Colour</span>
-                </label>
-                <label className="flex items-center gap-2" data-tip="The colour inside the frame, behind the face.">
-                  <input type="color" value={sp.bgColor} onChange={(e) => updateSpeaker(sp.id, { bgColor: e.target.value })} className="forge-swatch" />
-                  <span className="text-sm text-neutral-400">Fill</span>
-                </label>
-              </div>
-              <div data-tip="How strongly the frame line shows.">
-                <Slider label="Frame strength" value={sp.borderOpacity} min={0} max={1} step={0.05} onChange={(v) => updateSpeaker(sp.id, { borderOpacity: v })} format={(v) => `${Math.round(v * 100)}%`} />
-              </div>
-              <div data-tip="How solid the fill behind the face is. 0 lets the background show through.">
-                <Slider label="Fill strength" value={sp.bgOpacity} min={0} max={1} step={0.05} onChange={(v) => updateSpeaker(sp.id, { bgOpacity: v })} format={(v) => (v === 0 ? "see-through" : `${Math.round(v * 100)}%`)} />
-              </div>
             </Section>
 
             <Section title="Waveform" tip="The moving bars that show when they speak." open={false}>

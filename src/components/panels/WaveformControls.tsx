@@ -34,10 +34,11 @@ const STYLE_LABEL: Partial<Record<TrackWaveform["style"], string>> = {
  *  They hide the edge controls. Only the mesh is left, and nothing uses it. */
 const isOrbit = (style: string) => style === "mesh";
 const POSITIONS: TrackWaveform["position"][] = [
-  "speaker", "circular", "top", "bottom", "left", "right",
+  "speaker", "frame", "circular", "top", "bottom", "left", "right",
 ];
 const POSITION_LABEL: Record<TrackWaveform["position"], string> = {
   speaker: "around face",
+  frame: "around the video",
   circular: "circular",
   top: "top",
   bottom: "bottom",
@@ -175,9 +176,9 @@ export function WaveformControls({ value, onChange, label, canAnchorToFace = tru
             format={(v) => (v === 0 ? "off" : `${Math.round(v * 100)}%`)}
           />
 
-          {value.style === "dots" && (
+          {(value.style === "dots" || value.style === "particles" || value.style === "sparks") && (
             <Slider
-              label="Dot Size" value={value.dotSize} min={0.2} max={4} step={0.05}
+              label={value.style === "dots" ? "Dot Size" : "Particle size"} value={value.dotSize} min={0.2} max={4} step={0.05}
               onChange={(v) => onChange({ dotSize: v })} format={(v) => `${v.toFixed(2)}x`}
             />
           )}

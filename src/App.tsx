@@ -29,6 +29,7 @@ import {
 import { sampleAnalysis } from "./lib/waveform/audioAnalysis";
 import { useCornerFlare } from "./lib/motion/useCornerFlare";
 import { SparkField } from "./components/ui/SparkField";
+import { TipLayer } from "./components/ui/TipLayer";
 import { autoClean } from "./lib/media/autoClean";
 import videoMark from "./assets/video-mark.jpg";
 import imageMark from "./assets/image-mark.jpg";
@@ -452,6 +453,7 @@ export default function App() {
     <div className="relative z-[1] h-full w-full flex flex-col text-neutral-200">
 
       <SparkField moving={motionEnabled} />
+      <TipLayer />
 
       {/* Top bar — the Forge look (11 Oct 2026). The twin marks are the switch
           between the two Forges: this app's mark is lit, Image Forge's is
@@ -668,6 +670,8 @@ export default function App() {
                       bgColor={sp.bgColor}
                       borderColor={sp.borderColor}
                       outlineShape={sp.outlineShape}
+                      frameWidth={sp.frameWidth}
+                      sizeFraction={sp.size}
                     />
                   ) : (
                     <SpeakerAvatar

@@ -61,7 +61,7 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: "byok-settings", // saved to localStorage, survives restarts
-      version: 2,
+      version: 3,
 
       // persist's default merge is SHALLOW, so the whole `defaults` object came
       // from localStorage and every value added or changed since that blob was
@@ -86,6 +86,10 @@ export const useSettingsStore = create<SettingsState>()(
         // golds or blues; the new identity is mint, so it starts there once.
         if (version < 2 && persisted && typeof persisted === "object") {
           (persisted as { accentColor?: string }).accentColor = "#76FFC2";
+        }
+        // v3: no Appearance settings any more — mint and motion on, for everyone.
+        if (version < 3 && persisted && typeof persisted === "object") {
+          Object.assign(persisted as object, { accentColor: "#76FFC2", motionEnabled: true });
         }
         if (version === 0 && persisted && typeof persisted === "object") {
           const state = persisted as { defaults?: Partial<BackendDefaults> };
