@@ -424,3 +424,19 @@ input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-of
 .shelf-face.on { border-color: var(--accent); color: var(--ink); box-shadow: 0 0 20px -8px rgba(118, 255, 194, .8); }
 .shelf-insp { width: 44px; height: 44px; padding: 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); cursor: pointer; background: none; }
 .shelf-insp img { width: 100%; height: 100%; object-fit: cover; }
+
+/* ---- the faint moving grain on the black ground (Ak, 13 Oct 2026: "the very
+   black background into a very black background with a slight little noise").
+   Behind everything — the panels and the video itself stay clean. A static
+   noise tile, nudged in steps, is near-free; still when motion is off. ---- */
+body::before {
+  content: ""; position: fixed; inset: -60px; z-index: 0; pointer-events: none; opacity: .055;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1.4 -0.2'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>");
+  animation: forge-grain 1.2s steps(6) infinite;
+}
+@keyframes forge-grain {
+  0% { transform: translate(0, 0); } 17% { transform: translate(-22px, 14px); } 33% { transform: translate(18px, -26px); }
+  50% { transform: translate(-30px, -10px); } 67% { transform: translate(26px, 22px); } 83% { transform: translate(-12px, 30px); } 100% { transform: translate(0, 0); }
+}
+@media (prefers-reduced-motion: reduce) { body::before { animation: none; } }
+html[data-motion="off"] body::before { animation: none; }
