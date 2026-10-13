@@ -447,3 +447,16 @@ About 180 human work hours in all. Rounds 1–2 make what exists solid; rounds
 | O-6 subtitle files `.srt` / `.vtt` | done |
 | O-8 honest AI label | done (Video Forge) |
 | O-5, O-7, O-9 to O-21 | not started |
+
+### Later the same evening
+
+| ID | State |
+|---|---|
+| I-3 docs | done in both apps (three reading levels in Image Forge; in-app manual, Agents page with the real 8 tools, the Chat's facts) |
+| D1 cursor chaser | Ak meant a running pet: a violet fox runs after the mouse, sits, naps; any walk cycle from Make a sheet can replace it (Settings → Language & pet) |
+| P-7 side-facing set | built: Image Forge makes it ("Also side-facing"), Video Forge turns speakers towards each other (Cast → Faces). **Not yet seen with a real generated puppet** — needs the proof run |
+| P-8 full body, sitting | built: Full body framing, "Also sitting", Cast → Sitting. **Same: needs the proof run** |
+| Chat (I-5) | fixed for real: empty writing job takes a provider with a key; busy/retired models fall back; NVIDIA relay hung on IPv6 → IPv4 + body length |
+| Forge hub (section 6) | made-list (`%APPDATA%\Forge\made\register.jsonl`, videos + puppets) and orders with a `to` field; brand kit, forge switcher, Video Forge local API still to do |
+| Canva (section 7) | built: Settings → Canva, Made → Send ♥ to Canva, Wizards → Fill a Canva template. **Untested against Canva itself** — needs Ak's integration (Client ID + secret) |
+| Proof run | waiting for Ak's yes: a waist-up puppet with the side view on this computer's graphics card (~1–1.5 h) |
