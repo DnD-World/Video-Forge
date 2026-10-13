@@ -16,6 +16,19 @@ export type VisemeId = typeof VISEME[keyof typeof VISEME];
  *  drawing simply falls back to its neutral mouth. */
 export const SMILE_VISEME = 9;
 
+/**
+ * HALF-OPEN SHAPES (13 Oct 2026): a smaller AH, OH and EE. Used for short,
+ * unstressed vowels, and as the step between two open shapes — L→O, OO→L,
+ * EE→AH — so the mouth flows instead of snapping (Ak). Puppets made before
+ * have none: fullShape() gives the full one back, so nothing breaks.
+ */
+export const HALF = { AH: 10, OH: 11, EE: 12 } as const;
+export type HalfId = typeof HALF[keyof typeof HALF];
+export type MouthId = VisemeId | HalfId;
+export function fullShape(v: number): VisemeId {
+  return (v === HALF.AH ? VISEME.AH : v === HALF.OH ? VISEME.OH : v === HALF.EE ? VISEME.EE : v) as VisemeId;
+}
+
 // Order matters: check multi-char digraphs BEFORE single chars.
 const DIGRAPHS: [RegExp, VisemeId][] = [
   [/^ου/i, VISEME.OO],

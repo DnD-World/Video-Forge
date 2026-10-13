@@ -20,6 +20,7 @@ import type { CSSProperties } from "react";
 import type { Puppet, PuppetLayer } from "../../store/puppetTypes";
 import type { OutlineShape } from "../../store/types";
 import { BROW_REST, HEAD_STILL, type HeadPose } from "../../lib/motion/facePerformance";
+import { fullShape } from "../../lib/visemes/visemeMap";
 
 /** Layers already complained about, so one missing mouth is one message and not
  *  one per frame per worker. Module scope on purpose: it must outlive the
@@ -257,10 +258,12 @@ export function PuppetAvatar({
   };
   const browL = browSet(browLeft)?.left;
   const browR = browSet(browRight)?.right;
-  const mouth = puppet.mouths[String(viseme)] ?? puppet.mouths["0"];
+  // A half shape (10-12) the puppet was not made with falls back to its full one.
+  const mouthFor = (v: number) => puppet.mouths[String(v)] ?? puppet.mouths[String(fullShape(v))] ?? puppet.mouths["0"];
+  const mouth = mouthFor(viseme);
   const prevMouth =
     prevViseme !== undefined && prevViseme !== viseme
-      ? puppet.mouths[String(prevViseme)] ?? puppet.mouths["0"]
+      ? mouthFor(prevViseme)
       : undefined;
   // OFF BY DEFAULT — see visemeFadeMs in store/defaults.ts. Fading between two
   // mouth drawings does not produce an in-between mouth, it produces both at
