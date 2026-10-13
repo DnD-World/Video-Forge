@@ -60,3 +60,43 @@ Ak, 11 Oct: the 70 videos are done. The goal now is **polishing the maker** — 
 | C2 | **Top-moments shorts** (approved) | Phase 3 |
 | C3 | ~~Image Forge pair~~ **done 12 Oct** — shared keys (`tools/lib/forgeKeys.mjs`, DPAPI file `%APPDATA%/Forge/shared-keys.bin`), sparks on black, transparent camera icon, twin switch back. Image Forge branch `forge-twins` (not merged) | |
 | D1 | Public release | Ak works out what it should be for his advancement |
+
+## Round of 13 Oct 2026 (Ak's review after the puppet maker)
+
+Human-work-hour estimates in brackets. ✅ = decided, build it. ❓ = needs Ak.
+
+### Video Forge
+| # | Ask | Plan |
+|---|---|---|
+| V1 | Cast "+" opens a menu: ready-made puppet, or create new | ✅ Menu: "From my puppets" (shelf + library + built-ins) / "Create a new one" (order form, inline) [3] |
+| V2 | New speaker starts with Who, then the face section; rename "Look" (in Cast) to "Puppet" — no two "Look"s | ✅ [1] |
+| V3 | Frame thickness adjustable in pixels | ✅ slider 0–24 px [1] |
+| V4 | Waveform default "around the face" | ✅ [0.5] |
+| V5 | Sparks waveform more visible — slider | ✅ "Spark size/brightness" slider [1] |
+| V6 | Boiling preview not working | ✅ find and fix [1–2] |
+| V7 | Particles, bars, bloom bars look the same | ✅ make each distinct and checked side by side [3] |
+| V8 | Ribbon/particles/sparks/bloom/boiling: only circular and around-face; add "frame around the whole video" (outside in) | ✅ new position "video frame" for every style [4] |
+| V9 | Hover help hidden at the lowest choices | ✅ bubble flips upward near the bottom [0.5] |
+| V10 | Mass prepare and render from a Google Sheet | ✅ Sheet link ("publish to web" CSV, no Google Cloud, no key) or a .csv/.xlsx file → one row per video → narrate + render queue, overnight, one at a time [8] |
+| V11 | Settings: remove Appearance (always on) | ✅ [0.5] |
+| V12 | Settings: no LocalAI entry | ✅ "Your own machine" card: address, test, models listed [1.5] |
+
+### Image Forge
+| # | Ask | Plan |
+|---|---|---|
+| I1 | Start: default 2 images, not 6 | ✅ [0.2] |
+| I2 | Model choice = dropdown of what is set up and working, "Add more…" last → Settings | ✅ [2] |
+| I3 | "Look" → "Style" everywhere ("No particular style", "All styles"); the word links to the styles page | ✅ [1] |
+| I4 | Forge tab: wrong dates ("1 day ago" for months), Pause not working, convoluted, duplicates | ✅ Replace with "Made" — statistics (by engine, by day, cost) + a list of everything produced with status, filters, redo; fix the date bug and Pause [8] |
+| I5 | Settings: Test button beside every API key, right when pasted | ✅ [2] |
+| I6 | Gallery: old, misses puppets/visemes/sprites | ✅ Rebuild on the new "Made" list: pictures, sheets, puppets (live preview), GIFs; redo/mark [6] |
+| I7 | Recipes / previous batches — needed? | Recipe = a saved wizard setup (style, engine, shape). Batch = rows made together. ✅ Recommend: merge into **Templates** (incl. Puppet / Viseme sheet / Sprite sheet templates) and make batches a filter in "Made" [3] |
+| I8 | Wizards menu needs help; keep the Prompt factory and let it make CSV / Google Sheet lists | ✅ Menu reduced to: Make pictures, Make a puppet, Animate a character, Prompt factory. Factory exports CSV/XLSX and copies straight into a Google Sheet (paste) [4] |
+| I9 | Simplify "Start the wizard" | ✅ 3 steps: what (one sentence) → how many + style → engine (pre-picked) [4] |
+| I10 | Canva-style "many image makers plugged in" | Not worth it here: Image Forge already routes between engines; ❓ only if you want a "send to Canva" button |
+
+### Models (answers)
+- Z-Image (have it): best for lettering in pictures — now told it can write.
+- OVH SDXL: keep — free with no daily cap (capacity), weaker quality; good fallback for bulk.
+- DreamShaper: SD 1.5 fine-tune — fast, low memory, painterly fantasy look. Adds a style flavour, not quality. Optional.
+- Iris-3B: new (12 Oct 2026); its **upscale / restore** variant could become "make it bigger/sharper" for finished pictures later. Not runnable in LocalAI yet.
