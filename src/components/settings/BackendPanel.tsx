@@ -1,3 +1,4 @@
+import { LanguageCard, SayItCard } from "./SayItCard";
 import { useEffect, useState } from "react";
 import { useSettingsStore } from "../../store/useSettingsStore";
 import { Toggle } from "../ui/Toggle";
@@ -297,6 +298,8 @@ export default function BackendPanel() {
       </p>
 
       <LocalAiCard />
+      <SayItCard />
+      <LanguageCard />
       <ClipStorage />
 
       {/* Appearance was here — removed 13 Oct 2026 (Ak): the Forge look is the

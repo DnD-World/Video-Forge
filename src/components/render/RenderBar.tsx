@@ -18,6 +18,17 @@ import { HudButton } from "../ui/HudButton";
 import { Toggle } from "../ui/Toggle";
 import { autoClean } from "../../lib/media/autoClean";
 import { useProjectStore } from "../../store/useProjectStore";
+import { useSettingsStore } from "../../store/useSettingsStore";
+
+/** More shapes from the same project in one go (Ak, 13 Oct 2026). Positions are
+ *  fractions of the frame, so the cast lands in the same places on each. */
+const SHAPES = [
+  { id: "9:16", w: 1080, h: 1920, label: "Tall 9:16", tip: "Tall, for TikTok, Instagram Reels and YouTube Shorts." },
+  { id: "1:1", w: 1080, h: 1080, label: "Square 1:1", tip: "Square, for Instagram and Facebook feeds." },
+  { id: "4:5", w: 1080, h: 1350, label: "Portrait 4:5", tip: "A little taller than square: what Instagram's feed shows biggest." },
+  { id: "16:9", w: 1920, h: 1080, label: "Wide 16:9", tip: "Wide, for YouTube, websites and presentations." },
+] as const;
+type Nar = { filePath: string; segments: { speakerId: string; speakerLabel: string; text: string; startMs: number; endMs: number }[]; analysis: unknown };
 
 interface RenderResult {
   outputPath: string;
@@ -65,6 +76,13 @@ export function RenderBar() {
   const effectiveDuration =
     matchNarration && narrationSec && !audioPath ? narrationSec : durationSec;
   const [busy, setBusy] = useState(false);
+  const aiLabel = useSettingsStore((s) => s.aiLabel);
+  const setAiLabel = useSettingsStore((s) => s.setAiLabel);
+  const language = useProjectStore((s) => s.language);
+  const twinLang = language === "el" ? "en" : "el";
+  const [extraShapes, setExtraShapes] = useState<string[]>([]);
+  const [twin, setTwin] = useState(false);
+  const [made, setMade] = useState<string[]>([]);
   const [pct, setPct] = useState(0);
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -112,12 +130,16 @@ export function RenderBar() {
 
   /** draft: a quick look — a third of the size, 3 pictures a second, full
    *  sound — opened by itself when ready (Ak, 12 Oct 2026). */
-  async function start(draft = false) {
-    setBusy(true);
-    setError(null);
-    setResult(null);
+  async function start(draft = false, o: { width?: number; height?: number; nar?: Nar; stem?: string; inLoop?: boolean } = {}): Promise<string | null> {
+    if (!o.inLoop) {
+      setBusy(true);
+      setError(null);
+      setResult(null);
+      setMade([]);
+    }
     setPct(0);
-    setNote("Starting…");
+    setNote(o.stem ? `Starting ${o.stem}…` : "Starting…");
+    const narSec = o.nar ? Math.max(1, Math.ceil(Math.max(...o.nar.segments.map((x) => x.endMs)) / 1000)) : null;
 
     try {
       const res = await window.byok.render.start({
@@ -150,15 +172,16 @@ export function RenderBar() {
           sheetPath: sp.sheetPath,
           puppetPath: sp.puppetPath,
         })),
-        width: draft ? even(render.width / 3) : render.width,
-        height: draft ? even(render.height / 3) : render.height,
+        width: o.width ?? (draft ? even(render.width / 3) : render.width),
+        height: o.height ?? (draft ? even(render.height / 3) : render.height),
+        fileStem: o.stem,
         fps: draft ? 3 : fps,
         crf: draft ? 32 : undefined,
-        durationSec: effectiveDuration,
-        audioFilePath: effectiveAudioPath,
+        durationSec: narSec ?? effectiveDuration,
+        audioFilePath: o.nar ? o.nar.filePath : effectiveAudioPath,
         // Whichever audio is actually in the video is the one that drives the
         // waveform.
-        analysis: audioPath ? attachedAudio?.analysis ?? null : narration?.analysis ?? null,
+        analysis: (o.nar ? o.nar.analysis : audioPath ? attachedAudio?.analysis ?? null : narration?.analysis ?? null) as never,
         // Music plays under whatever the main audio is — including a
         // hand-attached file, which it has no quarrel with. Only the ducking
         // needs the narration, and that falls back to "never duck" on its own.
@@ -194,23 +217,58 @@ export function RenderBar() {
         backgroundColorLook,
         backgroundCrossfadeMs,
         subtitles,
+        aiLabel,
         visemeFadeMs,
         idleMotion,
         // Same reasoning: subtitles are only meaningful against the narration
         // whose timings produced them.
-        narrationSegments: audioPath ? [] : narration?.segments ?? [],
+        narrationSegments: o.nar ? o.nar.segments : audioPath ? [] : narration?.segments ?? [],
       });
 
       if (res.ok) {
         setResult({ outputPath: res.outputPath, frames: res.frames });
+        setMade((m) => [...m, res.outputPath]);
         setNote(draft ? "Draft ready — opening it" : "Done");
         setPct(100);
         if (draft) void window.byok.storage.openPath(res.outputPath);
         // Old background clips go once the video is safely out (Settings limit).
-        void autoClean().then((msg) => msg && setNote(`Done. ${msg}`));
-      } else {
-        setError(res.error ?? "Render failed.");
+        if (!o.inLoop) void autoClean().then((msg) => msg && setNote(`Done. ${msg}`));
+        return res.outputPath;
       }
+      setError(res.error ?? "Render failed.");
+      return null;
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+      return null;
+    } finally {
+      if (!o.inLoop) setBusy(false);
+    }
+  }
+
+  /** The finished video, plus every extra shape and the twin language — one
+   *  after another, never two at once (one render at a time on this machine). */
+  async function renderAll() {
+    if (!extraShapes.length && !twin) return void start(false);
+    setBusy(true);
+    setError(null);
+    setResult(null);
+    setMade([]);
+    try {
+      const shapes = [{ w: render.width, h: render.height, id: "" }, ...SHAPES.filter((x) => extraShapes.includes(x.id) && !(x.w === render.width && x.h === render.height)).map((x) => ({ w: x.w, h: x.h, id: x.id.replace(":", "x") }))];
+      const langs: { tag: string; nar?: Nar }[] = [{ tag: language }];
+      if (twin) {
+        setNote(`Translating the script and making the ${twinLang === "el" ? "Greek" : "English"} narration…`);
+        langs.push({ tag: twinLang, nar: (await window.byok.tts.twinNarration(twinLang)) as Nar });
+      }
+      for (const l of langs) {
+        for (const sh of shapes) {
+          const stem = [l.tag, sh.id].filter(Boolean).join("-");
+          const ok = await start(false, { width: sh.w, height: sh.h, nar: l.nar, stem: langs.length > 1 || sh.id ? stem : undefined, inLoop: true });
+          if (!ok) return;
+        }
+      }
+      setNote(`Done — ${langs.length * shapes.length} videos`);
+      void autoClean();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -240,11 +298,40 @@ export function RenderBar() {
         <button
           className="btn btn-primary"
           disabled={busy || !ready}
-          onClick={() => start(false)}
-          data-tip="The finished video, full quality. Shape and frame rate are in the Shape tab; intro and outro in Intro & outro."
+          onClick={() => void renderAll()}
+          data-tip="The finished video, full quality — plus any extra shapes and the other language ticked below, one after another."
         >
-          {busy ? "Rendering…" : "Render video"}
+          {busy ? "Rendering…" : extraShapes.length || twin ? `Render ${(1 + extraShapes.length) * (twin ? 2 : 1)} videos` : "Render video"}
         </button>
+      </div>
+
+      <div className="flex flex-col gap-2" data-tip="The same video in more shapes, made one after another. Your project's own shape is always made.">
+        <span className="label-etched">Also as</span>
+        <div className="flex flex-wrap gap-2">
+          {SHAPES.filter((x) => !(x.w === render.width && x.h === render.height)).map((x) => (
+            <button
+              key={x.id}
+              className="btn"
+              aria-pressed={extraShapes.includes(x.id)}
+              onClick={() => setExtraShapes((v) => (v.includes(x.id) ? v.filter((y) => y !== x.id) : [...v, x.id]))}
+              data-tip={`${x.tip} Click to add or remove.`}
+            >
+              {x.label}
+            </button>
+          ))}
+        </div>
+        <Toggle
+          label={`Also in ${twinLang === "el" ? "Greek" : "English"}`}
+          checked={twin}
+          onChange={setTwin}
+          data-tip={`The same video in ${twinLang === "el" ? "Greek" : "English"}: the script is translated and the same characters speak it, with matching subtitles. Uses your Gemini key.`}
+        />
+        <Toggle
+          label="Made with AI · Video Forge"
+          checked={aiLabel}
+          onChange={setAiLabel}
+          data-tip="A small honest label in a corner of the video, in our look — viewers trust it more, and EU rules ask for AI videos to be marked. Also written into the file's own notes."
+        />
       </div>
 
       {busy && (
@@ -258,7 +345,7 @@ export function RenderBar() {
 
       {result && !busy && (
         <div className="flex flex-col gap-2">
-          <p className="text-xs text-neutral-400 break-all">{note} — {result.outputPath.split(/[\\/]/).pop()}</p>
+          <p className="text-xs text-neutral-400 break-all">{note} — {made.length > 1 ? made.map((m) => m.split(/[\\/]/).pop()).join(", ") : result.outputPath.split(/[\\/]/).pop()}</p>
           <div className="flex gap-2">
             <button className="btn" onClick={() => window.byok.storage.openPath(result.outputPath)} data-tip="Play the video in your usual player.">Play it</button>
             <button className="btn" onClick={() => window.byok.storage.openOutputDir()} data-tip="Open the folder where your videos are saved.">Open folder</button>

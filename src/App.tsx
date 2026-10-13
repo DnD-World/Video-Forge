@@ -13,6 +13,7 @@ import { visemeBlendAt } from "./lib/visemes/timeline";
 import { useFileUrls } from "./lib/assets/useFileUrls";
 import { useSubtitleFont } from "./lib/assets/useSubtitleFont";
 import { usePuppets } from "./lib/puppets/usePuppets";
+import { AiBadge } from "../remotion/AiBadge";
 import { CastPanel } from "./components/panels/CastPanel";
 import { ScenePanel } from "./components/panels/ScenePanel";
 import { buildTracks } from "./lib/waveform/buildTracks";
@@ -196,6 +197,7 @@ export default function App() {
   // while you make them (Ak, 12 Oct 2026). Never rendered: the render has its
   // own segments.
   const projectLanguage = useProjectStore((s) => s.language);
+  const aiLabel = useSettingsStore((s) => s.aiLabel);
   const cues = useMemo(() => {
     if (narration?.segments?.length) return buildCues(narration.segments, subtitles.maxChars);
     // GREEK AND ENGLISH TAKING TURNS (Ak, 13 Oct 2026), so a font and size
@@ -715,6 +717,7 @@ export default function App() {
                 timeMs={previewTimeMs}
                 speakerColors={speakerColors}
               />
+              {aiLabel && <AiBadge width={canvasSize.w} height={canvasSize.h} />}
             </div>
             {/* The transport: play with sound, scrub, time. Space bar too. */}
             <div className="forge-transport">

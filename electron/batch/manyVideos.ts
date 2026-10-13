@@ -53,6 +53,8 @@ export interface ManyRequest {
   preset: unknown;
   /** Folder name for this run's videos, under the output folder. */
   runName: string;
+  /** "Made with AI · Video Forge" on each video. */
+  aiLabel?: boolean;
 }
 
 export type ManyEvent =
@@ -89,6 +91,7 @@ export async function runMany(
         backgrounds: row.backgrounds ?? "auto",
         language: row.language,
         outputName: row.name,
+        aiLabel: req.aiLabel,
       };
       const result = await runBatchJob(job, {
         ...ctx,

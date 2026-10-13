@@ -12,6 +12,7 @@
 // layout-critical has to be an inline style.
 // ---------------------------------------------------------------------------
 
+import { AiBadge } from "./AiBadge";
 import { useMemo } from "react";
 import { AbsoluteFill, Audio, Img, Loop, OffthreadVideo, Sequence, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { WaveformScene } from "../src/components/canvas/WaveformScene";
@@ -86,6 +87,7 @@ export function VideoComposition({
   topScrim = null,
   bannerVideo = null,
   nativeMedia = false,
+  aiLabel = false,
 }: RenderProps) {
   const frame = useCurrentFrame();
   const { width, height, fps, durationInFrames } = useVideoConfig();
@@ -517,6 +519,7 @@ export function VideoComposition({
       {/* ABOVE EVERYTHING, including the subtitles. A logo that a caption can
           cover is not a logo — the one thing it has to do is be present in
           every frame it is asked for. */}
+      {aiLabel && <AiBadge width={width} height={height} corner={logo && logo.position === "bottom-right" ? "left" : "right"} />}
       {logo && !nativeMedia && (
         <Img
           src={staticFile(logo.fileName)}

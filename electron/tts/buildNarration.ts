@@ -20,7 +20,8 @@ import * as elevenlabs from "./elevenlabsEngine";
 import { synthesizeGemini, type GeminiMode } from "./geminiEngine";
 import { synthesizeFish } from "./fishEngine";
 import { pitchShift } from "../audio/pitchShift";
-import { accentMap, withAccents } from "./greekAccents";
+import { accentMap, applyPronunciations, withAccents } from "./greekAccents";
+import { loadPronunciations } from "./pronunciations";
 import { concatWavBuffers } from "../audio/concatWav";
 import { analyzeNarration } from "../audio/analyzeNarration";
 import { trimSilence, squeezeSilence } from "../audio/trimSilence";
@@ -186,7 +187,9 @@ export async function buildNarration(
   // The WAV is cached; the analysis is recomputed from it, because the
   // spectrum is far larger than the audio and reading it back would cost more
   // than the FFT it saves.
-  const key = narrationKey(segments, pauses);
+  // The say-it-like-this list changes what is spoken, so it is part of the key.
+  const sayList = await loadPronunciations();
+  const key = narrationKey(segments, pauses) + (sayList.length ? `-${crypto.createHash("sha256").update(JSON.stringify(sayList)).digest("hex").slice(0, 8)}` : "");
   const cacheDir = path.join(outputDir, "narration-cache");
   const cachedWav = path.join(cacheDir, `${key}.wav`);
   const cachedMeta = path.join(cacheDir, `${key}.json`);
@@ -242,7 +245,7 @@ export async function buildNarration(
   if (accents.size) {
     console.log(`[video-forge] accents restored for ${accents.size} capitalised word(s): ${[...accents.values()].slice(0, 8).join(", ")}`);
   }
-  const spoken = (t: string) => withAccents(t, accents);
+  const spoken = (t: string) => applyPronunciations(withAccents(t, accents), sayList);
 
   const geminiAudio = new Map<number, Buffer>();
   const geminiIdx = segments.flatMap((s, i) => (s.engine === "gemini" ? [i] : []));

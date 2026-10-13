@@ -3,6 +3,8 @@ import path from "node:path";
 import fsp from "node:fs/promises";
 import * as keyStore from "./keyStore";
 import { request } from "./net/http";
+import { rememberNarration, twinNarration } from "./tts/twinNarration";
+import { loadPronunciations, savePronunciations, type SayItLike } from "./tts/pronunciations";
 import { removePuppet, listPuppets, orderResult, placeOrder, shelfRoot } from "../tools/lib/forgeShelf.mjs";
 import { fetchSheet, parseCsv, runMany, type ManyEvent, type ManyRequest } from "./batch/manyVideos";
 import { resolveUserData, NEW_APP_NAME } from "./migrateUserData";
@@ -284,6 +286,8 @@ ipcMain.handle("batch:runMany", async (e, req: ManyRequest) => {
 });
 /** What a LocalAI on this computer (or on Tailscale) offers. Only those
  *  addresses: this is a settings check, not a way to call any server. */
+ipcMain.handle("voice:pronunciations", async () => loadPronunciations());
+ipcMain.handle("voice:savePronunciations", async (_e, list: SayItLike[]) => savePronunciations(Array.isArray(list) ? list : []));
 ipcMain.handle("local:models", async (_e, base: string) => {
   const b = String(base || "").trim().replace(/\/+$/, "").replace(/\/v1$/, "");
   if (!/^https?:\/\/(127\.0\.0\.1|localhost|\[::1\]|100\.\d+\.\d+\.\d+)(:\d+)?$/i.test(b)) {
@@ -537,8 +541,11 @@ ipcMain.handle("tts:generateNarration", async (
   speakerOrder: string[] = [],
   pauses: { sameMs: number; turnMs: number } = { sameMs: 0, turnMs: 0 }
 ) => {
+  await rememberNarration({ segments, speakerOrder, pauses });
   return buildNarration(segments, speakerOrder, pauses, outputDir());
 });
+/** The same script in the other language, same cast (tts/twinNarration.ts). */
+ipcMain.handle("tts:twinNarration", async (_e, target: string) => twinNarration(String(target), outputDir()));
 
 
 // ---------------------------------------------------------------------------

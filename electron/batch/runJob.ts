@@ -110,6 +110,8 @@ export interface JobSpeaker {
 }
 
 export interface BatchJob {
+  /** "Made with AI · Video Forge" (remotion/AiBadge.tsx). On unless false. */
+  aiLabel?: boolean;
   /** A "Label: text" script. See docs/WRITING-SCRIPTS.md.
    *
    *  Not needed when `lessonDir` is given: a finished lesson carries its own
@@ -895,6 +897,7 @@ export async function runBatchJob(
         }
       : null,
     glass: job.glass ?? null,
+    aiLabel: job.aiLabel ?? true,
   } as RenderJob;
 
   const result = await renderVideo(renderJob, ctx);

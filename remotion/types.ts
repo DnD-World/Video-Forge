@@ -223,6 +223,8 @@ export type RenderProps = {
    *  speaker actually stopped, so they anchor the estimate. Empty is valid and
    *  means the old behaviour. */
   narrationPauses?: number[];
+  /** "Made with AI · Video Forge" in a bottom corner (AiBadge.tsx). */
+  aiLabel?: boolean;
 };
 
 export const COMPOSITION_ID = "video-forge";

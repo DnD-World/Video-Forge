@@ -22,6 +22,9 @@ interface SettingsState {
   /** LocalAI (or similar) on this computer — shared with Image Forge. */
   localAiBase: string;
   setLocalAiBase: (v: string) => void;
+  /** "Made with AI · Video Forge" on every video (remotion/AiBadge.tsx). On by default. */
+  aiLabel: boolean;
+  setAiLabel: (v: boolean) => void;
   setMediaLimitGb: (gb: number) => void;
   mediaAutoClean: boolean;
   setMediaAutoClean: (v: boolean) => void;
@@ -56,6 +59,8 @@ export const useSettingsStore = create<SettingsState>()(
       mediaLimitGb: 2,
       localAiBase: "http://127.0.0.1:8080",
       setLocalAiBase: (v) => set({ localAiBase: v }),
+      aiLabel: true,
+      setAiLabel: (v) => set({ aiLabel: v }),
       setMediaLimitGb: (gb) => set({ mediaLimitGb: gb }),
       mediaAutoClean: true,
       setMediaAutoClean: (v) => set({ mediaAutoClean: v }),

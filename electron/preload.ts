@@ -146,6 +146,12 @@ const api = {
       segments: { speakerId: string; speakerLabel: string; text: string; startMs: number; endMs: number }[];
       analysis: unknown;
     }> => ipcRenderer.invoke("tts:generateNarration", segments, speakerOrder, pauses),
+    /** The last narration again, translated and spoken in `target` ("el", "en"). */
+    twinNarration: (target: string): Promise<{
+      filePath: string;
+      segments: { speakerId: string; speakerLabel: string; text: string; startMs: number; endMs: number }[];
+      analysis: unknown;
+    }> => ipcRenderer.invoke("tts:twinNarration", target),
   },
 
   project: {
@@ -169,6 +175,10 @@ const api = {
       pictures: string[]
     ): Promise<{ ok: boolean; id?: string; opened?: boolean; problem?: string }> => ipcRenderer.invoke("forge:orderPuppet", order, pictures),
     orderResult: (id: string): Promise<{ slug: string | null; problem: string | null } | null> => ipcRenderer.invoke("forge:orderResult", id),
+  },
+  voice: {
+    pronunciations: (): Promise<{ word: string; say: string }[]> => ipcRenderer.invoke("voice:pronunciations"),
+    savePronunciations: (list: { word: string; say: string }[]): Promise<void> => ipcRenderer.invoke("voice:savePronunciations", list),
   },
   local: {
     models: (base: string): Promise<{ ok: boolean; models?: string[]; problem?: string }> => ipcRenderer.invoke("local:models", base),

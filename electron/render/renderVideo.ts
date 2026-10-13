@@ -31,6 +31,8 @@ import type { Puppet } from "../../src/store/puppetTypes";
 import { puppetAssetPaths, validatePuppet } from "../../src/lib/puppets/puppetAssets";
 import { ensureFont } from "../net/fonts";
 import { joinCards } from "./joinCards";
+import { spawn } from "node:child_process";
+import { ffmpegBin } from "../process/ffmpegPath";
 import { buildCues } from "../../src/lib/subtitles/wordTiming";
 import { toSrt, toVtt } from "../../src/lib/subtitles/subtitleFiles";
 
@@ -83,6 +85,10 @@ export interface RenderJob {
   idleMotion?: number;
   narrationSegments?: RenderProps["narrationSegments"];
   narrationPauses?: number[];
+  /** "Made with AI · Video Forge" on the picture, and in the file's own notes. */
+  aiLabel?: boolean;
+  /** Start of the file name ("el-9x16"), when one project makes several videos. */
+  fileStem?: string;
   /** x264 quality, 0–51: lower is better and bigger. Absent means 23, which is
    *  x264's own default and the usual "visually transparent" mark. Exposed so
    *  a batch can trade size against quality per row — a social cut and an LMS
@@ -525,6 +531,7 @@ export async function renderVideo(
       idleMotion: job.idleMotion ?? 0,
       narrationSegments: job.narrationSegments ?? [],
       narrationPauses: job.narrationPauses ?? [],
+      aiLabel: job.aiLabel ?? false,
     };
 
     // ASKED FOR, AND NEVER FORWARDED.
@@ -561,6 +568,7 @@ export async function renderVideo(
       "projectRoot",
       "outputDir",
       "outputName",
+      "fileStem",
       "jobId",
     ]);
     for (const [key, value] of Object.entries(job)) {
@@ -574,7 +582,8 @@ export async function renderVideo(
     }
 
     await fsp.mkdir(outputDir, { recursive: true });
-    const outputPath = path.join(outputDir, `render-${Date.now()}.mp4`);
+    const stem = job.fileStem ? job.fileStem.replace(/[^\p{L}\p{N}_-]+/gu, "_").slice(0, 40) : "render";
+    const outputPath = path.join(outputDir, `${stem}-${Date.now()}.mp4`);
     const frames = Math.max(1, Math.round(job.durationSec * job.fps));
 
     // THE ENGINE. HyperFrames by default since 11 Oct 2026 (licence-free for
@@ -651,6 +660,19 @@ export async function renderVideo(
     });
     warnings.push(...joined.warnings);
     for (const w of joined.warnings) onProgress(99, w);
+
+    // THE LABEL IN THE FILE, too: a note any player or platform can read.
+    // Copied, not re-encoded — a second or two.
+    if (job.aiLabel) {
+      const tagged = joined.outputPath.replace(/\.mp4$/i, ".tagged.mp4");
+      const ok = await new Promise<boolean>((resolve) => {
+        const p = spawn(ffmpegBin(), ["-y", "-i", joined.outputPath, "-map", "0", "-c", "copy", "-metadata", "comment=Made with AI (Video Forge)", "-metadata", "encoded_by=Video Forge", tagged], { windowsHide: true });
+        p.on("error", () => resolve(false));
+        p.on("close", (code) => resolve(code === 0));
+      });
+      if (ok) await fsp.rename(tagged, joined.outputPath).catch(() => {});
+      else await fsp.rm(tagged, { force: true }).catch(() => {});
+    }
 
     // SUBTITLE FILES beside the video, same cues as the picture, shifted by
     // any intro card joined in front (Ak, 13 Oct 2026).

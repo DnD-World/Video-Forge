@@ -208,6 +208,11 @@ declare global {
           segments: { speakerId: string; speakerLabel: string; text: string; startMs: number; endMs: number }[];
           analysis: AudioAnalysis | null;
         }>;
+        twinNarration: (target: string) => Promise<{
+          filePath: string;
+          segments: { speakerId: string; speakerLabel: string; text: string; startMs: number; endMs: number }[];
+          analysis: AudioAnalysis | null;
+        }>;
       };
       project: {
         startup: () => Promise<unknown>;
@@ -225,6 +230,10 @@ declare global {
           pictures: string[]
         ) => Promise<{ ok: boolean; id?: string; opened?: boolean; problem?: string }>;
         orderResult: (id: string) => Promise<{ slug: string | null; problem: string | null } | null>;
+      };
+      voice: {
+        pronunciations: () => Promise<{ word: string; say: string }[]>;
+        savePronunciations: (list: { word: string; say: string }[]) => Promise<void>;
       };
       local: {
         models: (base: string) => Promise<{ ok: boolean; models?: string[]; problem?: string }>;

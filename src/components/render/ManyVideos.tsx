@@ -9,6 +9,7 @@
 // ---------------------------------------------------------------------------
 
 import { useEffect, useMemo, useState } from "react";
+import { useSettingsStore } from "../../store/useSettingsStore";
 
 /** "<sheet or file name> · 13 Oct 19.40 · 12 videos" — the folder the videos land in. */
 function runNameFor(source: string, count: number): string {
@@ -160,7 +161,7 @@ export function ManyVideos() {
         backgrounds: (/^(no|none|off|όχι)$/i.test(pick(row, "backgrounds")) ? "none" : "auto") as "auto" | "none",
         language: pick(row, "language") || undefined,
       }));
-    const r = await window.byok.batch.runMany({ rows: list, cast, preset, runName: runNameFor(url, list.length) });
+    const r = await window.byok.batch.runMany({ rows: list, cast, preset, runName: runNameFor(url, list.length), aiLabel: useSettingsStore.getState().aiLabel });
     if (!r.ok) return setProblem(r.problem ?? "could not start");
     setRunning(true);
   };
