@@ -18,6 +18,21 @@ or deleting writes both, and `syncShared()` at start-up hands over keys the
 file lacks. Tested end to end on 12 Oct: Image Forge filled Gemini and NVIDIA
 from Video Forge by itself. Full status of the V2 work: `docs/V2-PLAN.md`.
 
+## Many videos from a sheet — 13 Oct 2026
+
+Make → **Many videos** (`src/components/render/ManyVideos.tsx`): a Google
+Sheet link (shared "anyone with the link"; read as CSV through Google's export
+address — `electron/batch/sheet.ts`, tested) or a CSV path. Check all matches
+each row's script to the cast; Make all runs `runBatchJob` in-process, one at a
+time (`electron/batch/manyVideos.ts`), with this project's cast and look as a
+preset. Output: `<output>/many/<run>/<name>.mp4`.
+
+Also this day: Cast "+" menu (ready-made / create new → order form), Cast
+section "Puppet" with frame thickness (`frameWidth`, px on 1080), waveform
+default around the face, position "around the video" (`frameEdgeAt`) for every
+style, distinct particles/sparks/bloom, a pretend voice for empty previews,
+window-wide hover help (`TipLayer`), Settings without Appearance, LocalAI card.
+
 ## Puppets from Image Forge — 12–13 Oct 2026
 
 Image Forge's puppet maker makes Forge puppets (method: Image Forge

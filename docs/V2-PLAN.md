@@ -100,3 +100,10 @@ Human-work-hour estimates in brackets. ✅ = decided, build it. ❓ = needs Ak.
 - OVH SDXL: keep — free with no daily cap (capacity), weaker quality; good fallback for bulk.
 - DreamShaper: SD 1.5 fine-tune — fast, low memory, painterly fantasy look. Adds a style flavour, not quality. Optional.
 - Iris-3B: new (12 Oct 2026); its **upscale / restore** variant could become "make it bigger/sharper" for finished pictures later. Not runnable in LocalAI yet.
+
+### Status of the 13 Oct round (end of day)
+Done and installed: V1–V12 (Many videos tested: 2 rows → 2 videos), I1–I9.
+I10 (Canva): not now — a Canva app needs their SDK, review and a hosted
+server (~20–30 h); worth it only when Image Forge goes public, for reach.
+Open: LocalAI still listens on every network until Ak runs
+`.localai-lockdown.sh` (127.0.0.1 + Tailscale only).
