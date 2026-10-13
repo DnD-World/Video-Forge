@@ -1,7 +1,51 @@
-# Handoff — 18 Aug 2026
+# Handoff — updated 13 Oct 2026 (evening)
 
 Everything a fresh session needs. `PLAN.md` holds the long history; this is the
-working state.
+working state. Newest sections first. Plans: `docs/V2-PLAN.md` (Video Forge),
+`docs/FORGES-PLAN.md` (both apps; has a Status section at the bottom).
+
+## Current state — 13 Oct 2026, evening
+
+**What it is now:** a four-step maker — Cast → Script → Look → Make — with
+Settings behind a gear. Voices: Gemini Live (default), DramaBox, Piper, Fish,
+ElevenLabs. Render engine: HyperFrames by default. Paired with Image Forge
+(shared keys, shared puppet shelf).
+
+### Built on 13 Oct (all verified in source; branch `dramabox-knobs-and-chatterbox-removal-rlrwzu`, not merged)
+
+| Area | What | Where |
+|---|---|---|
+| Cast "+" menu | Every character has a live face (blinks; talks on hover). Groups: Ready-made / Made in Image Forge / My library. "Order it from Image Forge" and "Open Image Forge" | `src/components/panels/CastPanel.tsx`, `PuppetShelf.tsx` |
+| Shelf | Live faces; two-click delete. Deleted puppets are moved to `%APPDATA%\Forge\puppets-deleted`, not erased | `tools/lib/forgeShelf.mjs`, `electron/main.ts` |
+| Hands | Arm pictures are now loaded (they never were). Whole-body poses (`posesReplaceBody`) replace the resting body. Automatic gestures: a question = shrug; "this / here / look / αυτό / εδώ / κοίτα" = point; longer lines = explain. Per-speaker **How much they gesture** slider (0 = none). Tags `[waves] [points] [shrugs] [explains]` still work | `src/components/canvas/PuppetAvatar.tsx`, `src/lib/motion/facePerformance.ts`, `src/store/puppetTypes.ts` |
+| Mouths | Shapes held about 100 ms; look-alikes merged in fast speech; quick consonants skipped; short vowels half-open; half-open in-betweens (visemes 10, 11, 12) between open shapes, closing only on real pauses. Puppets without half shapes fall back to the full ones | `src/lib/visemes/timeline.ts` |
+| Render | Frame thickness and gestures now reach the final render | `electron/render/renderVideo.ts`, `remotion/` |
+| Preview | Boiling waveform shows (SVG id clash fixed). Sample subtitles alternate Greek/English until narration exists | `src/components/canvas/` |
+| Make → Also as | Tall 9:16 · Square 1:1 · Portrait 4:5 · Wide 16:9, one after another | `src/components/render/RenderBar.tsx` |
+| Make → Also in English/Greek | Twin video: script translated by Gemini, same cast, matching subtitles | `electron/tts/twinNarration.ts` |
+| Make → Made with AI · Video Forge | Label on the picture, on by default, also written into the MP4's comment metadata. Also applies to Many videos | `remotion/AiBadge.tsx`, `renderVideo.ts` |
+| Subtitle files | `.srt` and `.vtt` beside every video | `renderVideo.ts` |
+| Greek stress fixer | Greek words typed without a tonos get one before the voice speaks. Spoken only; subtitles unchanged. Settings → **Say it like this** list is applied to every voice (`pronunciations.json` in userData) | `electron/tts/greekAccents*.ts`, `pronunciations.ts`, `src/components/settings/SayItCard.tsx` |
+| Settings → Language | Card: English now; Greek, French, German, Spanish, Portuguese "coming soon" (simple words only). Replaces the full Greek interface idea (FORGES-PLAN O-1) for now | `SayItCard.tsx` |
+| Hover help | One bubble over everything, stays open for its link; `title=` becomes a bubble too. Shared with Image Forge | `src/components/ui/TipLayer.tsx`, `tools/lib/hoverHelp.mjs` |
+| Buttons | Primary buttons readable (lighter gradient) | |
+| Many videos | Output folder is `<sheet> · <date> · <n> videos` | `src/components/render/ManyVideos.tsx` |
+| Shared keys | Shared keys file now also carries `openai`, `groq`, `elevenlabs`, `fish` names | `tools/lib/forgeKeys.mjs` |
+
+### How to test
+
+- `npm test` — 10 test files, including `tools/lib/hoverHelp.test.mjs`, which fails on any click control without a hover tip.
+- `npm run typecheck`, then `npm run dev` and open the app.
+- By hand: Cast → "+" (faces move on hover) · Script with `Καίτη: Τι είναι αυτό;` (shrug, then point) · Make → tick Square + "Also in English" → Render → find `.mp4`, `.srt`, `.vtt` together; `ffprobe` the MP4 for the AI comment.
+- One render at a time: two renders (or a render and the open app) collide on localhost:3001.
+
+### What's next
+
+- Merge the branch; tag after the release gate in the standards (README, HANDOFF, CHANGELOG, audit, gitleaks).
+- Template gallery: lesson, news desk, podcast, promo (A2 in V2-PLAN).
+- Not yet: AI cut-out model for puppet backgrounds (colour key plus spill cleaning is used instead); 3/4 two-person set (P-7); legs (P-8); real Greek interface (O-1); Social Forge / Content Forge prep.
+- Public copy and licence file: see V2-PLAN open risks.
+- Open on the mini PC: LocalAI still listens on every network until `.localai-lockdown.sh` is run.
 
 ---
 

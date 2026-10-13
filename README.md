@@ -37,8 +37,15 @@ machine** via a bundled Remotion + FFmpeg pipeline.
   them for one block.
 - 👄 **Viseme lip-sync** — 9-shape mouth animation, driven by forced alignment
   against the script rather than an estimate
-- 🧑‍🤝‍🧑 **Two-speaker avatars** — round disks, transparent backgrounds, drag/resize/snap
-- 📝 **Subtitle engine** — word-level timing, active-word glow, SRT export
+- 🧑‍🤝‍🧑 **Puppets with live faces** — pick from the Cast "+" menu (ready-made, made in Image Forge, or your library); they blink, talk, nod and gesture on their own (question = shrug, "this/here" = point), with a "How much they gesture" slider
+- 👄 **Smoother mouths** — shapes held ~100 ms, look-alikes merged in fast speech, half-open in-betweens
+- 📝 **Subtitle engine** — word-level timing, active-word glow, `.srt` and `.vtt` files beside every video
+- 📐 **One script, every shape** — Make → Also as: Tall 9:16, Square 1:1, Portrait 4:5, Wide 16:9
+- 🌍 **Twin language video** — Also in English/Greek: script translated, same cast, matching subtitles
+- 🏷️ **Honest AI label** — "Made with AI · Video Forge" on the picture (on by default) and in the file's notes
+- 🔤 **Greek stress fixer** — adds missing accents before the voice speaks; a "Say it like this" list for stubborn words
+- 📊 **Many videos from a sheet** — a Google Sheet link or CSV, one row per video, made one after another into a folder named `<sheet> · <date> · <n> videos`
+- 💬 **Hover help on every control**
 - 🌊 **6 waveform styles** × 5 positions × 6 behavior modes (only active speakers animate)
 - 🎼 **Smart audio** — auto-ducking, Freesound/Pixabay library, pinned custom uploads
 - 🎞️ **AI background automation** — contextual stock clips with a Relevancy↔Frequency dial
@@ -60,12 +67,18 @@ npm run dev
 > ([docs/BRAND-PACKS.md](docs/BRAND-PACKS.md)).
 > Recommended specs: NVIDIA 8GB GPU · 32GB RAM · ~1 hr render / 10 min video.
 
+## Guides
+- [Make a video, in plain words](docs/eli5/make-a-video.md)
+- [Writing scripts](docs/WRITING-SCRIPTS.md) · [Making puppets](docs/PUPPET-MAKING.md) · [Install](docs/INSTALL.md)
+- [Handoff (current state)](docs/HANDOFF.md) · [Changelog](CHANGELOG.md)
+
 ## 🗺️ Roadmap
-- Batch production from a spreadsheet — one row per lesson
+- Template gallery: lesson, news desk, podcast, promo
+- Interface in Greek, French, German, Spanish and Portuguese (Settings → Language shows them as coming soon)
 - Rendering a series in one process, instead of paying browser startup per video
 - Expanded transition library
 
-**Not on the roadmap, decided:** Azure Speech, Edge TTS, ElevenLabs and
+**Not on the roadmap, decided:** Azure Speech, Edge TTS and
 Chatterbox. Every extra engine multiplies what can break, and DramaBox plus
 Piper cover expressive and fast. Chatterbox shipped and was removed in
 August 2026.

@@ -107,3 +107,6 @@ I10 (Canva): not now — a Canva app needs their SDK, review and a hosted
 server (~20–30 h); worth it only when Image Forge goes public, for reach.
 Open: LocalAI still listens on every network until Ak runs
 `.localai-lockdown.sh` (127.0.0.1 + Tailscale only).
+
+## Status — 13 Oct 2026, evening
+The Video Forge asks of 13 Oct are done (see `docs/HANDOFF.md` and `CHANGELOG.md`): live-face "+" menu, hands and automatic gestures, smoother mouths, Also as / Also in English-Greek, AI label, subtitle files, Greek stress fixer, Language card, hover help. Per-item list for both apps: end of `docs/FORGES-PLAN.md`.

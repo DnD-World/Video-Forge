@@ -415,3 +415,35 @@ comparison page with three live versions, the Forge violet on black:
 
 About 180 human work hours in all. Rounds 1–2 make what exists solid; rounds
 3–4 make it understandable; rounds 5–7 make it bigger.
+
+---
+
+## Status (13 Oct 2026, evening)
+
+| ID | State |
+|---|---|
+| U1 settings and keys survive anything (vault) | done |
+| U2 / I-5 Image Forge chat gives wrong directions | done (chat fixed) |
+| B1 help bubble on every control | done |
+| B2 small leftovers | done |
+| I-1 Start remembers what you asked | done |
+| I-2 Appearance removed from Settings | done |
+| I-3 docs, agents, API pages | not covered in this list |
+| I-4 "Make a sheet" page | done (card shapes plus cursor comparison page) |
+| P-1, P-2, P-3, P-5, P-6 | partly done: no AI cut-out model; key colour plus spill cleaning instead |
+| P-4 smoother mouths | done (`src/lib/visemes/timeline.ts`) |
+| P-7 3/4 set, P-8 legs | not started |
+| P-9 hand movement | done |
+| P-10 delete a puppet | done (moved to `puppets-deleted`) |
+| P-11 moving thumbnails | done inside V-1 |
+| V-1 "+" menu with live faces | done |
+| V-2 "Create new" (Order it from Image Forge, Open Image Forge) | done |
+| V-3 boiling in the preview | done |
+| V-4 alternating sample subtitles | done |
+| O-1 Greek interface | replaced for now by Settings → Language card ("coming soon") |
+| O-2 every shape (Tall, Square, Portrait, Wide) | done |
+| O-3 twin language video | done |
+| O-4 Greek stress fixer and "say it like this" list | done |
+| O-6 subtitle files `.srt` / `.vtt` | done |
+| O-8 honest AI label | done (Video Forge) |
+| O-5, O-7, O-9 to O-21 | not started |
