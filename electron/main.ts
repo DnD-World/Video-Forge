@@ -5,6 +5,7 @@ import * as keyStore from "./keyStore";
 import { request } from "./net/http";
 import { rememberNarration, twinNarration } from "./tts/twinNarration";
 import { loadPronunciations, savePronunciations, type SayItLike } from "./tts/pronunciations";
+import { recordMade } from "../tools/lib/forgeHub.mjs";
 import { removePuppet, listPuppets, orderResult, placeOrder, shelfRoot } from "../tools/lib/forgeShelf.mjs";
 import { fetchSheet, parseCsv, runMany, type ManyEvent, type ManyRequest } from "./batch/manyVideos";
 import { resolveUserData, NEW_APP_NAME } from "./migrateUserData";
@@ -505,6 +506,24 @@ ipcMain.handle("render:start", async (_e, job: RenderJob) => {
       fontsDir: fontsDir(),
       onProgress: send,
     });
+    // On the Forge hub's list of everything made (tools/lib/forgeHub.mjs) —
+    // what the Social Forge will post from.
+    try {
+      const first = job.narrationSegments?.[0]?.text;
+      recordMade(shelfRoot(), {
+        app: "video-forge",
+        kind: "video",
+        file: result.outputPath,
+        width: job.width,
+        height: job.height,
+        durationSec: result.durationSec,
+        title: first ? first.replace(/\[[^\]]*\]/g, "").trim().slice(0, 80) : undefined,
+        madeWith: "Video Forge",
+        aiMade: true,
+      });
+    } catch {
+      /* the list is a convenience; the video is made either way */
+    }
     return { ok: true as const, jobId, ...result };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

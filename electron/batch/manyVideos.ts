@@ -11,6 +11,8 @@
 // uses, so a sheet of fifty runs overnight unattended.
 // ---------------------------------------------------------------------------
 
+import { recordMade } from "../../tools/lib/forgeHub.mjs";
+import { shelfRoot } from "../../tools/lib/forgeShelf.mjs";
 import fsp from "node:fs/promises";
 import path from "node:path";
 import { request } from "../net/http";
@@ -102,6 +104,11 @@ export async function runMany(
       await fsp.rename(result.outputPath, named);
       done++;
       onEvent({ type: "row", index, status: "done", pct: 100, outputPath: named });
+      try {
+        recordMade(shelfRoot(), { app: "video-forge", kind: "video", file: named, title: row.topic?.slice(0, 80), language: row.language, madeWith: "Video Forge · Many videos", tags: [req.runName] });
+      } catch {
+        /* the list is a convenience */
+      }
     } catch (e) {
       failed++;
       onEvent({ type: "row", index, status: "failed", error: e instanceof Error ? e.message : String(e) });
