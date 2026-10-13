@@ -22,6 +22,8 @@ interface Props {
   disabled?: boolean;
   className?: string;
   "aria-label"?: string;
+  /** Hover help (shown by TipLayer). */
+  "data-tip"?: string;
 }
 
 export function NumberField({
@@ -33,6 +35,7 @@ export function NumberField({
   disabled,
   className = "",
   "aria-label": ariaLabel,
+  "data-tip": dataTip,
 }: Props) {
   const held = useRef<number | null>(null);
 
@@ -79,7 +82,7 @@ export function NumberField({
   };
 
   return (
-    <div className={`flex items-stretch ${className}`}>
+    <div className={`flex items-stretch ${className}`} data-tip={dataTip}>
       <input
         type="number"
         value={value}

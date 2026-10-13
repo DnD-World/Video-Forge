@@ -96,7 +96,7 @@ export function ScenePanel({
       <h2 className="title-deco uppercase text-lg mb-3">{title}</h2>
 
       {tabs.length > 1 && (
-        <Tabs tabs={tabs.map((id) => ({ id, label: TAB_LABELS[id] }))} active={tab} onChange={setTab} />
+        <Tabs tabs={tabs.map((id) => ({ id, label: TAB_LABELS[id] }))} active={tab} onChange={setTab} data-tip="Switch between the groups of settings on this panel." />
       )}
 
       <div className="flex-1 overflow-y-auto pr-1 space-y-6">
@@ -113,6 +113,7 @@ export function ScenePanel({
                 return (
                   <div key={which} className="flex items-center gap-2">
                     <HudButton
+                      data-tip={`Pick a short video file from your computer to play ${which === "intro" ? "before" : "after"} your video.`}
                       onClick={async () => {
                         const p = await window.byok.dialog.openFile([
                           { name: "Video", extensions: ["mp4", "mov", "webm", "mkv", "m4v"] },
@@ -128,6 +129,7 @@ export function ScenePanel({
                     {value && (
                       <button
                         className="text-sm text-neutral-500 hover:text-red-400"
+                        data-tip={`Takes the ${which} out. Your video plays on its own.`}
                         onClick={() => setCards({ [key]: null })}
                       >
                         Remove
@@ -149,6 +151,7 @@ export function ScenePanel({
               <div className="label-etched">Logo</div>
               <div className="flex items-center gap-2">
                 <HudButton
+                  data-tip="Pick a picture (like your logo) to show on top of the whole video."
                   onClick={async () => {
                     const p = await window.byok.dialog.openFile([
                       { name: "Image", extensions: ["png", "jpg", "jpeg", "webp", "svg"] },
@@ -164,6 +167,7 @@ export function ScenePanel({
                 {logo.filePath && (
                   <button
                     className="text-sm text-neutral-500 hover:text-red-400"
+                    data-tip="Takes the logo off the video."
                     onClick={() => setLogo({ filePath: null })}
                   >
                     Remove
@@ -182,6 +186,7 @@ export function ScenePanel({
                     ] as const).map(([id, label]) => (
                       <HudButton
                         key={id}
+                        data-tip={`Puts the logo ${label} of the picture.`}
                         active={logo.position === id}
                         onClick={() => setLogo({ position: id })}
                       >
@@ -190,18 +195,18 @@ export function ScenePanel({
                     ))}
                   </div>
                   <Slider
-                    label="Logo size" value={logo.size} min={0.03} max={0.5} step={0.01}
+                    data-tip="How big the logo is, as a share of the video width." label="Logo size" value={logo.size} min={0.03} max={0.5} step={0.01}
                     onChange={(v) => setLogo({ size: v })}
                     format={(v) => `${Math.round(v * 100)}% of width`}
                   />
                   <Slider
-                    label="Logo opacity" value={logo.opacity} min={0.05} max={1} step={0.05}
+                    data-tip="How see-through the logo is. Lower = fainter." label="Logo opacity" value={logo.opacity} min={0.05} max={1} step={0.05}
                     onChange={(v) => setLogo({ opacity: v })}
                     format={(v) => `${Math.round(v * 100)}%`}
                   />
                   {logo.position !== "watermark" && (
                     <Slider
-                      label="Distance from edge" value={logo.margin} min={0} max={0.15} step={0.005}
+                      data-tip="How far the logo sits from the edge of the picture." label="Distance from edge" value={logo.margin} min={0} max={0.15} step={0.005}
                       onChange={(v) => setLogo({ margin: v })}
                       format={(v) => `${Math.round(v * 100)}%`}
                     />
@@ -243,12 +248,14 @@ export function ScenePanel({
               <div className="label-etched mb-2">Aspect Ratio</div>
               <div className="flex gap-2">
                 <HudButton
+                  data-tip="Tall, phone-style picture. Good for Shorts, TikTok and Reels."
                   active={render.format === "9:16"}
                   onClick={() => setRender({ format: "9:16", width: 1080, height: 1920 })}
                 >
                   9:16 vertical
                 </HudButton>
                 <HudButton
+                  data-tip="Wide, TV-style picture. Good for YouTube and computer screens."
                   active={render.format === "16:9"}
                   onClick={() => setRender({ format: "16:9", width: 1920, height: 1080 })}
                 >
@@ -261,7 +268,7 @@ export function ScenePanel({
               <div className="label-etched mb-2">Frame Rate</div>
               <div className="flex gap-2">
                 {FPS_OPTIONS.map((f) => (
-                  <HudButton key={f} active={fps === f} onClick={() => setFps(f)}>
+                  <HudButton key={f} active={fps === f} onClick={() => setFps(f)} data-tip={`Draws ${f} pictures every second. More = smoother but slower to make.`}>
                     {f} fps
                   </HudButton>
                 ))}
@@ -279,7 +286,7 @@ export function ScenePanel({
             <section>
               <div className="label-etched mb-2">Lip-sync</div>
               <Slider
-                label="Mouth Crossfade" value={visemeFadeMs} min={0} max={200} step={5}
+                data-tip="How smoothly one mouth shape melts into the next while someone talks. 0 = sudden jumps." label="Mouth Crossfade" value={visemeFadeMs} min={0} max={200} step={5}
                 onChange={(v) => setVisemeFadeMs(Math.round(v))}
                 format={(v) => (v === 0 ? "hard cut" : `${Math.round(v)} ms`)}
               />
@@ -290,7 +297,7 @@ export function ScenePanel({
               </p>
               <div className="mt-4">
                 <Slider
-                  label="Idle Motion" value={idleMotion} min={0} max={1} step={0.05}
+                  data-tip="How much the characters gently breathe and sway when still. 0 = frozen like a photo." label="Idle Motion" value={idleMotion} min={0} max={1} step={0.05}
                   onChange={setIdleMotion}
                   format={(v) => (v === 0 ? "still" : `${Math.round(v * 100)}%`)}
                 />
@@ -339,6 +346,7 @@ export function ScenePanel({
         {tab === "subtitles" && (
           <section className="space-y-4">
             <Toggle
+              data-tip="Turns the words on screen on or off while the narration plays."
               label="Show subtitles"
               checked={subtitles.enabled}
               onChange={(v) => setSubtitles({ enabled: v })}
@@ -353,6 +361,7 @@ export function ScenePanel({
                     {SUB_POS.map((p) => (
                       <HudButton
                         key={p}
+                        data-tip={`Puts the subtitles at the ${p} of the picture.`}
                         active={subtitles.position === p}
                         onClick={() => setSubtitles({ position: p })}
                       >
@@ -362,12 +371,12 @@ export function ScenePanel({
                   </div>
                 </div>
                 <Slider
-                  label="Text Size" value={subtitles.fontSize} min={0.02} max={0.14} step={0.002}
+                  data-tip="How big the subtitle letters are." label="Text Size" value={subtitles.fontSize} min={0.02} max={0.14} step={0.002}
                   onChange={(v) => setSubtitles({ fontSize: v })}
                   format={(v) => `${(v * 100).toFixed(1)}%`}
                 />
                 <Slider
-                  label="Outline" value={subtitles.strokeWidth} min={0} max={0.35} step={0.01}
+                  data-tip="How thick the dark edge around the subtitle letters is. It helps them stand out on busy pictures." label="Outline" value={subtitles.strokeWidth} min={0} max={0.35} step={0.01}
                   onChange={(v) => setSubtitles({ strokeWidth: v })}
                   format={(v) => (v === 0 ? "none" : `${Math.round(v * 100)}%`)}
                 />
@@ -383,6 +392,7 @@ export function ScenePanel({
                     ] as const).map(([id, label]) => (
                       <HudButton
                         key={id}
+                        data-tip={`Marks the word being spoken with "${label}" so viewers can follow along.`}
                         active={(subtitles.activeEmphasis ?? "glow") === id}
                         onClick={() => setSubtitles({ activeEmphasis: id })}
                       >
@@ -397,21 +407,23 @@ export function ScenePanel({
                   </p>
                 </div>
                 <Slider
-                  label="Glow Strength" value={subtitles.activeGlow} min={0} max={1.5} step={0.05}
+                  data-tip="How strong the glow is around the word being spoken. 0 = no glow." label="Glow Strength" value={subtitles.activeGlow} min={0} max={1.5} step={0.05}
                   onChange={(v) => setSubtitles({ activeGlow: v })}
                   format={(v) => (v === 0 ? "off" : `${v.toFixed(2)}x`)}
                 />
                 <Slider
-                  label="Line Length" value={subtitles.maxChars} min={14} max={80} step={1}
+                  data-tip="The most letters allowed on one subtitle line before it wraps to the next." label="Line Length" value={subtitles.maxChars} min={14} max={80} step={1}
                   onChange={(v) => setSubtitles({ maxChars: Math.round(v) })}
                   format={(v) => `${Math.round(v)} chars`}
                 />
                 <Toggle
+                  data-tip="The word being spoken lights up in that speaker's own colour."
                   label="Active word takes the speaker's colour"
                   checked={subtitles.activeFromSpeaker}
                   onChange={(v) => setSubtitles({ activeFromSpeaker: v })}
                 />
                 <Toggle
+                  data-tip="Shows all subtitle letters as CAPITALS."
                   label="UPPERCASE"
                   checked={subtitles.uppercase}
                   onChange={(v) => setSubtitles({ uppercase: v })}
@@ -432,6 +444,7 @@ export function ScenePanel({
                     <label key={key} className="flex flex-col items-center gap-1.5">
                       <input
                         type="color" value={subtitles[key]}
+                        data-tip={`The colour of the ${label.toLowerCase()} part of the subtitles. Click to pick another.`}
                         onChange={(e) => setSubtitles({ [key]: e.target.value })}
                         className="h-9 w-9 border border-accent/30 bg-transparent p-0"
                       />
@@ -446,7 +459,7 @@ export function ScenePanel({
                 )}
 
                 <div className="border-t border-accent/15 pt-4 space-y-2">
-                  <HudButton onClick={exportSrt} disabled={!narration}>
+                  <HudButton onClick={exportSrt} disabled={!narration} data-tip="Saves the words and their timing as a subtitle file (.srt) for sites that add their own captions.">
                     Export .srt
                   </HudButton>
                   <p className="text-sm text-neutral-500">

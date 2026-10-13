@@ -109,6 +109,7 @@ function Rail({
             e.stopPropagation();
             onToggle();
           }}
+          data-tip={`Opens the ${title} panel again.`}
           className="label-etched absolute inset-x-0 top-10 mx-auto whitespace-nowrap hover:text-accent-bright"
           style={{ writingMode: "vertical-rl" }}
         >
@@ -513,7 +514,7 @@ export default function App() {
           const at = STEPS.findIndex((x) => x.id === step);
           const state = !settingsOpen && st.id === step ? "on" : i < at ? "done" : "";
           return (
-            <button key={st.id} className={`forge-step panel-hud ${state}`} onClick={() => goStep(st.id)} aria-current={state === "on" ? "step" : undefined}>
+            <button key={st.id} className={`forge-step panel-hud ${state}`} data-tip={`Step ${i + 1} of 4: ${st.title} (${st.sub.toLowerCase()}). Click to go there.`} onClick={() => goStep(st.id)} aria-current={state === "on" ? "step" : undefined}>
               <span className="n">{i + 1}</span>
               <span className="t">{st.title}<small>{st.sub}</small></span>
             </button>
@@ -735,6 +736,7 @@ export default function App() {
                 disabled={!player.hasSound}
                 style={{ ["--p" as string]: `${player.durationMs ? (100 * player.timeMs) / player.durationMs : 0}%` }}
                 aria-label="Position in the video"
+                data-tip="Drag to jump to any moment in the video."
               />
               {player.hasSound ? (
                 <span className="time">
@@ -749,6 +751,7 @@ export default function App() {
           {!settingsOpen && step !== "make" && (
             <button
               className="forge-next"
+              data-tip="Goes on to the next step."
               onClick={() => goStep(STEPS[STEPS.findIndex((x) => x.id === step) + 1].id)}
             >
               Next: {STEPS[STEPS.findIndex((x) => x.id === step) + 1].title} →

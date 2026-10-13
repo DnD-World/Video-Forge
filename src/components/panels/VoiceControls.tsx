@@ -55,6 +55,7 @@ export function VoiceControls({
         <span className="label-etched text-sm">Starting point</span>
         <Picker
           aria-label="Starting point"
+          data-tip="Pick a ready-made voice style to start from, then fine-tune the sliders below."
           className="mt-1 w-full"
           value=""
           options={[
@@ -86,6 +87,7 @@ export function VoiceControls({
       <button
         type="button"
         className="text-sm text-accent-bright/70 hover:text-accent-bright"
+        data-tip="Shows or hides extra voice settings that most people never need to change."
         onClick={() => setShowAdvanced((s) => !s)}
       >
         {showAdvanced ? "Hide the rarely-touched ones" : "Show the rarely-touched ones"}
@@ -95,6 +97,7 @@ export function VoiceControls({
       <div className="border-t border-accent/15 pt-4 space-y-3">
         <p className="label-etched text-sm">Let the app add expression</p>
         <Toggle
+          data-tip="If a line of the script has no feeling written in, the app adds a mood so the voice does not sound flat."
           label="Lift flat lines"
           checked={!!expression.liftFlatLines}
           onChange={(liftFlatLines) => onExpressionChange({ ...expression, liftFlatLines })}
@@ -106,6 +109,7 @@ export function VoiceControls({
               type="text"
               className="w-full mt-1 bg-black/30 border border-accent/20 rounded px-2 py-1 text-sm"
               placeholder="speaks warmly"
+              data-tip="The mood the app adds to flat lines, for example speaks warmly."
               value={expression.defaultVerb ?? ""}
               onChange={(e) =>
                 onExpressionChange({ ...expression, defaultVerb: e.target.value })
@@ -114,6 +118,7 @@ export function VoiceControls({
           </label>
         )}
         <Toggle
+          data-tip="If the script says someone laughs or hums, the app writes the sound into the speech so you can actually hear it."
           label="Spell out laughs and hums"
           checked={!!expression.spellNoises}
           onChange={(spellNoises) => onExpressionChange({ ...expression, spellNoises })}
@@ -128,6 +133,22 @@ export function VoiceControls({
     </div>
   );
 }
+
+/** Plain-words help for each voice setting, by its key. */
+const KNOB_TIPS: Record<string, string> = {
+  stgScale: "How strongly the voice acts out the feeling in the script. Higher = more dramatic, lower = a flatter read.",
+  durationMultiplier: "How much time the voice takes to say the words. Under 1 = faster and tighter, over 1 = slower with pauses.",
+  cfgScale: "How closely the voice sticks to exactly what you wrote. Higher = more exact but a bit less natural.",
+  refDuration: "How many seconds of the sample recording the voice copies from.",
+  denoiseRef: "Cleans background hiss out of the sample recording before the voice copies it.",
+  watermark: "Hides a secret mark in the audio that says it was made by a computer. Off by default.",
+  seed: "A lucky number. The same number gives the same take every time; change it to get a different take.",
+  genDuration: "Forces the speech to last this many seconds. Leave on Auto and the program chooses.",
+  rescaleScale: "An expert setting that tweaks how the voice is balanced. Leave on Auto unless you are experimenting.",
+  targetChunkDuration: "Long text is cut into pieces. This is how many seconds each piece aims to be.",
+  maxChunkDuration: "No piece of speech is allowed to be longer than this many seconds, because long pieces start to sound worse.",
+  crossfadeMs: "How many thousandths of a second two pieces of speech overlap so the join is not heard.",
+};
 
 function KnobControl({
   knob,
@@ -147,7 +168,7 @@ function KnobControl({
   if (knob.kind === "toggle") {
     return (
       <div>
-        <Toggle label={label} checked={!!value} onChange={onChange} />
+        <Toggle label={label} checked={!!value} onChange={onChange} data-tip={KNOB_TIPS[knob.key] ?? knob.hint} />
         <p className="text-sm text-neutral-500 mt-1">{knob.hint}</p>
       </div>
     );
@@ -160,6 +181,7 @@ function KnobControl({
           <span className="label-etched text-sm">{label}</span>
           <NumberField
             aria-label={knob.label}
+            data-tip={KNOB_TIPS[knob.key] ?? knob.hint}
             className="w-24"
             value={typeof value === "number" ? value : 0}
             onChange={onChange}
@@ -176,6 +198,7 @@ function KnobControl({
   return (
     <div>
       <Slider
+        data-tip={KNOB_TIPS[knob.key] ?? knob.hint}
         label={label}
         value={typeof value === "number" ? value : (knob.min ?? 0)}
         min={knob.min ?? 0}
@@ -191,6 +214,7 @@ function KnobControl({
             <button
               type="button"
               className="text-sm text-accent-bright/60 hover:text-accent-bright"
+              data-tip={isAuto ? "Stop letting the program decide, and choose the number yourself." : "Let the program decide this one for you."}
               onClick={() => onChange(isAuto ? (knob.min ?? 0) : null)}
             >
               {isAuto ? "Set a value" : knob.nullLabel ?? "Auto"}
@@ -200,6 +224,7 @@ function KnobControl({
             <button
               type="button"
               className="text-sm text-accent-bright/60 hover:text-accent-bright"
+              data-tip="Puts this setting back the way it was at the start."
               onClick={onReset}
             >
               Reset

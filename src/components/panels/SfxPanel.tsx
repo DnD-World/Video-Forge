@@ -83,7 +83,7 @@ export function SfxPanel() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
-        <HudButton onClick={addFromDisk} disabled={!!busy}>
+        <HudButton onClick={addFromDisk} disabled={!!busy} data-tip="Pick a sound file from your computer to add as a sound effect.">
           Add from disk
         </HudButton>
       </div>
@@ -103,9 +103,10 @@ export function SfxPanel() {
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && runSearch()}
           placeholder="dog bark"
+          data-tip="Type the sound you want, in English, like dog bark, then press Enter to search."
           className="flex-1 min-w-0 bg-black/60 px-3 py-2 text-neutral-200 outline-none border border-accent/25"
         />
-        <HudButton onClick={runSearch} disabled={!!busy}>
+        <HudButton onClick={runSearch} disabled={!!busy} data-tip="Looks for free sound effects that match your words.">
           Search
         </HudButton>
       </div>
@@ -154,6 +155,7 @@ export function SfxPanel() {
               <button
                 onClick={() => removeSfx(c.id)}
                 className="label-etched underline hover:text-red-400 shrink-0"
+                data-tip="Takes this sound effect out of the video."
               >
                 remove
               </button>
@@ -163,6 +165,7 @@ export function SfxPanel() {
                 <span className="label-etched">at</span>
                 <NumberField
                   aria-label={`Seconds into the video for ${c.label}`}
+                  data-tip="When the sound plays, counted in seconds from the start of the video."
                   className="w-28"
                   min={0}
                   step={0.1}
@@ -183,6 +186,7 @@ export function SfxPanel() {
                   value={c.volume}
                   onChange={(e) => updateSfx(c.id, { volume: parseFloat(e.target.value) })}
                   className="flex-1"
+                  data-tip="How loud this sound effect is."
                 />
                 <span className="text-sm text-neutral-500 w-9 text-right">
                   {Math.round(c.volume * 100)}%

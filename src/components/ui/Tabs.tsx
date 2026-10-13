@@ -15,6 +15,8 @@ interface Props<T extends string> {
   active: T;
   onChange: (id: T) => void;
   "aria-label"?: string;
+  /** Hover help (shown by TipLayer). */
+  "data-tip"?: string;
 }
 
 export function Tabs<T extends string>({
@@ -22,11 +24,12 @@ export function Tabs<T extends string>({
   active,
   onChange,
   "aria-label": ariaLabel,
+  "data-tip": dataTip,
 }: Props<T>) {
   return (
     // Wraps rather than scrolls: a speaker's name can be any length, and a tab
     // hidden off the end of a strip is worse than a strip two rows tall.
-    <div className="tabs flex-wrap mb-4" role="tablist" aria-label={ariaLabel}>
+    <div className="tabs flex-wrap mb-4" role="tablist" aria-label={ariaLabel} data-tip={dataTip}>
       {tabs.map((t) => (
         <button
           key={t.id}

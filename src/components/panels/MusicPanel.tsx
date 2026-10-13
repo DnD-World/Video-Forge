@@ -67,6 +67,7 @@ export function MusicPanel() {
                 key={t.filePath}
                 active={music?.filePath === t.filePath}
                 onClick={() => loadMusicFile(t.filePath)}
+                data-tip={`Use the music loop "${t.name.replace(/.wav$/i, "").replace(/[_-]+/g, " ")}" as your background music.`}
               >
                 {t.name.replace(/\.wav$/i, "").replace(/[_-]+/g, " ").slice(0, 28)}
               </HudButton>
@@ -81,7 +82,7 @@ export function MusicPanel() {
       )}
 
       <div className="flex items-center gap-2">
-        <HudButton onClick={pickMusic} disabled={musicBusy}>
+        <HudButton onClick={pickMusic} disabled={musicBusy} data-tip="Pick a music file from your computer to play quietly under the voice.">
           {musicBusy ? "Analysing…" : music ? "Change Track" : "Load Music"}
         </HudButton>
         {music && (
@@ -91,6 +92,7 @@ export function MusicPanel() {
               setMusicNote(null);
             }}
             className="label-etched underline hover:text-red-400"
+            data-tip="Takes the music out of the video."
           >
             remove
           </button>
@@ -107,6 +109,7 @@ export function MusicPanel() {
       {musicNote && <p className="text-sm text-amber-400">{musicNote}</p>}
 
       <Slider
+        data-tip="How loud the music is. Lower it so people can hear the voice clearly."
         label="Music level"
         value={musicVolume}
         min={0} max={1} step={0.02}
@@ -114,6 +117,7 @@ export function MusicPanel() {
         onChange={(volume) => setMusicMix({ volume })}
       />
       <Slider
+        data-tip="Makes the music get quieter while someone is talking, then come back. Higher = quieter during speech."
         label="Duck under speech"
         value={musicDuck}
         min={0} max={1} step={0.05}
@@ -131,6 +135,7 @@ export function MusicPanel() {
           type="color" value={musicColor}
           onChange={(e) => setMusicColor(e.target.value)}
           className="h-9 w-9 border border-accent/30 bg-transparent p-0"
+          data-tip="The colour of the music's waveform picture. Click to pick another."
         />
         <span className="text-sm text-neutral-400">Music colour</span>
       </div>

@@ -31,6 +31,8 @@ import type { Puppet } from "../../src/store/puppetTypes";
 import { puppetAssetPaths, validatePuppet } from "../../src/lib/puppets/puppetAssets";
 import { ensureFont } from "../net/fonts";
 import { joinCards } from "./joinCards";
+import { buildCues } from "../../src/lib/subtitles/wordTiming";
+import { toSrt, toVtt } from "../../src/lib/subtitles/subtitleFiles";
 
 export interface RenderJob {
   musicWaveform: RenderProps["musicWaveform"];
@@ -649,6 +651,19 @@ export async function renderVideo(
     });
     warnings.push(...joined.warnings);
     for (const w of joined.warnings) onProgress(99, w);
+
+    // SUBTITLE FILES beside the video, same cues as the picture, shifted by
+    // any intro card joined in front (Ak, 13 Oct 2026).
+    if (job.narrationSegments?.length) {
+      try {
+        const cues = buildCues(job.narrationSegments, job.subtitles.maxChars, job.narrationPauses ?? []);
+        const stem = joined.outputPath.replace(/\.mp4$/i, "");
+        await fsp.writeFile(`${stem}.srt`, toSrt(cues, joined.introSec * 1000), "utf8");
+        await fsp.writeFile(`${stem}.vtt`, toVtt(cues, joined.introSec * 1000), "utf8");
+      } catch (e) {
+        warnings.push(`[video-forge] the subtitle files could not be written: ${(e as Error).message}`);
+      }
+    }
 
     return {
       outputPath: joined.outputPath,

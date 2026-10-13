@@ -196,6 +196,7 @@ export function CastPanel() {
         {library.length > 0 && (
           <Picker
             aria-label="Add a saved character"
+            data-tip="Adds a character you saved earlier to this video as a new speaker."
             className="w-44"
             value=""
             placeholder="From library…"

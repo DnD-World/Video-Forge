@@ -2,6 +2,8 @@ interface Props {
   label: string;
   checked: boolean;
   onChange: (v: boolean) => void;
+  /** Hover help (shown by TipLayer). */
+  "data-tip"?: string;
 }
 
 /**
@@ -20,9 +22,9 @@ interface Props {
  * A real <input type="checkbox"> underneath, so keyboard, focus and screen
  * readers work without reimplementing any of it.
  */
-export function Toggle({ label, checked, onChange }: Props) {
+export function Toggle({ label, checked, onChange, "data-tip": dataTip }: Props) {
   return (
-    <div className="leverrow">
+    <div className="leverrow" data-tip={dataTip}>
       <span className="tlabel">{label}</span>
       <label className="lever">
         <input

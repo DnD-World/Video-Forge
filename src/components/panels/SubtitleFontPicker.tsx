@@ -96,6 +96,7 @@ export function SubtitleFontPicker() {
           entirely and came out light-on-light. */}
       <Picker
         aria-label="Subtitle typeface"
+        data-tip="Choose the style of letters used for the subtitles. Each name is shown in its own letters."
         className="w-full"
         disabled={busy}
         value={subtitles.fontFamily ?? ""}
@@ -137,6 +138,7 @@ export function SubtitleFontPicker() {
             <button
               key={w}
               disabled={busy}
+              data-tip={`Letter thickness ${w}. Small numbers are thin, big numbers are bold.`}
               onClick={() => void choose(current.family, w)}
               className={`px-2 py-1 text-sm border ${
                 w === weight

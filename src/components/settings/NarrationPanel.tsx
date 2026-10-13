@@ -259,9 +259,9 @@ export default function NarrationPanel() {
             Write it with AI
           </summary>
           <div className="space-y-2 pt-3">
-            <input type="text" placeholder="What is it about? e.g. 'why dogs chase butterflies'" value={topic} onChange={(e) => setTopic(e.target.value)} className="w-full" />
-            <input type="text" placeholder="Tone (optional), e.g. playful, calm, serious" value={tone} onChange={(e) => setTone(e.target.value)} className="w-full" />
-            <button onClick={runDraft} disabled={drafting} className="btn">
+            <input type="text" placeholder="What is it about? e.g. 'why dogs chase butterflies'" data-tip="Say what the video is about in a few words. The AI uses it to write a first script." value={topic} onChange={(e) => setTopic(e.target.value)} className="w-full" />
+            <input type="text" placeholder="Tone (optional), e.g. playful, calm, serious" data-tip="Optional. The feeling you want, like playful or calm, so the AI writes in that style." value={tone} onChange={(e) => setTone(e.target.value)} className="w-full" />
+            <button onClick={runDraft} disabled={drafting} className="btn" data-tip="Asks the AI to write a first version of your script. You can change anything afterwards.">
               {drafting ? `Writing… ${draftSec}s` : "Write a draft"}
             </button>
             {draftError && <p className="text-sm text-red-400 whitespace-pre-wrap">{draftError}</p>}
@@ -277,6 +277,7 @@ export default function NarrationPanel() {
           </div>
           <textarea
             value={script}
+            data-tip="Type or paste your script here, one line for each thing a speaker says."
             onChange={(e) => setScript(e.target.value)}
             placeholder={`${names[0] ?? "Speaker 1"}: Hello there!\n${names[1] ?? "Speaker 2"}: [laughs] Hi, good to see you.`}
             className="forge-script-text flex-1 resize-none"

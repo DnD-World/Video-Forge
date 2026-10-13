@@ -143,7 +143,7 @@ export function BackgroundPanel() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
-        <HudButton onClick={chooseAutomatically} disabled={!!busy}>
+        <HudButton onClick={chooseAutomatically} disabled={!!busy} data-tip="Reads your narration and picks a stock video for each scene for you. You can swap any pick afterwards.">
           Choose automatically
         </HudButton>
         <HudButton
@@ -152,12 +152,14 @@ export function BackgroundPanel() {
             setSearchOpen(true);
           }}
           disabled={!!busy}
+          data-tip="Type what you want to see, like dog running in park, and choose a video yourself."
         >
           Search by hand
         </HudButton>
         {backgrounds.length > 0 && (
           <button
             onClick={() => setBackgrounds([])}
+            data-tip="Removes all the background videos so you can start over."
             className="label-etched underline text-neutral-500 hover:text-red-400"
           >
             clear
@@ -178,6 +180,7 @@ export function BackgroundPanel() {
           clip exactly as they do to a planned one. */}
       <div className="space-y-3 border-t border-accent/15 pt-3">
         <Slider
+          data-tip="Darkens the background video so the words and bars on top are easy to read. Higher = darker."
           label="Dim"
           value={backgroundDim}
           min={0}
@@ -212,6 +215,7 @@ export function BackgroundPanel() {
           ))}
         </div>
         <Slider
+          data-tip="How long one background video melts into the next one. 0 = a sudden cut."
           label="Crossfade"
           value={backgroundCrossfadeMs}
           min={0}
@@ -262,6 +266,7 @@ export function BackgroundPanel() {
                 setSearchOpen(true);
               }}
               className="label-etched underline hover:text-accent-bright shrink-0"
+              data-tip="Pick a different background video for this scene."
             >
               swap
             </button>
@@ -290,10 +295,10 @@ export function BackgroundPanel() {
               <div className="flex items-center gap-3 mb-1">
                 <h3 className="title-deco uppercase text-lg">Find a background</h3>
                 <div className="flex-1" />
-                <HudButton onClick={() => setExpanded((v) => !v)}>
+                <HudButton onClick={() => setExpanded((v) => !v)} data-tip="Makes this search window bigger, or back to normal size.">
                   {expanded ? "Restore" : "Maximize"}
                 </HudButton>
-                <HudButton onClick={() => setSearchOpen(false)}>Close</HudButton>
+                <HudButton onClick={() => setSearchOpen(false)} data-tip="Closes the search without choosing anything.">Close</HudButton>
               </div>
               <p className="text-sm text-neutral-500 mb-3">
                 Searches Pixabay and Pexels together. English terms work best — both
@@ -313,12 +318,13 @@ export function BackgroundPanel() {
                           if (e.key === "Escape") setSearchOpen(false);
                         }}
                         placeholder="dog running in park"
+                        data-tip="Type what you want to see, in English, then press Enter to search."
                         className="input"
                       />
                     </div>
                   </div>
                 </div>
-                <HudButton onClick={runSearch} disabled={!!busy}>
+                <HudButton onClick={runSearch} disabled={!!busy} data-tip="Looks for stock videos that match your words.">
                   {busy ? "Searching…" : "Search"}
                 </HudButton>
               </div>

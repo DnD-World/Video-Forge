@@ -13,31 +13,35 @@
 // ---------------------------------------------------------------------------
 
 import { geminiJson } from "../llm/geminiText";
-import { unaccentedCaps } from "./greekAccentsPure";
-export { unaccentedCaps, withAccents } from "./greekAccentsPure";
+import { sameWord, unaccentedWords } from "./greekAccentsPure";
+export { unaccentedCaps, unaccentedWords, withAccents, applyPronunciations } from "./greekAccentsPure";
 
-/** Look up the accent for every such word in the script, in one request. */
+/**
+ * Look up the stress for every unmarked Greek word in the script — capitals
+ * and words typed without their τόνος — in one request. A word keeps its own
+ * case: «ΕΝΣΤΙΚΤΟ» comes back «ΈΝΣΤΙΚΤΟ», «καλημερα» comes back «καλημέρα».
+ */
 export async function accentMap(texts: string[]): Promise<Map<string, string>> {
-  const words = [...new Set(texts.flatMap(unaccentedCaps))];
+  const words = [...new Set(texts.flatMap(unaccentedWords))];
   const map = new Map<string, string>();
   if (!words.length) return map;
   try {
     const reply = await geminiJson(
-      "You restore Greek accents. For each Greek word given in capitals, return the correctly accented lowercase form " +
-        "(monotonic system, one τόνος where Greek spelling puts it; words of one syllable usually take none). " +
-        'Answer only JSON: {"words": {"CAPS": "accented lowercase", ...}}.',
+      "You restore Greek stress marks. For each Greek word given (capitals or lowercase, typed without its τόνος), return the correctly accented lowercase form " +
+        "(monotonic system, one τόνος where Greek spelling puts it). Keep the letters exactly; only add the mark. " +
+        'Answer only JSON: {"words": {"AS GIVEN": "accented lowercase", ...}}.',
       JSON.stringify(words)
     );
     const parsed = JSON.parse(reply) as { words?: Record<string, string> };
-    for (const [caps, lower] of Object.entries(parsed.words ?? {})) {
+    for (const [given, lower] of Object.entries(parsed.words ?? {})) {
       // Only accept an answer that is the same word: same letters once the
       // accents are taken away. Anything else is the model rewriting the script.
-      const plain = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").toUpperCase();
-      if (typeof lower === "string" && plain(lower) === plain(caps)) map.set(caps, lower.toUpperCase());
+      if (typeof lower !== "string" || !sameWord(lower, given) || !words.includes(given)) continue;
+      const caps = given === given.toUpperCase();
+      map.set(given, caps ? lower.toUpperCase() : given[0] === given[0].toUpperCase() ? lower[0].toUpperCase() + lower.slice(1) : lower);
     }
   } catch (e) {
-    console.log(`[video-forge] couldn't restore accents on capitalised words (${e instanceof Error ? e.message : e}); spoken as written.`);
+    console.log(`[video-forge] couldn't restore Greek stress marks (${e instanceof Error ? e.message : e}); spoken as written.`);
   }
   return map;
 }
-

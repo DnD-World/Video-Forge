@@ -330,7 +330,7 @@ input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-of
 /* The bubble itself is drawn by components/ui/TipLayer.tsx, once for the
    whole window: drawn inside its panel (the first version) it was cut off by
    the panel's scroll edge — the lowest choices had no help at all (Ak, 13 Oct). */
-.forge-tip { position: fixed; z-index: 10000; max-width: 280px; padding: 8px 11px; border-radius: 12px; background: #071C26;
+.forge-tip { position: fixed; z-index: 2147483647; max-width: 300px; padding: 8px 11px; border-radius: 12px; background: #071C26;
   border: 1px solid rgba(118, 255, 194, .3); color: var(--ink); font: 400 12px/1.45 "Sora", sans-serif; letter-spacing: 0;
   text-transform: none; box-shadow: 0 10px 30px -8px rgba(0, 0, 0, .9); pointer-events: none; white-space: normal; animation: forge-tip-in .12s ease-out; }
 @keyframes forge-tip-in { from { opacity: 0; transform: translateY(2px); } }
@@ -477,3 +477,5 @@ html[data-motion="off"] body::before { animation: none; }
 .relative:hover > .shelf-del, .shelf-del.armed { opacity: 1; }
 .shelf-del:hover { border-color: #ff6b6b; color: #ffb4b4; }
 .shelf-del.armed { border-color: #ff6b6b; background: rgba(120, 20, 20, .9); color: #fff; }
+
+.forge-tip-more { display: block; margin-top: 6px; color: var(--accent); text-decoration: underline; text-underline-offset: 2px; font-weight: 500; }

@@ -198,6 +198,7 @@ function ClipStorage() {
       </p>
       <Slider
         label="Keep at most"
+        data-tip="The most disk space the downloaded background clips may use. Past this, the oldest ones can be cleaned away."
         value={limit}
         min={0.5} max={20} step={0.5}
         format={(v) => `${v} GB`}
@@ -208,6 +209,7 @@ function ClipStorage() {
       </div>
       <div className="flex items-center gap-3">
         <HudButton
+          data-tip="Deletes the stock clips this app downloaded, except ones your open project uses. They download again if needed."
           onClick={async () => {
             if (!window.confirm("Remove every downloaded background clip except the ones this project uses? They download again if a video needs them.")) return;
             const r = await window.byok.mediaCache.cleanUp(0, projectClipPaths());
@@ -337,6 +339,7 @@ export default function BackendPanel() {
               target="_blank"
               rel="noreferrer"
               className="text-sm text-accent-bright underline hover:text-accent inline-block mb-3"
+              data-tip={`Opens the ${p.label} website where you can get your own key. A key is like a password that lets this app use the service.`}
             >
               Get a key →
             </a>
@@ -345,6 +348,7 @@ export default function BackendPanel() {
                   <input
                     type="password"
                     placeholder={isSaved ? "Replace key…" : "Paste key…"}
+                    data-tip={`Paste your ${p.label} key here. It stays on this computer.`}
                     value={draft[p.id] ?? ""}
                     onChange={(e) =>
                       setDraft((d) => ({ ...d, [p.id]: e.target.value }))
@@ -353,6 +357,7 @@ export default function BackendPanel() {
                   />
                   <button
                     onClick={() => save(p.id)}
+                    data-tip={`Keeps the key you pasted for ${p.label}.`}
                     className="btn cut-sm btn-primary px-4 py-2 text-sm font-display font-semibold uppercase tracking-[0.1em]"
                   >
                     Save
@@ -361,6 +366,7 @@ export default function BackendPanel() {
                     <>
                       <button
                         onClick={() => test(p.id)}
+                        data-tip={`Checks that your ${p.label} key really works.`}
                         disabled={state?.busy}
                         className="btn cut-sm px-4 py-2 text-sm font-display uppercase tracking-[0.1em] hover:text-accent-bright disabled:opacity-40"
                       >
@@ -368,6 +374,7 @@ export default function BackendPanel() {
                       </button>
                       <button
                         onClick={() => remove(p.id)}
+                        data-tip={`Forgets your ${p.label} key. You can paste it again later.`}
                         className="btn cut-sm px-4 py-2 text-sm font-display uppercase tracking-[0.1em] hover:text-red-400"
                       >
                         Clear

@@ -277,10 +277,12 @@ export function PresetsPanel() {
         <div className="flex gap-2">
           <input
             type="text" placeholder="Name this look…" value={name}
+            data-tip="Give your current look a name, then press Save to keep it for later."
             onChange={(e) => setName(e.target.value)}
             className="flex-1 min-w-0 bg-metal-900 border border-accent/25 px-3 py-2 text-base text-neutral-100 outline-none focus:border-accent"
           />
           <HudButton
+            data-tip="Saves the way your video looks right now under the name you typed, so you can use it again."
             onClick={() => {
               const n = name.trim();
               if (!n) return;
@@ -305,8 +307,8 @@ export function PresetsPanel() {
                 </div>
               </div>
               <div className="flex gap-2 shrink-0">
-                <button onClick={() => loadSnapshot(tpl)} className="label-etched underline hover:text-accent-bright">Load</button>
-                <button onClick={() => deleteTemplate(key)} className="label-etched underline text-neutral-500 hover:text-red-400">Delete</button>
+                <button onClick={() => loadSnapshot(tpl)} className="label-etched underline hover:text-accent-bright" data-tip={`Applies the saved look "${key}" to your video.`}>Load</button>
+                <button onClick={() => deleteTemplate(key)} className="label-etched underline text-neutral-500 hover:text-red-400" data-tip={`Throws away the saved look "${key}". Your current video is not changed.`}>Delete</button>
               </div>
             </div>
           ))
@@ -324,8 +326,8 @@ export function PresetsPanel() {
           is for keeping named copies and moving them between machines.
         </p>
         <div className="flex gap-2">
-          <HudButton onClick={saveProject}>Save project…</HudButton>
-          <HudButton onClick={openProject}>Open project…</HudButton>
+          <HudButton onClick={saveProject} data-tip="Saves everything (cast, script, voices, look) into one file on your computer.">Save project…</HudButton>
+          <HudButton onClick={openProject} data-tip="Opens a project file you saved before, with everything just as you left it.">Open project…</HudButton>
         </div>
       </section>
 
@@ -341,6 +343,7 @@ export function PresetsPanel() {
             replaces what is on screen now, so save first if you want to keep it.
           </p>
           <HudButton
+            data-tip={`Fills in a ready-made example video called ${sample.name}. It replaces what you have on screen now.`}
             onClick={() => {
               if (
                 speakers.length > 0 &&
@@ -362,8 +365,8 @@ export function PresetsPanel() {
       <section className="space-y-3 border-t border-accent/15 pt-5">
         <div className="label-etched">Share the look as a file</div>
         <div className="flex gap-2">
-          <HudButton onClick={exportPreset}>Export…</HudButton>
-          <HudButton onClick={importPreset}>Import…</HudButton>
+          <HudButton onClick={exportPreset} data-tip="Saves your current look as a small file you can share or keep as a backup.">Export…</HudButton>
+          <HudButton onClick={importPreset} data-tip="Loads a look from a file someone shared with you.">Import…</HudButton>
         </div>
         <p className="text-sm text-neutral-500">
           Presets are plain JSON, so an assistant can write one for you and you

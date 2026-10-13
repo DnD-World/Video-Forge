@@ -40,6 +40,8 @@ interface Props<T extends string> {
   className?: string;
   triggerStyle?: CSSProperties;
   "aria-label"?: string;
+  /** Hover help (shown by TipLayer). */
+  "data-tip"?: string;
   /** Fires when the list opens or closes. The font picker uses it to start
    *  fetching previews only once someone actually looks at the list — there is
    *  no reason to pull twenty typefaces off the network for a control nobody
@@ -56,6 +58,7 @@ export function Picker<T extends string>({
   className = "",
   triggerStyle,
   "aria-label": ariaLabel,
+  "data-tip": dataTip,
   onOpenChange,
 }: Props<T>) {
   const [open, setOpenState] = useState(false);
@@ -167,7 +170,7 @@ export function Picker<T extends string>({
     : undefined;
 
   return (
-    <div className={`picker ${className}`}>
+    <div className={`picker ${className}`} data-tip={dataTip}>
       <button
         ref={triggerRef}
         type="button"
