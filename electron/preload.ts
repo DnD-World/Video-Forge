@@ -161,6 +161,13 @@ const api = {
   forge: {
     /** Open Image Forge. False when it is not installed on this computer. */
     openImageForge: (): Promise<boolean> => ipcRenderer.invoke("forge:openImageForge"),
+    shelfPuppets: (): Promise<{ slug: string; name: string; rigPath: string; basePath: string; framing: "head" | "waist"; madeAt: string }[]> =>
+      ipcRenderer.invoke("forge:shelfPuppets"),
+    orderPuppet: (
+      order: { name: string; description: string; style: string; framing: "head" | "waist"; auto: boolean },
+      pictures: string[]
+    ): Promise<{ ok: boolean; id?: string; opened?: boolean; problem?: string }> => ipcRenderer.invoke("forge:orderPuppet", order, pictures),
+    orderResult: (id: string): Promise<{ slug: string | null; problem: string | null } | null> => ipcRenderer.invoke("forge:orderResult", id),
   },
   llm: {
     draftScript: (opts: {

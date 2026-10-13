@@ -90,6 +90,7 @@ export interface BuiltNarration {
      *  makes before the first word. Both carried through to the face — see
      *  NarrationSegment in store/types.ts. */
     mood?: string;
+    tags?: string[];
     openingSound?: string;
   }[];
   analysis: ReturnType<typeof analyzeNarration>;
@@ -357,6 +358,7 @@ export async function buildNarration(
     // nods, [shakes head] shakes. Until 12 Oct 2026 the tags were stripped
     // here and the face never heard about them outside the course lessons.
     mood: moodTag(seg.text),
+    tags: [...seg.text.matchAll(/\[([^\]]+)\]/g)].map((m) => m[1].trim().toLowerCase()),
   }));
 
   // Written after the real file, and failures are swallowed: a cache that

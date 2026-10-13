@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain, dialog, shell, Menu } from "electron";
 import path from "node:path";
 import fsp from "node:fs/promises";
 import * as keyStore from "./keyStore";
+import { listPuppets, orderResult, placeOrder, shelfRoot } from "../tools/lib/forgeShelf.mjs";
 import { resolveUserData, NEW_APP_NAME } from "./migrateUserData";
 import { listPiperVoices, synthesizeWithPiper, shutdownAllPiperServers } from "./tts/piperEngine";
 import { analyzeNarration } from "./audio/analyzeNarration";
@@ -218,7 +219,7 @@ ipcMain.handle("storage:outputDir", async () => {
 /** The Forge switch: open Image Forge, Video Forge's sister app.
  *  Looked for where its installer puts it (per-user install). Returns false
  *  when it is not installed, so the UI can say so instead of doing nothing. */
-ipcMain.handle("forge:openImageForge", async () => {
+async function openImageForge(): Promise<boolean> {
   const exe = path.join(process.env.LOCALAPPDATA ?? "", "Programs", "Image Forge", "Image Forge.exe");
   try {
     await fsp.access(exe);
@@ -227,7 +228,32 @@ ipcMain.handle("forge:openImageForge", async () => {
   }
   const err = await shell.openPath(exe);
   return err === "";
-});
+}
+ipcMain.handle("forge:openImageForge", openImageForge);
+
+/** The Forge shelf (tools/lib/forgeShelf.mjs): puppets Image Forge made, and
+ *  orders for new ones. Image Forge notices an order within 20 seconds of
+ *  opening — and is opened here so it does. */
+ipcMain.handle("forge:shelfPuppets", async () => listPuppets(shelfRoot()));
+ipcMain.handle(
+  "forge:orderPuppet",
+  async (_e, order: { name: string; description: string; style: string; framing: "head" | "waist"; auto: boolean }, pictures: string[] = []) => {
+    const bufs: Buffer[] = [];
+    for (const p of pictures.slice(0, 3)) {
+      try {
+        bufs.push(await fsp.readFile(p));
+      } catch {
+        /* a picture that cannot be read is left out */
+      }
+    }
+    const id = `order-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+    const placed = placeOrder(shelfRoot(), { ...order, id, from: "Video Forge" }, bufs);
+    if (!placed.ok) return { ok: false, problem: placed.problem };
+    const opened = await openImageForge();
+    return { ok: true, id, opened };
+  }
+);
+ipcMain.handle("forge:orderResult", async (_e, id: string) => orderResult(shelfRoot(), id));
 
 /** Downloaded background clips: how much room they take, and clearing them
  *  (electron/media/mediaCache.ts). `keep` = clips the open project uses. */

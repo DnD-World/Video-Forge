@@ -24,7 +24,7 @@ import { deriveAccentShades, rgbTripleToHex } from "./lib/color/deriveShades";
 import { headMotion, motionTransform } from "./lib/motion/idleMotion";
 import {
   blinkAt, browAt, buildSpeakerBrowTracks,
-  buildSpeakerHeadTracks, headPoseAt,
+  buildSpeakerHeadTracks, headPoseAt, buildSpeakerPoseTracks, poseAt,
 } from "./lib/motion/facePerformance";
 import { sampleAnalysis } from "./lib/waveform/audioAnalysis";
 import { useCornerFlare } from "./lib/motion/useCornerFlare";
@@ -247,6 +247,8 @@ export default function App() {
     () => buildSpeakerBrowTracks(narration?.segments ?? []),
     [narration]
   );
+  // Arm poses from [waves], [points]… and greetings (12 Oct 2026).
+  const poseTracks = useMemo(() => buildSpeakerPoseTracks(narration?.segments ?? []), [narration]);
   const headTracks = useMemo(
     () => buildSpeakerHeadTracks(narration?.segments ?? []),
     [narration]
@@ -657,6 +659,7 @@ export default function App() {
                       browLeft={browAt(browTracks[sp.id], previewTimeMs)}
                       browRight={browAt(browTracks[sp.id], previewTimeMs)}
                       head={headPoseAt(sp.id, headTracks[sp.id], previewTimeMs, idleMotion)}
+                      pose={poseAt(poseTracks[sp.id], previewTimeMs)}
                       // size is a fraction of frame width; the render resolves
                       // it against the output width the exact same way.
                       size={sp.size * canvasSize.w}

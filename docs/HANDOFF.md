@@ -18,6 +18,28 @@ or deleting writes both, and `syncShared()` at start-up hands over keys the
 file lacks. Tested end to end on 12 Oct: Image Forge filled Gemini and NVIDIA
 from Video Forge by itself. Full status of the V2 work: `docs/V2-PLAN.md`.
 
+## Puppets from Image Forge — 12–13 Oct 2026
+
+Image Forge's puppet maker makes Forge puppets (method: Image Forge
+`docs/puppet-recipe.md`). They arrive on the **Forge shelf**,
+`%APPDATA%/Forge/puppets/<slug>/<slug>.rig.json`, shared through
+`tools/lib/forgeShelf.mjs` (identical copy in Image Forge). In the app:
+Cast → Look → **Puppets from Image Forge** (click a face to use it) and
+**Order a new puppet…** (description, style, framing, up to 3 inspiration
+pictures, "make it without me"); the order opens Image Forge, which makes it
+and puts it on the shelf. Component: `src/components/panels/PuppetShelf.tsx`.
+
+The puppet format gained `poses` (arm layers over the body). New in the face
+engine (`src/lib/motion/facePerformance.ts`): head gesture `nod` (`[nods]`,
+spoken yes/ναι) and `shake` for `[shakes head]`/no/όχι; arm poses from
+`[waves] [points] [shrugs] [explains]` and opening greetings
+(`buildSpeakerPoseTracks`, `poseAt`; drawn in `PuppetAvatar` under the neck).
+In-app narration now keeps the line's tags (`mood`, `tags`) — before, they
+were stripped and `[laughs]` never reached the face outside course lessons.
+
+Verified 13 Oct: Hoolio (owl, made in Image Forge) chosen from the shelf for
+Καίτη in a test copy, and lip-synced in the preview.
+
 ## Renamed: Video Forge (9 Oct 2026)
 
 The app was called BYOK-Vid-Creator; it is now **Video Forge** (package `video-forge`, appId `com.stravelakis.videoforge`, repo https://github.com/DnD-World/Video-Forge). The folder on disk is still `BYOK-Vid-Creator` (not renamed, so absolute paths in `jobs/` keep working).

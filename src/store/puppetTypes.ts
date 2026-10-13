@@ -139,6 +139,14 @@ export interface Puppet {
    * Omit the whole thing and the puppet leans as one piece, which is the right
    * answer for art where the head genuinely cannot be separated.
    */
+  /**
+   * Arm poses — "wave", "point", "shrug", "explain" — for waist-up puppets made
+   * by Image Forge's puppet maker (12 Oct 2026). Each is a layer cut from an
+   * edit of the base where only the arms changed, drawn over the BODY (below
+   * the neck), so a waving character can still nod. Asked for in the script
+   * with [waves], [points], [shrugs], [explains].
+   */
+  poses?: Record<string, PuppetLayer>;
   neck?: {
     /** The cut line, 0–1 down the base image. */
     y: number;

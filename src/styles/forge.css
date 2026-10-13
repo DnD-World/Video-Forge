@@ -413,3 +413,14 @@ input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-of
 .forge-waves .pic > div, .forge-waves .pic > svg, .forge-waves .pic > canvas { position: absolute; inset: 0; }
 .forge-waves .frame { position: absolute; left: 29%; top: 29%; width: 42%; height: 42%; border: 2px solid; background: rgba(11, 40, 55, .7); }
 .forge-waves .frame.circle { border-radius: 50%; } .forge-waves .frame.rounded { border-radius: 24%; } .forge-waves .frame.square { border-radius: 3px; } .forge-waves .frame.none { border-radius: 50%; }
+
+/* ---- puppets from Image Forge (Cast → Look) ---- */
+.forge-shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 8px; }
+.shelf-face { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px; border-radius: 18px; cursor: pointer;
+  background: rgba(0, 0, 0, .35); border: 1px solid var(--line); color: var(--ink-2); font: 400 11px "Sora", sans-serif; transition: border-color .2s, box-shadow .2s, transform .15s; }
+.shelf-face img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 50%; background: radial-gradient(circle at 50% 35%, #1b3a4a, #04121a 70%); }
+.shelf-face span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.shelf-face:hover { border-color: var(--line-hot); transform: translateY(-1px); }
+.shelf-face.on { border-color: var(--accent); color: var(--ink); box-shadow: 0 0 20px -8px rgba(118, 255, 194, .8); }
+.shelf-insp { width: 44px; height: 44px; padding: 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); cursor: pointer; background: none; }
+.shelf-insp img { width: 100%; height: 100%; object-fit: cover; }

@@ -20,6 +20,7 @@ import { VoiceControls } from "./VoiceControls";
 import { SfxPanel } from "./SfxPanel";
 import { useProjectStore } from "../../store/useProjectStore";
 import { useVoicesStore } from "../../store/useVoicesStore";
+import { PuppetShelf } from "./PuppetShelf";
 import { useSpeakerLibraryStore } from "../../store/useSpeakerLibraryStore";
 import { usePuppetDefs } from "../../lib/puppets/usePuppets";
 import { builtinPuppetPath, type BrandInfo, type BuiltinCharacter } from "../../store/builtinCast";
@@ -372,6 +373,7 @@ export function CastPanel() {
                   {sp.puppetPath && puppetErrors[sp.puppetPath] && <span className="text-red-400"> — {puppetErrors[sp.puppetPath]}</span>}
                 </span>
               </div>
+              <PuppetShelf current={sp.puppetPath} onPick={(rigPath) => updateSpeaker(sp.id, { puppetPath: rigPath })} />
               <div className="label-etched" data-tip="The shape around the face. The waveform follows it.">
                 Frame
               </div>

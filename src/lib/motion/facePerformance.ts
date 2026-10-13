@@ -422,6 +422,56 @@ const HEAD_FOR: { test: RegExp; kind: HeadGestureKind }[] = [
 const HEAD_LEAD_MS = 180;
 const HEAD_HOLD_MS = 520;
 
+/* ---------------- arm poses ---------------- */
+
+export interface PoseSpan {
+  startMs: number;
+  endMs: number;
+  pose: string;
+}
+
+/** Script tag → arm pose. The pose names are the ones Image Forge cuts. */
+const POSE_FOR: Record<string, string> = {
+  waves: "wave", wave: "wave", greets: "wave", "waves hello": "wave", "waves goodbye": "wave",
+  points: "point", point: "point", "points to the side": "point", shows: "point",
+  shrugs: "shrug", shrug: "shrug",
+  explains: "explain", explaining: "explain", gestures: "explain",
+};
+
+/** A line that opens with a greeting waves without being asked. */
+const GREETING = /^(γει[αά]|γεια σας|καλώς ήρθ|καλημέρα|καλησπέρα|hello|hi|hey|welcome|good (morning|evening)|bye|αντίο|τα λέμε)/i;
+
+const POSE_HOLD_MS = 1600;
+
+/**
+ * When each speaker's arms do something. A pose is held for about a second
+ * and a half at the start of its line, then the arms go back to rest — a hand
+ * left up for a whole paragraph reads as a frozen frame, not a wave.
+ */
+export function buildSpeakerPoseTracks(segments: NarrationSegment[]): Record<string, PoseSpan[]> {
+  const tracks: Record<string, PoseSpan[]> = {};
+  for (const seg of segments) {
+    const tags = seg.tags ?? (seg.mood ? [seg.mood] : []);
+    const pose = tags.map((t) => POSE_FOR[t]).find(Boolean) ?? (GREETING.test(seg.text.trim()) ? "wave" : undefined);
+    if (!pose) continue;
+    (tracks[seg.speakerId] ??= []).push({
+      startMs: Math.max(0, seg.startMs - 150),
+      endMs: Math.min(seg.endMs, seg.startMs + POSE_HOLD_MS),
+      pose,
+    });
+  }
+  return tracks;
+}
+
+/** The pose at a moment, or undefined for arms at rest. */
+export function poseAt(spans: PoseSpan[] | undefined, timeMs: number): string | undefined {
+  return spans?.find((s) => timeMs >= s.startMs && timeMs < s.endMs)?.pose;
+}
+
+/** Yes and no in the tags: [nods] and [shakes head] reach the head even when
+ *  a feeling came first on the line. */
+const HEAD_TAG: Record<string, HeadGestureKind> = { nods: "nod", nod: "nod", "shakes head": "shake", "shakes his head": "shake", "shakes her head": "shake" };
+
 export function buildSpeakerHeadTracks(
   segments: NarrationSegment[]
 ): Record<string, HeadSpan[]> {
@@ -432,6 +482,14 @@ export function buildSpeakerHeadTracks(
     // for about a second and settles: a head that tilts for a whole paragraph
     // is a head stuck sideways, not a curious one.
     const face = moodFace(seg.mood);
+    const tagged = (seg.tags ?? []).map((t) => HEAD_TAG[t]).find(Boolean);
+    if (tagged && tagged !== face?.head) {
+      (tracks[seg.speakerId] ??= []).push({
+        startMs: Math.max(0, seg.startMs - HEAD_LEAD_MS),
+        endMs: Math.min(seg.endMs, seg.startMs + 1100),
+        kind: tagged,
+      });
+    }
     if (face?.head) {
       (tracks[seg.speakerId] ??= []).push({
         startMs: Math.max(0, seg.startMs - HEAD_LEAD_MS),

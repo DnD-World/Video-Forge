@@ -218,6 +218,12 @@ declare global {
       };
       forge: {
         openImageForge: () => Promise<boolean>;
+        shelfPuppets: () => Promise<{ slug: string; name: string; rigPath: string; basePath: string; framing: "head" | "waist"; madeAt: string }[]>;
+        orderPuppet: (
+          order: { name: string; description: string; style: string; framing: "head" | "waist"; auto: boolean },
+          pictures: string[]
+        ) => Promise<{ ok: boolean; id?: string; opened?: boolean; problem?: string }>;
+        orderResult: (id: string) => Promise<{ slug: string | null; problem: string | null } | null>;
       };
       llm: {
         draftScript: (opts: {

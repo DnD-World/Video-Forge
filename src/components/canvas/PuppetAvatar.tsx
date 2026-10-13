@@ -77,6 +77,8 @@ interface Props {
   /** Rotation and offset of the head group. One transform carries every
    *  feature, which is the whole point of anchoring them to the head. */
   head?: HeadPose;
+  /** Arm pose name ("wave", "point"…), drawn when the puppet has it. */
+  pose?: string;
   /** Disk diameter in px. */
   size: number;
   bgOpacity: number;
@@ -106,7 +108,7 @@ export function PuppetAvatar({
   lidLeft = "open", lidRight = "open",
   lidLeftTo, lidRightTo, lidMix = 1,
   // Defaulted, not optional-and-absent, for the reason in `browSet` below.
-  browLeft = BROW_REST, browRight = BROW_REST, head: pose = HEAD_STILL, size,
+  browLeft = BROW_REST, browRight = BROW_REST, head: pose = HEAD_STILL, pose: armPose, size,
   bgOpacity, borderOpacity,
   bgColor = "#1a1a1a", borderColor = "#d98a3d",
   outlineShape = "circle",
@@ -267,6 +269,7 @@ export function PuppetAvatar({
   // A horizontal cut at the neck. The head's copy keeps everything above the
   // line plus an overlap band; the body's keeps everything below the line.
   // They share that band, and since the head draws on top it hides the join.
+  const armLayer = armPose ? puppet.poses?.[armPose] : undefined;
   const neck = puppet.neck;
   const cutPct = neck ? neck.y * 100 : 0;
   const overlapPct = neck ? neck.overlap * 100 : 0;
@@ -308,6 +311,12 @@ export function PuppetAvatar({
         }} />
       )}
 
+      {/* THE ARMS, in the body's space: below the neck, so they stay with the
+          shoulders while the head nods and shakes. */}
+      {neck && armLayer && (
+        <div style={{ position: "absolute", width: head, height: head }}>{draw(armLayer, "arms")}</div>
+      )}
+
       {/* The head group. The tilt, shake and bob live on THIS element — every
           feature is positioned inside it, so one transform moves the lot, and
           that is exactly what anchoring the layers to the head bought.
@@ -334,6 +343,8 @@ export function PuppetAvatar({
           WebkitMaskImage: neck ? headMask : undefined,
         }} />
         {puppet.base_layers?.map((l, i) => draw(l, `bl${i}`))}
+        {/* No neck: the whole character moves as one, arms included. */}
+        {!neck && armLayer && draw(armLayer, "arms")}
         {/* Whites first, then pupils, then a lid per eye on top — so the eye
             white stays visible behind a closed or half-closed lid. */}
         {/* EVERY CELL, KEPT IN THE DOM AND INVISIBLE.

@@ -423,6 +423,9 @@ export interface NarrationSegment {
    *  the same. Kept as the script's own word rather than a code of ours, so a
    *  new tag in a new lesson is a mapping to add and never a parse failure. */
   mood?: string;
+  /** Every [tag] on the line, lower case, in order — gestures like [waves]
+   *  live here even when the first tag is a feeling (12 Oct 2026). */
+  tags?: string[];
   /** A sound the voice makes before the first word — a laugh, a sigh, a gasp.
    *  The mouth has to move through it, and the words do not start until it is
    *  over, which is why 13 lines came back "starting late" when timed. */

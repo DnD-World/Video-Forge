@@ -33,7 +33,7 @@ import { headMotion, motionTransform } from "../src/lib/motion/idleMotion";
 import {
   blinkAt, blinkBlendAt, browAt, buildSpeakerBrowTracks,
   buildSpeakerMoodTracks, moodAt, moodFace,
-  buildSpeakerHeadTracks, headPoseAt,
+  buildSpeakerHeadTracks, headPoseAt, buildSpeakerPoseTracks, poseAt,
 } from "../src/lib/motion/facePerformance";
 import { sampleAnalysis } from "../src/lib/waveform/audioAnalysis";
 import type { RenderProps } from "./types";
@@ -127,6 +127,8 @@ export function VideoComposition({
     () => buildSpeakerMoodTracks(narrationSegments),
     [narrationSegments]
   );
+  // Arm poses from [waves], [points]… and greetings (12 Oct 2026).
+  const poseTracks = useMemo(() => buildSpeakerPoseTracks(narrationSegments), [narrationSegments]);
   const headTracks = useMemo(
     () => buildSpeakerHeadTracks(narrationSegments),
     [narrationSegments]
@@ -378,6 +380,7 @@ export function VideoComposition({
                 browLeft={browAt(browTracks[sp.id], timeMs)}
                 browRight={browAt(browTracks[sp.id], timeMs)}
                 head={headPoseAt(sp.id, headTracks[sp.id], timeMs, idleMotion)}
+                      pose={poseAt(poseTracks[sp.id], timeMs)}
                 size={size}
                 bgOpacity={sp.bgOpacity}
                 borderOpacity={sp.borderOpacity}
