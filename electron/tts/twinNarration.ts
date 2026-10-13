@@ -42,6 +42,7 @@ export async function twinNarration(target: string, outputDir: string) {
   const reply = await geminiJson(
     `You translate a video script into ${lang}. Translate each line naturally, for speaking aloud, keeping the meaning, tone and length close. ` +
       "Keep anything in [square brackets] exactly as it is. Keep names of people and brands. " +
+      `These are the characters' names; never translate them, write them in the ${lang} alphabet only if it differs: ${[...new Set(last.segments.map((x) => x.speakerLabel))].join(", ")}. ` +
       `${target === "el" ? "Write Greek with every stress mark (τόνος). " : ""}` +
       'Answer only JSON: {"lines": ["…", "…"]}, the same number of lines, in the same order.',
     JSON.stringify(last.segments.map((s) => s.text))
