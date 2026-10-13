@@ -443,22 +443,59 @@ const GREETING = /^(γει[αά]|γεια σας|καλώς ήρθ|καλημέ�
 
 const POSE_HOLD_MS = 1600;
 
+/** Words that point at something: the hand goes out to the side. */
+const POINTING = /^(this|that|these|those|here|there|look|see|αυτ[όόήά]|αυτ[έε]ς|εδ[ώω]|εκε[ίι]|κοίτα|κοιτάξτε|δε[ίι]τε|δες)$/i;
+const QUESTION = /[?;;]\s*$/;
+
 /**
  * When each speaker's arms do something. A pose is held for about a second
- * and a half at the start of its line, then the arms go back to rest — a hand
- * left up for a whole paragraph reads as a frozen frame, not a wave.
+ * and a half, then the arms go back to rest — a hand left up for a whole
+ * paragraph reads as a frozen frame, not a wave.
+ *
+ * Tags ([waves], [points]…) and greetings always count. On top of that, unless
+ * a speaker's "how much they gesture" is 0 (13 Oct 2026 — Ak had never seen a
+ * puppet move its hands, because nothing asked them to):
+ *  · a question → shrug;
+ *  · "this / here / look / αυτό / εδώ / κοίτα" → point, on that word;
+ *  · a longer line with nothing else → explain, a third of the way in. How
+ *    many of those get one is what the amount sets (0.5: every other line).
+ * Never random: the same script always moves the same way, preview or render.
  */
-export function buildSpeakerPoseTracks(segments: NarrationSegment[]): Record<string, PoseSpan[]> {
+export function buildSpeakerPoseTracks(segments: NarrationSegment[], amount: Record<string, number> = {}): Record<string, PoseSpan[]> {
   const tracks: Record<string, PoseSpan[]> = {};
+  const lineNo: Record<string, number> = {};
+  const push = (id: string, startMs: number, endCap: number, pose: string) =>
+    (tracks[id] ??= []).push({ startMs: Math.max(0, startMs - 150), endMs: Math.min(endCap, startMs + POSE_HOLD_MS), pose });
   for (const seg of segments) {
+    const n = (lineNo[seg.speakerId] = (lineNo[seg.speakerId] ?? -1) + 1);
     const tags = seg.tags ?? (seg.mood ? [seg.mood] : []);
-    const pose = tags.map((t) => POSE_FOR[t]).find(Boolean) ?? (GREETING.test(seg.text.trim()) ? "wave" : undefined);
-    if (!pose) continue;
-    (tracks[seg.speakerId] ??= []).push({
-      startMs: Math.max(0, seg.startMs - 150),
-      endMs: Math.min(seg.endMs, seg.startMs + POSE_HOLD_MS),
-      pose,
-    });
+    const asked = tags.map((t) => POSE_FOR[t]).find(Boolean) ?? (GREETING.test(seg.text.trim()) ? "wave" : undefined);
+    if (asked) {
+      push(seg.speakerId, seg.startMs, seg.endMs, asked);
+      continue;
+    }
+    const k = Math.max(0, Math.min(1, amount[seg.speakerId] ?? 0.5));
+    if (k === 0) continue;
+    // pointing words, on the word itself
+    let pointed = false;
+    for (const cue of buildCues([seg], Number.MAX_SAFE_INTEGER)) {
+      for (const w of cue.words) {
+        if (!pointed && POINTING.test(w.text.replace(/[^\p{L}]/gu, ""))) {
+          push(seg.speakerId, w.startMs, seg.endMs, "point");
+          pointed = true;
+        }
+      }
+    }
+    if (pointed) continue;
+    if (QUESTION.test(seg.text.trim())) {
+      push(seg.speakerId, seg.startMs + Math.min(600, (seg.endMs - seg.startMs) * 0.3), seg.endMs, "shrug");
+      continue;
+    }
+    // every line at 1, every other at 0.5, one in four at 0.25
+    const every = Math.max(1, Math.round(1 / k));
+    if (seg.endMs - seg.startMs >= 2200 && n % every === 0) {
+      push(seg.speakerId, seg.startMs + (seg.endMs - seg.startMs) / 3, seg.endMs, "explain");
+    }
   }
   return tracks;
 }

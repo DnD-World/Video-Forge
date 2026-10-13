@@ -326,6 +326,9 @@ export async function renderVideo(
         bgColor: sp.bgColor, borderColor: sp.borderColor,
         bgOpacity: sp.bgOpacity, borderOpacity: sp.borderOpacity,
         outlineShape: sp.outlineShape, waveform: sp.waveform,
+        // Both were missing here: the frame thickness and the gestures were
+        // seen in the preview and lost in the render (13 Oct 2026).
+        frameWidth: sp.frameWidth, gestures: sp.gestures,
         surface: sp.surface,
         sheetFileName,
         puppet: prepared?.puppet ?? null,

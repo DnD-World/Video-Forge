@@ -147,6 +147,10 @@ export interface Puppet {
    * with [waves], [points], [shrugs], [explains].
    */
   poses?: Record<string, PuppetLayer>;
+  /** true (Image Forge, 13 Oct 2026): each pose is a WHOLE BODY picture, head
+   *  left out, drawn INSTEAD of the resting body — so the resting arms are
+   *  gone while a hand waves. Without it a pose is drawn over the body. */
+  posesReplaceBody?: boolean;
   neck?: {
     /** The cut line, 0–1 down the base image. */
     y: number;
@@ -205,5 +209,8 @@ export function puppetFiles(p: Puppet): string[] {
   });
   p.extras?.forEach(add);
   Object.values(p.mouths).forEach(add);
+  // The arm poses. Left out until 13 Oct 2026, so their pictures were never
+  // loaded and no puppet ever moved a hand on screen.
+  Object.values(p.poses ?? {}).forEach(add);
   return [...out];
 }

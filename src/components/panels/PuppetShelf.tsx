@@ -10,6 +10,7 @@
 // ---------------------------------------------------------------------------
 
 import { useCallback, useEffect, useState } from "react";
+import { LiveFace } from "./LiveFace";
 import { Picker } from "../ui/Picker";
 
 type ShelfPuppet = Awaited<ReturnType<NonNullable<Window["byok"]>["forge"]["shelfPuppets"]>>[number];
@@ -34,11 +35,13 @@ export function PuppetShelf({ current, onPick, startOrdering = false }: { curren
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [style, setStyle] = useState("pixar");
-  const [framing, setFraming] = useState<"head" | "waist">("head");
+  const [framing, setFraming] = useState<"head" | "waist">("waist");
   const [auto, setAuto] = useState(true);
   const [pictures, setPictures] = useState<string[]>([]);
   const [note, setNote] = useState("");
   const [waiting, setWaiting] = useState<string | null>(null);
+  // Delete asks twice: the first click arms it, the second does it.
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   const load = useCallback(() => {
     void window.byok?.forge?.shelfPuppets().then(setPuppets).catch(() => setPuppets([]));
@@ -91,16 +94,35 @@ export function PuppetShelf({ current, onPick, startOrdering = false }: { curren
       {puppets.length > 0 ? (
         <div className="forge-shelf">
           {puppets.map((p) => (
-            <button
-              key={p.slug}
-              className={`shelf-face ${current === p.rigPath ? "on" : ""}`}
-              onClick={() => onPick(p.rigPath, p.name)}
-              data-tip={`${p.name}${p.framing === "waist" ? " · waist up, with arms" : ""}. Click to use.`}
-              aria-label={`Use ${p.name}`}
-            >
-              <img src={fileUrl(p.basePath)} alt="" />
-              <span>{p.name}</span>
-            </button>
+            <div key={p.slug} className="relative">
+              <button
+                className={`shelf-face w-full ${current === p.rigPath ? "on" : ""}`}
+                onClick={() => onPick(p.rigPath, p.name)}
+                data-tip={`${p.name}${p.framing === "waist" ? " · waist up, with arms" : ""}. Click to use. Hover to hear-see them talk.`}
+                aria-label={`Use ${p.name}`}
+              >
+                <LiveFace path={p.rigPath} label={p.name} />
+                <span>{p.name}</span>
+              </button>
+              {deleting === p.slug ? (
+                <button
+                  className="shelf-del armed"
+                  onClick={async () => {
+                    await window.byok.forge.removePuppet(p.slug);
+                    setDeleting(null);
+                    load();
+                  }}
+                  onMouseLeave={() => setDeleting(null)}
+                  data-tip={`Click again to delete ${p.name}. It is moved aside (Forge\puppets-deleted), not erased.`}
+                >
+                  delete?
+                </button>
+              ) : (
+                <button className="shelf-del" onClick={() => setDeleting(p.slug)} data-tip={`Delete ${p.name} from the shelf — you will be asked once more.`} aria-label={`Delete ${p.name}`}>
+                  ✕
+                </button>
+              )}
+            </div>
           ))}
         </div>
       ) : (
@@ -159,7 +181,7 @@ export function PuppetShelf({ current, onPick, startOrdering = false }: { curren
             <input type="checkbox" checked={auto} onChange={(e) => setAuto(e.target.checked)} />
             Make it without me (Image Forge picks the face)
           </label>
-          <button className="btn btn-primary" disabled={!description.trim()} onClick={() => void order()}>
+          <button className="btn btn-primary" disabled={!description.trim()} onClick={() => void order()} data-tip={description.trim() ? "Send it: Image Forge opens and starts on it. The puppet appears in the row above when it is done." : "Describe who it is first, in the box above."}>
             Send the order to Image Forge
           </button>
         </div>

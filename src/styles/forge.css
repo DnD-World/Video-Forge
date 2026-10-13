@@ -461,3 +461,19 @@ html[data-motion="off"] body::before { animation: none; }
 .forge-many .row.done span { color: var(--accent); }
 .forge-many .row.working { border-color: var(--line-hot); }
 .forge-many .row i { position: absolute; left: 0; bottom: 0; height: 2px; background: var(--accent); transition: width .4s; }
+
+/* PRIMARY, READABLE (13 Oct 2026). The navy start of the gradient put dark text
+   on dark blue — "too dark to read" (Ak). Same blue → mint journey, lighter
+   blue, so the dark text reads from end to end. Disabled is clearly grey, not
+   a dimmed copy of the real thing. */
+.btn-primary::before, .forge-next { background: linear-gradient(100deg, #8fb4ff, #9fd8ff 45%, var(--accent)) !important; }
+.btn-primary, .forge-next { color: #04121f !important; }
+.btn-primary:disabled { opacity: 1; filter: grayscale(1) brightness(.55); cursor: not-allowed; }
+
+/* Live faces in the shelf and the "+" menu (LiveFace.tsx). */
+.live-face { display: grid; place-items: center; margin: 0 auto; }
+.shelf-del { position: absolute; top: 2px; right: 2px; z-index: 2; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px;
+  border: 1px solid var(--line); background: rgba(3, 9, 12, .85); color: var(--ink-2); font: 500 11px "Sora", sans-serif; cursor: pointer; opacity: 0; transition: opacity .15s; }
+.relative:hover > .shelf-del, .shelf-del.armed { opacity: 1; }
+.shelf-del:hover { border-color: #ff6b6b; color: #ffb4b4; }
+.shelf-del.armed { border-color: #ff6b6b; background: rgba(120, 20, 20, .9); color: #fff; }

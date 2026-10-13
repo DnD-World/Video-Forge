@@ -817,6 +817,8 @@ export async function runBatchJob(
       bgOpacity: sp.bgOpacity,
       borderOpacity: sp.borderOpacity,
       outlineShape: sp.outlineShape,
+      frameWidth: sp.frameWidth,
+      gestures: sp.gestures,
       waveform: sp.waveform,
       // Without this the glass never reaches the composition. The list above
       // is hand-written rather than a spread, which is deliberate — the render

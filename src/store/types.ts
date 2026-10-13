@@ -318,6 +318,9 @@ export interface SpeakerConfig {
   /** Frame line thickness in pixels on a 1080-wide video (13 Oct 2026).
    *  Unset = the old automatic thickness (1.5% of the face's size). */
   frameWidth?: number;
+  /** How much their hands move by themselves, 0 (only when the script says)
+   *  to 1 (lively). Unset = 0.5. Puppets with arms only. */
+  gestures?: number;
   /** This speaker's own waveform. Animates only while they are speaking. */
   waveform: TrackWaveform;
   x: number;

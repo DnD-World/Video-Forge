@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { placeOrder, openOrders, orderPicture, finishOrder, orderResult, savePuppetFile, listPuppets, validateOrder, shelfRoot } from "./forgeShelf.mjs";
+import { placeOrder, openOrders, orderPicture, finishOrder, orderResult, savePuppetFile, listPuppets, validateOrder, shelfRoot, removePuppet } from "./forgeShelf.mjs";
 
 const root = () => fs.mkdtempSync(path.join(os.tmpdir(), "forge-shelf-"));
 const png = Buffer.from([0x89, 0x50, 0x4e, 0x47]);
@@ -50,4 +50,15 @@ test("a puppet appears on the shelf only once its rig file is written", () => {
   assert.equal(list[0].name, "Hoolio");
   assert.equal(list[0].framing, "waist");
   assert.ok(list[0].basePath.endsWith(path.join("hoolio", "base.png")));
+});
+
+test("a deleted puppet leaves the shelf but is kept aside, not erased", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "shelf-del-"));
+  savePuppetFile(root, "bride", "bride.rig.json", Buffer.from("{}"));
+  assert.equal(listPuppets(root).length, 1);
+  const r = removePuppet(root, "bride", new Date("2026-10-13T20:00:00Z"));
+  assert.ok(r.ok && r.gone);
+  assert.equal(listPuppets(root).length, 0);
+  assert.ok(fs.existsSync(path.join(root, "puppets-deleted")));
+  assert.equal(removePuppet(root, "../etc").ok, false);
 });

@@ -11,3 +11,4 @@ export function orderResult(root: string, id: string): { id: string; slug: strin
 export function savePuppetFile(root: string, slug: string, file: string, bytes: Buffer): { ok: boolean; problem?: string; path?: string };
 export function listPuppets(root: string): ShelfPuppet[];
 export function puppetFile(root: string, slug: string, file: string): Buffer | null;
+export function removePuppet(root: string, slug: string, now?: Date): { ok: boolean; problem?: string; gone?: boolean; to?: string };

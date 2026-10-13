@@ -24,6 +24,7 @@ import { PuppetShelf } from "./PuppetShelf";
 import { resolveAssetDir } from "../../lib/puppets/puppetAssets";
 import { useSpeakerLibraryStore } from "../../store/useSpeakerLibraryStore";
 import { usePuppetDefs } from "../../lib/puppets/usePuppets";
+import { LiveFace } from "./LiveFace";
 import { builtinPuppetPath, type BrandInfo, type BuiltinCharacter } from "../../store/builtinCast";
 import { defaultTrackWaveform } from "../../lib/waveform/buildTracks";
 import type { OutlineShape } from "../../store/types";
@@ -232,53 +233,78 @@ export function CastPanel() {
       </div>
       {adding && (
         <div className="forge-add">
-          <div className="label-etched">Ready-made</div>
-          <div className="forge-shelf">
-            {brand?.cast.map((c) => (
-              <button
-                key={c.file}
-                className="shelf-face"
-                onClick={() => {
-                  addBuiltin(c);
-                  setAdding(false);
-                }}
-                data-tip={`Add ${c.label}, with their face and voice.`}
-              >
-                <BuiltinFace dir={brand.puppetDir} file={c.file} label={c.label} color={c.borderColor} />
-                <span>{c.label}</span>
-              </button>
-            ))}
-            {library.map((l) => (
-              <button
-                key={l.savedId}
-                className="shelf-face"
-                onClick={() => {
-                  const { savedId: _s, savedAt: _a, ...rest } = l;
-                  addSpeakerFrom(rest);
-                  setAdding(false);
-                }}
-                data-tip={`Add ${l.label} from your library.`}
-              >
-                <span className="initial" style={{ borderColor: l.borderColor }}>{l.label.slice(0, 1)}</span>
-                <span>{l.label}</span>
-              </button>
-            ))}
-            {shelf.map((p) => (
-              <button
-                key={p.slug}
-                className="shelf-face"
-                onClick={() => {
-                  addSpeakerFrom({ label: p.name, puppetPath: p.rigPath, borderColor: "#76FFC2", bgColor: "#1a1a1a", bgOpacity: 0, borderOpacity: 1, outlineShape: "circle", size: 0.28, waveform: defaultTrackWaveform(speakers.length % 2 === 1 ? 1 : -1) });
-                  setAdding(false);
-                }}
-                data-tip={`Add ${p.name}, made in Image Forge. Choose a voice in Voice.`}
-              >
-                <img src={`file:///${p.basePath.replace(/\\/g, "/")}`} alt="" />
-                <span>{p.name}</span>
-              </button>
-            ))}
-          </div>
-          <div className="flex gap-2 pt-1">
+          {/* Every character this computer has, each with its own face,
+              blinking — hover and it talks (Ak, 13 Oct 2026). */}
+          {(brand?.cast.length ?? 0) > 0 && (
+            <>
+              <div className="label-etched" data-tip="Characters that come with this app's brand pack, voice and all.">Ready-made</div>
+              <div className="forge-shelf">
+                {brand!.cast.map((c) => (
+                  <button
+                    key={c.file}
+                    className="shelf-face"
+                    onClick={() => {
+                      addBuiltin(c);
+                      setAdding(false);
+                    }}
+                    data-tip={`Add ${c.label}, with their face and voice. ${c.note}`}
+                  >
+                    <LiveFace path={builtinPuppetPath(brand!.puppetDir, c.file)} label={c.label} color={c.borderColor} />
+                    <span>{c.label}</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+          {shelf.length > 0 && (
+            <>
+              <div className="label-etched" data-tip="Puppets made by Image Forge's puppet maker on this computer.">Made in Image Forge</div>
+              <div className="forge-shelf">
+                {shelf.map((p) => (
+                  <button
+                    key={p.slug}
+                    className="shelf-face"
+                    onClick={() => {
+                      addSpeakerFrom({ label: p.name, puppetPath: p.rigPath, borderColor: "#76FFC2", bgColor: "#1a1a1a", bgOpacity: 0, borderOpacity: 1, outlineShape: "circle", size: 0.28, waveform: defaultTrackWaveform(speakers.length % 2 === 1 ? 1 : -1) });
+                      setAdding(false);
+                    }}
+                    data-tip={`Add ${p.name}${p.framing === "waist" ? " (waist up, with hands)" : ""}, made in Image Forge. Choose a voice in Voice.`}
+                  >
+                    <LiveFace path={p.rigPath} label={p.name} />
+                    <span>{p.name}</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+          {library.length > 0 && (
+            <>
+              <div className="label-etched" data-tip="Speakers you saved with 'Save to library': face, voice and frame together.">My library</div>
+              <div className="forge-shelf">
+                {library.map((l) => (
+                  <button
+                    key={l.savedId}
+                    className="shelf-face"
+                    onClick={() => {
+                      const { savedId: _s, savedAt: _a, ...rest } = l;
+                      addSpeakerFrom(rest);
+                      setAdding(false);
+                    }}
+                    data-tip={`Add ${l.label} from your library, voice and all.`}
+                  >
+                    {l.puppetPath ? (
+                      <LiveFace path={l.puppetPath} label={l.label} color={l.borderColor} />
+                    ) : (
+                      <span className="initial" style={{ borderColor: l.borderColor }}>{l.label.slice(0, 1)}</span>
+                    )}
+                    <span>{l.label}</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+          <div className="label-etched pt-1" data-tip="A character nobody has made yet.">Someone new</div>
+          <div className="flex flex-wrap gap-2">
             <button
               className="btn btn-primary"
               onClick={() => {
@@ -286,11 +312,18 @@ export function CastPanel() {
                 setOrderFor("__new__");
                 setAdding(false);
               }}
-              data-tip="A new speaker: name them, then describe their puppet and Image Forge makes it."
+              data-tip="Add a new speaker and describe their puppet here; Image Forge makes it and it arrives on the shelf by itself."
             >
-              Create a new one
+              Order it from Image Forge
             </button>
-            <button className="btn" onClick={() => setAdding(false)}>
+            <button
+              className="btn"
+              onClick={() => void window.byok.forge.openImageForge()}
+              data-tip="Open Image Forge to make the puppet yourself there (Wizards → Make a puppet). It appears here when it is done."
+            >
+              Open Image Forge
+            </button>
+            <button className="btn" onClick={() => setAdding(false)} data-tip="Close this menu without adding anyone.">
               Never mind
             </button>
           </div>
@@ -386,6 +419,17 @@ export function CastPanel() {
                   <input type="color" value={sp.bgColor} onChange={(e) => updateSpeaker(sp.id, { bgColor: e.target.value })} className="forge-swatch" />
                   <span className="text-sm text-neutral-400">Fill</span>
                 </label>
+              </div>
+              <div data-tip="How often their hands move by themselves: on questions (a shrug), on words like 'this' or 'here' (pointing), and while explaining. None = only when the script asks, like [waves]. Only puppets made waist-up have hands.">
+                <Slider
+                  label="How much they gesture"
+                  value={sp.gestures ?? 0.5}
+                  min={0}
+                  max={1}
+                  step={0.25}
+                  onChange={(v) => updateSpeaker(sp.id, { gestures: v })}
+                  format={(v) => (v === 0 ? "only when asked" : v <= 0.25 ? "a little" : v <= 0.5 ? "some" : v <= 0.75 ? "a lot" : "lively")}
+                />
               </div>
               <div data-tip="How thick the frame line is, in pixels on a 1080-wide video. 0 hides it.">
                 <Slider

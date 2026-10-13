@@ -128,7 +128,10 @@ export function VideoComposition({
     [narrationSegments]
   );
   // Arm poses from [waves], [points]… and greetings (12 Oct 2026).
-  const poseTracks = useMemo(() => buildSpeakerPoseTracks(narrationSegments), [narrationSegments]);
+  const poseTracks = useMemo(
+    () => buildSpeakerPoseTracks(narrationSegments, Object.fromEntries(speakers.map((sp) => [sp.id, sp.gestures ?? 0.5]))),
+    [narrationSegments, speakers]
+  );
   const headTracks = useMemo(
     () => buildSpeakerHeadTracks(narrationSegments),
     [narrationSegments]

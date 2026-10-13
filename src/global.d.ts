@@ -218,6 +218,7 @@ declare global {
       };
       forge: {
         openImageForge: () => Promise<boolean>;
+        removePuppet: (slug: string) => Promise<{ ok: boolean; problem?: string }>;
         shelfPuppets: () => Promise<{ slug: string; name: string; rigPath: string; basePath: string; framing: "head" | "waist"; madeAt: string }[]>;
         orderPuppet: (
           order: { name: string; description: string; style: string; framing: "head" | "waist"; auto: boolean },

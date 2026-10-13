@@ -284,6 +284,9 @@ export function PuppetAvatar({
   // They share that band, and since the head draws on top it hides the join.
   const armLayer = armPose ? puppet.poses?.[armPose] : undefined;
   const neck = puppet.neck;
+  // A whole-body pose replaces the resting body (needs the neck to keep the
+  // base's own head on top); otherwise it is drawn over the body as before.
+  const bodySwap = !!(armLayer && puppet.posesReplaceBody && neck && urls[armLayer.file]);
   const cutPct = neck ? neck.y * 100 : 0;
   const overlapPct = neck ? neck.overlap * 100 : 0;
   const featherPct = neck ? (neck.feather ?? 0.008) * 100 : 0;
@@ -314,7 +317,7 @@ export function PuppetAvatar({
           base is masked so the head's ellipse is punched OUT of it, leaving a
           hole the rotating head covers. Without a neck this element isn't
           rendered at all and the whole character leans as one piece. */}
-      {neck && (
+      {neck && !bodySwap && (
         <div style={{
           position: "absolute", width: head, height: head,
           backgroundImage: `url(${urls[puppet.base] ?? ""})`,
@@ -324,9 +327,20 @@ export function PuppetAvatar({
         }} />
       )}
 
+      {/* THE POSE AS A BODY: the whole picture, unmasked — a waving hand may
+          rise above the neck line — with an empty hole where the head goes;
+          the head group below draws the base's head into it. */}
+      {bodySwap && armLayer && (
+        <div style={{
+          position: "absolute", width: head, height: head,
+          backgroundImage: `url(${urls[armLayer.file]})`,
+          backgroundSize: "100% 100%",
+        }} />
+      )}
+
       {/* THE ARMS, in the body's space: below the neck, so they stay with the
           shoulders while the head nods and shakes. */}
-      {neck && armLayer && (
+      {neck && armLayer && !bodySwap && (
         <div style={{ position: "absolute", width: head, height: head }}>{draw(armLayer, "arms")}</div>
       )}
 

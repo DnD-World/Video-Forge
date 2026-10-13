@@ -40,6 +40,8 @@ export type RenderSpeaker = {
   outlineShape: OutlineShape;
   /** Frame line thickness in px on a 1080-wide video; unset = automatic. */
   frameWidth?: number;
+  /** How much their hands move by themselves, 0–1; unset = 0.5. */
+  gestures?: number;
   /** The backdrop behind this face. When its style is "glass" the composition
    *  draws a real refracting pane sized to the avatar — a disc when the
    *  outline is a circle, a rounded square otherwise. */

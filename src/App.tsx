@@ -260,7 +260,10 @@ export default function App() {
     [narration]
   );
   // Arm poses from [waves], [points]… and greetings (12 Oct 2026).
-  const poseTracks = useMemo(() => buildSpeakerPoseTracks(narration?.segments ?? []), [narration]);
+  const poseTracks = useMemo(
+    () => buildSpeakerPoseTracks(narration?.segments ?? [], Object.fromEntries(speakers.map((sp) => [sp.id, sp.gestures ?? 0.5]))),
+    [narration, speakers]
+  );
   const headTracks = useMemo(
     () => buildSpeakerHeadTracks(narration?.segments ?? []),
     [narration]

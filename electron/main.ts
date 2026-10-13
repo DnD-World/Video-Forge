@@ -3,7 +3,7 @@ import path from "node:path";
 import fsp from "node:fs/promises";
 import * as keyStore from "./keyStore";
 import { request } from "./net/http";
-import { listPuppets, orderResult, placeOrder, shelfRoot } from "../tools/lib/forgeShelf.mjs";
+import { removePuppet, listPuppets, orderResult, placeOrder, shelfRoot } from "../tools/lib/forgeShelf.mjs";
 import { fetchSheet, parseCsv, runMany, type ManyEvent, type ManyRequest } from "./batch/manyVideos";
 import { resolveUserData, NEW_APP_NAME } from "./migrateUserData";
 import { listPiperVoices, synthesizeWithPiper, shutdownAllPiperServers } from "./tts/piperEngine";
@@ -256,6 +256,8 @@ ipcMain.handle(
   }
 );
 ipcMain.handle("forge:orderResult", async (_e, id: string) => orderResult(shelfRoot(), id));
+/** Off the shelf — moved to puppets-deleted/, not erased (forgeShelf.mjs). */
+ipcMain.handle("forge:removePuppet", async (_e, slug: string) => removePuppet(shelfRoot(), String(slug)));
 
 /** Many videos from one sheet (electron/batch/manyVideos.ts). One run at a
  *  time; progress goes to the window as "batch:event". */
