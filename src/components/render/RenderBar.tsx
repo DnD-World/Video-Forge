@@ -164,6 +164,8 @@ export function RenderBar() {
           outlineShape: sp.outlineShape,
           frameWidth: sp.frameWidth,
           gestures: sp.gestures,
+          facing: sp.facing,
+          sitting: sp.sitting,
           waveform: sp.waveform,
           // Paths, not URLs — main copies the files into the render's public
           // dir. The puppet wins over the sheet there, as it does in the

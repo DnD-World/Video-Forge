@@ -14,6 +14,7 @@ import { useFileUrls } from "./lib/assets/useFileUrls";
 import { useSubtitleFont } from "./lib/assets/useSubtitleFont";
 import { usePuppets } from "./lib/puppets/usePuppets";
 import { AiBadge } from "../remotion/AiBadge";
+import { viewFor } from "./lib/motion/facing";
 import { CastPanel } from "./components/panels/CastPanel";
 import { ScenePanel } from "./components/panels/ScenePanel";
 import { buildTracks } from "./lib/waveform/buildTracks";
@@ -679,6 +680,7 @@ export default function App() {
                       browRight={browAt(browTracks[sp.id], previewTimeMs)}
                       head={headPoseAt(sp.id, headTracks[sp.id], previewTimeMs, idleMotion)}
                       pose={poseAt(poseTracks[sp.id], previewTimeMs)}
+                      {...viewFor(sp, speakers, loaded.puppet)}
                       // size is a fraction of frame width; the render resolves
                       // it against the output width the exact same way.
                       size={sp.size * canvasSize.w}

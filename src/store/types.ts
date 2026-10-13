@@ -321,6 +321,11 @@ export interface SpeakerConfig {
   /** How much their hands move by themselves, 0 (only when the script says)
    *  to 1 (lively). Unset = 0.5. Puppets with arms only. */
   gestures?: number;
+  /** Which way the puppet faces: camera, left, right, or auto (towards the
+   *  nearest other speaker). Needs a puppet made with the side view. */
+  facing?: "camera" | "left" | "right" | "auto";
+  /** Sitting, for full-body puppets made with the sitting view. */
+  sitting?: boolean;
   /** This speaker's own waveform. Animates only while they are speaking. */
   waveform: TrackWaveform;
   x: number;

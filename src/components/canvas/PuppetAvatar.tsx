@@ -17,7 +17,7 @@
 // ---------------------------------------------------------------------------
 
 import type { CSSProperties } from "react";
-import type { Puppet, PuppetLayer } from "../../store/puppetTypes";
+import { puppetInView, type Puppet, type PuppetLayer, type PuppetViewName } from "../../store/puppetTypes";
 import type { OutlineShape } from "../../store/types";
 import { BROW_REST, HEAD_STILL, type HeadPose } from "../../lib/motion/facePerformance";
 import { fullShape } from "../../lib/visemes/visemeMap";
@@ -80,6 +80,10 @@ interface Props {
   head?: HeadPose;
   /** Arm pose name ("wave", "point"…), drawn when the puppet has it. */
   pose?: string;
+  /** Which view to draw (puppet.views): "side" for dialogue, "sit" sitting. */
+  view?: PuppetViewName;
+  /** Flip left↔right — the side view facing the other way. */
+  mirror?: boolean;
   /** Disk diameter in px. */
   size: number;
   bgOpacity: number;
@@ -109,7 +113,7 @@ function filterFor(l: PuppetLayer): string | undefined {
 }
 
 export function PuppetAvatar({
-  puppet, urls, urlsReady, viseme, prevViseme, mix = 1,
+  puppet: wholePuppet, view, mirror = false, urls, urlsReady, viseme, prevViseme, mix = 1,
   lidLeft = "open", lidRight = "open",
   lidLeftTo, lidRightTo, lidMix = 1,
   // Defaulted, not optional-and-absent, for the reason in `browSet` below.
@@ -120,6 +124,8 @@ export function PuppetAvatar({
   frameWidth,
   sizeFraction,
 }: Props) {
+  // The view asked for, swapped in whole; the front when the puppet has none.
+  const puppet = puppetInView(wholePuppet, view);
   // Pixels on a 1080-wide video, scaled to whatever this is drawn at: the
   // face's size is a fraction of the video's width, so the video's width here
   // is size / sizeFraction.
@@ -306,6 +312,7 @@ export function PuppetAvatar({
   return (
     <div style={{
       width: size, height: size,
+      transform: mirror ? "scaleX(-1)" : undefined,
       borderRadius: SHAPE_RADIUS[outlineShape],
       display: "grid", placeItems: "center",
       background: hexA(bgColor, bgOpacity),

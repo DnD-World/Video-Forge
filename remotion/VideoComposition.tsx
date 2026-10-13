@@ -13,6 +13,7 @@
 // ---------------------------------------------------------------------------
 
 import { AiBadge } from "./AiBadge";
+import { viewFor } from "../src/lib/motion/facing";
 import { useMemo } from "react";
 import { AbsoluteFill, Audio, Img, Loop, OffthreadVideo, Sequence, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { WaveformScene } from "../src/components/canvas/WaveformScene";
@@ -386,6 +387,7 @@ export function VideoComposition({
                 browRight={browAt(browTracks[sp.id], timeMs)}
                 head={headPoseAt(sp.id, headTracks[sp.id], timeMs, idleMotion)}
                       pose={poseAt(poseTracks[sp.id], timeMs)}
+                {...viewFor(sp, speakers, sp.puppet)}
                 size={size}
                 bgOpacity={sp.bgOpacity}
                 borderOpacity={sp.borderOpacity}

@@ -336,7 +336,7 @@ export async function renderVideo(
         outlineShape: sp.outlineShape, waveform: sp.waveform,
         // Both were missing here: the frame thickness and the gestures were
         // seen in the preview and lost in the render (13 Oct 2026).
-        frameWidth: sp.frameWidth, gestures: sp.gestures,
+        frameWidth: sp.frameWidth, gestures: sp.gestures, facing: sp.facing, sitting: sp.sitting,
         surface: sp.surface,
         sheetFileName,
         puppet: prepared?.puppet ?? null,

@@ -12,6 +12,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Empty } from "../ui/Empty";
 import { Picker } from "../ui/Picker";
+import { Toggle } from "../ui/Toggle";
 import { HudButton } from "../ui/HudButton";
 import { Slider } from "../ui/Slider";
 import { Tabs } from "../ui/Tabs";
@@ -432,6 +433,26 @@ export function CastPanel() {
                   format={(v) => (v === 0 ? "only when asked" : v <= 0.25 ? "a little" : v <= 0.5 ? "some" : v <= 0.75 ? "a lot" : "lively")}
                 />
               </div>
+              <div data-tip="Which way they look. Auto turns them towards the other speaker, so two characters talk to each other. Needs a puppet made in Image Forge with 'Also side-facing'.">
+                <Picker
+                  aria-label="Faces"
+                  className="w-full"
+                  value={sp.facing ?? "auto"}
+                  options={[
+                    { value: "auto", label: "Faces: towards the other speaker" },
+                    { value: "camera", label: "Faces: the camera" },
+                    { value: "left", label: "Faces: left" },
+                    { value: "right", label: "Faces: right" },
+                  ]}
+                  onChange={(v) => updateSpeaker(sp.id, { facing: v as "camera" | "left" | "right" | "auto" })}
+                />
+              </div>
+              <Toggle
+                label="Sitting"
+                checked={!!sp.sitting}
+                onChange={(v) => updateSpeaker(sp.id, { sitting: v })}
+                data-tip="Sits them down. Needs a full-body puppet made in Image Forge with 'Also sitting'."
+              />
               <div data-tip="How thick the frame line is, in pixels on a 1080-wide video. 0 hides it.">
                 <Slider
                   label="Frame thickness"

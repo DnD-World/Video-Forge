@@ -42,6 +42,8 @@ export type RenderSpeaker = {
   frameWidth?: number;
   /** How much their hands move by themselves, 0–1; unset = 0.5. */
   gestures?: number;
+  facing?: "camera" | "left" | "right" | "auto";
+  sitting?: boolean;
   /** The backdrop behind this face. When its style is "glass" the composition
    *  draws a real refracting pane sized to the avatar — a disc when the
    *  outline is a circle, a rounded square otherwise. */
