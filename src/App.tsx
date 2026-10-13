@@ -197,10 +197,21 @@ export default function App() {
   const projectLanguage = useProjectStore((s) => s.language);
   const cues = useMemo(() => {
     if (narration?.segments?.length) return buildCues(narration.segments, subtitles.maxChars);
-    const text = projectLanguage === "el" ? "Έτσι θα φαίνονται οι υπότιτλοί σου στο βίντεο." : "This is how your subtitles will look in the video.";
+    // GREEK AND ENGLISH TAKING TURNS (Ak, 13 Oct 2026), so a font and size
+    // can be judged in both alphabets — accents and all — before any voice
+    // exists. The project's own language goes first.
+    const el = "Έτσι θα φαίνονται οι υπότιτλοί σου στο βίντεο.";
+    const en = "This is how your subtitles will look in the video.";
+    const pair = projectLanguage === "el" ? [el, en] : [en, el];
     const first = speakers[0];
     return buildCues(
-      [{ speakerId: first?.id ?? "sample", speakerLabel: first?.label ?? "", text, startMs: 0, endMs: 4000 }],
+      Array.from({ length: 60 }, (_, i) => ({
+        speakerId: first?.id ?? "sample",
+        speakerLabel: first?.label ?? "",
+        text: pair[i % 2],
+        startMs: i * 4000,
+        endMs: i * 4000 + 3800,
+      })),
       subtitles.maxChars
     );
   }, [narration, subtitles.maxChars, projectLanguage, speakers]);

@@ -9,6 +9,17 @@
 // ---------------------------------------------------------------------------
 
 import { useEffect, useMemo, useState } from "react";
+
+/** "<sheet or file name> · 13 Oct 19.40 · 12 videos" — the folder the videos land in. */
+function runNameFor(source: string, count: number): string {
+  let name = "sheet";
+  const file = source.trim().split(/[\\/]/).pop() ?? "";
+  if (/docs\.google\.com/.test(source)) name = "Google Sheet";
+  else if (file) name = file.replace(/\.(csv|tsv|txt)$/i, "").slice(0, 40) || "sheet";
+  const d = new Date();
+  const when = `${d.getDate()} ${d.toLocaleString("en-GB", { month: "short" })} ${String(d.getHours()).padStart(2, "0")}.${String(d.getMinutes()).padStart(2, "0")}`;
+  return `${name} · ${when} · ${count} video${count === 1 ? "" : "s"}`;
+}
 import { useProjectStore } from "../../store/useProjectStore";
 import { parseScript } from "../../lib/narration/parseScript";
 import { parseDramaboxScript } from "../../lib/narration/parseDramaboxScript";
@@ -149,7 +160,7 @@ export function ManyVideos() {
         backgrounds: (/^(no|none|off|όχι)$/i.test(pick(row, "backgrounds")) ? "none" : "auto") as "auto" | "none",
         language: pick(row, "language") || undefined,
       }));
-    const r = await window.byok.batch.runMany({ rows: list, cast, preset, runName: `batch ${new Date().toISOString().slice(0, 16).replace("T", " ").replace(":", ".")}` });
+    const r = await window.byok.batch.runMany({ rows: list, cast, preset, runName: runNameFor(url, list.length) });
     if (!r.ok) return setProblem(r.problem ?? "could not start");
     setRunning(true);
   };

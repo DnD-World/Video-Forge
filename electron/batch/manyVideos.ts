@@ -65,7 +65,7 @@ export async function runMany(
   onEvent: (e: ManyEvent) => void,
   shouldStop: () => boolean
 ): Promise<void> {
-  const safe = (s: string) => s.replace(/[^\p{L}\p{N}._ -]+/gu, "_").slice(0, 80) || "video";
+  const safe = (s: string) => s.replace(/[^\p{L}\p{N}._ ·-]+/gu, "_").slice(0, 80) || "video";
   const folder = path.join(ctx.outputDir, "many", safe(req.runName));
   const work = path.join(folder, ".jobs");
   await fsp.mkdir(work, { recursive: true });

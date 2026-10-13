@@ -13,7 +13,7 @@
 // tracks exist and which are enabled is the behaviour.
 // ---------------------------------------------------------------------------
 
-import { useMemo } from "react";
+import { useId, useMemo } from "react";
 import type { AudioAnalysis } from "../../store/types";
 import { samplePath, frameEdgeAt, type PathPoint } from "../../lib/waveform/samplePath";
 import type { RenderTrack } from "../../lib/waveform/buildTracks";
@@ -197,10 +197,21 @@ const ORBIT_LOOKS: Record<string, {
   orbitsSwell: { count: 2, weight: 1.0, glow: 1.1, speeds: [1, 0.9], swellCore: true },
 };
 
-export function WaveformScene({
+export function WaveformScene(props: WaveformSceneProps) {
+  // Nothing to draw: return before any hook, in a component of its own, so the
+  // number of hooks below never changes between renders (React requires it).
+  if (props.width <= 0 || props.height <= 0 || props.tracks.length === 0) return null;
+  return <WaveformSceneDrawn {...props} />;
+}
+
+function WaveformSceneDrawn({
   tracks, width, height, timeMs, analysis, spectrum, musicAnalysis, musicSpectrum,
 }: WaveformSceneProps) {
-  if (width <= 0 || height <= 0 || tracks.length === 0) return null;
+  // NAMES THAT ARE NOT SHARED. The SVG fades and glows below are found by
+  // name across the WHOLE page, so the style tiles and the big preview, both
+  // drawing "boil-0-5", used whichever came first — the tile's, in the tile's
+  // coordinates — and the preview's boil drew nothing (Ak, 13 Oct 2026).
+  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   const frameMin = Math.min(width, height);
   const moment = sampleAnalysis(analysis, timeMs, spectrum);
@@ -341,7 +352,7 @@ export function WaveformScene({
           // sparks = bright scattered sparks, no bars.
           const bars =
             cfg.style === "bloomBars" ? (
-              <g filter={`url(#glow-${ti})`}>
+              <g filter={`url(#${uid}glow-${ti})`}>
                 {[...Array(density)].map((_, i) => {
                   const a = (i / density) * Math.PI * 2 - Math.PI / 2;
                   const p1 = at(a, 0);
@@ -375,7 +386,7 @@ export function WaveformScene({
           return (
             <g key={ti} opacity={opacity}>
               <defs>
-                <filter id={`glow-${ti}`} x="-50%" y="-50%" width="200%" height="200%">
+                <filter id={`${uid}glow-${ti}`} x="-50%" y="-50%" width="200%" height="200%">
                   <feGaussianBlur stdDeviation={frameMin * (cfg.style === "bloomBars" ? 0.014 : 0.004) * (0.5 + (src?.level ?? 0))} result="b" />
                   <feMerge>
                     <feMergeNode in="b" />
@@ -386,7 +397,7 @@ export function WaveformScene({
               </defs>
               {bars}
               {rest}
-              <g filter={sparks ? `url(#glow-${ti})` : undefined}>
+              <g filter={sparks ? `url(#${uid}glow-${ti})` : undefined}>
                 {live.map((p, i) => {
                   const scale = 1 / p.z;
                   // Bigger than before (Ak: "sparks should be more visible");
@@ -431,11 +442,11 @@ export function WaveformScene({
           return (
             <g key={ti} opacity={opacity}>
               <defs>
-                <filter id={`edge-${ti}`} x="-10%" y="-10%" width="120%" height="120%">
+                <filter id={`${uid}edge-${ti}`} x="-10%" y="-10%" width="120%" height="120%">
                   <feGaussianBlur stdDeviation={frameMin * 0.006} />
                 </filter>
               </defs>
-              <path d={`M ${outer.join(" L ")} L ${inner.reverse().join(" L ")} Z`} fill={track.color} opacity={0.55} filter={`url(#edge-${ti})`} />
+              <path d={`M ${outer.join(" L ")} L ${inner.reverse().join(" L ")} Z`} fill={track.color} opacity={0.55} filter={`url(#${uid}edge-${ti})`} />
               <path d={`M ${outer.join(" L ")}`} fill="none" stroke={track.color} strokeWidth={Math.max(1.5, frameMin * 0.003)} opacity={0.9} />
             </g>
           );
@@ -668,7 +679,7 @@ export function WaveformScene({
                 {slices.map((s, i) => (
                   <linearGradient
                     key={i}
-                    id={`boil-${ti}-${i}`}
+                    id={`${uid}boil-${ti}-${i}`}
                     gradientUnits="userSpaceOnUse"
                     x1={s.x1} y1={s.y1} x2={s.x2} y2={s.y2}
                   >
@@ -684,7 +695,7 @@ export function WaveformScene({
                 ))}
               </defs>
               {slices.map((s, i) => (
-                <path key={i} d={s.d} fill={`url(#boil-${ti}-${i})`} />
+                <path key={i} d={s.d} fill={`url(#${uid}boil-${ti}-${i})`} />
               ))}
             </g>
           );
