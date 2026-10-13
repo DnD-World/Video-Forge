@@ -620,3 +620,7 @@ In `CLAUDE.md`, and worth reading before the first reply:
   subtle motion — say so and hand it over.
 - Everything stays inside this folder. Never kill a process by name; other agents
   own `python.exe` and `node.exe` on this machine.
+
+## Next round (13 Oct 2026)
+
+Work list for both forges: `docs/FORGES-PLAN.md` (review, puppets, hover help, Forge hub, Canva, opportunities, recommended order).
