@@ -10,3 +10,4 @@ export function finishOrder(root: string, id: string, result: { slug?: string; p
 export function orderResult(root: string, id: string): { id: string; slug: string | null; problem: string | null; finishedAt: string } | null;
 export function savePuppetFile(root: string, slug: string, file: string, bytes: Buffer): { ok: boolean; problem?: string; path?: string };
 export function listPuppets(root: string): ShelfPuppet[];
+export function puppetFile(root: string, slug: string, file: string): Buffer | null;

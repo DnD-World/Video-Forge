@@ -21,6 +21,7 @@ import { SfxPanel } from "./SfxPanel";
 import { useProjectStore } from "../../store/useProjectStore";
 import { useVoicesStore } from "../../store/useVoicesStore";
 import { PuppetShelf } from "./PuppetShelf";
+import { resolveAssetDir } from "../../lib/puppets/puppetAssets";
 import { useSpeakerLibraryStore } from "../../store/useSpeakerLibraryStore";
 import { usePuppetDefs } from "../../lib/puppets/usePuppets";
 import { builtinPuppetPath, type BrandInfo, type BuiltinCharacter } from "../../store/builtinCast";
@@ -243,7 +244,7 @@ export function CastPanel() {
                 }}
                 data-tip={`Add ${c.label}, with their face and voice.`}
               >
-                <span className="initial" style={{ borderColor: c.borderColor }}>{c.label.slice(0, 1)}</span>
+                <BuiltinFace dir={brand.puppetDir} file={c.file} label={c.label} color={c.borderColor} />
                 <span>{c.label}</span>
               </button>
             ))}
@@ -532,4 +533,22 @@ function Section({ title, tip, open = true, children }: { title: string; tip: st
       <div className="space-y-3 pt-3">{children}</div>
     </details>
   );
+}
+
+/** A built-in character's face for the "+" menu: the base picture their own
+ *  puppet file names, or their initial when it cannot be read. */
+function BuiltinFace({ dir, file, label, color }: { dir: string; file: string; label: string; color?: string }) {
+  const path = builtinPuppetPath(dir, file);
+  const { defs } = usePuppetDefs([path]);
+  const def = defs[path];
+  const [broken, setBroken] = useState(false);
+  if (!def || broken) {
+    return (
+      <span className="initial" style={{ borderColor: color }}>
+        {label.slice(0, 1)}
+      </span>
+    );
+  }
+  const base = `${resolveAssetDir(path, def.dir)}/${def.base}`.split("\\").join("/");
+  return <img src={`file:///${base.replace(/^[/]+/, "")}`} alt="" onError={() => setBroken(true)} style={{ borderColor: color }} />;
 }
