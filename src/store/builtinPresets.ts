@@ -205,6 +205,25 @@ const STYLES: Style[] = [
       3: [{ x: 0.25, y: 0.22, size: 0.3 }, { x: 0.72, y: 0.45, size: 0.3 }, { x: 0.3, y: 0.76, size: 0.3 }],
     },
   },
+  {
+    // DIALOGUE (Ak, 14 Oct 2026): characters standing side by side and turned
+    // to each other — two fill a SQUARE video, three a WIDE one. No frames:
+    // the puppets stand in the scene. Faces turn by themselves when the puppet
+    // was made with Image Forge's "Also side-facing".
+    name: "Dialogue",
+    description: "Characters side by side, turned to each other — for scenes and mini dramas. Two for a square video, three for a wide one.",
+    outlineShape: "none",
+    waveform: () => ({ enabled: false, style: "bars", position: "speaker", scale: 1, density: 48, thickness: 1, smoothing: 0.25 }),
+    surface: { style: "none" },
+    subtitles: { position: "bottom", fontSize: 0.06, strokeWidth: 0.2, activeGlow: 0.3, activeEmphasis: "lift" as const, maxChars: 34, uppercase: false },
+    backgroundDim: 0.15,
+    backgroundBlur: 0.004,
+    layout: {
+      1: [{ x: 0.5, y: 0.6, size: 0.6 }],
+      2: [{ x: 0.29, y: 0.6, size: 0.52 }, { x: 0.71, y: 0.6, size: 0.52 }],
+      3: [{ x: 0.2, y: 0.6, size: 0.38 }, { x: 0.5, y: 0.6, size: 0.38 }, { x: 0.8, y: 0.6, size: 0.38 }],
+    },
+  },
 ];
 
 function slotsFor(style: Style, count: 1 | 2 | 3): SpeakerSlot[] {

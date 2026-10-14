@@ -224,9 +224,9 @@ declare global {
       forge: {
         openImageForge: () => Promise<boolean>;
         removePuppet: (slug: string) => Promise<{ ok: boolean; problem?: string }>;
-        shelfPuppets: () => Promise<{ slug: string; name: string; rigPath: string; basePath: string; framing: "head" | "waist"; madeAt: string }[]>;
+        shelfPuppets: () => Promise<{ slug: string; name: string; rigPath: string; basePath: string; framing: "head" | "waist" | "full"; madeAt: string }[]>;
         orderPuppet: (
-          order: { name: string; description: string; style: string; framing: "head" | "waist"; auto: boolean },
+          order: { name: string; description: string; style: string; framing: "head" | "waist" | "full"; auto: boolean },
           pictures: string[]
         ) => Promise<{ ok: boolean; id?: string; opened?: boolean; problem?: string }>;
         orderResult: (id: string) => Promise<{ slug: string | null; problem: string | null } | null>;

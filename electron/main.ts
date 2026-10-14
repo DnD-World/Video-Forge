@@ -242,7 +242,7 @@ ipcMain.handle("forge:openImageForge", openImageForge);
 ipcMain.handle("forge:shelfPuppets", async () => listPuppets(shelfRoot()));
 ipcMain.handle(
   "forge:orderPuppet",
-  async (_e, order: { name: string; description: string; style: string; framing: "head" | "waist"; auto: boolean }, pictures: string[] = []) => {
+  async (_e, order: { name: string; description: string; style: string; framing: "head" | "waist" | "full"; auto: boolean }, pictures: string[] = []) => {
     const bufs: Buffer[] = [];
     for (const p of pictures.slice(0, 3)) {
       try {

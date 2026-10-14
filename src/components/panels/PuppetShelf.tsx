@@ -17,6 +17,8 @@ type ShelfPuppet = Awaited<ReturnType<NonNullable<Window["byok"]>["forge"]["shel
 
 const STYLES = [
   { value: "pixar", label: "3D animated" },
+  { value: "lifelike", label: "Lifelike 3D (nearly real)" },
+  { value: "photo", label: "Photoreal (experimental)" },
   { value: "flat", label: "Flat cartoon" },
   { value: "clay", label: "Claymation" },
   { value: "paper", label: "Paper cut-out" },
@@ -35,7 +37,7 @@ export function PuppetShelf({ current, onPick, startOrdering = false }: { curren
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [style, setStyle] = useState("pixar");
-  const [framing, setFraming] = useState<"head" | "waist">("waist");
+  const [framing, setFraming] = useState<"head" | "waist" | "full">("waist");
   const [auto, setAuto] = useState(true);
   const [pictures, setPictures] = useState<string[]>([]);
   const [note, setNote] = useState("");
@@ -154,8 +156,9 @@ export function PuppetShelf({ current, onPick, startOrdering = false }: { curren
                 options={[
                   { value: "head", label: "Head and shoulders" },
                   { value: "waist", label: "Waist up, with arms" },
+                  { value: "full", label: "Full body (standing, sitting)" },
                 ]}
-                onChange={(v) => setFraming(v as "head" | "waist")}
+                onChange={(v) => setFraming(v as "head" | "waist" | "full")}
               />
             </div>
           </div>
