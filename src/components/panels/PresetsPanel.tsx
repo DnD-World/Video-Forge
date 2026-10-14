@@ -57,6 +57,7 @@ export function PresetsPanel() {
   }, []);
   const sample = brand?.sample;
 
+  const setRender = useProjectStore((s) => s.setRender);
   const templates = useTemplatesStore((s) => s.templates);
   const saveTemplate = useTemplatesStore((s) => s.saveTemplate);
   const deleteTemplate = useTemplatesStore((s) => s.deleteTemplate);
@@ -96,6 +97,18 @@ export function PresetsPanel() {
       setBackgroundStyle({ dim: b.backgroundDim, crossfadeMs: b.backgroundCrossfadeMs });
     }
 
+    // DIALOGUE: two talking fill a square, three a wide frame (Ak, 14 Oct
+    // 2026) — the starting shape, which Make → Shape can still change.
+    let shapeNote = "";
+    if (b.name.startsWith("Dialogue")) {
+      if (slots.length === 2) {
+        setRender({ width: 1080, height: 1080 });
+        shapeNote = " Shape set to square — change it any time in Make → Shape.";
+      } else if (slots.length === 3) {
+        setRender({ width: 1920, height: 1080 });
+        shapeNote = " Shape set to wide — change it any time in Make → Shape.";
+      }
+    }
     const extra = speakers.length - slots.length;
     setNote(
       speakers.length === 0
@@ -104,7 +117,7 @@ export function PresetsPanel() {
           ? `Applied "${b.name}" to ${slots.length} of ${speakers.length} speakers. ` +
             `It is a ${slots.length}-speaker look, so ${extra} kept their place — ` +
             `use the "${b.name.split(" · ")[0]}" preset for ${speakers.length} instead.`
-          : `Applied "${b.name}" to ${speakers.length} speaker(s). Faces and voices kept.`
+          : `Applied "${b.name}" to ${speakers.length} speaker(s). Faces and voices kept.${shapeNote}`
     );
   };
 

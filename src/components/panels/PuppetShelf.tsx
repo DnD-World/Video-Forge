@@ -18,12 +18,14 @@ type ShelfPuppet = Awaited<ReturnType<NonNullable<Window["byok"]>["forge"]["shel
 const STYLES = [
   { value: "pixar", label: "3D animated" },
   { value: "lifelike", label: "Lifelike 3D (nearly real)" },
-  { value: "photo", label: "Photoreal (experimental)" },
+  { value: "photo", label: "Touched-up photoreal" },
   { value: "flat", label: "Flat cartoon" },
   { value: "clay", label: "Claymation" },
   { value: "paper", label: "Paper cut-out" },
   { value: "anime", label: "Anime" },
   { value: "doodle", label: "Simple doodle" },
+  { value: "stick", label: "Stick figure" },
+  { value: "stick2d", label: "2D vector stick figure" },
 ];
 
 const fileUrl = (p: string) => `file:///${p.replace(/\\/g, "/").replace(/^\/+/, "")}`;
