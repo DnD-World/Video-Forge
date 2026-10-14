@@ -668,3 +668,26 @@ In `CLAUDE.md`, and worth reading before the first reply:
 ## Next round (13 Oct 2026)
 
 Work list for both forges: `docs/FORGES-PLAN.md` (review, puppets, hover help, Forge hub, Canva, opportunities, recommended order).
+
+## Running now: the 10 sample puppets (started 14 Oct 2026, ~18:00 Athens)
+
+For the "The Next New Thing" pitch. Made by Ak's **installed** Image Forge (his
+own profile, so they land in his Made → to review), started with
+`--remote-debugging-port=9555`, Z-Image (faces) + FLUX.2 klein (parts) on
+LocalAI, waist-up, side view on. Nothing goes to Video Forge until Ak approves
+each part in the review studio.
+
+- Orders: `%APPDATA%\Forge\orders\sample-01…10-*.json` (placed by
+  `%TEMP%\samples\orders.mjs`). Inspiration photos for Lucky (dog, Jane
+  Thomson) and Alex (guy, Andrea Piacquadio) in `%TEMP%\samples\insp\`.
+- Watcher: `%TEMP%\samples\watch.mjs`, log `%TEMP%\samples\run.log` (times in
+  UTC). Closes the maker when a puppet is done so the next order opens; HEAT
+  GUARD — at 83 °C on the graphics card it presses Stop, waits for 72 °C,
+  presses Continue; 3-minute rest between puppets. If the watcher died, restart
+  it with `FINISHED=<n already done> node watch.mjs` from that folder.
+- Progress per puppet: `%APPDATA%\image-forge\workshop\<slug>\meta.json`.
+- Estimate (measured ~30 s a picture, ~65–75 pictures a puppet): 6–9 hours.
+- If Z-Image/klein cannot make the dog or the guy cleanly: tell Ak why, he will
+  approve Nano Banana for those two.
+- After curation: put the approved Lucky and Alex in the Image Forge README
+  showcase (credit already written there).
