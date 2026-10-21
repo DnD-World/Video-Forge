@@ -9,6 +9,12 @@
         "dev"
       ],
       "port": 3000
+    },
+    {
+      "name": "explainer-checks",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "5590", "--bind", "127.0.0.1", "--directory", "explainer/checks"],
+      "port": 5590
     }
   ]
 }

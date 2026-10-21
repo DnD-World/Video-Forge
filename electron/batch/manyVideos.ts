@@ -42,7 +42,7 @@ export interface ManyRow {
   script: string;
   topic?: string;
   template?: string;
-  format?: "9:16" | "16:9";
+  format?: "9:16" | "16:9" | "1:1" | "4:5";
   music?: "auto" | "none";
   backgrounds?: "auto" | "none";
   language?: string;

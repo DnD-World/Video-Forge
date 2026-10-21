@@ -36,6 +36,9 @@ export function BackgroundPanel() {
   const setBackgroundStyle = useProjectStore((s) => s.setBackgroundStyle);
   const backgroundBlur = useProjectStore((s) => s.backgroundBlur);
   const backgroundColorLook = useProjectStore((s) => s.backgroundColorLook);
+  const speakers = useProjectStore((s) => s.speakers);
+  const updateSpeaker = useProjectStore((s) => s.updateSpeaker);
+  const setRender = useProjectStore((s) => s.setRender);
 
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -50,8 +53,30 @@ export function BackgroundPanel() {
   /** Which scene a manual pick will replace; null means "append as a new one". */
   const [targetScene, setTargetScene] = useState<number | null>(null);
 
-  const portrait = render.format === "9:16";
+  const portrait = render.height > render.width;
   const segments = narration?.segments ?? [];
+
+  /** An explainer video as the whole background, with the faces moved into the
+   *  spots it left empty (its .spots.json, written when it was rendered). */
+  async function useExplainer() {
+    const file = await window.byok.dialog.openFile([{ name: "Explainer video", extensions: ["mp4"] }]);
+    if (!file) return;
+    setError(null);
+    const spots = await window.byok.explainer.spotsFor(file);
+    const endMs = Math.max(1000, narration?.analysis?.durationMs ?? 600000);
+    setBackgrounds([{ startMs: 0, endMs, query: "explainer", reason: "Explainer video (made in Explainer)", filePath: file, hit: null } as Scene]);
+    setBackgroundStyle({ dim: 0, blur: 0 });
+    if (!spots) {
+      setError("Background set. No puppet-spot map was found next to that video, so the faces were not moved.");
+      return;
+    }
+    if (spots.width && spots.height) setRender({ format: spots.format as typeof render.format, width: spots.width, height: spots.height });
+    spots.slots.forEach((slot, i) => {
+      const sp = speakers[i];
+      if (sp) updateSpeaker(sp.id, { x: slot.x, y: slot.y, size: slot.size, ...(slot.outlineShape ? { outlineShape: slot.outlineShape as typeof sp.outlineShape } : {}) });
+    });
+    if (spots.slots.length !== speakers.length) setError(`The explainer has ${spots.slots.length} puppet spot(s) and this project has ${speakers.length} speaker(s). The first ${Math.min(spots.slots.length, speakers.length)} were placed; render the explainer again with the right number to match.`);
+  }
 
   async function chooseAutomatically() {
     if (segments.length === 0) {
@@ -145,6 +170,9 @@ export function BackgroundPanel() {
       <div className="flex flex-wrap items-center gap-2">
         <HudButton onClick={chooseAutomatically} disabled={!!busy} data-tip="Reads your narration and picks a stock video for each scene for you. You can swap any pick afterwards.">
           Choose automatically
+        </HudButton>
+        <HudButton onClick={useExplainer} disabled={!!busy} data-tip="Use an explainer you made (Explainer, top right) as the whole background. The puppets move into the spots it left empty for them.">
+          Use an explainer
         </HudButton>
         <HudButton
           onClick={() => {

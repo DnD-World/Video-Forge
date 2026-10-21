@@ -33,6 +33,11 @@ interface DecoNoirApi {
   setAccent: (hex: string, opts?: { hi?: string; lo?: string }) => void;
 }
 
+export interface ImportedStyleCard { id: string; name: string; family: string; look: string; motion: string; explains: string; fontFamilies: string[]; importedAt?: string }
+export interface ExWord { text: string; start: number; end: number }
+export interface ExIssue { level: "error" | "warn"; msg: string; t: number | null; count?: number }
+export interface ExCheck { W: number; H: number; duration: number; msMax: number; msAvg?: number; frames?: number; errors: ExIssue[]; warnings: ExIssue[]; storyboard: { kind?: string; t: number; file: string; url: string }[] }
+
 declare global {
   interface Window {
     DecoNoir?: DecoNoirApi;
@@ -220,6 +225,27 @@ declare global {
       mediaCache: {
         stats: () => Promise<{ dir: string; files: number; bytes: number }>;
         cleanUp: (limitBytes: number, keep: string[]) => Promise<{ removed: number; freedBytes: number; left: { files: number; bytes: number } }>;
+      };
+      /** Explainers — electron/explainer/explainerIpc.ts */
+      explainer: {
+        styles: () => Promise<{ imported: ImportedStyleCard[] }>;
+        importStyle: (text: string) => Promise<ImportedStyleCard>;
+        removeStyle: (id: string) => Promise<boolean>;
+        googleFonts: () => Promise<{ family: string; category: string }[]>;
+        fontData: (family: string) => Promise<{ weight: number; range: string | null; data: Uint8Array }[]>;
+        providers: () => Promise<{ id: string; label: string; hasKey: boolean }[]>;
+        writeScenes: (req: { script: string; words?: ExWord[]; format: string; provider: string; model?: string; base?: Record<string, unknown> }) => Promise<{ spec: any; attempts: number; ms: number; problems: string[]; model: string }>;
+        validate: (spec: unknown) => Promise<string[]>;
+        check: (spec: unknown) => Promise<ExCheck>;
+        render: (req: { spec: unknown; out: string; audio?: string; extras?: Record<string, unknown> }) => Promise<{ made: string[]; spots?: string }>;
+        importedPrompt: (req: Record<string, unknown>) => Promise<{ file: string; chars: number }>;
+        importedGenerate: (req: Record<string, unknown>) => Promise<ExCheck & { id: string; file: string; model: string; ms: number }>;
+        importedLoad: (htmlPath: string) => Promise<ExCheck & { id: string; file: string }>;
+        importedRender: (req: { id: string; out: string; tint?: unknown; audio?: string }) => Promise<{ made: string[] }>;
+        reveal: (file: string) => Promise<boolean>;
+        spotsFor: (mp4: string) => Promise<{ format: string; width: number; height: number; slots: { x: number; y: number; size: number; outlineShape?: string }[] } | null>;
+        cancel: () => Promise<boolean>;
+        onProgress: (cb: (p: { job: string; pct: number; note: string }) => void) => () => void;
       };
       forge: {
         openImageForge: () => Promise<boolean>;

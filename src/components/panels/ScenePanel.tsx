@@ -229,6 +229,7 @@ export function ScenePanel({
                   { id: "shorts", label: "Shorts · TikTok · Reels", tip: "Vertical (9:16), 30 pictures a second — phones.", format: "9:16" as const, w: 1080, h: 1920, fps: 30 as Fps },
                   { id: "youtube", label: "YouTube", tip: "Wide (16:9), 30 pictures a second — computers and TVs.", format: "16:9" as const, w: 1920, h: 1080, fps: 30 as Fps },
                   { id: "lesson", label: "Course lesson", tip: "Vertical (9:16), 24 pictures a second — like the 70 lessons. Smaller files, faster renders.", format: "9:16" as const, w: 1080, h: 1920, fps: 24 as Fps },
+                  { id: "feed", label: "Instagram feed", tip: "4:5 (1080×1350), 30 pictures a second — the tallest post Instagram's feed shows, bigger than square.", format: "4:5" as const, w: 1080, h: 1350, fps: 30 as Fps },
                 ]).map((m) => (
                   <HudButton
                     key={m.id}
@@ -260,6 +261,20 @@ export function ScenePanel({
                   onClick={() => setRender({ format: "16:9", width: 1920, height: 1080 })}
                 >
                   16:9 wide
+                </HudButton>
+                <HudButton
+                  data-tip="Square picture. Good for feeds on Instagram, Facebook and LinkedIn."
+                  active={render.format === "1:1"}
+                  onClick={() => setRender({ format: "1:1", width: 1080, height: 1080 })}
+                >
+                  1:1 square
+                </HudButton>
+                <HudButton
+                  data-tip="4:5, a little taller than square — the biggest a post shows in Instagram's feed."
+                  active={render.format === "4:5"}
+                  onClick={() => setRender({ format: "4:5", width: 1080, height: 1350 })}
+                >
+                  4:5 feed
                 </HudButton>
               </div>
             </section>
@@ -323,7 +338,7 @@ export function ScenePanel({
                 thing offered, not a thing you have to know about. */}
             <div className="border-t border-accent/15 pt-5">
               <MediaLibrary
-                shape={render.format === "9:16" ? "portrait" : "landscape"}
+                shape={render.height > render.width ? "portrait" : "landscape"}
                 onPick={(filePath, info) => {
                   const endMs = Math.max(1000, (narration?.analysis?.durationMs ?? 60000));
                   if (backgroundsNow().length && !window.confirm("Replace the planned backgrounds with this one clip for the whole video?")) return;

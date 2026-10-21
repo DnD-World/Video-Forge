@@ -57,3 +57,7 @@ jobs/*.queue.state.json
 # Which brand pack this computer has switched on (npm run brand). A choice per
 # machine, so a fresh clone or install starts neutral.
 brand.local.json
+puppet-run/
+
+# explainer checking-page output
+explainer/checks/

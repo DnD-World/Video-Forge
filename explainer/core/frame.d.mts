@@ -1,0 +1,11 @@
+import type { Format, Slot, Hole, SpotShape } from "../types";
+export const FORMATS: Record<Format, { width: number; height: number }>;
+export const EXPLAINER_SPOTS: Record<Format, Record<1 | 2 | 3, { x: number; y: number; size: number }[]>>;
+export const SPOT_SHAPES: SpotShape[];
+export const MIN_SIZE: { headline: number; label: number; number: number };
+export function unitFor(W: number, H: number): number;
+export function safeMargin(W: number, H: number): number;
+export function holesFor(slots: Slot[], W: number, H: number, shape?: string, pad?: number): Hole[];
+export function holePath(ctx: CanvasRenderingContext2D, h: Hole): void;
+export function contentBox(W: number, H: number, holes: Hole[]): { x: number; y: number; w: number; h: number };
+export function explainerSpots(format: Format, count: number, shape?: SpotShape): (Slot & { outlineShape: SpotShape })[];

@@ -1,8 +1,33 @@
-# Handoff — updated 13 Oct 2026 (evening)
+# Handoff — updated 21 Oct 2026
 
 Everything a fresh session needs. `PLAN.md` holds the long history; this is the
 working state. Newest sections first. Plans: `docs/V2-PLAN.md` (Video Forge),
 `docs/FORGES-PLAN.md` (both apps; has a Status section at the bottom).
+
+## Explainers — 20–21 Oct 2026 (new kind of video, built)
+
+Animated explainers drawn by code, as their own mode in the app (top right:
+**Puppet video | Explainer**). How to use and where everything is:
+[explainer/README.md](../explainer/README.md). Plan: [EXPLAINER-PLAN.md](EXPLAINER-PLAN.md).
+
+| Done | Proof (21 Oct 2026) |
+|---|---|
+| Built-in style "Mint Meander" (Stravelakis: Sora, navy, mint, Truchet tiles, half-circle waves), 3 schemes + custom colours, tint, 11 offline fonts + any Google Font, Greek via Inter | `npm run explainer:check` — 20 shape × puppet × scheme runs pass; Greek, custom colours, Google font + sepia checked by eye |
+| Explainer screen in the app: style, shape, puppets, live preview, write scenes with a saved key, check, storyboard, render + extras | driven in the real app over CDP: Groq wrote a Greek scene list, check passed 110 frames, render made MP4 + GIF + thumbnails + chapters |
+| Import a style from the AI Style Atlas (how-to inside), "Hand to Claude", load page, render with tint | Ak's two styles (#78 Sketchbook Graphite, #86 Multi-scale Truchet) imported into Ak's install; a test page loaded, checked, rendered sepia; model-written pages proven cut off from the internet |
+| Puppets on top: explainer leaves spots empty; puppet Look → Background → **Use an explainer** moves faces into them | spot maps read back correctly; button present (its file dialog not clickable in tests) |
+| 1:1 and 4:5 across the app (shape buttons, Instagram-feed preset, preview, backgrounds, batch sheet) | `tsc` clean, 78 tests pass |
+| Model bake-off on lesson 102.1 (Greek) | `explainer/checks/bakeoff/bakeoff.html` — Gemini 3.5 Flash best Greek (often overloaded), GPT-OSS 120B clean but adds a step, Qwen 3.8 faithful but scattered. Groq default order: GPT-OSS, then Qwen |
+
+Fixed along the way (not explainer work): `[data-tip] { position: relative }`
+had made the puppet screen's Next button a full-width block that pushed the
+preview off the stage since 13 Oct; now `:where([data-tip])`.
+
+Open: Ak's taste review of the look and the bake-off; security/stability/code
+review (Ak: high effort); then docs + UI tour update for the whole app (medium).
+Seen but not touched: in the puppet preview the "9:16 · 24 FPS · 1080×1920"
+label overlaps the sample subtitle text.
+Puppet long run is PAUSED (LocalAI off) — resume with `puppet-run/resume-run.cmd`.
 
 ## Current state — 13 Oct 2026, evening
 

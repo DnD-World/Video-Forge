@@ -164,6 +164,32 @@ const api = {
     cleanUp: (limitBytes: number, keep: string[]): Promise<{ removed: number; freedBytes: number; left: { files: number; bytes: number } }> =>
       ipcRenderer.invoke("media:cleanUp", limitBytes, keep),
   },
+  /** Explainers — see electron/explainer/explainerIpc.ts for what each does. */
+  explainer: {
+    styles: (): Promise<{ imported: any[] }> => ipcRenderer.invoke("explainer:styles"),
+    importStyle: (text: string): Promise<any> => ipcRenderer.invoke("explainer:importStyle", text),
+    removeStyle: (id: string): Promise<boolean> => ipcRenderer.invoke("explainer:removeStyle", id),
+    googleFonts: (): Promise<{ family: string; category: string }[]> => ipcRenderer.invoke("explainer:googleFonts"),
+    fontData: (family: string): Promise<{ weight: number; range: string | null; data: Uint8Array }[]> => ipcRenderer.invoke("explainer:fontData", family),
+    providers: (): Promise<{ id: string; label: string; hasKey: boolean }[]> => ipcRenderer.invoke("explainer:providers"),
+    writeScenes: (req: unknown): Promise<any> => ipcRenderer.invoke("explainer:writeScenes", req),
+    validate: (spec: unknown): Promise<string[]> => ipcRenderer.invoke("explainer:validate", spec),
+    check: (spec: unknown): Promise<any> => ipcRenderer.invoke("explainer:check", spec),
+    render: (req: unknown): Promise<{ made: string[]; spots?: string }> => ipcRenderer.invoke("explainer:render", req),
+    importedPrompt: (req: unknown): Promise<{ file: string; chars: number }> => ipcRenderer.invoke("explainer:importedPrompt", req),
+    importedGenerate: (req: unknown): Promise<any> => ipcRenderer.invoke("explainer:importedGenerate", req),
+    importedLoad: (htmlPath: string): Promise<any> => ipcRenderer.invoke("explainer:importedLoad", htmlPath),
+    importedRender: (req: unknown): Promise<{ made: string[] }> => ipcRenderer.invoke("explainer:importedRender", req),
+    reveal: (file: string): Promise<boolean> => ipcRenderer.invoke("explainer:reveal", file),
+    spotsFor: (mp4: string): Promise<{ format: string; width: number; height: number; slots: { x: number; y: number; size: number; outlineShape?: string }[] } | null> => ipcRenderer.invoke("explainer:spotsFor", mp4),
+    cancel: (): Promise<boolean> => ipcRenderer.invoke("explainer:cancel"),
+    onProgress: (cb: (p: { job: string; pct: number; note: string }) => void) => {
+      const listener = (_e: unknown, payload: any) => cb(payload);
+      ipcRenderer.on("explainer:progress", listener);
+      return () => ipcRenderer.removeListener("explainer:progress", listener);
+    },
+  },
+
   forge: {
     /** Open Image Forge. False when it is not installed on this computer. */
     openImageForge: (): Promise<boolean> => ipcRenderer.invoke("forge:openImageForge"),

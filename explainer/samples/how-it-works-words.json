@@ -1,0 +1,556 @@
+{
+ "style": "stravelakis",
+ "scheme": "night",
+ "format": "16:9",
+ "fps": 30,
+ "scenes": [
+  {
+   "kind": "title",
+   "at": 0,
+   "kicker": "Video Forge",
+   "text": "How an explainer gets made"
+  },
+  {
+   "kind": "number",
+   "at": 3.4,
+   "value": 4,
+   "suffix": " shapes",
+   "label": "wide, tall, square and 4:5 — one list"
+  },
+  {
+   "kind": "steps",
+   "at": 7.4,
+   "title": "Four steps",
+   "items": [
+    {
+     "text": "Write the script",
+     "at": 8
+    },
+    {
+     "text": "Turn it into scenes",
+     "at": 9
+    },
+    {
+     "text": "Check every frame",
+     "at": 10
+    },
+    {
+     "text": "Render the video",
+     "at": 11
+    }
+   ]
+  },
+  {
+   "kind": "points",
+   "at": 13.6,
+   "title": "What the checks look for",
+   "items": [
+    "Text big enough for a phone",
+    "Nothing outside the frame",
+    "Puppet spots left empty"
+   ]
+  },
+  {
+   "kind": "bars",
+   "at": 18.6,
+   "title": "Frame height in pixels",
+   "items": [
+    {
+     "label": "Wide 16:9",
+     "value": 1080
+    },
+    {
+     "label": "Tall 9:16",
+     "value": 1920
+    },
+    {
+     "label": "Square 1:1",
+     "value": 1080
+    },
+    {
+     "label": "Feed 4:5",
+     "value": 1350
+    }
+   ]
+  },
+  {
+   "kind": "compare",
+   "at": 23,
+   "title": "Before and after",
+   "left": {
+    "title": "Before",
+    "items": [
+     "One shape per video",
+     "Layout by hand"
+    ]
+   },
+   "right": {
+    "title": "After",
+    "items": [
+     "Every shape at once",
+     "Checked before render"
+    ]
+   }
+  },
+  {
+   "kind": "takeaway",
+   "at": 27.4,
+   "kicker": "In short",
+   "text": "Write it once, get it in every shape"
+  }
+ ],
+ "duration": 31,
+ "words": [
+  {
+   "text": "Here",
+   "start": 0,
+   "end": 0.28
+  },
+  {
+   "text": "is",
+   "start": 0.33,
+   "end": 0.62
+  },
+  {
+   "text": "how",
+   "start": 0.67,
+   "end": 0.95
+  },
+  {
+   "text": "an",
+   "start": 1,
+   "end": 1.28
+  },
+  {
+   "text": "explainer",
+   "start": 1.33,
+   "end": 1.62
+  },
+  {
+   "text": "gets",
+   "start": 1.67,
+   "end": 1.95
+  },
+  {
+   "text": "made",
+   "start": 2,
+   "end": 2.28
+  },
+  {
+   "text": "in",
+   "start": 2.33,
+   "end": 2.62
+  },
+  {
+   "text": "Video",
+   "start": 2.67,
+   "end": 2.95
+  },
+  {
+   "text": "Forge.",
+   "start": 3,
+   "end": 3.28
+  },
+  {
+   "text": "One",
+   "start": 3.33,
+   "end": 3.62
+  },
+  {
+   "text": "scene",
+   "start": 3.67,
+   "end": 3.95
+  },
+  {
+   "text": "list",
+   "start": 4,
+   "end": 4.28
+  },
+  {
+   "text": "gives",
+   "start": 4.33,
+   "end": 4.62
+  },
+  {
+   "text": "four",
+   "start": 4.67,
+   "end": 4.95
+  },
+  {
+   "text": "shapes:",
+   "start": 5,
+   "end": 5.28
+  },
+  {
+   "text": "wide,",
+   "start": 5.33,
+   "end": 5.62
+  },
+  {
+   "text": "tall,",
+   "start": 5.67,
+   "end": 5.95
+  },
+  {
+   "text": "square",
+   "start": 6,
+   "end": 6.28
+  },
+  {
+   "text": "and",
+   "start": 6.33,
+   "end": 6.62
+  },
+  {
+   "text": "four",
+   "start": 6.67,
+   "end": 6.95
+  },
+  {
+   "text": "by",
+   "start": 7,
+   "end": 7.28
+  },
+  {
+   "text": "five.",
+   "start": 7.33,
+   "end": 7.62
+  },
+  {
+   "text": "There",
+   "start": 7.67,
+   "end": 7.95
+  },
+  {
+   "text": "are",
+   "start": 8,
+   "end": 8.28
+  },
+  {
+   "text": "four",
+   "start": 8.33,
+   "end": 8.62
+  },
+  {
+   "text": "steps.",
+   "start": 8.67,
+   "end": 8.95
+  },
+  {
+   "text": "Write",
+   "start": 9,
+   "end": 9.28
+  },
+  {
+   "text": "the",
+   "start": 9.33,
+   "end": 9.62
+  },
+  {
+   "text": "script,",
+   "start": 9.67,
+   "end": 9.95
+  },
+  {
+   "text": "turn",
+   "start": 10,
+   "end": 10.28
+  },
+  {
+   "text": "it",
+   "start": 10.33,
+   "end": 10.62
+  },
+  {
+   "text": "into",
+   "start": 10.67,
+   "end": 10.95
+  },
+  {
+   "text": "scenes,",
+   "start": 11,
+   "end": 11.28
+  },
+  {
+   "text": "check",
+   "start": 11.33,
+   "end": 11.62
+  },
+  {
+   "text": "every",
+   "start": 11.67,
+   "end": 11.95
+  },
+  {
+   "text": "frame,",
+   "start": 12,
+   "end": 12.28
+  },
+  {
+   "text": "and",
+   "start": 12.33,
+   "end": 12.62
+  },
+  {
+   "text": "render",
+   "start": 12.67,
+   "end": 12.95
+  },
+  {
+   "text": "the",
+   "start": 13,
+   "end": 13.28
+  },
+  {
+   "text": "video.",
+   "start": 13.33,
+   "end": 13.62
+  },
+  {
+   "text": "The",
+   "start": 13.67,
+   "end": 13.95
+  },
+  {
+   "text": "checks",
+   "start": 14,
+   "end": 14.28
+  },
+  {
+   "text": "look",
+   "start": 14.33,
+   "end": 14.62
+  },
+  {
+   "text": "for",
+   "start": 14.67,
+   "end": 14.95
+  },
+  {
+   "text": "text",
+   "start": 15,
+   "end": 15.28
+  },
+  {
+   "text": "big",
+   "start": 15.33,
+   "end": 15.62
+  },
+  {
+   "text": "enough",
+   "start": 15.67,
+   "end": 15.95
+  },
+  {
+   "text": "for",
+   "start": 16,
+   "end": 16.28
+  },
+  {
+   "text": "a",
+   "start": 16.33,
+   "end": 16.62
+  },
+  {
+   "text": "phone,",
+   "start": 16.67,
+   "end": 16.95
+  },
+  {
+   "text": "nothing",
+   "start": 17,
+   "end": 17.28
+  },
+  {
+   "text": "outside",
+   "start": 17.33,
+   "end": 17.62
+  },
+  {
+   "text": "the",
+   "start": 17.67,
+   "end": 17.95
+  },
+  {
+   "text": "frame,",
+   "start": 18,
+   "end": 18.28
+  },
+  {
+   "text": "and",
+   "start": 18.33,
+   "end": 18.62
+  },
+  {
+   "text": "puppet",
+   "start": 18.67,
+   "end": 18.95
+  },
+  {
+   "text": "spots",
+   "start": 19,
+   "end": 19.28
+  },
+  {
+   "text": "left",
+   "start": 19.33,
+   "end": 19.62
+  },
+  {
+   "text": "empty.",
+   "start": 19.67,
+   "end": 19.95
+  },
+  {
+   "text": "Frame",
+   "start": 20,
+   "end": 20.28
+  },
+  {
+   "text": "heights",
+   "start": 20.33,
+   "end": 20.62
+  },
+  {
+   "text": "differ",
+   "start": 20.67,
+   "end": 20.95
+  },
+  {
+   "text": "by",
+   "start": 21,
+   "end": 21.28
+  },
+  {
+   "text": "shape.",
+   "start": 21.33,
+   "end": 21.62
+  },
+  {
+   "text": "Before,",
+   "start": 21.67,
+   "end": 21.95
+  },
+  {
+   "text": "one",
+   "start": 22,
+   "end": 22.28
+  },
+  {
+   "text": "shape",
+   "start": 22.33,
+   "end": 22.62
+  },
+  {
+   "text": "per",
+   "start": 22.67,
+   "end": 22.95
+  },
+  {
+   "text": "video",
+   "start": 23,
+   "end": 23.28
+  },
+  {
+   "text": "and",
+   "start": 23.33,
+   "end": 23.62
+  },
+  {
+   "text": "layout",
+   "start": 23.67,
+   "end": 23.95
+  },
+  {
+   "text": "by",
+   "start": 24,
+   "end": 24.28
+  },
+  {
+   "text": "hand.",
+   "start": 24.33,
+   "end": 24.62
+  },
+  {
+   "text": "After,",
+   "start": 24.67,
+   "end": 24.95
+  },
+  {
+   "text": "every",
+   "start": 25,
+   "end": 25.28
+  },
+  {
+   "text": "shape",
+   "start": 25.33,
+   "end": 25.62
+  },
+  {
+   "text": "at",
+   "start": 25.67,
+   "end": 25.95
+  },
+  {
+   "text": "once,",
+   "start": 26,
+   "end": 26.28
+  },
+  {
+   "text": "checked",
+   "start": 26.33,
+   "end": 26.62
+  },
+  {
+   "text": "before",
+   "start": 26.67,
+   "end": 26.95
+  },
+  {
+   "text": "render.",
+   "start": 27,
+   "end": 27.28
+  },
+  {
+   "text": "Write",
+   "start": 27.33,
+   "end": 27.62
+  },
+  {
+   "text": "it",
+   "start": 27.67,
+   "end": 27.95
+  },
+  {
+   "text": "once,",
+   "start": 28,
+   "end": 28.28
+  },
+  {
+   "text": "get",
+   "start": 28.33,
+   "end": 28.62
+  },
+  {
+   "text": "it",
+   "start": 28.67,
+   "end": 28.95
+  },
+  {
+   "text": "in",
+   "start": 29,
+   "end": 29.28
+  },
+  {
+   "text": "every",
+   "start": 29.33,
+   "end": 29.62
+  },
+  {
+   "text": "shape.",
+   "start": 29.67,
+   "end": 29.95
+  }
+ ],
+ "_note": "words are evenly spaced test timings, not a real narration"
+}

@@ -58,6 +58,15 @@ const BLANK =
   "name,script,topic,template,format,music,backgrounds,language\n" +
   '"Lesson 1","Καίτη: Καλώς ήρθατε!\nΣερίφης: [nods] Ναι, ξεκινάμε.","dogs learning to sit","","9:16","auto","auto","el"\n';
 
+/** A sheet's "format" cell -> a shape (21 Oct 2026: square and 4:5 added). */
+function shapeOf(v: string): "9:16" | "16:9" | "1:1" | "4:5" | undefined {
+  if (/4[:x]5|feed/i.test(v)) return "4:5";
+  if (/1[:x]1|square/i.test(v)) return "1:1";
+  if (/16[:x]9|wide|land/i.test(v)) return "16:9";
+  if (/9[:x]16|tall|vert|port/i.test(v)) return "9:16";
+  return undefined;
+}
+
 export function ManyVideos() {
   const speakers = useProjectStore((s) => s.speakers);
   const project = useProjectStore((s) => s);
@@ -156,7 +165,7 @@ export function ManyVideos() {
         script: pick(row, "script"),
         topic: pick(row, "topic") || undefined,
         template: pick(row, "template") || undefined,
-        format: (/16[:x]9|wide|land/i.test(pick(row, "format")) ? "16:9" : /9[:x]16|tall|vert|port/i.test(pick(row, "format")) ? "9:16" : undefined) as "9:16" | "16:9" | undefined,
+        format: shapeOf(pick(row, "format")),
         music: (/^(no|none|off|όχι)$/i.test(pick(row, "music")) ? "none" : "auto") as "auto" | "none",
         backgrounds: (/^(no|none|off|όχι)$/i.test(pick(row, "backgrounds")) ? "none" : "auto") as "auto" | "none",
         language: pick(row, "language") || undefined,
@@ -219,7 +228,7 @@ export function ManyVideos() {
           <li><b>name</b> — the video's file name</li>
           <li><b>topic</b> — a few words, for choosing background clips</li>
           <li><b>template</b> — a look by name, e.g. «News desk» (empty = this project's look)</li>
-          <li><b>format</b> — 9:16 or 16:9 · <b>music</b> / <b>backgrounds</b> — auto or none · <b>language</b> — el, en…</li>
+          <li><b>format</b> — 9:16, 16:9, 1:1 or 4:5 · <b>music</b> / <b>backgrounds</b> — auto or none · <b>language</b> — el, en…</li>
         </ul>
       </details>
 

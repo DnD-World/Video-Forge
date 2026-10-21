@@ -177,7 +177,7 @@ export interface BatchJob {
   /** Overrides the preset. Present because orientation is the one thing a
    *  batch is likely to vary per row — the same lesson, wide for the LMS and
    *  tall for social. */
-  format?: "9:16" | "16:9";
+  format?: "9:16" | "16:9" | "1:1" | "4:5";
   /** x264 quality, 0–51: lower is better and bigger. Defaults to 23. Raise it
    *  for social cuts, where the platform re-encodes everything anyway and the
    *  only thing a large file buys is upload time. */
@@ -276,6 +276,8 @@ export interface JobResult {
 const FORMATS = {
   "9:16": { width: 1080, height: 1920 },
   "16:9": { width: 1920, height: 1080 },
+  "1:1": { width: 1080, height: 1080 },
+  "4:5": { width: 1080, height: 1350 },
 } as const;
 
 async function readJson<T>(file: string): Promise<T> {

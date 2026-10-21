@@ -326,7 +326,10 @@ input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-of
 .state .lamp { display: none !important; }
 
 /* ---- ELI5 hover help: a [data-tip] gets a soft bubble ---- */
-[data-tip] { position: relative; }
+/* :where() = no weight, so an element's own position (absolute buttons like
+   .forge-next) still wins. Found 21 Oct 2026: the plain selector made the
+   Next button a full-width block that pushed the preview off the stage. */
+:where([data-tip]) { position: relative; }
 /* The bubble itself is drawn by components/ui/TipLayer.tsx, once for the
    whole window: drawn inside its panel (the first version) it was cut off by
    the panel's scroll edge — the lowest choices had no help at all (Ak, 13 Oct). */

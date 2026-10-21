@@ -1,3 +1,5 @@
+import { ExplainerStudio } from "./components/explainer/ExplainerStudio";
+import { HudButton } from "./components/ui/HudButton";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { MutableRefObject, ReactNode } from "react";
 import { Toggle } from "./components/ui/Toggle";
@@ -141,6 +143,12 @@ export default function App() {
   // step, so the rest of this file keeps reading one value.
   const [step, setStep] = useState<Step>("cast");
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // WHAT KIND OF VIDEO (21 Oct 2026): puppet videos (the four steps) or
+  // explainers (animated, drawn by code — src/components/explainer). Remembered.
+  const [mode, setModeState] = useState<"puppet" | "explainer">(() => {
+    try { return localStorage.getItem("vf.mode") === "explainer" ? "explainer" : "puppet"; } catch { return "puppet"; }
+  });
+  const setMode = (m: "puppet" | "explainer") => { setModeState(m); setSettingsOpen(false); try { localStorage.setItem("vf.mode", m); } catch { /* fine */ } };
   const view: "canvas" | "settings" | "narration" = settingsOpen ? "settings" : step === "script" ? "narration" : "canvas";
   const goStep = (s: Step) => { setSettingsOpen(false); setStep(s); };
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -284,7 +292,8 @@ export default function App() {
   const motionEnabled = useSettingsStore((s) => s.motionEnabled);
   const [forgeGoing, setForgeGoing] = useState(false);
 
-  const isPortrait = render.format === "9:16";
+  // the frame's own proportions, so square and 4:5 preview correctly too
+  const frameRatio = render.width / render.height;
 
   // The autosave stores the narration's path and timings but not its analysis —
   // a ten-minute spectrum is megabytes and localStorage would refuse it. The
@@ -427,11 +436,11 @@ export default function App() {
   }, [view]);
 
   const canvasSize = useMemo(() => {
-    const ratio = isPortrait ? 9 / 16 : 16 / 9;
+    const ratio = frameRatio;
     // 58px is kept free under the frame for the transport bar.
     const w = Math.floor(Math.min(stageSize.w, Math.max(0, stageSize.h - 58) * ratio));
     return { w: Math.max(0, w), h: Math.max(0, Math.floor(w / ratio)) };
-  }, [stageSize, isPortrait]);
+  }, [stageSize, frameRatio]);
 
   // Avatar dragging. The listeners live on window rather than the avatar so a
   // fast drag that outruns the cursor doesn't drop the gesture the moment the
@@ -500,8 +509,12 @@ export default function App() {
           Video Forge
           <small>AI video generator · BYOK</small>
         </div>
+        <div className="ml-auto flex gap-2 items-center" role="group" aria-label="Kind of video">
+          <HudButton data-tip="Puppet videos: talking characters, in four steps." active={mode === "puppet" && !settingsOpen} onClick={() => setMode("puppet")}>Puppet video</HudButton>
+          <HudButton data-tip="Explainers: animated pictures, words and charts drawn by code, timed to a narration — with or without puppets on top." active={mode === "explainer" && !settingsOpen} onClick={() => setMode("explainer")}>Explainer</HudButton>
+        </div>
         <button
-          className={`forge-gear ml-auto ${settingsOpen ? "on" : ""}`}
+          className={`forge-gear ml-3 ${settingsOpen ? "on" : ""}`}
           title="Settings — keys and preferences"
           aria-label="Settings"
           aria-pressed={settingsOpen}
@@ -511,7 +524,7 @@ export default function App() {
         </button>
       </header>
 
-      {!settingsOpen && (
+      {!settingsOpen && mode === "puppet" && (
       <nav className="forge-steps mx-3 mb-3" aria-label="Steps">
         {STEPS.map((st, i) => {
           const at = STEPS.findIndex((x) => x.id === step);
@@ -526,6 +539,7 @@ export default function App() {
       </nav>
       )}
 
+      {mode === "explainer" && !settingsOpen ? <ExplainerStudio /> : (
       <div className="flex flex-1 gap-3 px-3 pb-3 min-h-0">
         {/* LEFT: the cast — step 1 only */}
         {view === "canvas" && step === "cast" && (
@@ -782,6 +796,7 @@ export default function App() {
         </Rail>
         )}
       </div>
+      )}
     </div>
   );
 }

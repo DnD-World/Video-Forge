@@ -29,6 +29,7 @@ import { makeSfxEleven } from "./audio/makeSfxEleven";
 import { getSfxFreesound } from "./audio/getSfxFreesound";
 import { addOutros } from "./render/addOutros";
 import { loadActiveBrand } from "./brand";
+import { registerExplainerIpc } from "./explainer/explainerIpc";
 import type { BrandInfo } from "../src/store/builtinCast";
 import {
   buildBlocks,
@@ -235,6 +236,9 @@ async function openImageForge(): Promise<boolean> {
   return err === "";
 }
 ipcMain.handle("forge:openImageForge", openImageForge);
+
+// Explainers (animated videos drawn by code): electron/explainer/explainerIpc.ts
+registerExplainerIpc(() => mainWindow);
 
 /** The Forge shelf (tools/lib/forgeShelf.mjs): puppets Image Forge made, and
  *  orders for new ones. Image Forge notices an order within 20 seconds of

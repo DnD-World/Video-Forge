@@ -1,7 +1,8 @@
 import type { DramaboxParams } from "../lib/narration/dramaboxParams";
 import type { ExpressionOptions } from "../lib/narration/expression";
 
-export type AspectRatio = "9:16" | "16:9";
+/** 1:1 and 4:5 joined 16:9 and 9:16 on 21 Oct 2026 (Ak: "we need 4:5 all over"). */
+export type AspectRatio = "9:16" | "16:9" | "1:1" | "4:5";
 export type Engine = "remotion" | "ffmpeg";
 export type Fps = 10 | 24 | 30;
 
