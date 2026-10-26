@@ -10,6 +10,7 @@
 
 import { dialog, ipcMain, type BrowserWindow } from "electron";
 import * as keyStore from "../keyStore";
+import { guard } from "../security/guard";
 import { PROVIDERS, pickModel } from "../../tools/lib/explainerLlm.mjs";
 import { cardFromDescription, cardFromPicture, suggestForCard } from "../../tools/lib/characterLlm.mjs";
 import type { CharacterCard } from "../../characters/core/index.mjs";
@@ -62,7 +63,9 @@ export function registerCharacterIpc(getWindow: () => BrowserWindow | null) {
     const win = getWindow();
     const opts = { title: "A picture of the character", properties: ["openFile" as const], filters: [{ name: "Pictures", extensions: ["png", "jpg", "jpeg", "webp"] }] };
     const r = win ? await dialog.showOpenDialog(win, opts) : await dialog.showOpenDialog(opts);
-    return r.canceled ? null : r.filePaths[0] ?? null;
+    if (r.canceled || !r.filePaths[0]) return null;
+    guard().grantRead(r.filePaths[0]);
+    return r.filePaths[0];
   });
 
   ipcMain.handle("character:fromDescription", (_e, req: { description: string; look?: string; provider: string; model?: string }) =>
@@ -77,6 +80,8 @@ export function registerCharacterIpc(getWindow: () => BrowserWindow | null) {
   ipcMain.handle("character:fromPicture", (_e, req: { file: string; description?: string; look?: string; provider: string; model?: string }) =>
     run(async (signal) => {
       if (!SEES_PICTURES.has(req.provider)) throw new Error(`${PROVIDERS[req.provider]?.label ?? req.provider} can't look at pictures here. Use Google Gemini, OpenRouter or OpenAI.`);
+      // The picture is read and sent to a cloud model, so it must be one you picked.
+      guard().assertRead(req.file);
       const key = await keyFor(req.provider);
       const model = await chooseModel(req.provider, key, req.model);
       const r = await cardFromPicture({ provider: req.provider, key, model, file: req.file, description: String(req.description ?? "").slice(0, 2000), look: req.look, signal });

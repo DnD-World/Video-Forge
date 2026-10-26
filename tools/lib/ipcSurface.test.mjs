@@ -27,3 +27,22 @@ test("engines never get a way to update themselves or phone home", () => {
 test("Piper voice servers are told to listen on this computer only", () => {
   assert.match(read("electron/tts/piperEngine.ts"), /"--host", "127\.0\.0\.1"/);
 });
+
+test("every IPC handler that takes a path or program from the window checks it first", () => {
+  const main = read("electron/main.ts");
+  // read/write handlers go through the path check
+  assert.match(main, /readFile\(guard\(\)\.assertRead\(filePath\)\)/);
+  assert.match(main, /writeFile\(guard\(\)\.assertWrite\(filePath\)/);
+  assert.ok(!/fsp\.readFile\(filePath\)/.test(main), "a handler still reads a raw window path");
+  assert.ok(!/fsp\.readFile\(source\.file/.test(main));
+  // downloads are validated
+  assert.match(main, /safeMediaId\(id\)/);
+  assert.match(main, /safeMediaUrl\(url\)/);
+  // dialogs are where permission is given
+  assert.match(main, /guard\(\)\.grantRead\(/);
+  assert.match(main, /guard\(\)\.grantWrite\(/);
+  // the explainer and character handlers too
+  assert.match(read("electron/explainer/explainerIpc.ts"), /guard\(\)\.assertWrite\(out\)/);
+  assert.match(read("electron/explainer/explainerIpc.ts"), /guard\(\)\.assertRead\(htmlPath\)/);
+  assert.match(read("electron/characters/characterIpc.ts"), /guard\(\)\.assertRead\(req\.file\)/);
+});

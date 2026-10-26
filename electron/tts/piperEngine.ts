@@ -31,6 +31,14 @@ interface ServerHandle {
 const servers = new Map<string, ServerHandle>(); // keyed by onnxPath
 let nextPort = 5501;
 
+/** Set by the app window's side of main: refuses any program that is not a
+ *  Python interpreter the user could have chosen. Unset for headless job runs,
+ *  whose job file is the user's own. Throws to refuse. */
+let startGuard: ((pythonPath: string, onnxPath: string) => void) | null = null;
+export function setPiperStartGuard(fn: ((pythonPath: string, onnxPath: string) => void) | null): void {
+  startGuard = fn;
+}
+
 function pingServer(port: number): Promise<boolean> {
   return new Promise((resolve) => {
     const req = http.get({ host: "127.0.0.1", port, path: "/", timeout: 800 }, (res) => {
@@ -79,6 +87,7 @@ async function waitUntilReady(port: number, timeoutMs = 20000): Promise<void> {
 }
 
 async function getOrStartServer(pythonPath: string, onnxPath: string): Promise<ServerHandle> {
+  startGuard?.(pythonPath, onnxPath);
   const existing = servers.get(onnxPath);
   if (existing) return existing;
 

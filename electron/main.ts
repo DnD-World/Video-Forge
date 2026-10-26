@@ -9,7 +9,9 @@ import { recordMade } from "../tools/lib/forgeHub.mjs";
 import { removePuppet, listPuppets, orderResult, placeOrder, shelfRoot } from "../tools/lib/forgeShelf.mjs";
 import { fetchSheet, parseCsv, runMany, type ManyEvent, type ManyRequest } from "./batch/manyVideos";
 import { resolveUserData, NEW_APP_NAME } from "./migrateUserData";
-import { listPiperVoices, synthesizeWithPiper, shutdownAllPiperServers } from "./tts/piperEngine";
+import { listPiperVoices, synthesizeWithPiper, shutdownAllPiperServers, setPiperStartGuard } from "./tts/piperEngine";
+import { guard, addReadOnlyRoot, pythonAllowed } from "./security/guard";
+import { OPEN_EXTENSIONS, safeMediaId, safeMediaUrl } from "./security/pathGuard";
 import { analyzeNarration } from "./audio/analyzeNarration";
 import { listMusic } from "./audio/musicLibrary";
 import * as elevenlabs from "./tts/elevenlabsEngine";
@@ -187,7 +189,7 @@ ipcMain.handle(
     segments?: { speakerId: string; startMs: number; endMs: number }[],
     speakerOrder?: string[]
   ) => {
-    const buf = await fsp.readFile(filePath);
+    const buf = await fsp.readFile(guard().assertRead(filePath));
     return analyzeNarration(buf, segments ?? [], speakerOrder ?? []);
   }
 );
@@ -206,15 +208,22 @@ ipcMain.handle("dialog:openFile", async (_e, filters?: Electron.FileFilter[]) =>
     properties: ["openFile"],
     filters,
   });
-  return res.canceled ? null : res.filePaths[0];
+  if (res.canceled) return null;
+  // A file you picked is a file the window may then read (electron/security).
+  guard().grantRead(res.filePaths[0]);
+  return res.filePaths[0];
 });
 
 ipcMain.handle("dialog:saveFile", async (_e, defaultName: string, filters?: Electron.FileFilter[]) => {
   const res = await dialog.showSaveDialog(mainWindow!, {
-    defaultPath: path.join(app.getPath("downloads"), defaultName),
+    // basename: the window names a file, not a folder to save into
+    defaultPath: path.join(app.getPath("downloads"), path.basename(String(defaultName || "file"))),
     filters,
   });
-  return res.canceled ? null : res.filePath;
+  if (res.canceled || !res.filePath) return null;
+  // The one place outside its own folder the window may write.
+  guard().grantWrite(res.filePath);
+  return res.filePath;
 });
 
 ipcMain.handle("storage:outputDir", async () => {
@@ -251,7 +260,7 @@ ipcMain.handle(
     const bufs: Buffer[] = [];
     for (const p of pictures.slice(0, 3)) {
       try {
-        bufs.push(await fsp.readFile(p));
+        bufs.push(await fsp.readFile(guard().assertRead(p)));
       } catch {
         /* a picture that cannot be read is left out */
       }
@@ -272,7 +281,7 @@ ipcMain.handle("forge:removePuppet", async (_e, slug: string) => removePuppet(sh
 let manyStop = false;
 let manyRunning = false;
 ipcMain.handle("batch:readSheet", async (_e, source: { url?: string; file?: string }) => {
-  const text = source.file ? await fsp.readFile(source.file, "utf8") : await fetchSheet(source.url ?? "");
+  const text = source.file ? await fsp.readFile(guard().assertRead(source.file), "utf8") : await fetchSheet(source.url ?? "");
   return parseCsv(text);
 });
 ipcMain.handle("batch:runMany", async (e, req: ManyRequest) => {
@@ -319,11 +328,13 @@ const mediaDir = () => path.join(app.getPath("userData"), "media");
 ipcMain.handle("media:cacheStats", async () => cacheStats(mediaDir()));
 ipcMain.handle("media:cleanUp", async (_e, limitBytes: number, keep: string[] = []) => cleanUp(mediaDir(), limitBytes, keep));
 
-/** Open a finished video in the computer's own player. Only files inside the
- *  app's output folder, so a page can never ask to run something else. */
+/** Open a finished video in the computer's own player. Only media files inside
+ *  the app's output folder (a real folder check, not a text prefix), so a page
+ *  can never ask to run something else. */
 ipcMain.handle("storage:openPath", async (_e, p: string) => {
-  const full = path.resolve(p);
-  if (!full.toLowerCase().startsWith(path.resolve(outputDir()).toLowerCase())) return false;
+  const full = path.resolve(String(p));
+  if (!OPEN_EXTENSIONS.has(path.extname(full).toLowerCase())) return false;
+  if (!guard().isInside(outputDir(), full)) return false;
   return (await shell.openPath(full)) === "";
 });
 
@@ -377,6 +388,13 @@ ipcMain.handle("sound:search", async (_e, query: string) => searchSounds(query))
  *  Named by provider and id rather than by the query that found it, so the
  *  same clip picked twice reuses one file instead of accumulating copies. */
 ipcMain.handle("media:download", async (_e, id: string, url: string) => {
+  // The id becomes a file name and the address is fetched: both come from the
+  // window, so neither is trusted (no "..\" in the name, https from the stock
+  // libraries only).
+  if (!safeMediaId(id)) throw new Error("That clip has an id this app will not use as a file name.");
+  const safeUrl = safeMediaUrl(url);
+  if (!safeUrl) throw new Error("Clips can only be downloaded over https from Pixabay, Pexels or Freesound.");
+  url = safeUrl;
   const dir = path.join(app.getPath("userData"), "media");
   const ext = (url.split("?")[0].match(/\.(mp4|mov|webm|mp3|wav|ogg)$/i)?.[1] ?? "mp4").toLowerCase();
   const dest = path.join(dir, `${id}.${ext}`);
@@ -417,12 +435,12 @@ ipcMain.handle("fonts:ensure", async (_e, family: string, weight: number) =>
 );
 
 ipcMain.handle("storage:readFile", async (_e, filePath: string) => {
-  const buf = await fsp.readFile(filePath);
+  const buf = await fsp.readFile(guard().assertRead(filePath));
   return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
 });
 
 ipcMain.handle("storage:writeFile", async (_e, filePath: string, data: ArrayBuffer) => {
-  await fsp.writeFile(filePath, Buffer.from(data));
+  await fsp.writeFile(guard().assertWrite(filePath), Buffer.from(data));
   return true;
 });
 
@@ -465,6 +483,10 @@ ipcMain.handle(
     const result = buildBlocks(scriptText, speakers);
     if (result.errors.length) {
       return { ok: false as const, errors: result.errors, summary: [] as string[] };
+    }
+    // Only the app's own folder or the folder of a file you just chose to save.
+    if (!guard().canWriteDir(outDir)) {
+      return { ok: false as const, errors: ["Save into a folder you choose with the Save button."], summary: [] as string[] };
     }
     await fsp.mkdir(outDir, { recursive: true });
     await fsp.writeFile(
@@ -544,6 +566,7 @@ ipcMain.handle("render:start", async (_e, job: RenderJob) => {
 // ---------------------------------------------------------------------------
 
 ipcMain.handle("tts:listPiperVoices", async (_e, voicesDir: string) => {
+  if (!guard().canRead(voicesDir)) return [];
   return listPiperVoices(voicesDir);
 });
 
@@ -677,6 +700,24 @@ app.whenReady().then(async () => {
     }
     return;
   }
+
+  // From here on the app window is asking, so what it asks for is checked
+  // (the headless runs above read the user's own job file and are not).
+  setPiperStartGuard((python, onnx) => {
+    if (!pythonAllowed(python)) {
+      throw new Error("The voice server must be a Python program: use \"python\", or the python file inside your piper-venv folder.");
+    }
+    if (!guard().canRead(onnx)) throw new Error("That voice file is outside the folders this app reads from.");
+  });
+  // The active brand pack's puppet art may live outside the app folder.
+  try {
+    const brand = await loadActiveBrand(app.getAppPath());
+    addReadOnlyRoot(brand?.dir);
+    addReadOnlyRoot(brand?.puppetDir);
+  } catch { /* no brand pack: nothing to add */ }
+  // `--project <file>` came from the command line, i.e. from the user.
+  const projArg = process.argv.indexOf("--project");
+  if (projArg !== -1 && process.argv[projArg + 1]) guard().grantRead(process.argv[projArg + 1]);
 
   createWindow();
   // Give Image Forge the keys typed here before it existed (in the background).
