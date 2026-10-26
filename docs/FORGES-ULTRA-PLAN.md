@@ -161,6 +161,11 @@ money leaks).
 
 **Credit left: 243** (Ak, 26 Oct 2026). Plan: the whole cast below + variants + sets (≈ 200), ≈ 40 kept for redos and extras.
 
+**Price confirmed 26 Oct 2026** (Google's own pricing page, ai.google.dev/gemini-api/docs/pricing):
+- Nano Banana 2.1 costs **$0.0336 a 1K picture standard** and **$0.0168 in batch**.
+- An input picture is 1,120 tokens, about $0.0008 in batch.
+- So a batch edit costs about $0.018, half the $0.034 used below, which makes every figure below about double the real cost.
+
 **Cost per puppet (estimate).** A full puppet in the 25 Oct run (head + full
 body + 3/4 view, 59 parts + bases) is about 62 pictures; head-only about 20.
 At Nano Banana 2's batch price ($0.034 a picture — Nano Banana 2.1's own price

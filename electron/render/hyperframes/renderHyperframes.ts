@@ -32,6 +32,7 @@ import { createRequire } from "node:module";
 import { ffmpegBin } from "../../process/ffmpegPath";
 import { childEnv } from "../../net/childEnv";
 import { killTree, spawnTracked } from "../../process/childTree";
+import { NO_BROWSER_HELP, pickRenderBrowser } from "./renderBrowser";
 import { backgroundTiming } from "../../../src/lib/background/backgroundTiming";
 import { musicGainAt } from "../../../src/lib/audio/ducking";
 import { colorLookCss } from "../../../src/lib/background/colorLook";
@@ -82,6 +83,9 @@ function run(cmd: string, args: string[], opts: { env?: NodeJS.ProcessEnv; onLin
   });
 }
 
+/** Output tags that say "ordinary video" (bt709), for every clip we build. */
+const SDR_TAGS = ["-color_primaries", "bt709", "-color_trc", "bt709", "-colorspace", "bt709"];
+
 // ---- background track --------------------------------------------------------
 async function buildBackgroundTrack(input: HyperframesInput): Promise<{ file: string; startSec: number; durSec: number } | null> {
   const { props, dir } = input;
@@ -116,7 +120,11 @@ async function buildBackgroundTrack(input: HyperframesInput): Promise<{ file: st
   const lastSlot = timing.slots[timing.slots.length - 1];
   const durSec = (lastSlot.startFrame + lastSlot.durationInFrames - first.startFrame) / fps;
   const file = "bg-track.mp4";
-  args.push("-filter_complex", chains.join(";"), "-map", `[${last}]`, "-an", "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-r", String(fps), path.join(dir, file));
+  // Tagged as ordinary (SDR, bt709) video. A stock clip tagged HDR (HLG/PQ)
+  // otherwise passes its tag on to the whole track, and the renderer then tries
+  // to unpack every frame as raw HDR — about 100 GB for a 7-minute lesson,
+  // which failed the 101.1 test render (26 Oct 2026).
+  args.push("-filter_complex", chains.join(";"), "-map", `[${last}]`, "-an", "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-r", String(fps), ...SDR_TAGS, path.join(dir, file));
   await run(ffmpegBin(), args, { signal: input.signal });
   return { file, startSec: first.startFrame / fps, durSec };
 }
@@ -127,7 +135,7 @@ async function buildBanner(input: HyperframesInput, totalSec: number): Promise<s
   if (!b) return null;
   const file = "banner-loop.mp4";
   await run(ffmpegBin(), ["-y", "-v", "error", "-stream_loop", "-1", "-i", path.join(input.dir, b.fileName),
-    "-t", totalSec.toFixed(3), "-an", "-c:v", "libx264", "-crf", "18", "-preset", "veryfast", "-r", String(input.props.fps),
+    "-t", totalSec.toFixed(3), "-an", "-c:v", "libx264", "-crf", "18", "-preset", "veryfast", "-r", String(input.props.fps), ...SDR_TAGS,
     path.join(input.dir, file)], { signal: input.signal });
   return file;
 }
@@ -297,20 +305,28 @@ export async function renderHyperframes(input: HyperframesInput): Promise<void> 
   await fsp.writeFile(path.join(input.dir, "index.html"), writePage(input, { bg, banner, mix, totalSec }));
 
   onProgress(0.2, "Rendering frames…");
+  // A complete copy of the hidden browser (renderBrowser.ts says why).
+  const browser = pickRenderBrowser();
   const cli = require_.resolve("hyperframes/bin/hyperframes.mjs");
-  await run(process.execPath, [cli, "render", input.dir, "--output", input.outputPath, "--fps", String(props.fps), "--crf", String(input.crf), "--quiet"], {
-    // childEnv() carries the no-update / no-telemetry switches (it is the one
-    // place engine environments are set).
-    env: childEnv({ ELECTRON_RUN_AS_NODE: "1" }),
-    signal: input.signal,
-    onLine: (l) => {
-      const m = l.match(/@hf-progress (\{.*\})/);
-      if (m) {
-        try {
-          const p = JSON.parse(m[1]);
-          onProgress(0.2 + 0.8 * Math.min(1, (p.pct ?? 0) / 100), p.code === "assemble" ? "Assembling…" : "Rendering frames…");
-        } catch { /* a malformed progress line is not worth failing a render for */ }
-      }
-    },
-  });
+  try {
+    await run(process.execPath, [cli, "render", input.dir, "--output", input.outputPath, "--fps", String(props.fps), "--crf", String(input.crf), "--sdr", "--quiet"], {
+      // childEnv() carries the no-update / no-telemetry switches (it is the one
+      // place engine environments are set).
+      env: childEnv({ ELECTRON_RUN_AS_NODE: "1", ...(browser ? { HYPERFRAMES_BROWSER_PATH: browser } : {}) }),
+      signal: input.signal,
+      onLine: (l) => {
+        const m = l.match(/@hf-progress (\{.*\})/);
+        if (m) {
+          try {
+            const p = JSON.parse(m[1]);
+            onProgress(0.2 + 0.8 * Math.min(1, (p.pct ?? 0) / 100), p.code === "assemble" ? "Assembling…" : "Rendering frames…");
+          } catch { /* a malformed progress line is not worth failing a render for */ }
+        }
+      },
+    });
+  } catch (e) {
+    // the damaged-browser error says nothing a person can act on; this does
+    if (/ICU data|Failed to launch the browser/i.test(String(e))) throw new Error(NO_BROWSER_HELP);
+    throw e;
+  }
 }
