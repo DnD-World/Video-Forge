@@ -9,8 +9,6 @@ import { contextBridge, ipcRenderer } from "electron";
 const api = {
   keys: {
     list: (): Promise<string[]> => ipcRenderer.invoke("keys:list"),
-    get: (provider: string): Promise<string | null> =>
-      ipcRenderer.invoke("keys:get", provider),
     set: (provider: string, value: string): Promise<boolean> =>
       ipcRenderer.invoke("keys:set", provider, value),
     remove: (provider: string): Promise<boolean> =>

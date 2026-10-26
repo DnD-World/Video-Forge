@@ -44,7 +44,6 @@ declare global {
     byok: {
       keys: {
         list: () => Promise<string[]>;
-        get: (provider: string) => Promise<string | null>;
         set: (provider: string, value: string) => Promise<boolean>;
         remove: (provider: string) => Promise<boolean>;
         encryptionAvailable: () => Promise<boolean>;

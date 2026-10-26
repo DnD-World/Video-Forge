@@ -157,9 +157,8 @@ ipcMain.handle("keys:list", async () => {
   return keyStore.listKeys();
 });
 
-ipcMain.handle("keys:get", async (_e, provider: string) => {
-  return keyStore.getKey(provider);
-});
+// There is deliberately no "keys:get": a key read by the window could be read
+// by anything that ever ran inside it. Main reads keys itself, where they are used.
 
 ipcMain.handle("keys:set", async (_e, provider: string, value: string) => {
   const result = await keyStore.setKey(provider, value);
