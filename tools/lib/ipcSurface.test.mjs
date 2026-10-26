@@ -28,6 +28,19 @@ test("Piper voice servers are told to listen on this computer only", () => {
   assert.match(read("electron/tts/piperEngine.ts"), /"--host", "127\.0\.0\.1"/);
 });
 
+test("the window is sandboxed, has a content policy, and cannot wander off the app's page", () => {
+  const main = read("electron/main.ts");
+  assert.match(main, /sandbox: true/);
+  assert.match(main, /preload\.cjs/);
+  assert.match(main, /will-navigate/);
+  assert.match(main, /setPermissionRequestHandler/);
+  assert.ok(!/shell\.openExternal\(url\)/.test(main), "openExternal must only get checked web addresses");
+  const cfg = read("electron.vite.config.ts");
+  assert.match(cfg, /Content-Security-Policy/);
+  assert.match(cfg, /\[name\]\.cjs/);
+  assert.match(cfg, /script-src 'self'/);
+});
+
 test("every IPC handler that takes a path or program from the window checks it first", () => {
   const main = read("electron/main.ts");
   // read/write handlers go through the path check

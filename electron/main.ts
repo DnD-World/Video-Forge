@@ -11,7 +11,8 @@ import { fetchSheet, parseCsv, runMany, type ManyEvent, type ManyRequest } from 
 import { resolveUserData, NEW_APP_NAME } from "./migrateUserData";
 import { listPiperVoices, synthesizeWithPiper, shutdownAllPiperServers, setPiperStartGuard } from "./tts/piperEngine";
 import { guard, addReadOnlyRoot, pythonAllowed } from "./security/guard";
-import { OPEN_EXTENSIONS, safeMediaId, safeMediaUrl } from "./security/pathGuard";
+import { OPEN_EXTENSIONS, isAppPage, safeExternalUrl, safeMediaId, safeMediaUrl } from "./security/pathGuard";
+import { pathToFileURL } from "node:url";
 import { analyzeNarration } from "./audio/analyzeNarration";
 import { listMusic } from "./audio/musicLibrary";
 import * as elevenlabs from "./tts/elevenlabsEngine";
@@ -83,18 +84,41 @@ function createWindow() {
     // (build/icon.png, via electron-builder); this covers the dev build too.
     icon: path.join(app.getAppPath(), "out", "renderer", "icon-256.png"),
     webPreferences: {
-      preload: path.join(__dirname, "../preload/preload.mjs"),
+      // A CommonJS preload (electron.vite.config.ts): Electron only sandboxes
+      // a window whose preload is not an ES module.
+      preload: path.join(__dirname, "../preload/preload.cjs"),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false,
+      sandbox: true,
     },
   });
 
   mainWindow.once("ready-to-show", () => mainWindow?.show());
 
+  // The window stays on the app's own page. Anything else — a dropped file, a
+  // link, a redirect — is stopped, and a web link goes to the user's browser.
+  const appPages = (isDev && process.env["ELECTRON_RENDERER_URL"])
+    ? [process.env["ELECTRON_RENDERER_URL"]]
+    : [pathToFileURL(path.join(__dirname, "../renderer/index.html")).toString()];
+  const stayHome = (event: Electron.Event, url: string) => {
+    if (isAppPage(url, appPages)) return;
+    event.preventDefault();
+    const web = safeExternalUrl(url);
+    if (web) void shell.openExternal(web);
+  };
+  mainWindow.webContents.on("will-navigate", stayHome);
+  mainWindow.webContents.on("will-redirect", stayHome);
+  mainWindow.webContents.on("will-attach-webview", (event) => event.preventDefault());
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    shell.openExternal(url);
+    // Only web addresses ever reach the system: no file:, smb:, or app protocols.
+    const web = safeExternalUrl(url);
+    if (web) void shell.openExternal(web);
     return { action: "deny" };
+  });
+  // The page needs no camera, microphone, location or the like. Electron's
+  // default is to say yes to everything; this says no, except copying text.
+  mainWindow.webContents.session.setPermissionRequestHandler((_wc, permission, callback) => {
+    callback(permission === "clipboard-sanitized-write");
   });
 
   // Electron ships no right-click menu at all — without this, right-clicking a
