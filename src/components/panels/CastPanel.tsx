@@ -9,7 +9,7 @@
 // colour. There is no second control, because two controls would drift.
 // ---------------------------------------------------------------------------
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Empty } from "../ui/Empty";
 import { Picker } from "../ui/Picker";
 import { Toggle } from "../ui/Toggle";
@@ -21,6 +21,9 @@ import { VoiceControls } from "./VoiceControls";
 import { SfxPanel } from "./SfxPanel";
 import { useProjectStore } from "../../store/useProjectStore";
 import { useVoicesStore } from "../../store/useVoicesStore";
+import { useSettingsStore } from "../../store/useSettingsStore";
+import { usePlayer } from "../../lib/motion/usePreviewPlayer";
+import { plainError } from "../../lib/plainError";
 import { PuppetShelf } from "./PuppetShelf";
 import { resolveAssetDir } from "../../lib/puppets/puppetAssets";
 import { useSpeakerLibraryStore } from "../../store/useSpeakerLibraryStore";
@@ -105,6 +108,53 @@ export function CastPanel() {
       { name: "Audio", extensions: ["wav", "mp3", "m4a", "ogg", "flac"] },
     ]);
     if (p) await loadMusicFile(p);
+  };
+
+  // ▶ on a character: hear their voice. The first line they speak in the
+  // narration (a short stretch of it) through the preview; if they have none
+  // yet, a short sentence from a FREE local voice. Never a paid voice.
+  const player = usePlayer();
+  const narrationNow = useProjectStore((s) => s.narration);
+  const attachedNow = useProjectStore((s) => s.attachedAudio);
+  const projectLanguage = useProjectStore((s) => s.language);
+  const piperPython = useSettingsStore((s) => s.defaults.piperPythonPath);
+  const sampleAudio = useRef<HTMLAudioElement | null>(null);
+  const [sampleOn, setSampleOn] = useState<string | null>(null);
+  const [sampleNote, setSampleNote] = useState<string | null>(null);
+  useEffect(() => () => { sampleAudio.current?.pause(); }, []);
+  const playVoice = async (sp: (typeof speakers)[number]) => {
+    setSampleNote(null);
+    sampleAudio.current?.pause();
+    setSampleOn(null);
+    const seg = narrationNow?.segments.find((x) => x.speakerId === sp.id);
+    if (seg && player?.hasSound && !attachedNow) {
+      player.playSpan(seg.startMs, Math.min(seg.endMs, seg.startMs + 6000));
+      return;
+    }
+    player?.stop();
+    if (sp.ttsEngine !== "dramabox" && engineOf(sp) === "piper" && sp.voiceId) {
+      try {
+        setSampleOn(sp.id);
+        const { audioBuffer } = await window.byok.tts.synthesizePiper(
+          piperPython,
+          sp.voiceId,
+          projectLanguage === "en" ? "Hello! This is how I sound." : "Γεια σου! Έτσι ακούγομαι."
+        );
+        const a = new Audio(URL.createObjectURL(new Blob([audioBuffer], { type: "audio/wav" })));
+        a.onended = () => setSampleOn(null);
+        sampleAudio.current = a;
+        await a.play();
+      } catch (e) {
+        setSampleOn(null);
+        setSampleNote(plainError(e, "Press ▶ to try again."));
+      }
+      return;
+    }
+    setSampleNote(
+      engineOf(sp) === "piper" && !sp.voiceId
+        ? `Pick a free voice for ${sp.label} first, then press ▶.`
+        : `${sp.label} has no line in the narration yet. Make the narration in the Script step, then press ▶ to hear this voice. Paid and online voices are never started from here.`
+    );
   };
 
   const addSpeakerFrom = useProjectStore((s) => s.addSpeakerFrom);
@@ -339,6 +389,14 @@ export function CastPanel() {
           <>
             <Section title="Who" tip="The name and the character behind it.">
               <div className="flex items-center gap-2">
+                <button
+                  className={`forge-sample ${sampleOn === sp.id || (player?.playing && narrationNow?.segments.some((x) => x.speakerId === sp.id && player.span?.startMs === x.startMs)) ? "playing" : ""}`}
+                  onClick={() => playVoice(sp)}
+                  aria-label={`Hear ${sp.label}`}
+                  data-tip={`Plays a short bit of ${sp.label}'s voice: their first line in the narration, or a free sample if they have none yet.`}
+                >
+                  ▶
+                </button>
                 <input
                   type="text"
                   value={sp.label}
@@ -351,6 +409,7 @@ export function CastPanel() {
                   Remove
                 </button>
               </div>
+              {sampleNote && <p className="text-sm text-amber-300" data-tip="Why no voice was played. Follow the message and press ▶ again.">{sampleNote}</p>}
               <label className="block" data-tip="How the script introduces them, e.g. «A grave man». Lets story-style scripts find the right voice, and tells the voice who to be.">
                 <span className="label-etched">Character</span>
                 <input

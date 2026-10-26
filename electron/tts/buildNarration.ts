@@ -191,16 +191,20 @@ const paidLinesDir = (outputDir: string) => path.join(outputDir, "eleven-lines")
 export async function estimatePaid(
   segments: NarrationInput[],
   pauses: NarrationPauses,
-  outputDir: string
+  outputDir: string,
+  /** Re-making a line wants a NEW take, so nothing made earlier is reused. */
+  fresh = false
 ): Promise<{ narrationCached: boolean; lines: number; chars: number; reusedLines: number }> {
   const sayList = await loadPronunciations();
   const key = narrationKey(segments, pauses) + (sayList.length ? `-${crypto.createHash("sha256").update(JSON.stringify(sayList)).digest("hex").slice(0, 8)}` : "");
-  try {
-    await fsp.access(path.join(outputDir, "narration-cache", `${key}.wav`));
-    await fsp.access(path.join(outputDir, "narration-cache", `${key}.json`));
-    return { narrationCached: true, lines: 0, chars: 0, reusedLines: 0 };
-  } catch {
-    /* not made yet */
+  if (!fresh) {
+    try {
+      await fsp.access(path.join(outputDir, "narration-cache", `${key}.wav`));
+      await fsp.access(path.join(outputDir, "narration-cache", `${key}.json`));
+      return { narrationCached: true, lines: 0, chars: 0, reusedLines: 0 };
+    } catch {
+      /* not made yet */
+    }
   }
   const accents = await accentMap(segments.map((x) => x.text));
   const spoken = (t: string) => applyPronunciations(withAccents(t, accents), sayList);
@@ -211,7 +215,7 @@ export async function estimatePaid(
   for (const seg of segments) {
     if (seg.engine !== "elevenlabs") continue;
     const text = elevenTextFor(seg, spoken);
-    if (readPaidLine(dir, elevenKeyFor(seg, text))) reusedLines++;
+    if (!fresh && readPaidLine(dir, elevenKeyFor(seg, text))) reusedLines++;
     else {
       lines++;
       chars += text.length;
@@ -228,7 +232,7 @@ export async function buildNarration(
   pauses: NarrationPauses,
   outputDir: string,
   /** Who may spend money on this narration. Without it, paid lines are refused. */
-  opts: { paid?: PaidPolicy } = {}
+  opts: { paid?: PaidPolicy; fresh?: boolean } = {}
 ): Promise<BuiltNarration> {
   if (segments.length === 0) {
     throw new Error(
@@ -252,6 +256,7 @@ export async function buildNarration(
   const cachedWav = path.join(cacheDir, `${key}.wav`);
   const cachedMeta = path.join(cacheDir, `${key}.json`);
   try {
+    if (opts.fresh) throw new Error("a new take was asked for");
     const [buffer, metaRaw] = await Promise.all([
       fsp.readFile(cachedWav),
       fsp.readFile(cachedMeta, "utf8"),
@@ -317,7 +322,7 @@ export async function buildNarration(
     const text = elevenTextFor(seg, spoken);
     const k = elevenKeyFor(seg, text);
     elevenPlan.set(i, { text, key: k });
-    if (!readPaidLine(paidDir, k)) toBuyChars += text.length;
+    if (opts.fresh || !readPaidLine(paidDir, k)) toBuyChars += text.length;
   }
   const gate = paidGate(opts.paid, toBuyChars);
   if (!gate.ok) throw new Error(gate.message);
@@ -367,7 +372,7 @@ export async function buildNarration(
       // segment would be drawn on screen and looked for in the audio.
       const plan = elevenPlan.get(i)!;
       // Bought on an earlier try? Then it is free now.
-      let line = readPaidLine(paidDir, plan.key);
+      let line = opts.fresh ? null : readPaidLine(paidDir, plan.key);
       if (!line) {
         try {
           const { audioBuffer, credits: spent } = await elevenlabs.synthesize({

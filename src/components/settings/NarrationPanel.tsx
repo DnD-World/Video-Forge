@@ -1,25 +1,20 @@
-import { engineOf, geminiModeOf, DEFAULT_GEMINI_MODEL, DEFAULT_GEMINI_VOICE } from "../../lib/narration/geminiVoices";
+import { engineOf } from "../../lib/narration/geminiVoices";
+import { narrationInputFor, parseAnyScript, scriptLineFor } from "../../lib/narration/resolveSegments";
 import { ErrorLine } from "../ui/ErrorLine";
 import { plainError } from "../../lib/plainError";
 import { useEffect, useState } from "react";
 import { useProjectStore } from "../../store/useProjectStore";
 import { useSettingsStore } from "../../store/useSettingsStore";
 import { useVoicesStore } from "../../store/useVoicesStore";
-import { parseScript } from "../../lib/narration/parseScript";
-import { parseDramaboxScript } from "../../lib/narration/parseDramaboxScript";
 import { SCRIPT_STARTERS } from "../../lib/narration/scriptStarters";
 import { Slider } from "../ui/Slider";
 import { Picker } from "../ui/Picker";
+import { usePlayer } from "../../lib/motion/usePreviewPlayer";
 
 const LANGUAGES = [
   { code: "el", label: "Greek" },
   { code: "en", label: "English" },
 ];
-
-interface NarrationResult {
-  filePath: string;
-  segments: { speakerId: string; speakerLabel: string; text: string; startMs: number; endMs: number }[];
-}
 
 /**
  * The actual Phase 2 goal: turn a script into ONE combined narration audio
@@ -48,8 +43,12 @@ export default function NarrationPanel() {
   /** What the last "write DramaBox files" run did, said in full. */
   const [blocksNote, setBlocksNote] = useState<string | null>(null);
   const [unmatchedLines, setUnmatchedLines] = useState<string[]>([]);
-  const [result, setResult] = useState<NarrationResult | null>(null);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const narration = useProjectStore((s) => s.narration);
+  const attachedAudio = useProjectStore((s) => s.attachedAudio);
+  const player = usePlayer();
+  const [remaking, setRemaking] = useState<number | null>(null);
+  const [remakeNote, setRemakeNote] = useState<string | null>(null);
+  const [remakeError, setRemakeError] = useState<string | null>(null);
 
   const [topic, setTopic] = useState("");
   const [tone, setTone] = useState("");
@@ -135,20 +134,9 @@ export default function NarrationPanel() {
   const generate = async () => {
     setGenerating(true);
     setGenError(null);
-    setResult(null);
-    setAudioUrl(null);
 
-    // TWO SCRIPT STYLES, as in the batch runner: "Name: line", or the prose
-    // style the course was written in (A bright woman speaks warmly, "…"),
-    // where each character is found by the phrase they open with.
-    let { segments, unmatchedLines: unmatched } = parseScript(script, speakers);
-    if (segments.length === 0) {
-      const prose = parseDramaboxScript(
-        script,
-        speakers.map((sp, i) => ({ id: sp.id, label: sp.label, openingPhrase: sp.openingPhrase ?? `Speaker ${i + 1}` }))
-      );
-      if (prose.segments.length > 0) ({ segments, unmatchedLines: unmatched } = prose);
-    }
+    // TWO SCRIPT STYLES, as in the batch runner (see parseAnyScript).
+    const { segments, unmatchedLines: unmatched } = parseAnyScript(script, speakers);
     setUnmatchedLines(unmatched);
 
     if (segments.length === 0) {
@@ -175,35 +163,7 @@ export default function NarrationPanel() {
     }
 
     try {
-      const resolvedSegments = segments.map((seg) => {
-        const sp = speakerById.get(seg.speakerId)!;
-        const engine = engineOf(sp);
-        return {
-          speakerId: seg.speakerId,
-          speakerLabel: seg.speakerLabel,
-          text: seg.text,
-          language,
-          engine,
-          pitch: sp.pitch ?? 0,
-          speed: sp.speed ?? 1,
-          breathMs: sp.breathMs,
-          direction: seg.direction,
-          piperPythonPath,
-          piperOnnxPath: sp.voiceId,
-          elevenVoiceId: sp.elevenVoiceId,
-          elevenModel: sp.elevenModel,
-          eleven: sp.eleven,
-          gemini:
-            engine === "gemini"
-              ? {
-                  mode: geminiModeOf(sp.geminiModel ?? DEFAULT_GEMINI_MODEL),
-                  model: sp.geminiModel ?? DEFAULT_GEMINI_MODEL,
-                  voice: sp.geminiVoice ?? DEFAULT_GEMINI_VOICE,
-                  persona: sp.openingPhrase,
-                }
-              : undefined,
-        };
-      });
+      const resolvedSegments = segments.map((seg) => narrationInputFor(seg, speakerById.get(seg.speakerId)!, language, piperPythonPath));
 
       const res = await window.byok.tts.generateNarration(
         resolvedSegments,
@@ -212,7 +172,6 @@ export default function NarrationPanel() {
         // A paid voice asks "this will cost about …" before anything is bought.
         { pricePer1000: useSettingsStore.getState().elevenPricePer1000Usd }
       );
-      setResult(res);
       // Publish it so the render bar can attach it and match its length
       // without the user hand-picking the file, and so the waveform can be
       // driven by the real audio instead of the placeholder animation.
@@ -221,13 +180,62 @@ export default function NarrationPanel() {
         segments: res.segments,
         analysis: res.analysis,
       });
-      const buf = await window.byok.storage.readFile(res.filePath);
-      const blob = new Blob([buf], { type: "audio/wav" });
-      setAudioUrl(URL.createObjectURL(blob));
     } catch (e: any) {
       setGenError(plainError(e, "Press Make the narration to try again."));
     } finally {
       setGenerating(false);
+    }
+  };
+
+  /** Make one line again — same voice and settings — and splice it in. A paid
+   *  voice shows its cost in a window and waits for a yes (main process). */
+  const remake = async (i: number) => {
+    if (!narration) return;
+    const seg = narration.segments[i];
+    const sp = speakers.find((x) => x.id === seg.speakerId);
+    setRemakeNote(null);
+    setRemakeError(null);
+    if (!sp) {
+      setRemakeError(`The speaker "${seg.speakerLabel}" is not in the Cast any more, so there is no voice to make this line with.`);
+      return;
+    }
+    if (sp.ttsEngine === "dramabox") {
+      setRemakeError(`${sp.label} speaks with DramaBox, which is made on the rented graphics machine and not inside this app. Make that line there and bring the sound back.`);
+      return;
+    }
+    if (engineOf(sp) === "piper" && !sp.voiceId) {
+      setRemakeError(`${sp.label} uses a free local voice but none is picked yet. Pick one in the Cast step.`);
+      return;
+    }
+    // The script's own words for this line (with its [acting] marks) when the
+    // script still matches the narration; otherwise the words the narration holds.
+    const fromScript = scriptLineFor(script, speakers, narration.segments, i);
+    const line = fromScript ?? { speakerId: seg.speakerId, speakerLabel: seg.speakerLabel, text: seg.text };
+    setRemaking(i);
+    try {
+      const res = await window.byok.tts.remakeLine(
+        {
+          narrationPath: narration.filePath,
+          segments: narration.segments,
+          index: i,
+          input: narrationInputFor(line, sp, language, piperPythonPath),
+          speakerOrder: speakers.map((x) => x.id),
+        },
+        { pricePer1000: useSettingsStore.getState().elevenPricePer1000Usd }
+      );
+      const oldLen = seg.endMs - seg.startMs;
+      const newLen = res.segments[i].endMs - res.segments[i].startMs;
+      setNarration({ filePath: res.filePath, segments: res.segments as typeof narration.segments, analysis: res.analysis });
+      const diff = (newLen - oldLen) / 1000;
+      setRemakeNote(
+        `Line ${i + 1} made again: ${(oldLen / 1000).toFixed(1)} s is now ${(newLen / 1000).toFixed(1)} s.` +
+          (Math.abs(diff) >= 0.05 ? ` The lines after it moved ${diff > 0 ? "later" : "earlier"} by ${Math.abs(diff).toFixed(1)} s.` : " The lines after it stayed where they were.") +
+          (fromScript ? "" : " The script had changed since, so the words the narration holds were used.")
+      );
+    } catch (e: any) {
+      setRemakeError(plainError(e, "Your narration is unchanged. Press Remake to try again."));
+    } finally {
+      setRemaking(null);
     }
   };
 
@@ -331,22 +339,62 @@ export default function NarrationPanel() {
         </button>
         {genError && <ErrorLine tip="The narration could not be made. Read the message, fix the cause, and press Make the narration again." className="text-sm text-red-400 whitespace-pre-wrap" text={genError} />}
 
-        {audioUrl && result && (
-          <div className="forge-sec space-y-3">
-            <div data-tip="The finished voice recording. Press play to listen." className="label-etched">The narration</div>
-            <audio src={audioUrl} controls className="w-full" />
-            <details>
-              <summary data-tip="Click to see when each line starts." className="text-sm text-neutral-400 cursor-pointer">{result.segments.length} lines — show timings</summary>
-              <div className="space-y-1 mt-2">
-                {result.segments.map((seg, i) => (
-                  <div key={i} className="text-xs flex gap-2">
-                    <span data-tip="When this line starts, in seconds." className="text-accent shrink-0 tabular-nums">{(seg.startMs / 1000).toFixed(1)}s</span>
-                    <span data-tip="Who says this line." className="shrink-0 text-neutral-400">{seg.speakerLabel}</span>
-                    <span data-tip="The words of this line.">{seg.text}</span>
+        {narration && narration.segments.length > 0 && (
+          <div className="forge-sec space-y-2">
+            <div data-tip="Every line of the narration. Press ▶ to hear just that line, or click a line to move the preview there." className="label-etched">
+              The lines
+            </div>
+            {attachedAudio && (
+              <p className="text-xs text-amber-300" data-tip="The preview plays your own recording, so single lines cannot be played from here.">
+                Your own recording is attached, so the preview plays that and not these lines.
+              </p>
+            )}
+            <div className="forge-lines">
+              {narration.segments.map((seg, i) => {
+                const sp = speakers.find((x) => x.id === seg.speakerId);
+                const here = !!player && player.timeMs >= seg.startMs && player.timeMs < seg.endMs;
+                const mine = !!player?.playing && player.span?.startMs === seg.startMs && player.span?.endMs === seg.endMs;
+                const paid = !!sp && engineOf(sp) === "elevenlabs";
+                return (
+                  <div key={`${i}-${seg.startMs}`} className={`line ${here ? "on" : ""}`} style={{ ["--c" as string]: sp?.borderColor ?? "#888" }}>
+                    <button
+                      className="go"
+                      disabled={!player?.hasSound || !!attachedAudio}
+                      onClick={() => (mine ? player?.stop() : player?.playSpan(seg.startMs, seg.endMs))}
+                      aria-label={mine ? `Stop line ${i + 1}` : `Play line ${i + 1}`}
+                      data-tip={mine ? "Stops this line." : "Plays just this line, with sound, and the preview follows it."}
+                    >
+                      {mine ? "❚❚" : "▶"}
+                    </button>
+                    <button
+                      className="words"
+                      disabled={!player?.hasSound || !!attachedAudio}
+                      onClick={() => player?.seek(seg.startMs)}
+                      data-tip="Moves the preview to the start of this line without playing it."
+                    >
+                      <i />
+                      <span className="who">{seg.speakerLabel}</span>
+                      <span className="t">{seg.text}</span>
+                      <span className="at">{(seg.startMs / 1000).toFixed(1)}s</span>
+                    </button>
+                    <button
+                      className="redo"
+                      disabled={remaking !== null || generating}
+                      onClick={() => remake(i)}
+                      data-tip={
+                        paid
+                          ? "Makes only this line again with the same voice and settings. It uses your paid voice, so you are shown the cost and asked first."
+                          : "Makes only this line again with the same voice and settings, and puts it back. The other lines keep their sound; the ones after it move if the length changes."
+                      }
+                    >
+                      {remaking === i ? "Making…" : "Remake"}
+                    </button>
                   </div>
-                ))}
-              </div>
-            </details>
+                );
+              })}
+            </div>
+            {remakeNote && <p className="text-xs text-emerald-400" data-tip="What the last remake changed.">{remakeNote}</p>}
+            {remakeError && <ErrorLine tip="The line could not be remade, and your narration is unchanged. Read the message, then try again." className="text-sm text-red-400 whitespace-pre-wrap" text={remakeError} />}
           </div>
         )}
       </div>

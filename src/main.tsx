@@ -13,6 +13,7 @@ import "@fontsource/sora/400.css";
 import "@fontsource/sora/500.css";
 import "@fontsource/sora/600.css";
 import "./styles/forge.css";
+import "./styles/lines.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

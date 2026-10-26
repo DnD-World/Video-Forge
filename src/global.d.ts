@@ -214,6 +214,20 @@ declare global {
           segments: { speakerId: string; speakerLabel: string; text: string; startMs: number; endMs: number }[];
           analysis: AudioAnalysis | null;
         }>;
+        remakeLine: (
+          req: {
+            narrationPath: string;
+            segments: import("../electron/tts/buildNarration").BuiltNarration["segments"];
+            index: number;
+            input: import("../electron/tts/buildNarration").NarrationInput;
+            speakerOrder: string[];
+          },
+          paid?: { pricePer1000?: number }
+        ) => Promise<{
+          filePath: string;
+          segments: import("../electron/tts/buildNarration").BuiltNarration["segments"];
+          analysis: AudioAnalysis | null;
+        }>;
         twinNarration: (target: string, paid?: { pricePer1000?: number }) => Promise<{
           filePath: string;
           segments: { speakerId: string; speakerLabel: string; text: string; startMs: number; endMs: number }[];

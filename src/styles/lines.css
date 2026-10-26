@@ -1,0 +1,20 @@
+/* ---- Script: the lines, each with ▶ and Remake; Cast: ▶ a voice (plan #16) ---- */
+.forge-lines { display: flex; flex-direction: column; gap: 4px; max-height: 420px; overflow-y: auto; padding-right: 2px; }
+.forge-lines .line { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; align-items: center; gap: 6px; padding: 3px; border-radius: 12px;
+  border: 1px solid transparent; transition: background .2s, border-color .2s; }
+.forge-lines .line.on { background: rgba(255, 255, 255, .05); border-color: var(--c); box-shadow: 0 0 16px -8px var(--c); }
+.forge-lines .go, .forge-sample { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; font-size: 11px; line-height: 1;
+  border: 1px solid var(--line); background: rgba(0, 0, 0, .4); color: var(--accent); transition: all .15s; flex: none; }
+.forge-lines .go:hover:not(:disabled), .forge-sample:hover:not(:disabled) { border-color: var(--accent); background: rgba(118, 255, 194, .12); }
+.forge-lines .go:disabled, .forge-sample:disabled { opacity: .35; cursor: not-allowed; }
+.forge-lines .words { display: grid; grid-template-columns: 8px auto minmax(0, 1fr) auto; align-items: baseline; gap: 6px; text-align: left; padding: 4px 6px; border-radius: 8px;
+  background: none; border: 0; color: var(--ink-2); font: 400 .78rem/1.35 "Sora", sans-serif; cursor: pointer; }
+.forge-lines .words:hover:not(:disabled) { background: rgba(255, 255, 255, .04); }
+.forge-lines .words i { width: 8px; height: 8px; border-radius: 50%; background: var(--c); align-self: center; }
+.forge-lines .words .who { color: var(--ink); font-weight: 500; }
+.forge-lines .words .t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.forge-lines .words .at { color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.forge-lines .redo { padding: 3px 9px; border-radius: 999px; font: 500 .72rem "Sora", sans-serif; cursor: pointer; border: 1px solid var(--line); background: rgba(0, 0, 0, .35); color: var(--ink-2); }
+.forge-lines .redo:hover:not(:disabled) { border-color: var(--accent); color: var(--ink); }
+.forge-lines .redo:disabled { opacity: .45; cursor: not-allowed; }
+.forge-sample.playing { background: var(--accent); color: #001a10; }
