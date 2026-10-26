@@ -61,3 +61,7 @@ puppet-run/
 
 # explainer checking-page output
 explainer/checks/
+characters/checks/
+
+# Ak's private photos
+nelly/

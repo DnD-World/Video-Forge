@@ -23,7 +23,7 @@ research), and the shelf and settings on this computer.
 |---|---|---|
 | Image Forge "lost" its keys | Not lost. The app keeps its settings in a box tied to the local address it opens on (port 47821). A test copy of mine was holding 47821, so Ak's copy opened on 47822 and found an empty box. The old box still holds everything. | **Ak: close Image Forge fully (tray icon too) and open it again.** The keys come back. Today's list in Made will look empty until fix U1 merges the two boxes. Pictures saved to the folder are safe either way. |
 | LocalAI open to the home network | Checked: now listening only on this computer (127.0.0.1) and on Tailscale (100.73.36.42). | Fixed by Ak. |
-| research-agent `web_search` | Errored for every call from two helpers today. | Logged with `report_issue`. |
+| research-forge `web_search` | Errored for every call from two helpers today. | Logged with `report_issue`. |
 
 ---
 

@@ -30,6 +30,7 @@ import { getSfxFreesound } from "./audio/getSfxFreesound";
 import { addOutros } from "./render/addOutros";
 import { loadActiveBrand } from "./brand";
 import { registerExplainerIpc } from "./explainer/explainerIpc";
+import { registerCharacterIpc } from "./characters/characterIpc";
 import type { BrandInfo } from "../src/store/builtinCast";
 import {
   buildBlocks,
@@ -239,6 +240,7 @@ ipcMain.handle("forge:openImageForge", openImageForge);
 
 // Explainers (animated videos drawn by code): electron/explainer/explainerIpc.ts
 registerExplainerIpc(() => mainWindow);
+registerCharacterIpc(() => mainWindow);
 
 /** The Forge shelf (tools/lib/forgeShelf.mjs): puppets Image Forge made, and
  *  orders for new ones. Image Forge notices an order within 20 seconds of

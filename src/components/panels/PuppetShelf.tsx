@@ -30,7 +30,7 @@ const STYLES = [
 
 const fileUrl = (p: string) => `file:///${p.replace(/\\/g, "/").replace(/^\/+/, "")}`;
 
-export function PuppetShelf({ current, onPick, startOrdering = false }: { current?: string; onPick: (rigPath: string, name: string) => void; startOrdering?: boolean }) {
+export function PuppetShelf({ current, onPick, startOrdering = false }: { current?: string; onPick: (rigPath: string, name: string, framing: "head" | "waist" | "full") => void; startOrdering?: boolean }) {
   const [puppets, setPuppets] = useState<ShelfPuppet[]>([]);
   const [ordering, setOrdering] = useState(startOrdering);
   useEffect(() => {
@@ -101,7 +101,7 @@ export function PuppetShelf({ current, onPick, startOrdering = false }: { curren
             <div key={p.slug} className="relative">
               <button
                 className={`shelf-face w-full ${current === p.rigPath ? "on" : ""}`}
-                onClick={() => onPick(p.rigPath, p.name)}
+                onClick={() => onPick(p.rigPath, p.name, p.framing)}
                 data-tip={`${p.name}${p.framing === "waist" ? " · waist up, with arms" : ""}. Click to use. Hover to hear-see them talk.`}
                 aria-label={`Use ${p.name}`}
               >

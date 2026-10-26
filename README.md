@@ -42,7 +42,7 @@ machine** via a bundled Remotion + FFmpeg pipeline.
 - 📝 **Subtitle engine** — word-level timing, active-word glow, `.srt` and `.vtt` files beside every video
 - 📐 **One script, every shape** — Make → Also as: Tall 9:16, Square 1:1, Portrait 4:5, Wide 16:9
 - 🌍 **Twin language video** — Also in English/Greek: script translated, same cast, matching subtitles
-- 🏷️ **Honest AI label** — "Made with AI · Video Forge" on the picture (on by default) and in the file's notes
+- 🏷️ **Honest AI label** — "Made with Video Forge" on the picture (on by default) and in the file's notes
 - 🔤 **Greek stress fixer** — adds missing accents before the voice speaks; a "Say it like this" list for stubborn words
 - 📊 **Many videos from a sheet** — a Google Sheet link or CSV, one row per video, made one after another into a folder named `<sheet> · <date> · <n> videos`
 - 💬 **Hover help on every control**
@@ -91,4 +91,4 @@ This project was designed and engineered in collaboration with AI systems:
 - Google Flow — media workflow support
 - Human direction & product vision: Stravelakis.
 ## 📄 License
-TBD.
+No licence: all rights reserved (since 26 Oct 2026). Copies taken before that date keep the MIT licence they came with.

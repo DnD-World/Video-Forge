@@ -247,6 +247,15 @@ declare global {
         cancel: () => Promise<boolean>;
         onProgress: (cb: (p: { job: string; pct: number; note: string }) => void) => () => void;
       };
+      /** Drawn characters' AI helper — electron/characters/characterIpc.ts */
+      characters: {
+        providers: () => Promise<{ id: string; label: string; hasKey: boolean; seesPictures: boolean }[]>;
+        pickPicture: () => Promise<string | null>;
+        fromDescription: (req: { description: string; look?: string; provider: string; model?: string }) => Promise<{ card: import("../characters/core/index.mjs").CharacterCard; problems: string[]; ms: number; model: string }>;
+        fromPicture: (req: { file: string; description?: string; look?: string; provider: string; model?: string }) => Promise<{ card: import("../characters/core/index.mjs").CharacterCard; problems: string[]; ms: number; model: string }>;
+        suggest: (req: { card: import("../characters/core/index.mjs").CharacterCard; purpose?: string; provider: string; model?: string }) => Promise<{ suggestions: { field: string; label: string; value: unknown; why: string }[]; ms: number; model: string }>;
+        cancel: () => Promise<boolean>;
+      };
       forge: {
         openImageForge: () => Promise<boolean>;
         removePuppet: (slug: string) => Promise<{ ok: boolean; problem?: string }>;

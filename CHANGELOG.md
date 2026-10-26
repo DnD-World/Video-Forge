@@ -5,6 +5,10 @@ Nothing is tagged yet; everything below is under Unreleased.
 
 ## [Unreleased]
 
+### Changed (25 Oct 2026)
+- Full-body puppets no longer get the waveform ring around them: adding one (or picking one on a speaker) switches that speaker's ring off. It can still be switched back on in the speaker's waveform settings.
+- The label on the picture and in the MP4 notes now reads "Made with Video Forge" (was "Made with AI · Video Forge").
+
 ### Added (13 Oct 2026)
 - Cast "+" menu: every character has a live face (blinks, talks on hover), grouped Ready-made / Made in Image Forge / My library; "Order it from Image Forge" and "Open Image Forge".
 - Puppet shelf: live faces and a two-click delete (moved to `%APPDATA%\Forge\puppets-deleted`, not erased).

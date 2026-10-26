@@ -13,8 +13,8 @@ Tools that worked:
 
 | Tool | Result |
 |---|---|
-| research-agent `read_page` | Worked (Reddit, GitHub, Trustpilot, Remotion, Steam). Failed once on veadotube.com. |
-| research-agent `web_search` | Failed on every call ("Error executing tool"), 6 tries. Logged with `report_issue`. |
+| research-forge `read_page` | Worked (Reddit, GitHub, Trustpilot, Remotion, Steam). Failed once on veadotube.com. |
+| research-forge `web_search` | Failed on every call ("Error executing tool"), 6 tries. Logged with `report_issue`. |
 | Firecrawl search | Worked for 8 searches, then hit a rate limit (429). |
 | Parallel `web_search` | Worked; used for the rest. |
 | GitHub public API (curl) | Star counts, licences, last-push dates, top issues. All numbers taken 2026-10-09. |

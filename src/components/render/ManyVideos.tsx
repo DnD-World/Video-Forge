@@ -134,6 +134,7 @@ export function ManyVideos() {
       openingPhrase: s.openingPhrase,
       puppetPath: s.puppetPath,
       sheetPath: s.sheetPath,
+      character: s.character,
       engine: (s.ttsEngine === "dramabox" ? "gemini" : s.ttsEngine ?? "gemini") as "gemini",
       geminiMode: s.geminiMode,
       geminiModel: s.geminiModel,

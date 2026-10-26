@@ -55,7 +55,7 @@ export interface ManyRequest {
   preset: unknown;
   /** Folder name for this run's videos, under the output folder. */
   runName: string;
-  /** "Made with AI · Video Forge" on each video. */
+  /** "Made with Video Forge" on each video. */
   aiLabel?: boolean;
 }
 

@@ -85,7 +85,7 @@ export interface RenderJob {
   idleMotion?: number;
   narrationSegments?: RenderProps["narrationSegments"];
   narrationPauses?: number[];
-  /** "Made with AI · Video Forge" on the picture, and in the file's own notes. */
+  /** "Made with Video Forge" on the picture, and in the file's own notes. */
   aiLabel?: boolean;
   /** Start of the file name ("el-9x16"), when one project makes several videos. */
   fileStem?: string;
@@ -341,6 +341,7 @@ export async function renderVideo(
         sheetFileName,
         puppet: prepared?.puppet ?? null,
         puppetFiles: prepared?.files ?? {},
+        character: sp.character ?? null,
       });
     }
 
@@ -666,7 +667,7 @@ export async function renderVideo(
     if (job.aiLabel) {
       const tagged = joined.outputPath.replace(/\.mp4$/i, ".tagged.mp4");
       const ok = await new Promise<boolean>((resolve) => {
-        const p = spawn(ffmpegBin(), ["-y", "-i", joined.outputPath, "-map", "0", "-c", "copy", "-metadata", "comment=Made with AI (Video Forge)", "-metadata", "encoded_by=Video Forge", tagged], { windowsHide: true });
+        const p = spawn(ffmpegBin(), ["-y", "-i", joined.outputPath, "-map", "0", "-c", "copy", "-metadata", "comment=Made with Video Forge", "-metadata", "encoded_by=Video Forge", tagged], { windowsHide: true });
         p.on("error", () => resolve(false));
         p.on("close", (code) => resolve(code === 0));
       });

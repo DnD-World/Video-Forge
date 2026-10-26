@@ -20,6 +20,7 @@
 // point every row at it.
 // ---------------------------------------------------------------------------
 
+import type { CharacterCard } from "../../characters/core/index.mjs";
 import fsp from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
@@ -73,6 +74,8 @@ export interface JobSpeaker {
    *  are given — the same precedence the preview and the render already use. */
   sheetPath?: string;
   puppetPath?: string;
+  /** A drawn character (characters/core); wins over both. */
+  character?: CharacterCard;
   engine: "piper" | "dramabox" | "elevenlabs" | "gemini" | "fish";
   /** Gemini: `live` (default — unlimited free, checked word by word) or `tts`
    *  (10 a day free). Model and voice default to Ak's picks (docs/V2-NEEDS.md). */
@@ -110,7 +113,7 @@ export interface JobSpeaker {
 }
 
 export interface BatchJob {
-  /** "Made with AI · Video Forge" (remotion/AiBadge.tsx). On unless false. */
+  /** "Made with Video Forge" (remotion/AiBadge.tsx). On unless false. */
   aiLabel?: boolean;
   /** A "Label: text" script. See docs/WRITING-SCRIPTS.md.
    *
@@ -372,6 +375,7 @@ export async function runBatchJob(
       label: c.label,
       sheetPath: c.sheetPath ?? fromPreset?.sheetPath,
       puppetPath: c.puppetPath ?? fromPreset?.puppetPath,
+      character: c.character ?? fromPreset?.character,
       borderColor: c.borderColor ?? fromPreset?.borderColor ?? "#ff9a3c",
       surface: s?.surface ?? fromPreset?.surface,
       bgColor: fromPreset?.bgColor ?? "#000000",
@@ -834,6 +838,7 @@ export async function runBatchJob(
       surface: sp.surface,
       sheetPath: sp.sheetPath,
       puppetPath: sp.puppetPath,
+      character: sp.character,
     })),
     musicColor: preset.musicColor ?? defaultProject.musicColor,
     width,

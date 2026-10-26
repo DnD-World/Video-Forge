@@ -22,7 +22,7 @@ interface SettingsState {
   /** LocalAI (or similar) on this computer — shared with Image Forge. */
   localAiBase: string;
   setLocalAiBase: (v: string) => void;
-  /** "Made with AI · Video Forge" on every video (remotion/AiBadge.tsx). On by default. */
+  /** "Made with Video Forge" on every video (remotion/AiBadge.tsx). On by default. */
   aiLabel: boolean;
   setAiLabel: (v: boolean) => void;
   setMediaLimitGb: (gb: number) => void;

@@ -5,6 +5,8 @@ import type { MutableRefObject, ReactNode } from "react";
 import { Toggle } from "./components/ui/Toggle";
 import { SpeakerAvatar } from "./components/canvas/SpeakerAvatar";
 import { PuppetAvatar } from "./components/canvas/PuppetAvatar";
+import { CharacterAvatar } from "./components/canvas/CharacterAvatar";
+import { facingView, lookById } from "../characters/core/index.mjs";
 import { WaveformScene } from "./components/canvas/WaveformScene";
 import { BackgroundScene } from "./components/canvas/BackgroundScene";
 import { SubtitleScene } from "./components/canvas/SubtitleScene";
@@ -680,7 +682,31 @@ export default function App() {
                   }}
                   className="z-10"
                 >
-                  {loaded ? (
+                  {sp.character ? (
+                    // a drawn character: same signals as the puppet, drawn by code
+                    <CharacterAvatar
+                      card={sp.character}
+                      size={sp.size * canvasSize.w}
+                      timeMs={previewTimeMs}
+                      viseme={blend.to}
+                      prevViseme={blend.from}
+                      mix={blend.mix}
+                      lidFrom={blinkAt(sp.id, previewTimeMs, idleMotion)}
+                      browLeft={browAt(browTracks[sp.id], previewTimeMs)}
+                      browRight={browAt(browTracks[sp.id], previewTimeMs)}
+                      head={headPoseAt(sp.id, headTracks[sp.id], previewTimeMs, idleMotion)}
+                      poseSpans={poseTracks[sp.id]}
+                      {...facingView(sp.facing, sp, speakers.filter((o) => o.id !== sp.id), { dialogue: lookById(sp.character.look).profile ? 2 : 1 })}
+                      active={activeSpeakerId === sp.id}
+                      bgOpacity={sp.bgOpacity}
+                      borderOpacity={sp.borderOpacity}
+                      bgColor={sp.bgColor}
+                      borderColor={sp.borderColor}
+                      outlineShape={sp.outlineShape}
+                      frameWidth={sp.frameWidth}
+                      sizeFraction={sp.size}
+                    />
+                  ) : loaded ? (
                     <PuppetAvatar
                       puppet={loaded.puppet}
                       urls={loaded.urls}

@@ -1,3 +1,4 @@
+import type { CharacterCard } from "../../characters/core/index.mjs";
 import type { DramaboxParams } from "../lib/narration/dramaboxParams";
 import type { ExpressionOptions } from "../lib/narration/expression";
 
@@ -299,6 +300,10 @@ export interface SpeakerConfig {
    *  halfway through building a puppet should not lose the working sheet, and
    *  every project saved before puppets existed still opens with its face on. */
   puppetPath?: string;
+  /** A character drawn by code (characters/core) — the third kind of face.
+   *  When set it WINS over the puppet and the sheet. A small JSON card, so it
+   *  lives in the project itself and rides into the render with no files. */
+  character?: CharacterCard;
   /** The disc behind this speaker.
    *
    *  SUCCESSOR TO bgColor + bgOpacity, which described a flat colour and could

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Video Forge — deterministic desktop video production machine",
   "author": "Stravelakis",
-  "license": "MIT",
+  "license": "UNLICENSED",
   "type": "module",
   "main": "./out/main/main.js",
   "scripts": {
@@ -18,9 +18,12 @@
     "outros": "electron . --add-outros",
     "ask-forge": "node tools/ask-forge.mjs",
     "brand": "node tools/use-brand.mjs",
-    "test": "node --test tools/lib/forgeLink.test.mjs tools/lib/brand.test.mjs tools/lib/migrateUserData.test.mjs tools/lib/scriptMatch.test.mjs tools/lib/greekAccents.test.mjs tools/lib/mediaCache.test.mjs tools/lib/forgeKeys.test.mjs tools/lib/forgeShelf.test.mjs tools/lib/sheet.test.mjs tools/lib/hoverHelp.test.mjs tools/lib/forgeHub.test.mjs explainer/explainer.test.mjs",
+    "test": "node --test tools/lib/forgeLink.test.mjs tools/lib/brand.test.mjs tools/lib/migrateUserData.test.mjs tools/lib/scriptMatch.test.mjs tools/lib/greekAccents.test.mjs tools/lib/mediaCache.test.mjs tools/lib/forgeKeys.test.mjs tools/lib/forgeShelf.test.mjs tools/lib/sheet.test.mjs tools/lib/hoverHelp.test.mjs tools/lib/forgeHub.test.mjs explainer/explainer.test.mjs characters/characters.test.mjs",
     "test:link": "node --test tools/lib/forgeLink.test.mjs",
     "test:explainer": "node --test explainer/explainer.test.mjs",
+    "test:characters": "node --test characters/characters.test.mjs",
+    "characters:sheet": "node tools/character-sheet.mjs",
+    "characters:check": "electron tools/character-check.mjs",
     "explainer:check": "electron tools/explainer-check.mjs",
     "explainer:render": "electron tools/explainer-render.mjs",
     "explainer:bakeoff": "electron tools/explainer-bakeoff.mjs"

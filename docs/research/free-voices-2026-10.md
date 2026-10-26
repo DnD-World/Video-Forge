@@ -76,5 +76,5 @@ I only researched these. I downloaded no models.
 - **Multi-character lessons:** Gemini does two speakers per call. For more characters, make one call per line and join the audio. Custom designed or cloned voices cannot be mixed inside one two-speaker call.
 - **Cost after the free period:** Gemini 3.8 TTS prices double on 1 Jan 2027 (Flash from $9 to $18 per 1M audio tokens). The free tier has no listed end date.
 - **Edge-tts failure:** Microsoft can block it at any time (403 seen on a repeat request).
-- **Research tools:** the research-agent web search failed on every call this session ("Error executing tool"). I logged it with `report_issue` and used Firecrawl plus direct page downloads instead.
+- **Research tools:** the research-forge web search failed on every call this session ("Error executing tool"). I logged it with `report_issue` and used Firecrawl plus direct page downloads instead.
 - **Samples:** `docs/research/tts-samples/` holds six files, all using the sentence "Η σκυλίτσα μου κυνηγάει πεταλούδες. Κάθε μία. Κάθε φορά."

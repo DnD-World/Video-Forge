@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// "Made with AI · Video Forge" (Ak, 13 Oct 2026): an honest label, in our own
+// "Made with Video Forge" (Ak, 13 Oct 2026): an honest label, in our own
 // look. Viewers trust brands less when AI is hidden (Clutch, Aug 2026), and
 // the EU AI Act asks for AI-made content to be marked. Optional — on by
 // default — and small: a glass pill in a bottom corner, above the subtitles'
@@ -43,7 +43,7 @@ export function AiBadge({ width, height, corner = "right" }: { width: number; he
         <path d="M12 1.5l2.6 7.1 7.4 2.9-7.4 2.9L12 22.5l-2.6-8.1L2 11.5l7.4-2.9z" fill="url(#aib)" />
       </svg>
       <span>
-        Made with AI · <b style={{ fontWeight: 650, color: "#76FFC2" }}>Video Forge</b>
+        Made with <b style={{ fontWeight: 650, color: "#76FFC2" }}>Video Forge</b>
       </span>
     </div>
   );

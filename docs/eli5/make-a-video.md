@@ -22,7 +22,7 @@ Four steps, left to right: **Cast, Script, Look, Make.**
 - Press **Render video**.
 - **Also as**: tick Tall, Square, Portrait or Wide to get more shapes from the same script (for TikTok, Instagram, YouTube).
 - **Also in English / Greek**: get a second copy in the other language. The app translates the script. Same characters, matching subtitles.
-- **Made with AI · Video Forge**: a small label on the picture. It's on by default. Untick it if you don't want it.
+- **Made with Video Forge**: a small label on the picture. It's on by default. Untick it if you don't want it.
 - When it finishes you get the video plus subtitle files (`.srt` and `.vtt`) next to it.
 - **Many videos**: paste a Google Sheet link (shared "anyone with the link") with one row per video. The app makes them one after another into a folder named after the sheet.
 

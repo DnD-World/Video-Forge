@@ -20,6 +20,8 @@ import { WaveformScene } from "../src/components/canvas/WaveformScene";
 import { SubtitleScene } from "../src/components/canvas/SubtitleScene";
 import { SpeakerAvatar } from "../src/components/canvas/SpeakerAvatar";
 import { PuppetAvatar } from "../src/components/canvas/PuppetAvatar";
+import { CharacterAvatar } from "../src/components/canvas/CharacterAvatar";
+import { facingView, lookById } from "../characters/core/index.mjs";
 import { BackgroundLayer } from "./BackgroundLayer";
 import { MusicTrack } from "./MusicTrack";
 import { SubtitleFont } from "./SubtitleFont";
@@ -356,7 +358,36 @@ export function VideoComposition({
             {/* The very same components the preview draws. Duplicating the disk
                 markup here is what let the border width and glow drift apart
                 once already — there is only one implementation now. */}
-            {sp.puppet ? (
+            {sp.character ? (
+              // A drawn character takes the very same signals as the puppet
+              // below; it draws instead of swapping pictures.
+              <CharacterAvatar
+                card={sp.character}
+                size={size}
+                timeMs={timeMs}
+                viseme={mouth.to}
+                prevViseme={mouth.from}
+                mix={mouth.mix}
+                {...(() => {
+                  const b = blinkBlendAt(sp.id, timeMs, idleMotion);
+                  const at = (state: string) => (state === "open" && face?.lid ? face.lid : state);
+                  return { lidFrom: at(b.from), lidTo: at(b.to), lidMix: b.mix };
+                })()}
+                browLeft={browAt(browTracks[sp.id], timeMs)}
+                browRight={browAt(browTracks[sp.id], timeMs)}
+                head={headPoseAt(sp.id, headTracks[sp.id], timeMs, idleMotion)}
+                poseSpans={poseTracks[sp.id]}
+                {...facingView(sp.facing, sp, speakers.filter((o) => o.id !== sp.id), { dialogue: lookById(sp.character.look).profile ? 2 : 1 })}
+                active={activeSpeakerId === sp.id}
+                bgOpacity={sp.bgOpacity}
+                borderOpacity={sp.borderOpacity}
+                bgColor={sp.bgColor}
+                borderColor={sp.borderColor}
+                outlineShape={sp.outlineShape}
+                frameWidth={sp.frameWidth}
+                sizeFraction={sp.size}
+              />
+            ) : sp.puppet ? (
               <PuppetAvatar
                 puppet={sp.puppet}
                 urls={puppetUrls[i]}

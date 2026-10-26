@@ -1,8 +1,52 @@
-# Handoff — updated 21 Oct 2026
+# Handoff — updated 25 Oct 2026
 
 Everything a fresh session needs. `PLAN.md` holds the long history; this is the
 working state. Newest sections first. Plans: `docs/V2-PLAN.md` (Video Forge),
 `docs/FORGES-PLAN.md` (both apps; has a Status section at the bottom).
+
+## Ultra plan — 25–26 Oct 2026 (plan only, nothing built)
+
+Both forges checked end to end; Ak chose the scope on 26 Oct:
+[FORGES-ULTRA-PLAN.md](FORGES-ULTRA-PLAN.md) (v2: phases with effort levels,
+the puppet library on the Google credit, review rules, motion library, the
+new 128 GB mini PC). Evidence: [research/ultra-2026-10-25/](research/ultra-2026-10-25/).
+Phase 0 done 26 Oct: WIP committed + pushed, licence removed (UNLICENSED, both forges), nelly/ ignored, puppet-run copied to minipc ~/backups/puppet-run. Next: Phase 1 (HIGH).
+Top risks: Image Forge spends without asking in five places; ~11 days of work
+not backed up; Google credit ends before Christmas.
+
+## Drawn characters — 24–25 Oct 2026 (foundations built, medium phase next)
+
+Characters drawn by code, as a third kind of speaker (card JSON → any of 20
+looks, front / 3/4 / side, 34 wardrobe items, lip-sync from the narration's
+existing signals). How it works: [characters/README.md](../characters/README.md).
+Plan, Ak's verdicts on the looks, and what each effort level does:
+[CHARACTER-BUILDER-PLAN.md](CHARACTER-BUILDER-PLAN.md).
+
+- Built (high effort): engine `characters/core/`, `CharacterAvatar` in the
+  preview and the Remotion composition, `speaker.character` through the render
+  bar, batch jobs and renderVideo, AI helper core (`window.byok.characters`),
+  checks (`npm run test:characters`, `npm run characters:check`).
+- Seen working: all 20 looks on a real canvas (identical twice, fast), the
+  preview in the real app with three drawn speakers, the AI helper live (Groq
+  from a description, Gemini 3.5 Flash from a picture).
+- **Not seen yet: a full render with a drawn character** — Remotion's headless
+  browser can't start from the build session's sandbox. Try a Draft render
+  once the form can pick a character.
+- Not committed (Ak commits after the medium phase).
+- Next (medium): the form, finishing the looks (Karagiozis traditional, Greek
+  vase clothing), wardrobe catalogue, Pixabay/Pexels, pop-ups, docs.
+
+## Puppets with Nano Banana 2.1 — 23–25 Oct 2026 (pictures made, not yet in Image Forge)
+
+All pictures are made by Vertex batch (tier-1-emf credit): bases, 3/4 views and
+every part for Alex, Nikos (Greek now), Yiayia Eleni, Maria, Elena (chibi),
+Lucky, Captain Stavros, Bolt (head only), Grump (back to the old look), Blip
+(3/4), and the private five (Kaiti, Tsika, Serifis, Maya, Nelly on four legs).
+Files: `puppet-run/nb21/raw/` (bases/, parts/ — 784 parts, background still on;
+key colour per puppet in `scripts/bases.json`), `puppet-run/nb21/scripts/` (the
+batch scripts and every prompt used), `puppet-run/nb21/bases.html` (bases review). Next (medium): the parts review page,
+then load into Image Forge (old puppets backed up), private five to a private
+folder only. Lips only on Maria, Nikos, Kaiti.
 
 ## Explainers — 20–21 Oct 2026 (new kind of video, built)
 
@@ -48,7 +92,7 @@ ElevenLabs. Render engine: HyperFrames by default. Paired with Image Forge
 | Preview | Boiling waveform shows (SVG id clash fixed). Sample subtitles alternate Greek/English until narration exists | `src/components/canvas/` |
 | Make → Also as | Tall 9:16 · Square 1:1 · Portrait 4:5 · Wide 16:9, one after another | `src/components/render/RenderBar.tsx` |
 | Make → Also in English/Greek | Twin video: script translated by Gemini, same cast, matching subtitles | `electron/tts/twinNarration.ts` |
-| Make → Made with AI · Video Forge | Label on the picture, on by default, also written into the MP4's comment metadata. Also applies to Many videos | `remotion/AiBadge.tsx`, `renderVideo.ts` |
+| Make → Made with Video Forge | Label on the picture, on by default, also written into the MP4's comment metadata. Also applies to Many videos | `remotion/AiBadge.tsx`, `renderVideo.ts` |
 | Subtitle files | `.srt` and `.vtt` beside every video | `renderVideo.ts` |
 | Greek stress fixer | Greek words typed without a tonos get one before the voice speaks. Spoken only; subtitles unchanged. Settings → **Say it like this** list is applied to every voice (`pronunciations.json` in userData) | `electron/tts/greekAccents*.ts`, `pronunciations.ts`, `src/components/settings/SayItCard.tsx` |
 | Settings → Language | Card: English now; Greek, French, German, Spanish, Portuguese "coming soon" (simple words only). Replaces the full Greek interface idea (FORGES-PLAN O-1) for now | `SayItCard.tsx` |

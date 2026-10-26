@@ -267,10 +267,10 @@ export function CastPanel() {
                     key={p.slug}
                     className="shelf-face"
                     onClick={() => {
-                      addSpeakerFrom({ label: p.name, puppetPath: p.rigPath, borderColor: "#76FFC2", bgColor: "#1a1a1a", bgOpacity: 0, borderOpacity: 1, outlineShape: "circle", size: 0.28, waveform: defaultTrackWaveform(speakers.length % 2 === 1 ? 1 : -1) });
+                      addSpeakerFrom({ label: p.name, puppetPath: p.rigPath, borderColor: "#76FFC2", bgColor: "#1a1a1a", bgOpacity: 0, borderOpacity: 1, outlineShape: "circle", size: 0.28, waveform: { ...defaultTrackWaveform(speakers.length % 2 === 1 ? 1 : -1), enabled: p.framing !== "full" } });
                       setAdding(false);
                     }}
-                    data-tip={`Add ${p.name}${p.framing === "waist" ? " (waist up, with hands)" : ""}, made in Image Forge. Choose a voice in Voice.`}
+                    data-tip={`Add ${p.name}${p.framing === "waist" ? " (waist up, with hands)" : p.framing === "full" ? " (full body, no ring around them)" : ""}, made in Image Forge. Choose a voice in Voice.`}
                   >
                     <LiveFace path={p.rigPath} label={p.name} />
                     <span>{p.name}</span>
@@ -394,7 +394,7 @@ export function CastPanel() {
                   {sp.puppetPath && puppetErrors[sp.puppetPath] && <span className="text-red-400"> — {puppetErrors[sp.puppetPath]}</span>}
                 </span>
               </div>
-              <PuppetShelf current={sp.puppetPath} startOrdering={orderFor === sp.id} onPick={(rigPath) => updateSpeaker(sp.id, { puppetPath: rigPath })} />
+              <PuppetShelf current={sp.puppetPath} startOrdering={orderFor === sp.id} onPick={(rigPath, _name, framing) => updateSpeaker(sp.id, framing === "full" ? { puppetPath: rigPath, waveform: { ...sp.waveform, enabled: false } } : { puppetPath: rigPath })} />
               <div className="label-etched" data-tip="The shape around the face. The waveform follows it.">
                 Frame
               </div>

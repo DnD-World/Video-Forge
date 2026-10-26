@@ -190,6 +190,16 @@ const api = {
     },
   },
 
+  /** Drawn characters' AI helper — see electron/characters/characterIpc.ts. */
+  characters: {
+    providers: (): Promise<{ id: string; label: string; hasKey: boolean; seesPictures: boolean }[]> => ipcRenderer.invoke("character:providers"),
+    pickPicture: (): Promise<string | null> => ipcRenderer.invoke("character:pickPicture"),
+    fromDescription: (req: unknown): Promise<any> => ipcRenderer.invoke("character:fromDescription", req),
+    fromPicture: (req: unknown): Promise<any> => ipcRenderer.invoke("character:fromPicture", req),
+    suggest: (req: unknown): Promise<any> => ipcRenderer.invoke("character:suggest", req),
+    cancel: (): Promise<boolean> => ipcRenderer.invoke("character:cancel"),
+  },
+
   forge: {
     /** Open Image Forge. False when it is not installed on this computer. */
     openImageForge: (): Promise<boolean> => ipcRenderer.invoke("forge:openImageForge"),

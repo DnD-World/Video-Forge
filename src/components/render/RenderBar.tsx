@@ -173,6 +173,8 @@ export function RenderBar() {
           // place rather than being decided twice.
           sheetPath: sp.sheetPath,
           puppetPath: sp.puppetPath,
+          // a drawn character is JSON and wins over both (same rule everywhere)
+          character: sp.character,
         })),
         width: o.width ?? (draft ? even(render.width / 3) : render.width),
         height: o.height ?? (draft ? even(render.height / 3) : render.height),
@@ -329,7 +331,7 @@ export function RenderBar() {
           data-tip={`The same video in ${twinLang === "el" ? "Greek" : "English"}: the script is translated and the same characters speak it, with matching subtitles. Uses your Gemini key.`}
         />
         <Toggle
-          label="Made with AI · Video Forge"
+          label="Made with Video Forge"
           checked={aiLabel}
           onChange={setAiLabel}
           data-tip="A small honest label in a corner of the video, in our look — viewers trust it more, and EU rules ask for AI videos to be marked. Also written into the file's own notes."

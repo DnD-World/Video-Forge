@@ -16,6 +16,7 @@ import type {
   TrackWaveform,
 } from "../src/store/types";
 import type { Puppet } from "../src/store/puppetTypes";
+import type { CharacterCard } from "../characters/core/index.mjs";
 import type { GlassConfig } from "../src/components/canvas/GlassPanel";
 
 // Declared as `type` aliases rather than `interface` on purpose. Remotion
@@ -68,6 +69,9 @@ export type RenderSpeaker = {
    *  tuned, and a mismatch shows up as a missing layer instead of as art that
    *  is subtly the wrong one. */
   puppetFiles: Record<string, string>;
+  /** A drawn character (characters/core). Wins over the puppet and the sheet.
+   *  Pure JSON: nothing to copy into the public dir. */
+  character?: CharacterCard | null;
 };
 
 /** One background clip, reduced to what the composition needs to draw it.
@@ -225,7 +229,7 @@ export type RenderProps = {
    *  speaker actually stopped, so they anchor the estimate. Empty is valid and
    *  means the old behaviour. */
   narrationPauses?: number[];
-  /** "Made with AI · Video Forge" in a bottom corner (AiBadge.tsx). */
+  /** "Made with Video Forge" in a bottom corner (AiBadge.tsx). */
   aiLabel?: boolean;
 };
 
