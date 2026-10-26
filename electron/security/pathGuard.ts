@@ -163,6 +163,19 @@ export class PathGuard {
     this.save();
   }
 
+  /** Just this one file, not its folder: a file you saved can be opened again
+   *  later (Recent projects) without handing over the folder you saved it in. */
+  grantReadFile(file: string): void {
+    const f = PathGuard.clean(file);
+    if (!f) return;
+    const entry = path.resolve(f);
+    const n = this.norm(entry);
+    if (this.readGrants.some((g) => this.norm(g) === n)) return;
+    this.readGrants.push(entry);
+    if (this.readGrants.length > MAX_GRANTS) this.readGrants = this.readGrants.slice(-MAX_GRANTS);
+    this.save();
+  }
+
   /** The user chose this file to save: it, and same-named siblings, may be written. */
   grantWrite(file: string): void {
     const f = PathGuard.clean(file);

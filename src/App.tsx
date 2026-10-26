@@ -39,6 +39,7 @@ import {
 import { sampleAnalysis } from "./lib/waveform/audioAnalysis";
 import { useCornerFlare } from "./lib/motion/useCornerFlare";
 import { SparkField } from "./components/ui/SparkField";
+import { HistoryBar } from "./components/HistoryBar";
 import { TipLayer } from "./components/ui/TipLayer";
 import { autoClean } from "./lib/media/autoClean";
 import videoMark from "./assets/video-mark.jpg";
@@ -481,7 +482,8 @@ export default function App() {
           Video Forge
           <small>Talking-character videos</small>
         </div>
-        <div className="ml-auto flex gap-2 items-center" role="group" aria-label="Kind of video">
+        <div className="ml-auto"><HistoryBar /></div>
+        <div className="flex gap-2 items-center" role="group" aria-label="Kind of video">
           <HudButton data-tip="Puppet videos: talking characters, in four steps." active={mode === "puppet" && !settingsOpen} onClick={() => setMode("puppet")}>Puppet video</HudButton>
           <HudButton data-tip="Explainers: animated pictures, words and charts drawn by code, timed to a narration — with or without puppets on top." active={mode === "explainer" && !settingsOpen} onClick={() => setMode("explainer")}>Explainer</HudButton>
           <HudButton data-tip="Many videos at once: one row of a spreadsheet per video, all made in a row with the look you set up." active={mode === "many" && !settingsOpen} onClick={() => setMode("many")}>Many videos</HudButton>

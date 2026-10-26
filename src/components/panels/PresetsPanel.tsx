@@ -21,7 +21,7 @@ import { builtinPresets } from "../../store/builtinPresets";
 import { sampleProject } from "../../store/sampleProject";
 import type { BrandInfo } from "../../store/builtinCast";
 import { migrateSurface } from "../../store/types";
-import { projectToDoc, docToProject } from "../../lib/project/projectFile";
+import { saveProjectFile, openProjectFile } from "../../lib/project/projectActions";
 
 
 export function PresetsPanel() {
@@ -35,7 +35,6 @@ export function PresetsPanel() {
   const setBackgroundStyle = useProjectStore((s) => s.setBackgroundStyle);
   const loadSnapshot = useProjectStore((s) => s.loadSnapshot);
   const loadProject = useProjectStore((s) => s.loadProject);
-  const setNarration = useProjectStore((s) => s.setNarration);
 
   const render = useProjectStore((s) => s.render);
   const fps = useProjectStore((s) => s.fps);
@@ -166,68 +165,13 @@ export function PresetsPanel() {
   };
 
   const saveProject = async () => {
-    const target = await window.byok.dialog.saveFile("project.byokproj.json", [
-      { name: "BYOK project", extensions: ["json"] },
-    ]);
-    if (!target) return;
-    // Everything the autosave keeps (music, sound effects, backgrounds, logo,
-    // cards, attached audio…) goes in the file too. The audio analyses are
-    // megabytes; the file paths are enough to rebuild them on open.
-    const doc = projectToDoc(useProjectStore.getState());
-    const json = JSON.stringify(doc, null, 2);
-    await window.byok.storage.writeFile(target, new TextEncoder().encode(json).buffer as ArrayBuffer);
-    setNote(`Saved project to ${target.split(/[\\/]/).pop()}`);
+    const note = await saveProjectFile();
+    if (note) setNote(note);
   };
 
   const openProject = async () => {
-    const src = await window.byok.dialog.openFile([{ name: "BYOK project", extensions: ["json"] }]);
-    if (!src) return;
-    try {
-      const buf = await window.byok.storage.readFile(src);
-      const opened = docToProject(JSON.parse(new TextDecoder().decode(buf)));
-      if (!opened.ok) {
-        setNote(`${opened.message} Pick a project file that was saved from Video Forge.`);
-        return;
-      }
-      loadProject(opened.project);
-      // Rebuild the analysis from the audio files the project points at, exactly
-      // like the autosave does on startup.
-      const music = useProjectStore.getState().music;
-      if (music?.filePath) {
-        try {
-          const analysis = await window.byok.audio.analyzeFile(music.filePath);
-          if (analysis) useProjectStore.getState().setMusic({ ...music, analysis });
-        } catch {
-          /* the file moved: the track is still listed, its waveform idles */
-        }
-      }
-      const attached = useProjectStore.getState().attachedAudio;
-      if (attached?.filePath) {
-        try {
-          const analysis = await window.byok.audio.analyzeFile(attached.filePath);
-          if (analysis) useProjectStore.getState().setAttachedAudio({ ...attached, analysis });
-        } catch {
-          /* same */
-        }
-      }
-      const n = useProjectStore.getState().narration;
-      if (n?.filePath) {
-        try {
-          const analysis = await window.byok.audio.analyzeFile(
-            n.filePath,
-            n.segments,
-            useProjectStore.getState().speakers.map((s) => s.id)
-          );
-          if (analysis) setNarration({ ...n, analysis });
-        } catch {
-          setNote(`Loaded, but its narration file is missing — regenerate to get the waveform back.`);
-          return;
-        }
-      }
-      setNote(`Opened ${src.split(/[\\/]/).pop()}`);
-    } catch (e) {
-      setNote(`Couldn't read that project — ${plainError(e, "Pick a project file that was saved from Video Forge.")}`);
-    }
+    const r = await openProjectFile();
+    if (r.kind !== "cancelled") setNote(r.note);
   };
 
   const BUILT_INS = builtinPresets();
