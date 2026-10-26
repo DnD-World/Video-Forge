@@ -47,7 +47,7 @@ export async function nvidiaChatModels(apiKey: string): Promise<string[]> {
     headers: { Authorization: `Bearer ${apiKey}` },
   });
   if (res.status === 401 || res.status === 403) {
-    throw new Error("NVIDIA did not accept the saved key. Check it in Backend Settings.");
+    throw new Error("NVIDIA did not accept the saved key. Check it in Settings (the gear, top right).");
   }
   if (res.status !== 200) {
     throw new Error(`NVIDIA would not list its models (HTTP ${res.status}), so no footage could be planned.`);

@@ -1,4 +1,6 @@
 import { engineOf, geminiModeOf, DEFAULT_GEMINI_MODEL, DEFAULT_GEMINI_VOICE } from "../../lib/narration/geminiVoices";
+import { ErrorLine } from "../ui/ErrorLine";
+import { plainError } from "../../lib/plainError";
 import { useEffect, useState } from "react";
 import { useProjectStore } from "../../store/useProjectStore";
 import { useSettingsStore } from "../../store/useSettingsStore";
@@ -91,7 +93,7 @@ export default function NarrationPanel() {
       });
       setScript(draft);
     } catch (e: any) {
-      setDraftError(e?.message ?? String(e));
+      setDraftError(plainError(e, "Press Write a draft to try again."));
     } finally {
       setDrafting(false);
     }
@@ -223,7 +225,7 @@ export default function NarrationPanel() {
       const blob = new Blob([buf], { type: "audio/wav" });
       setAudioUrl(URL.createObjectURL(blob));
     } catch (e: any) {
-      setGenError(e?.message ?? String(e));
+      setGenError(plainError(e, "Press Make the narration to try again."));
     } finally {
       setGenerating(false);
     }
@@ -266,7 +268,7 @@ export default function NarrationPanel() {
             <button onClick={runDraft} disabled={drafting} className="btn" data-tip="Asks the AI to write a first version of your script. You can change anything afterwards.">
               {drafting ? `Writing… ${draftSec}s` : "Write a draft"}
             </button>
-            {draftError && <p className="text-sm text-red-400 whitespace-pre-wrap">{draftError}</p>}
+            {draftError && <ErrorLine tip="The AI could not write a draft. Check the key in Settings and press Write a draft again." className="text-sm text-red-400 whitespace-pre-wrap" text={draftError} />}
           </div>
         </details>
 
@@ -275,7 +277,7 @@ export default function NarrationPanel() {
             <span className="label-etched" data-tip="One line per speech: the speaker's name, a colon, their words. [laughs], [whispers], [points] are acted, never read out.">
               The script
             </span>
-            <span className="text-xs text-neutral-500">{lines} line{lines === 1 ? "" : "s"}</span>
+            <span data-tip="How many lines your script has." className="text-xs text-neutral-500">{lines} line{lines === 1 ? "" : "s"}</span>
           </div>
           <textarea
             value={script}
@@ -290,7 +292,7 @@ export default function NarrationPanel() {
               {unmatchedLines.length} line(s) didn't match a speaker and were skipped:
               <ul className="list-disc pl-5 mt-1">
                 {unmatchedLines.map((l, i) => (
-                  <li key={i}>{l}</li>
+                  <li data-tip="A line that starts with a name no speaker has. Change the name to match a speaker in the Cast, or remove the line." key={i}>{l}</li>
                 ))}
               </ul>
             </div>
@@ -327,20 +329,20 @@ export default function NarrationPanel() {
         >
           {generating ? "Making the narration…" : "Make the narration"}
         </button>
-        {genError && <p className="text-sm text-red-400 whitespace-pre-wrap">{genError}</p>}
+        {genError && <ErrorLine tip="The narration could not be made. Read the message, fix the cause, and press Make the narration again." className="text-sm text-red-400 whitespace-pre-wrap" text={genError} />}
 
         {audioUrl && result && (
           <div className="forge-sec space-y-3">
-            <div className="label-etched">The narration</div>
+            <div data-tip="The finished voice recording. Press play to listen." className="label-etched">The narration</div>
             <audio src={audioUrl} controls className="w-full" />
             <details>
-              <summary className="text-sm text-neutral-400 cursor-pointer">{result.segments.length} lines — show timings</summary>
+              <summary data-tip="Click to see when each line starts." className="text-sm text-neutral-400 cursor-pointer">{result.segments.length} lines — show timings</summary>
               <div className="space-y-1 mt-2">
                 {result.segments.map((seg, i) => (
                   <div key={i} className="text-xs flex gap-2">
-                    <span className="text-accent shrink-0 tabular-nums">{(seg.startMs / 1000).toFixed(1)}s</span>
-                    <span className="shrink-0 text-neutral-400">{seg.speakerLabel}</span>
-                    <span>{seg.text}</span>
+                    <span data-tip="When this line starts, in seconds." className="text-accent shrink-0 tabular-nums">{(seg.startMs / 1000).toFixed(1)}s</span>
+                    <span data-tip="Who says this line." className="shrink-0 text-neutral-400">{seg.speakerLabel}</span>
+                    <span data-tip="The words of this line.">{seg.text}</span>
                   </div>
                 ))}
               </div>

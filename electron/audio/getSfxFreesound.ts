@@ -165,7 +165,7 @@ export async function getSfxFreesound(argv: string[]): Promise<void> {
   if (only) rows = rows.filter((r) => only.split(",").includes(r.name));
 
   const key = await keyStore.getKey("freesound");
-  if (!key) throw new Error("No Freesound key saved — add one in Backend Settings.");
+  if (!key) throw new Error("No Freesound key saved — add one in Settings (the gear, top right).");
 
   // `--ids name=123,name=456` takes exactly the sounds a person picked out on
   // the site, and skips searching entirely.

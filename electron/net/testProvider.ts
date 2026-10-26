@@ -26,13 +26,13 @@ export interface ProviderTestResult {
 function interpret(status: number, body: string): ProviderTestResult {
   if (status >= 200 && status < 300) return { ok: true, message: "Key works." };
   if (status === 401 || status === 403) {
-    return { ok: false, message: "Key rejected (401/403) — wrong key, or it hasn't been activated yet." };
+    return { ok: false, message: "Key rejected (401/403) — wrong key, or it hasn't been activated yet. Paste it again, or make a new one on the service's website." };
   }
   if (status === 429) {
     return { ok: false, message: "Rate limited (429) — the key is probably valid, just try again shortly." };
   }
   const snippet = body.trim().slice(0, 160);
-  return { ok: false, message: `Provider returned ${status}${snippet ? ` — ${snippet}` : ""}` };
+  return { ok: false, message: `Provider returned ${status}${snippet ? ` — ${snippet}` : ""}. Try again in a minute; if it keeps happening, make a new key.` };
 }
 
 export interface TestOptions {
@@ -57,7 +57,7 @@ export async function testProvider(
           headers: { "xi-api-key": key },
         });
         if (!res.ok) {
-          return { ok: false, message: `ElevenLabs said ${res.status} ${res.statusText}.` };
+          return { ok: false, message: `ElevenLabs said ${res.status} ${res.statusText}. Paste the key again, or make a new one on the ElevenLabs website.` };
         }
         const b = (await res.json()) as {
           tier?: string;
@@ -190,6 +190,6 @@ export async function testProvider(
     }
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    return { ok: false, message: `Couldn't reach the provider — ${msg}` };
+    return { ok: false, message: `Couldn't reach the provider — ${msg}. Check your internet and press Test again.` };
   }
 }

@@ -506,7 +506,7 @@ export default function App() {
               setForgeGoing(true);
               const ok = await window.byok.forge.openImageForge();
               setTimeout(() => setForgeGoing(false), 900);
-              if (!ok) alert("Image Forge isn't installed on this computer yet.");
+              if (!ok) alert("Image Forge isn't installed on this computer yet. Install Image Forge, then press this button again.");
             }}
           >
             <img src={imageMark} alt="" />

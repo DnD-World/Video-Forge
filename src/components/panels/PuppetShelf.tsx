@@ -64,7 +64,7 @@ export function PuppetShelf({ current, onPick, startOrdering = false }: { curren
       if (!r) return;
       setWaiting(null);
       load();
-      setNote(r.slug ? `Your puppet is ready — it is in the row above.` : `Image Forge could not make it: ${r.problem ?? "no reason given"}.`);
+      setNote(r.slug ? `Your puppet is ready — it is in the row above.` : `Image Forge could not make it: ${r.problem ?? "no reason given"}. Open Image Forge to see why, then press Order again.`);
     }, 30000);
     return () => window.clearInterval(t);
   }, [waiting, load]);
@@ -72,7 +72,7 @@ export function PuppetShelf({ current, onPick, startOrdering = false }: { curren
   const order = async () => {
     setNote("");
     const r = await window.byok.forge.orderPuppet({ name: name.trim() || "puppet", description, style, framing, auto }, pictures);
-    if (!r.ok) return setNote(`Could not place the order: ${r.problem}`);
+    if (!r.ok) return setNote(`Could not place the order: ${r.problem}. Check that Image Forge is installed, then press Order again.`);
     setWaiting(r.id ?? null);
     setOrdering(false);
     setNote(
@@ -102,7 +102,7 @@ export function PuppetShelf({ current, onPick, startOrdering = false }: { curren
               <button
                 className={`shelf-face w-full ${current === p.rigPath ? "on" : ""}`}
                 onClick={() => onPick(p.rigPath, p.name, p.framing)}
-                data-tip={`${p.name}${p.framing === "waist" ? " · waist up, with arms" : ""}. Click to use. Hover to hear-see them talk.`}
+                data-tip={`${p.name}${p.framing === "waist" ? " · waist up, with arms" : ""}. Click to use this puppet.`}
                 aria-label={`Use ${p.name}`}
               >
                 <LiveFace path={p.rigPath} label={p.name} />
@@ -191,7 +191,7 @@ export function PuppetShelf({ current, onPick, startOrdering = false }: { curren
           </button>
         </div>
       )}
-      {note && <p className="text-sm text-neutral-400">{note}</p>}
+      {note && <p data-tip="What just happened with your characters. If something went wrong, try again." className="text-sm text-neutral-400">{note}</p>}
     </div>
   );
 }

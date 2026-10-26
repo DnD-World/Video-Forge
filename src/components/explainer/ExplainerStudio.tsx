@@ -15,6 +15,7 @@
 // ---------------------------------------------------------------------------
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { plainError } from "../../lib/plainError";
 import { HudButton } from "../ui/HudButton";
 import { Tabs } from "../ui/Tabs";
 import { Toggle } from "../ui/Toggle";
@@ -130,14 +131,14 @@ export function ExplainerStudio() {
   const act = async (label: string, fn: () => Promise<void>) => {
     setMessage(null);
     setBusy({ job: label, pct: 0.01, note: label });
-    try { await fn(); } catch (e) { setMessage({ tone: "bad", text: String((e as Error).message ?? e).replace(/^Error invoking remote method '[^']+': (Error: )?/, "") }); }
+    try { await fn(); } catch (e) { setMessage({ tone: "bad", text: plainError(e, "Fix that, then press the same button again.") }); }
     finally { setBusy(null); }
   };
 
   // ---- actions -------------------------------------------------------------------------
   const writeScenes = () => act("Writing the scenes…", async () => {
     const r = await window.byok.explainer.writeScenes({ script: d.script, words: d.words ?? undefined, format: d.format, provider: d.provider, base: { style: BUILT_IN } });
-    if (r.problems.length || !r.spec) { setMessage({ tone: "bad", text: `${r.model} could not write a valid scene list after ${r.attempts} tries: ${r.problems.join("; ")}` }); return; }
+    if (r.problems.length || !r.spec) { setMessage({ tone: "bad", text: `${r.model} could not write a valid scene list after ${r.attempts} tries: ${r.problems.join("; ")}. Press Write the scenes to try again, or pick another model.` }); return; }
     set({ spec: { ...r.spec, words: undefined } as Spec });
     setCheck(null);
     setMessage({ tone: "good", text: `${r.model} wrote ${r.spec.scenes.length} scenes in ${(r.ms / 1000).toFixed(1)} s (${r.attempts} ${r.attempts === 1 ? "try" : "tries"}). Check it, then render.` });
@@ -224,7 +225,7 @@ export function ExplainerStudio() {
         {isBuiltIn ? <LivePreview spec={spec} problems={problems} /> : <ImportedPreview page={importedPage} name={styleName} />}
 
         {isBuiltIn && check && <CheckView check={check} />}
-        {message && <div data-tip="What just happened." className={`rounded-xl px-3 py-2 text-sm ${message.tone === "good" ? "bg-emerald-400/10 text-emerald-200 border border-emerald-400/30" : "bg-rose-400/10 text-rose-200 border border-rose-400/30"}`}>{message.text}</div>}
+        {message && <div data-tip={message.tone === "good" ? "What just happened." : "Something went wrong. The message says what to fix."} className={`rounded-xl px-3 py-2 text-sm ${message.tone === "good" ? "bg-emerald-400/10 text-emerald-200 border border-emerald-400/30" : "bg-rose-400/10 text-rose-200 border border-rose-400/30"}`}>{message.text}</div>}
         {busy && (
           <div className="flex items-center gap-3" data-tip="Working — this can take a while for long videos.">
             <div className="flex-1 h-2 rounded-full bg-white/10 overflow-hidden"><div className="h-full bg-[var(--accent)]" style={{ width: `${Math.round(busy.pct * 100)}%` }} /></div>
@@ -236,7 +237,7 @@ export function ExplainerStudio() {
 
       {/* RIGHT: script, look, make */}
       <aside className="panel-hud w-[380px] shrink-0 p-4 flex flex-col gap-3 min-h-0">
-        <div data-tip="Script: what it says. Look: colours, tint, font. Make: check, extras and render."><Tabs tabs={[{ id: "script", label: "Script" }, { id: "look", label: "Look" }, { id: "make", label: "Make" }]} active={tab} onChange={setTab} /></div>
+        <div data-tip="Three pages: what it says, how it looks, and making the files."><Tabs tabs={[{ id: "script", label: "Script" }, { id: "look", label: "Look" }, { id: "make", label: "Make" }]} active={tab} onChange={setTab} /></div>
         <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-4 pr-1">
           {tab === "script" && (
             <ScriptTab d={d} set={set} providers={providers} isBuiltIn={isBuiltIn} busy={!!busy}

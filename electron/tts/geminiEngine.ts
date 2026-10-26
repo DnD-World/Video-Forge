@@ -56,7 +56,7 @@ export interface GeminiTake {
 
 async function apiKey(): Promise<string> {
   const key = await keyStore.getKey("gemini");
-  if (!key) throw new Error("No Gemini key saved (Backend Settings → Gemini).");
+  if (!key) throw new Error("No Gemini key saved (Settings → Gemini).");
   return key;
 }
 

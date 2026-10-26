@@ -84,7 +84,7 @@ export function CastPanel() {
       setMusic({ filePath: p, analysis });
       if (!analysis) {
         setMusicNote(
-          "Loaded. It will play, but it couldn't be analysed — the music waveform " +
+          "Loaded. It will play, but it couldn't be analysed — the music sound bars " +
             "won't follow it and it won't repeat if it's shorter than the video. " +
             "A 16-bit PCM .wav does both."
         );
@@ -153,7 +153,7 @@ export function CastPanel() {
     window.byok?.brand
       ?.active()
       .then((b) => !cancelled && setBrand(b))
-      .catch(() => !cancelled && setCastError("Couldn't read the brand pack's characters."));
+      .catch(() => !cancelled && setCastError("Couldn't read the brand pack's characters. Close and reopen the app; if it stays, pick the characters by hand with +."));
     return () => {
       cancelled = true;
     };
@@ -193,7 +193,7 @@ export function CastPanel() {
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="title-deco text-lg">Cast</h2>
+        <h2 className="title-deco text-lg" data-tip="The people who talk in your video. Each one has a face and a voice.">Cast</h2>
         {library.length > 0 && (
           <Picker
             aria-label="Add a saved character"
@@ -211,7 +211,7 @@ export function CastPanel() {
           />
         )}
       </div>
-      {castError && <p className="text-sm text-red-400 mb-2">{castError}</p>}
+      {castError && <p className="text-sm text-red-400 mb-2" data-tip="The character could not be added. Read the message and try again.">{castError}</p>}
 
       {/* ONE TAB PER SPEAKER, in their own colour, and a + for a new one. */}
       <div className="forge-who" role="tablist" aria-label="Speakers">
@@ -223,7 +223,7 @@ export function CastPanel() {
             className={`who ${s.id === active ? "on" : ""}`}
             style={{ ["--c" as string]: s.borderColor }}
             onClick={() => setActive(s.id)}
-            data-tip={`Everything about ${s.label}: voice, look, waveform and place.`}
+            data-tip={`Everything about ${s.label}: voice, look, sound bars and place.`}
           >
             <i />
             {s.label}
@@ -369,7 +369,7 @@ export function CastPanel() {
                     setSaved(sp.label);
                     window.setTimeout(() => setSaved(null), 2000);
                   }}
-                  data-tip="Keep this character (face, voice, colours, waveform) to reuse in other videos."
+                  data-tip="Keep this character (face, voice, colours, sound bars) to reuse in other videos."
                 >
                   Save to library
                 </button>
@@ -385,7 +385,7 @@ export function CastPanel() {
                     const p = await window.byok.dialog.openFile([{ name: "Puppet", extensions: ["json"] }]);
                     if (p) updateSpeaker(sp.id, { puppetPath: p });
                   }}
-                  data-tip="The talking face: a puppet file (.puppet.json) with mouths, eyes and brows."
+                  data-tip="The talking face: a puppet file with mouths, eyes and brows."
                 >
                   {sp.puppetPath ? "Change face" : "Choose face…"}
                 </button>
@@ -395,7 +395,7 @@ export function CastPanel() {
                 </span>
               </div>
               <PuppetShelf current={sp.puppetPath} startOrdering={orderFor === sp.id} onPick={(rigPath, _name, framing) => updateSpeaker(sp.id, framing === "full" ? { puppetPath: rigPath, waveform: { ...sp.waveform, enabled: false } } : { puppetPath: rigPath })} />
-              <div className="label-etched" data-tip="The shape around the face. The waveform follows it.">
+              <div className="label-etched" data-tip="The shape around the face. The sound bars follow it.">
                 Frame
               </div>
               <div className="forge-shapes">
@@ -413,7 +413,7 @@ export function CastPanel() {
                 ))}
               </div>
               <div className="flex items-center gap-4">
-                <label className="flex items-center gap-2" data-tip="Their colour: the frame and their waveform use it.">
+                <label className="flex items-center gap-2" data-tip="Their colour: the frame and their sound bars use it.">
                   <input type="color" value={sp.borderColor} onChange={(e) => updateSpeaker(sp.id, { borderColor: e.target.value })} className="forge-swatch" />
                   <span className="text-sm text-neutral-400">Colour</span>
                 </label>
@@ -422,7 +422,7 @@ export function CastPanel() {
                   <span className="text-sm text-neutral-400">Fill</span>
                 </label>
               </div>
-              <div data-tip="How often their hands move by themselves: on questions (a shrug), on words like 'this' or 'here' (pointing), and while explaining. None = only when the script asks, like [waves]. Only puppets made waist-up have hands.">
+              <div data-tip="How often their hands move by themselves, like a shrug on a question or a point on “this”. None means only when the script asks, like [waves].">
                 <Slider
                   label="How much they gesture"
                   value={sp.gestures ?? 0.5}
@@ -433,7 +433,7 @@ export function CastPanel() {
                   format={(v) => (v === 0 ? "only when asked" : v <= 0.25 ? "a little" : v <= 0.5 ? "some" : v <= 0.75 ? "a lot" : "lively")}
                 />
               </div>
-              <div data-tip="Which way they look. Auto turns them towards the other speaker, so two characters talk to each other. Needs a puppet made in Image Forge with 'Also side-facing'.">
+              <div data-tip="Which way they look. Auto turns them towards the other speaker.">
                 <Picker
                   aria-label="Faces"
                   className="w-full"
@@ -489,7 +489,7 @@ export function CastPanel() {
               </div>
               {engineOf(sp) === "gemini" && (
                 <>
-                  <div data-tip="Live models are free with no daily limit. TTS models sound a little better, but only 10 lines a day are free.">
+                  <div data-tip="Live models are free with no daily limit. Voice-only models sound a little better, but only 10 lines a day are free.">
                     <Picker
                       aria-label="Gemini model"
                       className="w-full"
@@ -567,8 +567,8 @@ export function CastPanel() {
               )}
             </Section>
 
-            <Section title="Waveform" tip="The moving bars that show when they speak." open={false}>
-              <WaveformControls label={`Show ${sp.label}'s waveform`} value={sp.waveform} onChange={(patch) => setSpeakerWaveform(sp.id, patch)} face={{ color: sp.borderColor, shape: sp.outlineShape }} />
+            <Section title="Sound bars" tip="The moving bars that show when they speak." open={false}>
+              <WaveformControls label={`Show ${sp.label}'s sound bars`} value={sp.waveform} onChange={(patch) => setSpeakerWaveform(sp.id, patch)} face={{ color: sp.borderColor, shape: sp.outlineShape }} />
             </Section>
 
             <Section title="Place" tip="Where they stand in the picture. You can also drag them on the preview." open={false}>
@@ -610,7 +610,7 @@ function BuiltinFace({ dir, file, label, color }: { dir: string; file: string; l
   const [broken, setBroken] = useState(false);
   if (!def || broken) {
     return (
-      <span className="initial" style={{ borderColor: color }}>
+      <span data-tip="The first letter of the name, shown because the face picture could not be loaded." className="initial" style={{ borderColor: color }}>
         {label.slice(0, 1)}
       </span>
     );

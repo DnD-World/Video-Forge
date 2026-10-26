@@ -31,7 +31,7 @@ const HINTS: Record<string, string[]> = {
 
 async function keyFor(provider: string): Promise<string> {
   const key = await keyStore.getKey(provider);
-  if (!key) throw new Error(`No ${PROVIDERS[provider]?.label ?? provider} key saved. Add it in Settings → keys.`);
+  if (!key) throw new Error(`No ${PROVIDERS[provider]?.label ?? provider} key saved. Add it in Settings (the gear, top right), in the box for it.`);
   return key;
 }
 async function chooseModel(provider: string, key: string, wanted?: string): Promise<string> {

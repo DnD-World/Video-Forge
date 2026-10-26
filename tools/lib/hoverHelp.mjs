@@ -142,7 +142,7 @@ export function scanSource(src, { custom = [], texts = false, tipAttrs = ["title
       // A balanced {value} is a readout (a number, a name). An unbalanced one
       // is a list or a condition that holds more tags: not text.
       const balanced = d2 === 0 && (bare.match(/\{/g) || []).length === (bare.match(/\}/g) || []).length;
-      const readout = balanced && /^\{[^{}]*\}$/.test(bare) && !/\.map\(/.test(bare);
+      const readout = balanced && /^\{[^{}]*\}$/.test(bare) && !/\.map\(/.test(bare) && !/^\{\s*children\s*\}$/.test(bare) && !/\.hint\s*\}$/.test(bare);
       // A sentence of seven words or more explains itself: it IS the help.
       const prose = lit.trim().split(/\s+/).filter((w) => /[A-Za-zͰ-Ͽ]{2,}/.test(w)).length >= 7;
       if (bare && !prose && (hasWords || readout)) {
@@ -175,4 +175,35 @@ export function nakedControls(root, opts = {}) {
   };
   walk(root);
   return found;
+}
+
+/** Words a person reads on screen: help texts, labels, placeholders, and lines of plain words in the markup. */
+export function visibleStrings(root) {
+  const out = [];
+  const attr = /(?:data-tip|title|label|placeholder|aria-label|tip|hint)\s*=\s*(?:"([^"]*)"|\{`([^`]*)`\})/g;
+  const walk = (dir) => {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      const p = path.join(dir, e.name);
+      if (e.isDirectory()) walk(p);
+      else if (e.name.endsWith(".tsx")) {
+        const src = fs.readFileSync(p, "utf8");
+        const file = path.relative(root, p).split(path.sep).join("/");
+        let m;
+        attr.lastIndex = 0;
+        while ((m = attr.exec(src))) out.push({ file, kind: "tip", text: (m[1] ?? m[2]).replace(/\$\{[^}]*\}/g, "X") });
+        for (const line of stripComments(src).split("\n")) {
+          const t = line.trim();
+          // a line of plain words inside the markup: no code characters
+          if (t && /^[A-Za-zͰ-Ͽ][^<>{}=;()[\]|&]*$/.test(t) && / /.test(t)) out.push({ file, kind: "text", text: t });
+        }
+      }
+    }
+  };
+  walk(root);
+  return out;
+}
+
+/** Sentences in a help text. */
+export function sentenceCount(text) {
+  return text.split(/(?<=[.!?])\s+(?=[A-Z“"Ͱ-Ͽ])/).filter(Boolean).length;
 }

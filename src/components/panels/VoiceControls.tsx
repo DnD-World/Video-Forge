@@ -52,7 +52,7 @@ export function VoiceControls({
   return (
     <div className="space-y-4">
       <label className="block">
-        <span className="label-etched text-sm">Starting point</span>
+        <span data-tip="A ready-made set of voice settings to start from. You can change anything after." className="label-etched text-sm">Starting point</span>
         <Picker
           aria-label="Starting point"
           data-tip="Pick a ready-made voice style to start from, then fine-tune the sliders below."
@@ -95,7 +95,7 @@ export function VoiceControls({
 
       {/* --- the app writing expression the script did not ------------------ */}
       <div className="border-t border-accent/15 pt-4 space-y-3">
-        <p className="label-etched text-sm">Let the app add expression</p>
+        <p data-tip="Lets the app add feeling to lines that have none written in." className="label-etched text-sm">Let the app add expression</p>
         <Toggle
           data-tip="If a line of the script has no feeling written in, the app adds a mood so the voice does not sound flat."
           label="Lift flat lines"
@@ -104,7 +104,7 @@ export function VoiceControls({
         />
         {expression.liftFlatLines && (
           <label className="block">
-            <span className="label-etched text-sm">Lift them to</span>
+            <span data-tip="The feeling the app gives to flat lines, for example “cheerful”." className="label-etched text-sm">Lift them to</span>
             <input
               type="text"
               className="w-full mt-1 bg-black/30 border border-accent/20 rounded px-2 py-1 text-sm"
@@ -178,7 +178,7 @@ function KnobControl({
     return (
       <div>
         <div className="flex items-center justify-between gap-3">
-          <span className="label-etched text-sm">{label}</span>
+          <span data-tip="The name of this voice setting. A dot after it means you changed it from the default." className="label-etched text-sm">{label}</span>
           <NumberField
             aria-label={knob.label}
             data-tip={KNOB_TIPS[knob.key] ?? knob.hint}

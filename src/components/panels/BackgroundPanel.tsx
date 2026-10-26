@@ -13,6 +13,8 @@
 // ---------------------------------------------------------------------------
 
 import { useState } from "react";
+import { ErrorLine } from "../ui/ErrorLine";
+import { plainError } from "../../lib/plainError";
 import { createPortal } from "react-dom";
 import { Empty } from "../ui/Empty";
 import { HudButton } from "../ui/HudButton";
@@ -109,7 +111,7 @@ export function BackgroundPanel() {
             withFiles.push({ ...sc, filePath } as Scene);
             continue;
           } catch (e) {
-            withFiles.push({ ...sc, note: `Download failed: ${e instanceof Error ? e.message : e}` });
+            withFiles.push({ ...sc, note: `Download failed: ${e instanceof Error ? e.message : e}. Swap this clip with the button on the right.` });
             continue;
           }
         }
@@ -117,7 +119,7 @@ export function BackgroundPanel() {
       }
       setBackgrounds(withFiles);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(plainError(e, "Press Choose automatically to try again."));
     } finally {
       setBusy(null);
     }
@@ -132,7 +134,7 @@ export function BackgroundPanel() {
       setHits(res.hits);
       setNotes(res.notes);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(plainError(e, "Check your internet, then search again."));
     } finally {
       setBusy(null);
     }
@@ -159,7 +161,7 @@ export function BackgroundPanel() {
       setBackgrounds(next);
       setSearchOpen(false);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(plainError(e, "Pick a different clip, or search again."));
     } finally {
       setBusy(null);
     }
@@ -195,10 +197,10 @@ export function BackgroundPanel() {
         )}
       </div>
 
-      {busy && <p className="label-etched text-accent-bright">{busy}</p>}
-      {error && <p className="text-sm text-red-400">{error}</p>}
+      {busy && <p className="label-etched text-accent-bright" data-tip="What the app is doing right now. Wait for it to finish.">{busy}</p>}
+      {error && <ErrorLine tip="The background step did not work. Read the message, fix the cause, and press the button again." text={error} />}
       {look && (
-        <p className="text-sm text-neutral-400">
+        <p className="text-sm text-neutral-400" data-tip="One look the picked clips share, so the whole video feels like one piece.">
           <span className="label-etched">Shared look</span> — {look}
         </p>
       )}
@@ -244,7 +246,7 @@ export function BackgroundPanel() {
         </div>
         <Slider
           data-tip="How long one background video melts into the next one. 0 = a sudden cut."
-          label="Crossfade"
+          label="Blend between clips"
           value={backgroundCrossfadeMs}
           min={0}
           max={2000}
@@ -254,7 +256,7 @@ export function BackgroundPanel() {
         />
         <p className="text-sm text-neutral-500">
           Everything else draws over the background, so some dimming is what keeps the
-          waveform and the subtitles readable. A crossfade longer than half the shortest
+          sound bars and the subtitles readable. A blend longer than half the shortest
           scene is trimmed to fit.
         </p>
       </div>
@@ -269,7 +271,7 @@ export function BackgroundPanel() {
       <div className="space-y-2">
         {backgrounds.map((sc, i) => (
           <div key={i} className="flex gap-3 items-start">
-            <div className="w-24 h-14 shrink-0 bg-black/60 overflow-hidden cut-sm">
+            <div className="w-24 h-14 shrink-0 bg-black/60 overflow-hidden cut-sm" data-tip="A small picture of the clip chosen for this part of the video. Empty means none was found.">
               {sc.hit?.thumbUrl ? (
                 <img src={sc.hit.thumbUrl} alt="" className="w-full h-full object-cover" />
               ) : (
@@ -277,15 +279,15 @@ export function BackgroundPanel() {
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="label-etched truncate">{sc.query}</p>
+              <p className="label-etched truncate" data-tip="The words used to find this clip.">{sc.query}</p>
               <p className="text-sm text-neutral-500 truncate" title={sc.reason}>
                 {sc.reason}
               </p>
-              <p className="text-sm text-neutral-600">
+              <p className="text-sm text-neutral-600" data-tip="When this clip plays (in seconds), where it came from, and who made it.">
                 {(sc.startMs / 1000).toFixed(1)}s–{(sc.endMs / 1000).toFixed(1)}s
                 {sc.hit && ` · ${sc.hit.provider} · ${sc.hit.author}`}
               </p>
-              {sc.note && <p className="text-sm text-amber-400">{sc.note}</p>}
+              {sc.note && <p className="text-sm text-amber-400" data-tip="Something to know about this clip. Swap it with the button on the right if you do not like it.">{sc.note}</p>}
             </div>
             <button
               onClick={() => {
@@ -321,7 +323,7 @@ export function BackgroundPanel() {
               }`}
             >
               <div className="flex items-center gap-3 mb-1">
-                <h3 className="title-deco uppercase text-lg">Find a background</h3>
+                <h3 className="title-deco uppercase text-lg" data-tip="Search free stock videos and pick one by hand.">Find a background</h3>
                 <div className="flex-1" />
                 <HudButton onClick={() => setExpanded((v) => !v)} data-tip="Makes this search window bigger, or back to normal size.">
                   {expanded ? "Restore" : "Maximize"}
@@ -358,11 +360,11 @@ export function BackgroundPanel() {
               </div>
 
               {notes.map((n, i) => (
-                <p key={i} className="text-sm text-amber-400 mb-1">{n}</p>
+                <p key={i} className="text-sm text-amber-400 mb-1" data-tip="A heads-up from the search. It did not stop the search.">{n}</p>
               ))}
-              {error && <p className="text-sm text-red-400 mb-1">{error}</p>}
+              {error && <ErrorLine className="text-sm text-red-400 mb-1" tip="The search did not work. Check your internet and your Pixabay and Pexels keys in Settings, then search again." text={error} />}
               {!busy && hits.length === 0 && (
-                <p className="text-sm text-neutral-500">
+                <p data-tip="Nothing searched yet. Type a few words above and press Enter." className="text-sm text-neutral-500">
                   Type a search and press Enter.
                 </p>
               )}

@@ -36,14 +36,14 @@ export function MusicPanel() {
       setMusic({ filePath: p, analysis });
       if (!analysis) {
         setMusicNote(
-          "Loaded. It will play, but it couldn't be analysed — the music waveform " +
+          "Loaded. It will play, but it couldn't be analysed — the music sound bars " +
             "won't follow it and it won't repeat if it's shorter than the video. " +
             "A 16-bit PCM .wav does both."
         );
       }
     } catch (e) {
       setMusic({ filePath: p, analysis: null });
-      setMusicNote(`Loaded, but analysing it failed (${e instanceof Error ? e.message : String(e)}). It will still play.`);
+      setMusicNote(`Loaded, but analysing it failed (${e instanceof Error ? e.message : String(e)}). It will still play; to make the sound bars follow it, pick a 16-bit WAV file.`);
     } finally {
       setMusicBusy(false);
     }
@@ -60,7 +60,7 @@ export function MusicPanel() {
           itself; this is for choosing one by hand on a single video. */}
       {musicLibrary.length > 0 && (
         <div className="space-y-2">
-          <div className="label-etched">Library</div>
+          <div data-tip="Music that comes with the app. Click one to use it." className="label-etched">Library</div>
           <div className="flex flex-wrap gap-2">
             {musicLibrary.map((t) => (
               <HudButton
@@ -74,7 +74,7 @@ export function MusicPanel() {
             ))}
           </div>
           <p className="text-sm text-neutral-500">
-            All loopable and cleared for use. A batch gives each lesson one
+            All of these can repeat smoothly and are cleared for use. A batch gives each lesson one
             of these on rotation, so the same lesson always gets the same
             bed and the next one gets the next track along.
           </p>
@@ -106,7 +106,7 @@ export function MusicPanel() {
             : " · not analysed"}
         </p>
       )}
-      {musicNote && <p className="text-sm text-amber-400">{musicNote}</p>}
+      {musicNote && <p data-tip="A message about the music file. Read it, then pick another file if it says the file is a problem." className="text-sm text-amber-400">{musicNote}</p>}
 
       <Slider
         data-tip="How loud the music is. Lower it so people can hear the voice clearly."
@@ -118,7 +118,7 @@ export function MusicPanel() {
       />
       <Slider
         data-tip="Makes the music get quieter while someone is talking, then come back. Higher = quieter during speech."
-        label="Duck under speech"
+        label="Lower music when someone talks"
         value={musicDuck}
         min={0} max={1} step={0.05}
         format={(v) => (v === 0 ? "off" : `−${Math.round(v * 100)}%`)}
@@ -126,7 +126,7 @@ export function MusicPanel() {
       />
       <p className="text-sm text-neutral-500">
         The bed drops out of the way just before each line and comes back
-        slowly after it — early, because a duck that arrives with the voice
+        slowly after it — early, because lowering it only when the voice starts
         always sounds late. A track shorter than the video repeats.
       </p>
 
@@ -135,21 +135,21 @@ export function MusicPanel() {
           type="color" value={musicColor}
           onChange={(e) => setMusicColor(e.target.value)}
           className="h-9 w-9 border border-accent/30 bg-transparent p-0"
-          data-tip="The colour of the music's waveform picture. Click to pick another."
+          data-tip="The colour of the music's sound bars. Click to pick another."
         />
-        <span className="text-sm text-neutral-400">Music colour</span>
+        <span data-tip="The colour of the little moving picture that dances to the music." className="text-sm text-neutral-400">Music colour</span>
       </div>
       <p className="text-sm text-neutral-500">
         The music track always animates — music doesn't take turns the way
         speakers do. With a track loaded it animates to the music itself;
-        without one it borrows the narration. Its waveform is on the
-        Waveforms tab.
+        without one it borrows the narration. Its sound bars are on the
+        Sound bars tab.
       </p>
 
       <section className="space-y-3 border-t border-accent/15 pt-4">
-        <div className="label-etched">Music waveform</div>
+        <div data-tip="The moving picture that dances to the music. Turn it on or change how it looks here." className="label-etched">Music sound bars</div>
         <WaveformControls
-          label="Show music waveform"
+          label="Show music sound bars"
           value={musicWaveform}
           onChange={setMusicWaveform}
           canAnchorToFace={false}
