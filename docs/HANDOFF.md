@@ -55,7 +55,20 @@ Render proof (#7), 26 Oct:
       54 min long / 806 MB;
   (3) explainer sound effects.
 
-Next: installers for both apps, then the "B" layout (Ak's pick). Phase 3 is on hold until Ak says so.
+26 Oct evening:
+- Installed for Ak: Image Forge 1.1.0 and Video Forge 0.2.0.
+- Subtitle paging fixed (sentences, even pages, no dangling little words, no
+  blinks between pages); outro join timescale fixed.
+- "B" layout built for Puppet video (App.tsx + canvas/TimelineStrip.tsx +
+  forge.css):
+  - steps down the left, with the open step in place;
+  - the preview always on the right;
+  - the timeline strip under the preview;
+  - Many videos as a mode button;
+  - the column folds to its numbers.
+- Checked at 1440×900 and 1280×720 with lesson 101.1 data, and installed.
+
+Next: bring the Explainer into the same layout. Phase 3 is on hold until Ak says so.
 Top risk: Google credit ends before Christmas.
 
 ## Phase 1 safety fixes — branch `phase1-vf-safety` (not merged, not pushed)
