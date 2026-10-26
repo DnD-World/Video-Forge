@@ -202,14 +202,14 @@ export function ExplainerStudio() {
     <div className="flex flex-1 gap-3 px-3 pb-3 min-h-0">
       {/* LEFT: style */}
       <aside className="panel-hud w-[300px] shrink-0 p-4 flex flex-col gap-3 overflow-y-auto">
-        <div className="label-etched">Style</div>
+        <div className="label-etched" data-tip="Pick the look of the animation. The built-in one works straight away.">Style</div>
         <StyleCard active={isBuiltIn} title="Mint Meander" sub="Stravelakis brand · pattern tiles · ready to use" tip="The built-in style: Sora type, navy and mint, Truchet tiles. Every frame is checked automatically." onClick={() => set({ style: BUILT_IN })} />
         {imported.map((s) => (
           <StyleCard key={s.id} active={d.style === s.id} title={s.name} sub={`${s.family} · imported · experimental`} tip={s.look} onClick={() => set({ style: s.id })}
             onRemove={async () => { await window.byok.explainer.removeStyle(s.id); if (d.style === s.id) set({ style: BUILT_IN }); refreshStyles(); }} />
         ))}
         <HudButton data-tip="Bring in a style from Futurepedia's AI Style Atlas by pasting its Copy prompt. Step-by-step help inside." onClick={() => setShowImport(true)}>+ Import a style</HudButton>
-        <p className="text-xs text-neutral-400 leading-relaxed">Imported styles stay on this computer. A top model rewrites the whole animation for your topic, so they are slower and marked experimental.</p>
+        <p className="text-xs text-neutral-400 leading-relaxed" data-tip="Imported styles are made by an online helper each time, so they are slower and may be rough.">Imported styles stay on this computer. A top model rewrites the whole animation for your topic, so they are slower and marked experimental.</p>
       </aside>
 
       {/* CENTRE: shape, preview, storyboard, checks */}
@@ -314,13 +314,13 @@ function LivePreview({ spec, problems }: { spec: Spec; problems: string[] }) {
     <div className="flex flex-col gap-2">
       <div className="flex justify-center rounded-2xl bg-black/40 p-2" style={{ height: "min(52vh, 560px)" }}>
         {stage ? <canvas ref={canvasRef} style={{ height: "100%", aspectRatio: `${W}/${H}`, maxWidth: "100%", borderRadius: 12 }} data-tip="Live preview — the same drawing code as the final video." />
-          : <div className="self-center text-sm text-rose-200 max-w-md">The scene list has problems, so there is nothing to show yet:<ul className="list-disc pl-5 mt-1">{problems.slice(0, 6).map((p) => <li key={p}>{p}</li>)}</ul></div>}
+          : <div className="self-center text-sm text-rose-200 max-w-md" data-tip="The scene list cannot be drawn yet. Fix the lines listed here, or press Sample under Script to start again.">The scene list has problems, so there is nothing to show yet:<ul className="list-disc pl-5 mt-1">{problems.slice(0, 6).map((p) => <li key={p}>{p}</li>)}</ul></div>}
       </div>
       {stage && (
         <div className="flex items-center gap-3">
           <HudButton data-tip={playing ? "Pause the preview." : "Play the preview."} onClick={() => setPlaying((p) => !p)}>{playing ? "Pause" : "Play"}</HudButton>
           <input type="range" min={0} max={stage.R.duration} step={0.01} value={t} onChange={(e) => { setPlaying(false); setT(Number(e.target.value)); }} className="flex-1" data-tip="Drag through the explainer." />
-          <span className="text-xs tabular-nums text-neutral-300 w-24 text-right">{t.toFixed(1)} / {stage.R.duration.toFixed(1)} s</span>
+          <span className="text-xs tabular-nums text-neutral-300 w-24 text-right" data-tip="Where you are in the preview, and how long it is, in seconds.">{t.toFixed(1)} / {stage.R.duration.toFixed(1)} s</span>
         </div>
       )}
     </div>
@@ -369,16 +369,16 @@ function ScriptTab(p: {
   return (
     <>
       <section className="flex flex-col gap-2">
-        <div className="label-etched">What the explainer says</div>
+        <div className="label-etched" data-tip="Your words. The pictures are built from them.">What the explainer says</div>
         <textarea value={d.script} onChange={(e) => set({ script: e.target.value, words: null })} rows={8} className="resize-y" placeholder="Paste the narration or write what to explain…" data-tip="The script. Only what is written here appears on screen — the model is told not to add facts." />
         <div className="flex flex-wrap gap-2">
           <HudButton data-tip="Take the current puppet project's narration: its words and when each is spoken, so the pictures land on the words." onClick={p.onUseNarration}>Use this project's narration</HudButton>
         </div>
-        <div className="text-xs text-neutral-400">{d.words?.length ? `Timed to ${d.words.length} narration words${d.audio ? " · its audio goes into the video" : ""}.` : `About ${estimateSeconds(d.script || "x")} s when read aloud (no narration timing).`}</div>
+        <div className="text-xs text-neutral-400" data-tip="Whether the pictures are timed to a real voice, or to a guess of how long it takes to read.">{d.words?.length ? `Timed to ${d.words.length} narration words${d.audio ? " · its audio goes into the video" : ""}.` : `About ${estimateSeconds(d.script || "x")} s when read aloud (no narration timing).`}</div>
       </section>
       <section className="flex flex-col gap-2">
-        <div className="label-etched">Model</div>
-        {withKeys.length === 0 ? <div className="text-sm text-amber-200">No AI key saved. Add one under Settings (gear, top right) — Groq or Gemini work well and have free tiers.</div> : (
+        <div className="label-etched" data-tip="Which online helper writes the scenes. You need a key for it in Settings.">Model</div>
+        {withKeys.length === 0 ? <div className="text-sm text-amber-200 flex flex-wrap items-center gap-2" data-tip="The online helper needs a key (like a password) from you. Groq and Gemini have free ones.">No AI key saved. Groq or Gemini work well and have free tiers. <HudButton data-tip="Opens Settings, where you paste the key." onClick={() => window.dispatchEvent(new Event("forge:open-settings"))}>Open Settings</HudButton></div> : (
           <div className="flex flex-wrap gap-2">
             {withKeys.map((x) => <HudButton key={x.id} data-tip={`Use your ${x.label} key.`} active={d.provider === x.id} onClick={() => set({ provider: x.id })}>{x.label}</HudButton>)}
           </div>
@@ -402,8 +402,8 @@ function ScriptTab(p: {
             <HudButton data-tip="Use this edited scene list." onClick={() => { try { set({ spec: JSON.parse(json) }); setJsonError(null); } catch (e) { setJsonError(String((e as Error).message)); } }}>Apply</HudButton>
             <HudButton data-tip="Go back to the sample explainer." onClick={() => set({ spec: sample as unknown as Spec })}>Sample</HudButton>
           </div>
-          {jsonError && <div className="text-xs text-rose-300">{jsonError}</div>}
-          {p.problems.length > 0 && <ul className="text-xs text-rose-300 list-disc pl-5">{p.problems.map((x) => <li key={x}>{x}</li>)}</ul>}
+          {jsonError && <div className="text-xs text-rose-300" data-tip="The scene list text is not valid, so Apply did nothing. Fix this line, or press Sample to start again.">{jsonError} Fix it, or press Sample to start again.</div>}
+          {p.problems.length > 0 && <ul className="text-xs text-rose-300 list-disc pl-5" data-tip="Problems found in the scene list. Fix them, then Apply again.">{p.problems.map((x) => <li key={x}>{x}</li>)}</ul>}
         </details>
       )}
     </>
@@ -418,7 +418,7 @@ function LookTab({ look, setLook, isBuiltIn }: { look: Look; setLook: (x: Partia
     <>
       {isBuiltIn && (
         <section className="flex flex-col gap-2">
-          <div className="label-etched">Colours</div>
+          <div className="label-etched" data-tip="The colours of the whole animation.">Colours</div>
           <div className="flex flex-wrap gap-2">
             {Object.entries(SCHEMES).map(([id, s]) => <HudButton key={id} data-tip={s.label} active={!look.custom && look.scheme === id} onClick={() => setLook({ scheme: id, custom: false })}>{id}</HudButton>)}
             <HudButton data-tip="Pick your own background and accent; the rest is worked out and kept readable." active={look.custom} onClick={() => setLook({ custom: true })}>my colours</HudButton>
@@ -432,7 +432,7 @@ function LookTab({ look, setLook, isBuiltIn }: { look: Look; setLook: (x: Partia
         </section>
       )}
       <section className="flex flex-col gap-2">
-        <div className="label-etched">Tint</div>
+        <div className="label-etched" data-tip="A colour wash over the whole animation. Optional.">Tint</div>
         <div className="flex flex-wrap gap-2">
           {["none", ...Object.keys(TINT_PRESETS)].map((t) => <HudButton key={t} data-tip={t === "none" ? "No tint." : `Recolour the whole video in ${t} tones.`} active={look.tint === t} onClick={() => setLook({ tint: t })}>{t}</HudButton>)}
         </div>
@@ -440,17 +440,17 @@ function LookTab({ look, setLook, isBuiltIn }: { look: Look; setLook: (x: Partia
       </section>
       {isBuiltIn && (
         <section className="flex flex-col gap-2">
-          <div className="label-etched">Font</div>
+          <div className="label-etched" data-tip="The letter style used on screen.">Font</div>
           <div className="flex flex-wrap gap-2">
             {BUNDLED_FONTS.map((f) => <HudButton key={f.family} data-tip={`${f.feel} · works offline`} active={look.font === f.family} onClick={() => setLook({ font: f.family })}>{f.family}</HudButton>)}
           </div>
           <input type="search" value={googleQuery} placeholder="Search all Google Fonts (online)…" data-tip="Any Google Fonts family. Downloaded once, then it works offline too."
             onFocus={() => { if (!google) window.byok.explainer.googleFonts().then(setGoogle); }} onChange={(e) => setGoogleQuery(e.target.value)} />
-          {google && google.length === 0 && <div className="text-xs text-amber-200">Google Fonts can't be reached right now — the bundled fonts still work.</div>}
+          {google && google.length === 0 && <div className="text-xs text-amber-200" data-tip="The font list needs the internet. Check your connection and click the search box again.">Google Fonts can't be reached right now — the bundled fonts still work.</div>}
           <div className="flex flex-wrap gap-2">
             {results.map((f) => <HudButton key={f.family} data-tip={`${f.category} · from Google Fonts`} active={look.font === f.family} onClick={() => setLook({ font: f.family })}>{f.family}</HudButton>)}
           </div>
-          {!isBundledName(look.font) && <div className="text-xs text-neutral-400">Using "{look.font}" from Google Fonts. Letters it lacks (e.g. Greek) come from Inter.</div>}
+          {!isBundledName(look.font) && <div className="text-xs text-neutral-400" data-tip="This font comes from Google Fonts. Where it has no letter, Inter fills in.">Using "{look.font}" from Google Fonts. Letters it lacks (e.g. Greek) come from Inter.</div>}
         </section>
       )}
     </>
@@ -470,13 +470,13 @@ function MakeTab(p: {
     <>
       {p.isBuiltIn && (
         <section className="flex flex-col gap-2">
-          <div className="label-etched">1 · Check</div>
+          <div className="label-etched" data-tip="Step 1: look for problems before you make the video.">1 · Check</div>
           <HudButton data-tip="Walks through every frame: text big enough, inside the frame, readable, puppet spots empty. Shows the storyboard." disabled={p.busy} onClick={p.onCheck}>Check every frame</HudButton>
         </section>
       )}
       {p.isBuiltIn && (
         <section className="flex flex-col gap-2">
-          <div className="label-etched">2 · Extras</div>
+          <div className="label-etched" data-tip="Step 2: pick extra files to make along with the video.">2 · Extras</div>
           <Toggle label="Thumbnails (3 × 1280×720)" checked={x.thumbs} onChange={tog("thumbs")} data-tip="Three YouTube thumbnails: title, key number, takeaway." />
           <Toggle label="Chapter list for YouTube" checked={x.chapters} onChange={tog("chapters")} data-tip="00:00 lines for the video description (YouTube needs 3+ chapters of 10 s)." />
           <Toggle label={p.hasWords ? "Captions (.srt + .vtt)" : "Captions (need the project's narration)"} checked={x.captions && p.hasWords} onChange={tog("captions")} data-tip="Caption files from the narration's word times — good for YouTube search." />
@@ -489,16 +489,16 @@ function MakeTab(p: {
         </section>
       )}
       <section className="flex flex-col gap-2">
-        <div className="label-etched">{p.isBuiltIn ? "3 · Render" : "Render"}</div>
-        {p.audio && <div className="text-xs text-neutral-400">Narration audio goes in: {p.audio.split(/[\\/]/).pop()}</div>}
+        <div className="label-etched" data-tip="The last step: make the video file.">{p.isBuiltIn ? "3 · Render" : "Render"}</div>
+        {p.audio && <div className="text-xs text-neutral-400" data-tip="This voice recording will be inside the finished video.">Narration audio goes in: {p.audio.split(/[\\/]/).pop()}</div>}
         <HudButton tone="good" data-tip="Choose where to save, then the video (and the extras) are made." disabled={p.busy || !p.canRender} onClick={p.onRender}>Render the video</HudButton>
-        {!p.canRender && <div className="text-xs text-neutral-400">{p.isBuiltIn ? "Fix the scene list first (Script → Scene list)." : "Write or load the page first (Script)."}</div>}
+        {!p.canRender && <div className="text-xs text-neutral-400" data-tip="The Render button stays off until this is done.">{p.isBuiltIn ? "Fix the scene list first (Script → Scene list)." : "Write or load the page first (Script)."}</div>}
       </section>
       {p.made.length > 0 && (
         <section className="flex flex-col gap-1">
-          <div className="label-etched">Made</div>
+          <div className="label-etched" data-tip="The files that were just made. Click one to show it in its folder.">Made</div>
           {p.made.map((f) => <button key={f} className="text-left text-sm underline decoration-dotted text-neutral-200" data-tip="Show this file in Explorer." onClick={() => window.byok.explainer.reveal(f)}>{f.split(/[\\/]/).pop()}</button>)}
-          {p.isBuiltIn && <div className="text-xs text-neutral-400 mt-1">For puppets on top: the .spots.json next to the video says where each face goes — see the README.</div>}
+          {p.isBuiltIn && <div className="text-xs text-neutral-400 mt-1" data-tip="A small file saying where each puppet face should be placed on top of the video.">For puppets on top: the .spots.json next to the video says where each face goes — see the README.</div>}
         </section>
       )}
     </>
@@ -523,7 +523,7 @@ function ImportDialog({ onClose, onImported }: { onClose: () => void; onImported
         </ol>
         <p className="text-xs text-neutral-400 m-0">The styles belong to their creator. Video Forge doesn't include them; your copy stays on this computer. Imported styles are experimental: a model writes a new animation each time.</p>
         <textarea value={text} onChange={(e) => setText(e.target.value)} rows={8} className="font-mono text-xs" placeholder="Paste the Copy prompt here…" data-tip="Paste the whole prompt from the atlas." />
-        {error && <div className="text-sm text-rose-300">{error}</div>}
+        {error && <div className="text-sm text-rose-300" data-tip="The style could not be added. Check you pasted the whole prompt from the atlas, then try again.">{error} Check you pasted the whole prompt, then press Import again.</div>}
         <div className="flex gap-2 justify-end">
           <HudButton data-tip="Close without importing." onClick={onClose}>Cancel</HudButton>
           <HudButton tone="good" data-tip="Read the prompt and add the style." disabled={!text.trim()} onClick={async () => {

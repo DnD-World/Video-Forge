@@ -13,6 +13,7 @@
 
 import { request } from "./http";
 import * as keyStore from "../keyStore";
+import { PROVIDERS } from "../../tools/lib/explainerLlm.mjs";
 
 export interface ProviderTestResult {
   ok: boolean;
@@ -170,6 +171,17 @@ export async function testProvider(
         const r = await request(
           `https://freesound.org/apiv2/search/text/?query=dog&page_size=1&token=${encodeURIComponent(key)}`
         );
+        return interpret(r.status, r.body);
+      }
+
+      // The four "chat" providers the explainer and character helpers can use.
+      // Listing models is free and needs a valid key.
+      case "groq":
+      case "cerebras":
+      case "openai":
+      case "mistral": {
+        const base = PROVIDERS[providerId].base;
+        const r = await request(`${base}/models`, { headers: { Authorization: `Bearer ${key}` } });
         return interpret(r.status, r.body);
       }
 

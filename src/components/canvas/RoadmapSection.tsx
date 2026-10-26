@@ -34,7 +34,7 @@ const UPCOMING: Upcoming[] = [
 
 export function RoadmapSection() {
   return (
-    <section className="flex flex-col gap-3 opacity-50">
+    <section className="flex flex-col gap-3 opacity-50" data-tip="Ideas that are not built yet. They are greyed out and do nothing.">
       <h2 className="label-etched">Coming Soon</h2>
       <p className="text-sm text-neutral-500">
         Planned and greyed out until they're wired up.

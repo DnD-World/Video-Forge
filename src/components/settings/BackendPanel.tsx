@@ -27,7 +27,7 @@ const ACCENT_PRESETS = [
   { name: "Ice", hex: "#9FC6D8" },
 ];
 
-type Access = "instant" | "approval";
+type Access = "instant" | "paid" | "approval";
 
 interface Provider {
   id: string;
@@ -71,6 +71,34 @@ const PROVIDERS: Provider[] = [
     label: "NVIDIA",
     what: "Writes and polishes your script with GLM-5.2. Free to use.",
     url: "https://build.nvidia.com/",
+    access: "instant",
+  },
+  {
+    id: "groq",
+    label: "Groq",
+    what: "A fast, free-tier brain for writing explainer scene lists and character cards. The easiest one to start with.",
+    url: "https://console.groq.com/keys",
+    access: "instant",
+  },
+  {
+    id: "cerebras",
+    label: "Cerebras",
+    what: "Another fast brain for explainers and character cards. Has a free tier.",
+    url: "https://cloud.cerebras.ai/platform/",
+    access: "instant",
+  },
+  {
+    id: "openai",
+    label: "OpenAI",
+    what: "A paid brain for explainers and character cards. It can also look at a picture to build a character from it.",
+    url: "https://platform.openai.com/api-keys",
+    access: "paid",
+  },
+  {
+    id: "mistral",
+    label: "Mistral",
+    what: "A brain for explainers and character cards. Has a free tier.",
+    url: "https://console.mistral.ai/api-keys",
     access: "instant",
   },
   {
@@ -118,6 +146,10 @@ const ACCESS_BADGE: Record<Access, { text: string; className: string }> = {
   instant: {
     text: "FREE · INSTANT",
     className: "bg-emerald-500/15 text-emerald-300",
+  },
+  paid: {
+    text: "PAID · INSTANT",
+    className: "bg-sky-500/15 text-sky-300",
   },
   approval: {
     text: "NEEDS APPROVAL",
