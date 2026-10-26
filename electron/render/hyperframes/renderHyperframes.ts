@@ -33,6 +33,16 @@ import { ffmpegBin } from "../../process/ffmpegPath";
 import { childEnv } from "../../net/childEnv";
 import { killTree, spawnTracked } from "../../process/childTree";
 import { NO_BROWSER_HELP, pickRenderBrowser } from "./renderBrowser";
+
+/**
+ * THE GRAPHICS CARD (Ak, 26 Oct 2026: "use the gpu"). HyperFrames draws and
+ * encodes on the processor unless told otherwise, and Video Forge never told
+ * it — every render so far ran on the CPU alone. --gpu encodes with the NVIDIA
+ * card (NVENC); --browser-gpu draws the frames with the graphics card instead
+ * of software. VIDEOFORGE_RENDER_CPU=1 goes back to the processor (for a
+ * machine without a usable card, or to keep the card cool).
+ */
+const gpuFlags = () => (process.env.VIDEOFORGE_RENDER_CPU === "1" ? [] : ["--gpu", "--browser-gpu"]);
 import { backgroundTiming } from "../../../src/lib/background/backgroundTiming";
 import { musicGainAt } from "../../../src/lib/audio/ducking";
 import { colorLookCss } from "../../../src/lib/background/colorLook";
@@ -309,7 +319,7 @@ export async function renderHyperframes(input: HyperframesInput): Promise<void> 
   const browser = pickRenderBrowser();
   const cli = require_.resolve("hyperframes/bin/hyperframes.mjs");
   try {
-    await run(process.execPath, [cli, "render", input.dir, "--output", input.outputPath, "--fps", String(props.fps), "--crf", String(input.crf), "--sdr", "--quiet"], {
+    await run(process.execPath, [cli, "render", input.dir, "--output", input.outputPath, "--fps", String(props.fps), "--crf", String(input.crf), "--sdr", ...gpuFlags(), "--quiet"], {
       // childEnv() carries the no-update / no-telemetry switches (it is the one
       // place engine environments are set).
       env: childEnv({ ELECTRON_RUN_AS_NODE: "1", ...(browser ? { HYPERFRAMES_BROWSER_PATH: browser } : {}) }),

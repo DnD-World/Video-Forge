@@ -44,7 +44,18 @@ Phase 2, 26 Oct (MEDIUM):
   - tuning the checks on Ak's ✓/✗ marks (needs his first reviews);
   - Nano Banana 2.1's batch price.
 
-Next: Phase 3 (LOW), the credit run, alongside Ak's reviews.
+Render proof (#7), 26 Oct:
+- Explainer: "near perfect" (Ak); well-timed sound effects would make it 100%.
+- Puppet lesson (101.1): renders on the GPU (NVENC; frames via the
+  complete Playwright headless shell, set to the NVIDIA card in Windows by
+  Ak). 7m25s took 13.2 min.
+- Open bugs:
+  (1) subtitles wrong in the first 30 s (Ak);
+  (2) the outro join stamps its last frames at 54 min, so the file reads
+      54 min long / 806 MB;
+  (3) explainer sound effects.
+
+Next: installers for both apps, then the "B" layout (Ak's pick). Phase 3 is on hold until Ak says so.
 Top risk: Google credit ends before Christmas.
 
 ## Phase 1 safety fixes — branch `phase1-vf-safety` (not merged, not pushed)
