@@ -125,7 +125,7 @@ export function WaveformControls({ value, onChange, label, canAnchorToFace = tru
 
           {!isOrbit(value.style) && (
             <div>
-              <div className="label-etched mb-2">Position</div>
+              <div data-tip="Where the moving sound bars sit on the picture." className="label-etched mb-2">Position</div>
               <div className="flex flex-wrap gap-2">
                 {POSITIONS.filter((p) => p !== "speaker" || canAnchorToFace).map((p) => (
                   <HudButton key={p} active={value.position === p} onClick={() => onChange({ position: p })} data-tip={`Places the moving picture ${POSITION_LABEL[p]}.`}>

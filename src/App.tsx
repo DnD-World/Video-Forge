@@ -153,6 +153,12 @@ export default function App() {
   });
   const setMode = (m: "puppet" | "explainer") => { setModeState(m); setSettingsOpen(false); try { localStorage.setItem("vf.mode", m); } catch { /* fine */ } };
   const view: "canvas" | "settings" | "narration" = settingsOpen ? "settings" : step === "script" ? "narration" : "canvas";
+  // Any screen can ask for the Settings page ("Open Settings" buttons in messages).
+  useEffect(() => {
+    const open = () => setSettingsOpen(true);
+    window.addEventListener("forge:open-settings", open);
+    return () => window.removeEventListener("forge:open-settings", open);
+  }, []);
   const goStep = (s: Step) => { setSettingsOpen(false); setStep(s); };
   const canvasRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -500,15 +506,15 @@ export default function App() {
               setForgeGoing(true);
               const ok = await window.byok.forge.openImageForge();
               setTimeout(() => setForgeGoing(false), 900);
-              if (!ok) alert("Image Forge isn't installed on this computer yet.");
+              if (!ok) alert("Image Forge isn't installed on this computer yet. Install Image Forge, then press this button again.");
             }}
           >
             <img src={imageMark} alt="" />
           </button>
         </div>
-        <div className="forge-name">
+        <div className="forge-name" data-tip="The name of this app. It makes videos with talking characters, using your own keys for the online helpers.">
           Video Forge
-          <small>AI video generator · BYOK</small>
+          <small>Talking-character videos</small>
         </div>
         <div className="ml-auto flex gap-2 items-center" role="group" aria-label="Kind of video">
           <HudButton data-tip="Puppet videos: talking characters, in four steps." active={mode === "puppet" && !settingsOpen} onClick={() => setMode("puppet")}>Puppet video</HudButton>
@@ -632,7 +638,7 @@ export default function App() {
               {/* Only on an empty frame — once there is narration it sat behind
                   the subtitles and read as part of them. */}
               {!narration && !attachedAudio && (
-                <span className="label-etched text-center leading-relaxed relative z-10">
+                <span className="label-etched text-center leading-relaxed relative z-10" data-tip="The shape of your video, how many pictures per second, and its size in pixels. Change them in the Look step.">
                   {render.format} · {fps} FPS
                   <br />
                   {render.width}×{render.height}

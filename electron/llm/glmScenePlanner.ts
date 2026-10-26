@@ -67,7 +67,7 @@ export async function draftScript(opts: DraftScriptOptions): Promise<string> {
 async function draftScriptNvidia(opts: DraftScriptOptions): Promise<string> {
   const apiKey = await keyStore.getKey("nvidia");
   if (!apiKey) {
-    throw new Error("No NVIDIA API key saved — add one in Backend Settings first.");
+    throw new Error("No NVIDIA API key saved — add one in Settings (the gear, top right) first.");
   }
   if (opts.speakerLabels.length === 0) {
     throw new Error("Add at least one speaker before generating a script draft.");

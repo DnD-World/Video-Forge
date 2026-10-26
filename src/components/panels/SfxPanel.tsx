@@ -12,6 +12,8 @@
 // ---------------------------------------------------------------------------
 
 import { useState } from "react";
+import { ErrorLine } from "../ui/ErrorLine";
+import { plainError } from "../../lib/plainError";
 import { Empty } from "../ui/Empty";
 import { NumberField } from "../ui/NumberField";
 import { HudButton } from "../ui/HudButton";
@@ -61,7 +63,7 @@ export function SfxPanel() {
       setHits(res.hits);
       setNotes(res.notes);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(plainError(e, "Check your internet, then search again."));
     } finally {
       setBusy(null);
     }
@@ -74,7 +76,7 @@ export function SfxPanel() {
       const filePath = await window.byok.media.download(hit.id, hit.url);
       addSfx({ filePath, label: hit.name, atMs: nextAtMs, volume: 0.8 });
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(plainError(e, "Pick a different sound, or search again."));
     } finally {
       setBusy(null);
     }
@@ -90,11 +92,11 @@ export function SfxPanel() {
 
       {/* Stated plainly because the obvious question is "why isn't Pixabay
           here too, like it is for backgrounds". */}
-      <p className="text-sm text-neutral-500">
-        Search covers <strong className="text-neutral-300">Freesound, CC0 only</strong> — nothing
+      <p data-tip="Where the sound search looks: only Freesound sounds that are free to use without credit." className="text-sm text-neutral-500">
+        Search covers <strong data-tip="Freesound is a free sound library. CC0 means anyone may use the sound for anything, no credit needed." className="text-neutral-300">Freesound, CC0 only</strong> — nothing
         found here needs crediting or a licence. Pixabay and Envato have no public
         audio API, so their sounds can't be searched from inside the app; download
-        them in a browser and bring them in with <em>Add from disk</em>.
+        them in a browser and bring them in with <em data-tip="Use a sound file already on your computer.">Add from disk</em>.
       </p>
 
       <div className="flex items-center gap-2">
@@ -116,10 +118,10 @@ export function SfxPanel() {
         aren't offered.
       </p>
 
-      {busy && <p className="label-etched text-accent-bright">{busy}</p>}
-      {error && <p className="text-sm text-red-400">{error}</p>}
+      {busy && <p data-tip="What the app is doing right now. Wait for it to finish." className="label-etched text-accent-bright">{busy}</p>}
+      {error && <ErrorLine tip="The sound search did not work. Check your internet and your Freesound key in Settings, then search again." className="text-sm text-red-400" text={error} />}
       {notes.map((n, i) => (
-        <p key={i} className="text-sm text-amber-400">{n}</p>
+        <p data-tip="A heads-up from the search. It did not stop it." key={i} className="text-sm text-amber-400">{n}</p>
       ))}
 
       {hits.length > 0 && (
@@ -143,7 +145,7 @@ export function SfxPanel() {
         {sfx.length === 0 && (
           <Empty>
             No effects yet. Each one plays once, at the second you give it, over
-            everything else — effects aren't ducked.
+            everything else — effects don't get quieter when someone talks.
           </Empty>
         )}
         {sfx.map((c) => (
@@ -162,7 +164,7 @@ export function SfxPanel() {
             </div>
             <div className="flex items-center gap-3">
               <label className="flex items-center gap-1.5">
-                <span className="label-etched">at</span>
+                <span data-tip="At what second of the video the sound plays." className="label-etched">at</span>
                 <NumberField
                   aria-label={`Seconds into the video for ${c.label}`}
                   data-tip="When the sound plays, counted in seconds from the start of the video."
@@ -174,10 +176,10 @@ export function SfxPanel() {
                     updateSfx(c.id, { atMs: Math.max(0, Math.round(secs * 1000)) })
                   }
                 />
-                <span className="label-etched">s</span>
+                <span data-tip="Seconds." className="label-etched">s</span>
               </label>
               <label className="flex items-center gap-1.5 flex-1">
-                <span className="label-etched">vol</span>
+                <span data-tip="Volume of this sound. Further right is louder." className="label-etched">vol</span>
                 <input
                   type="range"
                   min={0}

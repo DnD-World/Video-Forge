@@ -4,6 +4,7 @@
 // ---------------------------------------------------------------------------
 
 import { ManyVideos } from "../render/ManyVideos";
+import { plainError } from "../../lib/plainError";
 import { useState } from "react";
 import { HudButton } from "../ui/HudButton";
 import { MediaLibrary } from "./MediaLibrary";
@@ -87,13 +88,13 @@ export function ScenePanel({
       );
       setSrtNote(`Saved ${target.split(/[\\/]/).pop()}`);
     } catch (e) {
-      setSrtNote(`Couldn't save it: ${e instanceof Error ? e.message : String(e)}`);
+      setSrtNote(`Couldn't save it: ${plainError(e, "Pick another folder and press Export again.")}`);
     }
   };
 
   return (
     <div className="flex flex-col h-full">
-      <h2 className="title-deco uppercase text-lg mb-3">{title}</h2>
+      <h2 data-tip="The name of the page you are on." className="title-deco uppercase text-lg mb-3">{title}</h2>
 
       {tabs.length > 1 && (
         <Tabs tabs={tabs.map((id) => ({ id, label: TAB_LABELS[id] }))} active={tab} onChange={setTab} data-tip="Switch between the groups of settings on this panel." />
@@ -106,7 +107,7 @@ export function ScenePanel({
                 A card placed in the composition would shift the narration and
                 every subtitle by its own length. */}
             <section className="space-y-2">
-              <div className="label-etched">Intro &amp; outro</div>
+              <div data-tip="A short clip before your video starts, and one after it ends." className="label-etched">Intro &amp; outro</div>
               {(["intro", "outro"] as const).map((which) => {
                 const key = which === "intro" ? "introPath" : "outroPath";
                 const value = cards[key];
@@ -123,7 +124,7 @@ export function ScenePanel({
                     >
                       {value ? `Change ${which}` : `Choose ${which}…`}
                     </HudButton>
-                    <span className="text-sm text-neutral-400 truncate flex-1">
+                    <span data-tip="The file you picked. “none” means you have not picked one." className="text-sm text-neutral-400 truncate flex-1">
                       {value ? value.split(/[\/]/).pop() : "none"}
                     </span>
                     {value && (
@@ -148,7 +149,7 @@ export function ScenePanel({
 
             {/* Drawn over everything, subtitles included. */}
             <section className="space-y-2">
-              <div className="label-etched">Logo</div>
+              <div data-tip="A small picture, like your logo, shown on top of the whole video." className="label-etched">Logo</div>
               <div className="flex items-center gap-2">
                 <HudButton
                   data-tip="Pick a picture (like your logo) to show on top of the whole video."
@@ -161,7 +162,7 @@ export function ScenePanel({
                 >
                   {logo.filePath ? "Change logo" : "Choose logo…"}
                 </HudButton>
-                <span className="text-sm text-neutral-400 truncate flex-1">
+                <span data-tip="The picture you picked. “none” means you have not picked one." className="text-sm text-neutral-400 truncate flex-1">
                   {logo.filePath ? logo.filePath.split(/[\/]/).pop() : "none"}
                 </span>
                 {logo.filePath && (
@@ -246,7 +247,7 @@ export function ScenePanel({
               </div>
             </section>
             <section>
-              <div className="label-etched mb-2">Aspect Ratio</div>
+              <div data-tip="The shape of your video: tall for phones, wide for TV, square for feeds." className="label-etched mb-2">Aspect Ratio</div>
               <div className="flex gap-2">
                 <HudButton
                   data-tip="Tall, phone-style picture. Good for Shorts, TikTok and Reels."
@@ -280,7 +281,7 @@ export function ScenePanel({
             </section>
 
             <section>
-              <div className="label-etched mb-2">Frame Rate</div>
+              <div data-tip="Pictures per second. More means smoother movement but a bigger file and a slower make." className="label-etched mb-2">Frame Rate</div>
               <div className="flex gap-2">
                 {FPS_OPTIONS.map((f) => (
                   <HudButton key={f} active={fps === f} onClick={() => setFps(f)} data-tip={`Draws ${f} pictures every second. More = smoother but slower to make.`}>
@@ -299,9 +300,9 @@ export function ScenePanel({
         {tab === "motion" && (
           <>
             <section>
-              <div className="label-etched mb-2">Lip-sync</div>
+              <div data-tip="How the mouths move with the voice." className="label-etched mb-2">Lip-sync</div>
               <Slider
-                data-tip="How smoothly one mouth shape melts into the next while someone talks. 0 = sudden jumps." label="Mouth Crossfade" value={visemeFadeMs} min={0} max={200} step={5}
+                data-tip="How smoothly one mouth shape melts into the next while someone talks. 0 = sudden jumps." label="Mouth blending" value={visemeFadeMs} min={0} max={200} step={5}
                 onChange={(v) => setVisemeFadeMs(Math.round(v))}
                 format={(v) => (v === 0 ? "hard cut" : `${Math.round(v)} ms`)}
               />
@@ -371,7 +372,7 @@ export function ScenePanel({
                 <SubtitleFontPicker />
 
                 <div>
-                  <div className="label-etched mb-2">Position</div>
+                  <div data-tip="Where the subtitles sit on the picture." className="label-etched mb-2">Position</div>
                   <div className="flex flex-wrap gap-2">
                     {SUB_POS.map((p) => (
                       <HudButton
@@ -396,7 +397,7 @@ export function ScenePanel({
                   format={(v) => (v === 0 ? "none" : `${Math.round(v * 100)}%`)}
                 />
                 <div>
-                  <div className="label-etched mb-2">Mark the spoken word</div>
+                  <div data-tip="How the word being spoken right now is shown in the subtitles." className="label-etched mb-2">Mark the spoken word</div>
                   <div className="flex flex-wrap gap-2">
                     {([
                       ["glow", "glow"],
@@ -463,7 +464,7 @@ export function ScenePanel({
                         onChange={(e) => setSubtitles({ [key]: e.target.value })}
                         className="h-9 w-9 border border-accent/30 bg-transparent p-0"
                       />
-                      <span className="text-sm text-neutral-400">{label}</span>
+                      <span data-tip="Which part of the subtitles this colour is for. Click the colour box next to it to change it." className="text-sm text-neutral-400">{label}</span>
                     </label>
                   ))}
                 </div>
@@ -475,14 +476,14 @@ export function ScenePanel({
 
                 <div className="border-t border-accent/15 pt-4 space-y-2">
                   <HudButton onClick={exportSrt} disabled={!narration} data-tip="Saves the words and their timing as a subtitle file (.srt) for sites that add their own captions.">
-                    Export .srt
+                    Export subtitle file (.srt)
                   </HudButton>
                   <p className="text-sm text-neutral-500">
                     The same lines and the same timing the video burns in, as a subtitle
                     file — for platforms that want their own captions. Styling isn't
                     carried: an .srt is text and timing, and the player draws it.
                   </p>
-                  {srtNote && <p className="text-sm text-accent-bright">{srtNote}</p>}
+                  {srtNote && <p data-tip="What happened when the subtitle file was made. If it says something went wrong, try the button again." className="text-sm text-accent-bright">{srtNote}</p>}
                 </div>
               </>
             )}

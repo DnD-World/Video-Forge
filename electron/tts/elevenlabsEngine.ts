@@ -123,7 +123,7 @@ export async function synthesize(
   const apiKey = await keyStore.getKey("elevenlabs");
   if (!apiKey) {
     throw new Error(
-      "No ElevenLabs API key saved — add one in Backend Settings first."
+      "No ElevenLabs API key saved — add one in Settings (the gear, top right) first."
     );
   }
   if (!opts.voiceId) {
@@ -193,7 +193,7 @@ export async function synthesize(
       sampleRate = FALLBACK_RATE;
       res = await ask(sampleRate);
     } else {
-      throw new Error("ElevenLabs refused the key. Check it in Backend Settings.");
+      throw new Error("ElevenLabs refused the key. Check it in Settings (the gear, top right).");
     }
   }
 
@@ -202,7 +202,7 @@ export async function synthesize(
     // "unusual activity" has cost people hours of looking in the wrong place.
     const text = await res.text();
     if (res.status === 401) {
-      throw new Error("ElevenLabs refused the key. Check it in Backend Settings.");
+      throw new Error("ElevenLabs refused the key. Check it in Settings (the gear, top right).");
     }
     if (res.status === 422) {
       throw new Error(

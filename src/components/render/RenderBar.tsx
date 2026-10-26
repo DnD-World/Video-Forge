@@ -13,6 +13,8 @@
 // ---------------------------------------------------------------------------
 
 import { useEffect, useRef, useState } from "react";
+import { ErrorLine } from "../ui/ErrorLine";
+import { plainError } from "../../lib/plainError";
 import { NumberField } from "../ui/NumberField";
 import { HudButton } from "../ui/HudButton";
 import { Toggle } from "../ui/Toggle";
@@ -123,7 +125,7 @@ export function RenderBar() {
       setAttachedAudio({ filePath: p, analysis: null });
       setError(
         `Attached the audio, but couldn't analyse it (${e instanceof Error ? e.message : String(e)}). ` +
-          "It will still play; the waveform just won't follow it. 16-bit PCM WAV analyses reliably."
+          "It will still play; the sound bars just won't follow it. 16-bit PCM WAV analyses reliably."
       );
     } finally {
       setAnalyzing(false);
@@ -245,7 +247,7 @@ export function RenderBar() {
       setError(res.error ?? "Render failed.");
       return null;
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(plainError(e, "Press Render to try again. If it keeps failing, check the Cast and Script steps."));
       return null;
     } finally {
       if (!o.inLoop) setBusy(false);
@@ -279,7 +281,7 @@ export function RenderBar() {
       setNote(`Done — ${langs.length * shapes.length} videos`);
       void autoClean();
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(plainError(e, "Press Render to try again. If it keeps failing, check the Cast and Script steps."));
     } finally {
       setBusy(false);
     }
@@ -360,7 +362,7 @@ export function RenderBar() {
         </div>
       )}
 
-      {error && <p className="text-xs text-red-400 break-words">{error}</p>}
+      {error && <ErrorLine tip="The video could not be made. Read the message, fix the cause, and press Render again." className="text-xs text-red-400 break-words" text={error} />}
 
       {result && !busy && (
         <div className="flex flex-col gap-2">

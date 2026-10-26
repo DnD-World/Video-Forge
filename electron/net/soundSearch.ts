@@ -51,7 +51,7 @@ export async function searchSounds(query: string): Promise<SoundSearchResult> {
   if (!key) {
     return {
       hits: [],
-      notes: ["freesound: no API key saved — add one in Backend Settings."],
+      notes: ["freesound: no API key saved — add one in Settings (the gear, top right)."],
     };
   }
 

@@ -102,7 +102,7 @@ export function MediaLibrary({ onPick, shape }: Props) {
         ))}
       </div>
       {!loading && shown.length === 0 && (
-        <p className="text-sm text-neutral-500">
+        <p className="text-sm text-neutral-500" data-tip="This list is empty. Clips appear when you choose backgrounds automatically or by search.">
           {items.length === 0
             ? "Nothing downloaded yet. Clips arrive here when you choose backgrounds automatically or by search."
             : "None of the downloaded clips has this video's shape."}

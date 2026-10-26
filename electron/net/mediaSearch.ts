@@ -221,7 +221,7 @@ export async function searchVideos(
         const msg = e instanceof Error ? e.message : String(e);
         notes.push(
           msg === "no key"
-            ? `${p}: no API key saved — add one in Backend Settings.`
+            ? `${p}: no API key saved — add one in Settings (the gear, top right).`
             : `${p}: ${msg}`
         );
         return { p, hits: [] as MediaHit[] };

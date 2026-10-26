@@ -100,7 +100,7 @@ async function generate(apiKey: string, row: Row): Promise<Buffer> {
     if ((res.status === 401 || res.status === 403) && /tier|subscription|plan|pro/i.test(text)) {
       continue;
     }
-    if (res.status === 401) throw new Error("ElevenLabs refused the key. Check it in Backend Settings.");
+    if (res.status === 401) throw new Error("ElevenLabs refused the key. Check it in Settings (the gear, top right).");
     if (res.status === 429) throw new Error(`ElevenLabs: too many requests, or the credits are gone. ${text.slice(0, 200)}`);
     throw new Error(`ElevenLabs ${res.status} — ${text.slice(0, 300)}`);
   }
@@ -140,7 +140,7 @@ export async function makeSfxEleven(argv: string[]): Promise<void> {
   if (!apiKey) {
     const saved = await keyStore.listKeys();
     throw new Error(
-      `No ElevenLabs key saved — add one in Backend Settings. ` +
+      `No ElevenLabs key saved — add one in Settings (the gear, top right). ` +
         `Keys saved now: ${saved.length ? saved.join(", ") : "none"}.`
     );
   }

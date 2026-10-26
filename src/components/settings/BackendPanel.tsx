@@ -1,4 +1,5 @@
 import { LanguageCard, SayItCard } from "./SayItCard";
+import { plainError } from "../../lib/plainError";
 import { useEffect, useState } from "react";
 import { useSettingsStore } from "../../store/useSettingsStore";
 import { Toggle } from "../ui/Toggle";
@@ -27,7 +28,7 @@ const ACCENT_PRESETS = [
   { name: "Ice", hex: "#9FC6D8" },
 ];
 
-type Access = "instant" | "approval";
+type Access = "instant" | "paid" | "approval";
 
 interface Provider {
   id: string;
@@ -71,6 +72,34 @@ const PROVIDERS: Provider[] = [
     label: "NVIDIA",
     what: "Writes and polishes your script with GLM-5.2. Free to use.",
     url: "https://build.nvidia.com/",
+    access: "instant",
+  },
+  {
+    id: "groq",
+    label: "Groq",
+    what: "A fast, free-tier brain for writing explainer scene lists and character cards. The easiest one to start with.",
+    url: "https://console.groq.com/keys",
+    access: "instant",
+  },
+  {
+    id: "cerebras",
+    label: "Cerebras",
+    what: "Another fast brain for explainers and character cards. Has a free tier.",
+    url: "https://cloud.cerebras.ai/platform/",
+    access: "instant",
+  },
+  {
+    id: "openai",
+    label: "OpenAI",
+    what: "A paid brain for explainers and character cards. It can also look at a picture to build a character from it.",
+    url: "https://platform.openai.com/api-keys",
+    access: "paid",
+  },
+  {
+    id: "mistral",
+    label: "Mistral",
+    what: "A brain for explainers and character cards. Has a free tier.",
+    url: "https://console.mistral.ai/api-keys",
     access: "instant",
   },
   {
@@ -119,6 +148,10 @@ const ACCESS_BADGE: Record<Access, { text: string; className: string }> = {
     text: "FREE · INSTANT",
     className: "bg-emerald-500/15 text-emerald-300",
   },
+  paid: {
+    text: "PAID · INSTANT",
+    className: "bg-sky-500/15 text-sky-300",
+  },
   approval: {
     text: "NEEDS APPROVAL",
     className: "bg-amber-500/15 text-amber-300",
@@ -153,12 +186,12 @@ function PaidVoiceCard() {
         Let “Many videos” buy paid voice without asking each time
       </label>
       <div className="flex gap-3 flex-wrap text-sm items-center">
-        <label className="flex items-center gap-2">
+        <label data-tip="A safety limit on spending. The app stops buying voice once a whole sheet has used this many characters." className="flex items-center gap-2">
           Stop buying after
           <input type="number" min={0} step={1000} value={cap} onChange={(e) => setCap(Number(e.target.value))} className="w-28" data-tip="The most characters one whole sheet may buy. 0 means no limit. A character is one ElevenLabs credit." />
           characters
         </label>
-        <label className="flex items-center gap-2">
+        <label data-tip="What your plan charges per 1,000 characters. It is only used to show a cost estimate." className="flex items-center gap-2">
           Price per 1,000 characters (USD)
           <input type="number" min={0.01} step={0.01} value={price} onChange={(e) => setPrice(Number(e.target.value))} className="w-20" data-tip="Used only to turn characters into money in the question before a paid narration. It is your own plan's price: check it on the ElevenLabs site." />
         </label>
@@ -199,10 +232,10 @@ function LocalAiCard() {
           {busy ? "Testing…" : "Test"}
         </button>
       </div>
-      {state && !state.ok && <p className="text-sm text-amber-300">{state.problem}</p>}
+      {state && !state.ok && <p data-tip="LocalAI did not answer. Start LocalAI on this computer, then press Test again." className="text-sm text-amber-300">{state.problem}</p>}
       {state?.ok && (
         <div className="space-y-1 text-sm">
-          <p className="text-emerald-300">✓ Answering · {state.models?.length ?? 0} models</p>
+          <p data-tip="LocalAI answered, and this is how many models it has ready." className="text-emerald-300">✓ Answering · {state.models?.length ?? 0} models</p>
           {Object.entries(groups).map(([k, ids]) => (
             <p key={k} className="text-neutral-400">
               <b className="text-neutral-200 font-medium">{k}:</b> {ids.join(", ")}
@@ -227,7 +260,7 @@ function ClipStorage() {
   const over = stats && stats.bytes > limit * 1e9;
   return (
     <div className="border border-accent/25 bg-metal-800/60 p-4 space-y-3">
-      <h3 className="label-lit text-sm">Downloaded background clips</h3>
+      <h3 data-tip="Stock clips the app downloaded for backgrounds. Here you see how much room they use and can clear them." className="label-lit text-sm">Downloaded background clips</h3>
       <p className="text-sm text-neutral-400" title="Stock clips are downloaded for each video's background and kept so re-renders are fast.">
         {stats ? `${stats.files} clips, ${gb(stats.bytes)}` : "Counting…"}
         {over && !auto ? " — over your limit. Clean up, or switch on automatic clean-up." : ""}
@@ -240,7 +273,7 @@ function ClipStorage() {
         format={(v) => `${v} GB`}
         onChange={setLimit}
       />
-      <div className="flex items-center gap-3" title="After every render and when the app starts, the clips used longest ago are removed until the folder is under this limit. Clips your open project uses are kept. A removed clip downloads again if a video needs it.">
+      <div className="flex items-center gap-3" title="Old clips are removed after every render and when the app starts, until the folder is under your limit. Clips your open project uses are kept.">
         <Toggle label="Clean up automatically" checked={auto} onChange={setAuto} />
       </div>
       <div className="flex items-center gap-3">
@@ -255,7 +288,7 @@ function ClipStorage() {
         >
           Clean up now
         </HudButton>
-        {note && <span className="text-sm text-neutral-400">{note}</span>}
+        {note && <span data-tip="What the clean-up just did." className="text-sm text-neutral-400">{note}</span>}
       </div>
     </div>
   );
@@ -289,7 +322,7 @@ export default function BackendPanel() {
     } catch (e) {
       // Nothing was saved (e.g. the key file could not be read). The pasted key
       // stays in the box so it is not lost, and the reason is shown.
-      const why = (e instanceof Error ? e.message : String(e)).replace(/^Error invoking remote method '[^']+': (Error: )?/, "");
+      const why = plainError(e, "Press Save to try again.");
       setTests((t) => ({ ...t, [id]: { busy: false, result: { ok: false, message: why } } }));
       return;
     }
@@ -303,7 +336,7 @@ export default function BackendPanel() {
     try {
       await window.byok.keys.remove(id);
     } catch (e) {
-      const why = (e instanceof Error ? e.message : String(e)).replace(/^Error invoking remote method '[^']+': (Error: )?/, "");
+      const why = plainError(e, "Press Clear to try again.");
       setTests((t) => ({ ...t, [id]: { busy: false, result: { ok: false, message: why } } }));
       return;
     }
@@ -330,7 +363,7 @@ export default function BackendPanel() {
             ok: false,
             message: msg.includes("No handler registered")
               ? "This build of the app doesn't have the connectivity test yet — fully quit and restart the app (Ctrl+C the dev server and run npm run dev again)."
-              : `Test couldn't run — ${msg}`,
+              : `Test couldn't run — ${msg}. Press Test to try again.`,
           },
         },
       }));
@@ -339,9 +372,9 @@ export default function BackendPanel() {
 
   return (
     <div className="p-6 space-y-4 overflow-y-auto h-full">
-      <h2 className="label-lit text-base">API Keys &amp; Backend</h2>
+      <h2 data-tip="Where you paste the keys for online helpers and set the app up. A key is like a password for a service." className="label-lit text-base">Keys and settings</h2>
       <p className="text-sm">
-        Keys are encrypted with your OS keychain and never leave this machine.
+        Keys are encrypted with your computer's password store and never leave this machine.
         Paste a key, press Save, then press Test to confirm it actually works —
         Test makes one real call to the provider.
       </p>
@@ -357,9 +390,9 @@ export default function BackendPanel() {
           still respected). */}
       {!encryptionAvailable && (
         <p className="text-sm text-accent-bright border border-accent-deep/40 bg-accent-deep/10 px-3 py-2">
-          Your OS keychain isn't available, so keys are being saved to a
+          Your computer's password store isn't available, so keys are being saved to a
           local file instead of encrypted storage. They still never leave
-          this machine, but consider unlocking your OS keychain for
+          this machine, but consider unlocking your computer's password store for
           stronger protection.
         </p>
       )}
@@ -374,18 +407,18 @@ export default function BackendPanel() {
             className="border p-4 border-accent/25 bg-metal-800/60"
           >
             <div className="flex items-center justify-between mb-1 gap-3">
-              <span className="text-base text-neutral-200">
+              <span data-tip="The name of the online service this key box is for." className="text-base text-neutral-200">
                 {p.label}
-                <span className={`ml-2 px-2 py-0.5 text-sm ${badge.className}`}>
+                <span data-tip="Whether the service is free, paid, or needs approval before you get a key." className={`ml-2 px-2 py-0.5 text-sm ${badge.className}`}>
                   {badge.text}
                 </span>
               </span>
               {isSaved && (
-                <span className="text-sm text-emerald-400 shrink-0">saved ✓</span>
+                <span data-tip="A key for this service is already saved on this computer." className="text-sm text-emerald-400 shrink-0">saved ✓</span>
               )}
             </div>
 
-            <p className="text-sm mb-2">{p.what}</p>
+            <p data-tip="What this service does for you in the app, and what it costs." className="text-sm mb-2">{p.what}</p>
 
             <a
               href={p.url}
@@ -451,11 +484,11 @@ export default function BackendPanel() {
       })}
 
       <div className="border border-accent/25 bg-metal-800/60 p-4">
-        <h3 className="label-lit text-sm mb-2">Voice Engines — no API key needed</h3>
+        <h3 data-tip="Voices that run on your own computer. They need no key and no sign-up." className="label-lit text-sm mb-2">Free voices on your computer — no key needed</h3>
         <p className="text-sm">
           Piper runs entirely on your own machine, so there's nothing to sign up
           for and nothing to paste. What it asks for below are{" "}
-          <em>folder paths</em> on this computer — where you installed it — not
+          <em data-tip="A folder path is the address of a folder on your computer, like C:\Piper.">folder paths</em> on this computer — where you installed it — not
           keys. Piper is the fast local voice, correct and flat, and it is right
           for checking timing. DramaBox is the one that acts, and it generates on
           a rented GPU rather than here — the app writes its files from the

@@ -29,7 +29,7 @@ let working: string | null = null;
 export async function geminiJson(system: string, user: string): Promise<string> {
   const key = await keyStore.getKey("gemini");
   if (!key) {
-    throw new Error("No Gemini key saved (Backend Settings → Gemini), so Gemini cannot plan the footage.");
+    throw new Error("No Gemini key saved (Settings → Gemini), so Gemini cannot plan the footage.");
   }
 
   const order = working ? [working, ...MODELS.filter((m) => m !== working)] : MODELS;

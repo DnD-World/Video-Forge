@@ -210,7 +210,7 @@ export function ManyVideos() {
           onChange={(e) => setUrl(e.target.value)}
           placeholder="Paste a Google Sheet link (or a .csv file path)"
           className="flex-1 min-w-0"
-          data-tip="In the sheet: Share → General access → Anyone with the link (Viewer). Then copy the link. No Google account setup or keys needed."
+          data-tip="In the sheet, press Share and set it to “Anyone with the link”, then copy the link. No keys needed."
         />
         <button
           className="btn"
@@ -240,19 +240,19 @@ export function ManyVideos() {
       <details className="forge-sec">
         <summary data-tip="Which columns the sheet can have. Only script is required.">Columns</summary>
         <ul className="text-sm text-neutral-400 space-y-1 pt-2">
-          <li><b>script</b> — the lines, «Name: words», one per line (required)</li>
-          <li><b>name</b> — the video's file name</li>
-          <li><b>topic</b> — a few words, for choosing background clips</li>
-          <li><b>template</b> — a look by name, e.g. «News desk» (empty = this project's look)</li>
-          <li><b>format</b> — 9:16, 16:9, 1:1 or 4:5 · <b>music</b> / <b>backgrounds</b> — auto or none · <b>language</b> — el, en…</li>
+          <li><b data-tip="The only column you must have: the lines to speak, one per line, like “Name: words”.">script</b> — the lines, «Name: words», one per line (required)</li>
+          <li><b data-tip="What to call the finished video file.">name</b> — the video's file name</li>
+          <li><b data-tip="A few words about the video, used to pick background clips.">topic</b> — a few words, for choosing background clips</li>
+          <li><b data-tip="The name of a look to use, for example “News desk”. Empty means this project’s look.">template</b> — a look by name, e.g. «News desk» (empty = this project's look)</li>
+          <li><b data-tip="The video shape: 9:16 tall, 16:9 wide, 1:1 square or 4:5.">format</b> — 9:16, 16:9, 1:1 or 4:5 · <b data-tip="Music for this video: auto picks one, none leaves it out.">music</b> / <b data-tip="Background clips for this video: auto picks them, none leaves them out.">backgrounds</b> — auto or none · <b data-tip="The language code, for example el for Greek or en for English.">language</b> — el, en…</li>
         </ul>
       </details>
 
-      {problem && <p className="text-sm text-red-400">{problem}</p>}
+      {problem && <p data-tip="There is a problem with the sheet. Fix it in the sheet, then press Check again." className="text-sm text-red-400">{problem}</p>}
 
       {rows.length > 0 && (
         <div className="flex flex-col gap-2">
-          <div className="label-etched">{good} of {rows.length} ready</div>
+          <div data-tip="How many rows in the sheet are ready to become a video." className="label-etched">{good} of {rows.length} ready</div>
           <div className="forge-many">
             {rows.map((row, i) => {
               const c = checks[i];
@@ -285,7 +285,7 @@ export function ManyVideos() {
               </button>
             )}
           </div>
-          {finished && <p className="text-sm text-neutral-300">{finished}</p>}
+          {finished && <p data-tip="How the run ended. Open the folder to see the videos that were made." className="text-sm text-neutral-300">{finished}</p>}
         </div>
       )}
     </section>

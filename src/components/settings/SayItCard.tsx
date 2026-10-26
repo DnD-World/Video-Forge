@@ -70,7 +70,7 @@ export function LanguageCard() {
   ];
   return (
     <div className="forge-sec space-y-3">
-      <div className="label-lit">Language</div>
+      <div data-tip="The language the app’s own buttons and words are in." className="label-lit">Language</div>
       <p className="text-sm text-neutral-400">
         The language the app's own words are in. More are coming once the app has settled. Your videos can already be in Greek, English and more.
       </p>

@@ -12,6 +12,7 @@
 // ---------------------------------------------------------------------------
 
 import { useEffect, useState } from "react";
+import { plainError } from "../../lib/plainError";
 import { HudButton } from "../ui/HudButton";
 import { useProjectStore } from "../../store/useProjectStore";
 import { useTemplatesStore } from "../../store/useTemplatesStore";
@@ -160,7 +161,7 @@ export function PresetsPanel() {
       loadSnapshot(parsed);
       setNote(`Loaded ${src.split(/[\\/]/).pop()}`);
     } catch (e) {
-      setNote(`Couldn't read that preset — ${e instanceof Error ? e.message : String(e)}`);
+      setNote(`Couldn't read that preset — ${plainError(e, "Pick a preset file that was saved from Video Forge.")}`);
     }
   };
 
@@ -185,7 +186,7 @@ export function PresetsPanel() {
       const buf = await window.byok.storage.readFile(src);
       const opened = docToProject(JSON.parse(new TextDecoder().decode(buf)));
       if (!opened.ok) {
-        setNote(opened.message);
+        setNote(`${opened.message} Pick a project file that was saved from Video Forge.`);
         return;
       }
       loadProject(opened.project);
@@ -225,7 +226,7 @@ export function PresetsPanel() {
       }
       setNote(`Opened ${src.split(/[\\/]/).pop()}`);
     } catch (e) {
-      setNote(`Couldn't read that project — ${e instanceof Error ? e.message : String(e)}`);
+      setNote(`Couldn't read that project — ${plainError(e, "Pick a project file that was saved from Video Forge.")}`);
     }
   };
 
@@ -235,7 +236,7 @@ export function PresetsPanel() {
   return (
     <div className="space-y-6">
       <section className="space-y-3">
-        <div className="label-etched">Templates</div>
+        <div data-tip="Ready-made looks. Click one to restyle your video in one go." className="label-etched">Templates</div>
         {/* A GALLERY THAT MOVES (Ak's "first-minute wow", 10 Oct 2026). Each
             tile is a tiny live sketch of its look in the cast's own colours;
             hover makes it talk, click applies it. */}
@@ -291,7 +292,7 @@ export function PresetsPanel() {
       </section>
 
       <section className="space-y-3 border-t border-accent/15 pt-5">
-        <div className="label-etched">Your presets</div>
+        <div data-tip="Looks you saved yourself. Click one to use it again." className="label-etched">Your presets</div>
         <div className="flex gap-2">
           <input
             type="text" placeholder="Name this look…" value={name}
@@ -314,13 +315,13 @@ export function PresetsPanel() {
         </div>
 
         {saved.length === 0 ? (
-          <p className="text-sm text-neutral-500">Nothing saved yet.</p>
+          <p data-tip="You have not saved a look yet. Name one above and press Save to keep it." className="text-sm text-neutral-500">Nothing saved yet.</p>
         ) : (
           saved.map(([key, tpl]) => (
             <div key={key} className="flex items-center justify-between gap-2 border border-accent/20 bg-metal-900/60 px-3 py-2">
               <div className="min-w-0">
-                <div className="text-base text-neutral-200 truncate">{key}</div>
-                <div className="text-sm text-neutral-500">
+                <div data-tip="The name you gave this saved look." className="text-base text-neutral-200 truncate">{key}</div>
+                <div data-tip="The day you saved this look." className="text-sm text-neutral-500">
                   {new Date(tpl.savedAt).toLocaleDateString()}
                 </div>
               </div>
@@ -338,7 +339,7 @@ export function PresetsPanel() {
           two separate is the point: "try a different look" must not throw away
           your script, and "open last week's video" must not be a look. */}
       <section className="space-y-3 border-t border-accent/15 pt-5">
-        <div className="label-etched">Project</div>
+        <div data-tip="Save or open a whole video job: script, voices, look, everything." className="label-etched">Project</div>
         <p className="text-sm text-neutral-500">
           Everything, not just the look. Your work is autosaved as you go — this
           is for keeping named copies and moving them between machines.
@@ -354,7 +355,7 @@ export function PresetsPanel() {
           Only offered when a brand pack with a sample is switched on. */}
       {brand && sample && (
         <section className="space-y-3 border-t border-accent/15 pt-5">
-          <div className="label-etched">Sample project</div>
+          <div data-tip="A finished example you can open to see how a video is set up." className="label-etched">Sample project</div>
           <p className="text-sm text-neutral-500">
             "{sample.name}" — the {brand.name} characters, a written script, the
             house look and subtitles. Press Render and you get a video. It
@@ -381,18 +382,18 @@ export function PresetsPanel() {
       )}
 
       <section className="space-y-3 border-t border-accent/15 pt-5">
-        <div className="label-etched">Share the look as a file</div>
+        <div data-tip="Turn your look into a file to share or back up, or load one from a file." className="label-etched">Share the look as a file</div>
         <div className="flex gap-2">
           <HudButton onClick={exportPreset} data-tip="Saves your current look as a small file you can share or keep as a backup.">Export…</HudButton>
           <HudButton onClick={importPreset} data-tip="Loads a look from a file someone shared with you.">Import…</HudButton>
         </div>
         <p className="text-sm text-neutral-500">
-          Presets are plain JSON, so an assistant can write one for you and you
-          just import it.
+          A preset is a small text file, so an AI helper can write one for you
+          and you just import it.
         </p>
       </section>
 
-      {note && <p className="text-sm text-accent-bright">{note}</p>}
+      {note && <p data-tip="What just happened. If it says something went wrong, read it and try the button again." className="text-sm text-accent-bright">{note}</p>}
     </div>
   );
 }
