@@ -11,6 +11,7 @@ import { WaveformScene } from "./components/canvas/WaveformScene";
 import { BackgroundScene } from "./components/canvas/BackgroundScene";
 import { SubtitleScene } from "./components/canvas/SubtitleScene";
 import { TimelineStrip } from "./components/canvas/TimelineStrip";
+import { NextStep, StepColumn, useFolded } from "./components/ui/StepColumn";
 import { usePreviewPlayer } from "./lib/motion/usePreviewPlayer";
 import { buildCues } from "./lib/subtitles/wordTiming";
 import { buildSpeakerVisemeTracks } from "./lib/visemes/speakerTracks";
@@ -115,10 +116,7 @@ export default function App() {
   const [snapToGrid, setSnapToGrid] = useState(true);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   // The steps column can fold to its numbers, handing the room to the preview.
-  const [folded, setFoldedState] = useState(() => {
-    try { return localStorage.getItem("vf.stepsFolded") === "1"; } catch { return false; }
-  });
-  const setFolded = (f: boolean) => { setFoldedState(f); try { localStorage.setItem("vf.stepsFolded", f ? "1" : "0"); } catch { /* fine */ } };
+  const [folded, setFolded] = useFolded("vf.stepsFolded");
   // "Many videos" opens Make on its own tab.
   const [makeTab, setMakeTab] = useState<"render" | "many">("render");
 
@@ -428,6 +426,9 @@ export default function App() {
     };
   }, [draggingId, snapToGrid, updateSpeaker]);
 
+  const nextStep = STEPS[STEPS.findIndex((x) => x.id === step) + 1];
+  const nextButton = nextStep ? <NextStep label={nextStep.title} tip={`Goes on to step ${STEPS.indexOf(nextStep) + 1}: ${nextStep.title} (${nextStep.sub.toLowerCase()}).`} onClick={() => goStep(nextStep.id)} /> : null;
+
   return (
     // No background class here on purpose: the brushed-metal ground is a fixed
     // layer behind the whole app, and an opaque shell would paint over it.
@@ -498,72 +499,28 @@ export default function App() {
       ) : (
       <div className="forge-studio flex flex-1 gap-3 px-3 pb-3 min-h-0">
         {/* LEFT: the four steps, top to bottom; the one you are on opens in place. */}
-        <aside
-          ref={asideFlare.ref}
-          onClick={asideFlare.fire}
-          className={`forge-studio-left panel-hud hud-flare-target relative min-h-0 ${folded ? "folded" : ""}`}
-          style={{ width: folded ? 84 : STEP_WIDTH[step] }}
-          aria-label="Your video, step by step"
+        <StepColumn
+          steps={STEPS.map((st) => ({ ...st, status: stepStatus(st.id) }))}
+          current={step}
+          onGo={goStep}
+          width={STEP_WIDTH[step]}
+          folded={folded}
+          setFolded={setFolded}
+          flareRef={asideFlare.ref}
+          onFlare={asideFlare.fire}
+          decor={<HudCorners />}
+          foot={nextButton}
         >
-          <HudCorners />
-          <button
-            className="forge-fold"
-            onClick={(e) => { e.stopPropagation(); setFolded(!folded); }}
-            aria-label={folded ? "Open the steps" : "Fold the steps away"}
-            data-tip={folded ? "Opens the steps column again." : "Folds the steps to their numbers, so the preview gets the room."}
-          >
-            {folded ? "›" : "‹"}
-          </button>
-          {!folded && <div className="label-etched forge-stepper-title" data-tip="The four steps that make a video, in order. The one you are on is open.">Your video, step by step</div>}
-          <ol className="forge-stepper">
-            {STEPS.map((st, i) => {
-              const at = STEPS.findIndex((x) => x.id === step);
-              const state = st.id === step ? "on" : i < at ? "done" : "";
-              return (
-                <li key={st.id} className={`forge-sstep ${state}`}>
-                  <button
-                    className="head"
-                    onClick={() => { if (folded && st.id === step) setFolded(false); goStep(st.id); }}
-                    aria-current={state === "on" ? "step" : undefined}
-                    data-tip={`Step ${i + 1} of 4: ${st.title} (${st.sub.toLowerCase()}). ${state === "on" ? "You are here." : "Click to go there."}`}
-                  >
-                    <span className="n">{state === "done" ? "✓" : i + 1}</span>
-                    {!folded && (
-                      <span className="t">
-                        {st.title}
-                        <small>{stepStatus(st.id)}</small>
-                      </span>
-                    )}
-                  </button>
-                  {!folded && st.id === step && (
-                    <div className="body">
-                      {st.id === "cast" ? (
-                        <CastPanel />
-                      ) : st.id === "script" ? (
-                        <NarrationPanel />
-                      ) : st.id === "look" ? (
-                        <ScenePanel key="look" title="Look" tabs={["presets", "background", "subtitles", "music", "sfx", "motion"]} />
-                      ) : (
-                        <ScenePanel key={`make-${makeTab}`} title="Make" tabs={makeTab === "many" ? ["many", "render", "extras", "shape"] : ["render", "many", "extras", "shape"]} />
-                      )}
-                    </div>
-                  )}
-                </li>
-              );
-            })}
-          </ol>
-          {!folded && step !== "make" && (
-            <div className="forge-studio-foot">
-              <button
-                className="forge-next"
-                data-tip="Goes on to the next step."
-                onClick={() => goStep(STEPS[STEPS.findIndex((x) => x.id === step) + 1].id)}
-              >
-                Next: {STEPS[STEPS.findIndex((x) => x.id === step) + 1].title} →
-              </button>
-            </div>
+          {step === "cast" ? (
+            <CastPanel />
+          ) : step === "script" ? (
+            <NarrationPanel />
+          ) : step === "look" ? (
+            <ScenePanel key="look" title="Look" tabs={["presets", "background", "subtitles", "music", "sfx", "motion"]} />
+          ) : (
+            <ScenePanel key={`make-${makeTab}`} title="Make" tabs={makeTab === "many" ? ["many", "render", "extras", "shape"] : ["render", "many", "extras", "shape"]} />
           )}
-        </aside>
+        </StepColumn>
 
         {/* RIGHT: the preview — always — with the play controls and the timeline strip under it. */}
         <main
@@ -785,10 +742,16 @@ export default function App() {
               // the audio's own length once it has loaded; the narration's end until then
               durationMs={player.durationMs || (narration?.segments?.length ? narration.segments[narration.segments.length - 1].endMs : 0)}
               timeMs={player.timeMs}
-              voices={narration?.segments ?? []}
-              backgrounds={backgrounds}
-              colorOf={(id) => speakerColors[id] ?? "rgba(118,255,194,.6)"}
-              labelOf={(id) => speakers.find((x) => x.id === id)?.label ?? ""}
+              top={(narration?.segments ?? []).map((v) => ({
+                startMs: v.startMs,
+                endMs: v.endMs,
+                color: speakerColors[v.speakerId] ?? "rgba(118,255,194,.6)",
+                tip: `${speakers.find((x) => x.id === v.speakerId)?.label ?? v.speakerLabel}: “${v.text.length > 90 ? v.text.slice(0, 88) + "…" : v.text}”`,
+              }))}
+              bottom={backgrounds.map((b, i) => ({ startMs: b.startMs, endMs: b.endMs, tip: `Background clip ${i + 1}` }))}
+              tip="The whole video: who speaks when (top, in their colour) and the background clips (bottom). Click or drag to jump to that moment."
+              emptyText="The video's timeline appears here once the narration is made"
+              emptyTip="Once the narration is made (step 2), this strip shows who speaks when and which background is on, and you can click it to jump anywhere."
               onSeek={player.seek}
             />
             </div>

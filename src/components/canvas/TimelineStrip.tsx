@@ -1,40 +1,48 @@
 // ---------------------------------------------------------------------------
 // The strip under the preview (the "B" layout, Ak's pick, 26 Oct 2026): the
-// whole video at a glance — who speaks when, which background clip is on —
-// with the play head moving along it. Click or drag anywhere to jump there.
+// whole video at a glance in two rows — for a puppet video who speaks when and
+// the background clips; for an explainer its scenes and the narration's words
+// — with the play head moving along it. Click or drag anywhere to jump there.
 //
 // Pure display: times come in, a seek goes out. Nothing here owns state.
 // ---------------------------------------------------------------------------
 
 import { useRef } from "react";
 
-export interface StripSpan {
+export interface StripBlock {
   startMs: number;
   endMs: number;
+  /** a colour for the block; none = the row's own alternating shades */
+  color?: string;
+  /** the hover help for this block */
+  tip: string;
 }
 
 export function TimelineStrip({
   durationMs,
   timeMs,
-  voices,
-  backgrounds,
-  colorOf,
-  labelOf,
+  top,
+  bottom,
+  tip,
+  emptyText,
+  emptyTip,
   onSeek,
 }: {
   durationMs: number;
   timeMs: number;
-  voices: (StripSpan & { speakerId: string; text: string })[];
-  backgrounds: StripSpan[];
-  colorOf: (speakerId: string) => string;
-  labelOf: (speakerId: string) => string;
+  top: StripBlock[];
+  bottom: StripBlock[];
+  /** what the strip shows, for its hover help */
+  tip: string;
+  emptyText: string;
+  emptyTip: string;
   onSeek: (ms: number) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   if (!durationMs) {
     return (
-      <div className="forge-strip empty" data-tip="Once the narration is made (step 2), this strip shows who speaks when and which background is on, and you can click it to jump anywhere.">
-        The video's timeline appears here once the narration is made
+      <div className="forge-strip empty" data-tip={emptyTip}>
+        {emptyText}
       </div>
     );
   }
@@ -44,6 +52,15 @@ export function TimelineStrip({
     if (!r) return;
     onSeek(Math.max(0, Math.min(durationMs, ((clientX - r.left) / r.width) * durationMs)));
   };
+  const row = (blocks: StripBlock[]) =>
+    blocks.map((b, i) => (
+      <span
+        key={i}
+        className={`blk ${!b.color && i % 2 ? "alt" : ""}`}
+        style={{ left: pct(b.startMs), width: pct(b.endMs - b.startMs), ...(b.color ? { background: b.color } : {}) }}
+        data-tip={b.tip}
+      />
+    ));
   return (
     <div
       ref={ref}
@@ -53,23 +70,10 @@ export function TimelineStrip({
         seekAt(e.clientX);
       }}
       onPointerMove={(e) => e.buttons === 1 && seekAt(e.clientX)}
-      data-tip="The whole video: who speaks when (top, in their colour) and the background clips (bottom). Click or drag to jump to that moment."
+      data-tip={tip}
     >
-      <div className="lane voices" aria-hidden>
-        {voices.map((v, i) => (
-          <span
-            key={i}
-            className="blk"
-            style={{ left: pct(v.startMs), width: pct(v.endMs - v.startMs), background: colorOf(v.speakerId) }}
-            data-tip={`${labelOf(v.speakerId)}: “${v.text.length > 90 ? v.text.slice(0, 88) + "…" : v.text}”`}
-          />
-        ))}
-      </div>
-      <div className="lane clips" aria-hidden>
-        {backgrounds.map((b, i) => (
-          <span key={i} className={`blk ${i % 2 ? "alt" : ""}`} style={{ left: pct(b.startMs), width: pct(b.endMs - b.startMs) }} data-tip={`Background clip ${i + 1}`} />
-        ))}
-      </div>
+      <div className="lane voices" aria-hidden>{row(top)}</div>
+      <div className="lane clips" aria-hidden>{row(bottom)}</div>
       <span className="head" style={{ left: pct(timeMs) }} />
     </div>
   );

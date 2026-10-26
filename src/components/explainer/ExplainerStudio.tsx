@@ -2,13 +2,12 @@
 // The Explainer screen (Ak, 21 Oct 2026): animated explainer videos drawn by
 // code, as their own kind of video next to the puppet videos.
 //
-//   left    the style: the built-in Stravelakis look, or styles the user
-//           imported from the AI Style Atlas (with the how-to)
-//   centre  shape, puppet spots, a live preview, the 4-picture storyboard and
-//           what the checks found
-//   right   Script (write the scenes with a model), Look (colours, tint,
-//           font) and Make (render + GIF, clip, still, thumbnails, captions,
-//           chapters)
+// THE "B" LAYOUT (Ak's pick, 26 Oct 2026), the same as the puppet video:
+//   left    four steps — Style (built in, or imported from the AI Style
+//           Atlas), Script (write the scenes with a model), Look (shape,
+//           puppet spots, colours, tint, font), Make (check, extras, render)
+//   right   the live preview, filling the room, with a strip of its scenes and
+//           words under it; then the storyboard and what the checks found
 //
 // The live preview runs the same drawing code as the render
 // (explainer/stage/stage.mjs), so what plays here is what comes out.
@@ -17,9 +16,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { plainError } from "../../lib/plainError";
 import { HudButton } from "../ui/HudButton";
-import { Tabs } from "../ui/Tabs";
 import { Toggle } from "../ui/Toggle";
 import { Slider } from "../ui/Slider";
+import { NextStep, StepColumn, useFolded } from "../ui/StepColumn";
+import { TimelineStrip } from "../canvas/TimelineStrip";
 import { createStage } from "../../../explainer/stage/stage.mjs";
 import { holePath } from "../../../explainer/core/frame.mjs";
 import { validateSpec } from "../../../explainer/core/spec.mjs";
@@ -41,6 +41,16 @@ const FORMATS: { id: Format; label: string; tip: string }[] = [
 const SIZES: Record<Format, [number, number]> = { "16:9": [1920, 1080], "9:16": [1080, 1920], "1:1": [1080, 1080], "4:5": [1080, 1350] };
 const ATLAS_URL = "https://www.futurepedia.io/resources/ai-style-atlas/view";
 const BUILT_IN = "stravelakis";
+
+type ExStep = "style" | "script" | "look" | "make";
+const EX_STEPS: { id: ExStep; title: string; sub: string }[] = [
+  { id: "style", title: "Style", sub: "How it is drawn" },
+  { id: "script", title: "Script", sub: "What it says" },
+  { id: "look", title: "Look", sub: "Shape, colours and letters" },
+  { id: "make", title: "Make", sub: "Check, extras, render" },
+];
+/** How wide the steps column is for each step. */
+const EX_WIDTH: Record<ExStep, number> = { style: 380, script: 480, look: 440, make: 440 };
 
 type Look = { scheme: string; custom: boolean; background: string; accent: string; tint: string; tintAmount: number; font: string };
 type Draft = { style: string; format: Format; puppets: number; shape: SpotShape; script: string; words: Word[] | null; audio: string | null; spec: Spec; look: Look; provider: string };
@@ -109,7 +119,11 @@ export function ExplainerStudio() {
 
   const [imported, setImported] = useState<ImportedStyleCard[]>([]);
   const [providers, setProviders] = useState<{ id: string; label: string; hasKey: boolean }[]>([]);
-  const [tab, setTab] = useState<"script" | "look" | "make">("script");
+  const [tab, setTab] = useState<ExStep>(() => {
+    try { const v = localStorage.getItem("vf.explainer.step"); return v === "style" || v === "look" || v === "make" ? v : "script"; } catch { return "script"; }
+  });
+  useEffect(() => { try { localStorage.setItem("vf.explainer.step", tab); } catch { /* fine */ } }, [tab]);
+  const [folded, setFolded] = useFolded("vf.explainer.stepsFolded");
   const [busy, setBusy] = useState<{ job: string; pct: number; note: string } | null>(null);
   const [message, setMessage] = useState<{ tone: "good" | "bad"; text: string } | null>(null);
   const [check, setCheck] = useState<ExCheck | null>(null);
@@ -199,29 +213,74 @@ export function ExplainerStudio() {
 
   const styleName = isBuiltIn ? "Mint Meander (Stravelakis)" : imported.find((s) => s.id === d.style)?.name ?? d.style;
 
+  const canRender = isBuiltIn ? problems.length === 0 : !!importedPage && !importedPage.errors.length;
+  const status: Record<ExStep, string> = {
+    style: styleName,
+    script: d.words?.length ? `Timed to ${d.words.length} narration words` : d.script.trim() ? `About ${estimateSeconds(d.script)} s when read` : "Showing the sample — write your own",
+    look: `${d.format} · ${d.puppets ? `${d.puppets} puppet${d.puppets > 1 ? "s" : ""}` : "no puppets"} · ${d.look.custom ? "my colours" : d.look.scheme} · ${d.look.font}`,
+    make: made.length ? `${made.length} file${made.length > 1 ? "s" : ""} made` : canRender ? "Ready to render" : "Not ready yet",
+  };
+  const at = EX_STEPS.findIndex((x) => x.id === tab);
+  const nextStep = EX_STEPS[at + 1];
+  const nextButton = nextStep ? <NextStep label={nextStep.title} tip={`Goes on to step ${EX_STEPS.indexOf(nextStep) + 1}: ${nextStep.title} (${nextStep.sub.toLowerCase()}).`} onClick={() => setTab(nextStep.id)} /> : null;
+
   return (
-    <div className="flex flex-1 gap-3 px-3 pb-3 min-h-0">
-      {/* LEFT: style */}
-      <aside className="panel-hud w-[300px] shrink-0 p-4 flex flex-col gap-3 overflow-y-auto">
-        <div className="label-etched" data-tip="Pick the look of the animation. The built-in one works straight away.">Style</div>
-        <StyleCard active={isBuiltIn} title="Mint Meander" sub="Stravelakis brand · pattern tiles · ready to use" tip="The built-in style: Sora type, navy and mint, Truchet tiles. Every frame is checked automatically." onClick={() => set({ style: BUILT_IN })} />
-        {imported.map((s) => (
-          <StyleCard key={s.id} active={d.style === s.id} title={s.name} sub={`${s.family} · imported · experimental`} tip={s.look} onClick={() => set({ style: s.id })}
-            onRemove={async () => { await window.byok.explainer.removeStyle(s.id); if (d.style === s.id) set({ style: BUILT_IN }); refreshStyles(); }} />
-        ))}
-        <HudButton data-tip="Bring in a style from Futurepedia's AI Style Atlas by pasting its Copy prompt. Step-by-step help inside." onClick={() => setShowImport(true)}>+ Import a style</HudButton>
-        <p className="text-xs text-neutral-400 leading-relaxed" data-tip="Imported styles are made by an online helper each time, so they are slower and may be rough.">Imported styles stay on this computer. A top model rewrites the whole animation for your topic, so they are slower and marked experimental.</p>
-      </aside>
-
-      {/* CENTRE: shape, preview, storyboard, checks */}
-      <main className="panel-hud flex-1 min-w-0 p-4 flex flex-col gap-3 overflow-y-auto">
-        <div className="flex flex-wrap items-center gap-2">
-          {FORMATS.map((f) => <HudButton key={f.id} data-tip={f.tip} active={d.format === f.id} onClick={() => { set({ format: f.id }); setCheck(null); }}>{f.label}</HudButton>)}
-          <span className="mx-2 text-neutral-500">|</span>
-          {[0, 1, 2, 3].map((n) => <HudButton key={n} data-tip={n ? `Leave room for ${n} puppet${n > 1 ? "s" : ""} — the explainer becomes their background.` : "No puppets: the story uses the whole frame."} active={d.puppets === n} onClick={() => { set({ puppets: n }); setCheck(null); }}>{n ? `${n} puppet${n > 1 ? "s" : ""}` : "No puppets"}</HudButton>)}
-          {d.puppets > 0 && (["circle", "rounded", "square"] as SpotShape[]).map((sh) => <HudButton key={sh} data-tip={`Puppet spots shaped as ${sh}s — match the puppet video's frame.`} active={d.shape === sh} onClick={() => set({ shape: sh })}>{sh}</HudButton>)}
+    <div className="forge-studio flex flex-1 gap-3 px-3 pb-3 min-h-0">
+      {/* LEFT: the four steps; the one you are on is open in place */}
+      <StepColumn
+        steps={EX_STEPS.map((x) => ({ ...x, status: status[x.id] }))}
+        current={tab}
+        onGo={setTab}
+        width={EX_WIDTH[tab]}
+        folded={folded}
+        setFolded={setFolded}
+        title="Your explainer, step by step"
+        foot={nextButton}
+      >
+        <div className="flex flex-col gap-4">
+          {tab === "style" && (
+            <>
+              <StyleCard active={isBuiltIn} title="Mint Meander" sub="Stravelakis brand · pattern tiles · ready to use" tip="The built-in style: Sora type, navy and mint, Truchet tiles. Every frame is checked automatically." onClick={() => set({ style: BUILT_IN })} />
+              {imported.map((s) => (
+                <StyleCard key={s.id} active={d.style === s.id} title={s.name} sub={`${s.family} · imported · experimental`} tip={s.look} onClick={() => set({ style: s.id })}
+                  onRemove={async () => { await window.byok.explainer.removeStyle(s.id); if (d.style === s.id) set({ style: BUILT_IN }); refreshStyles(); }} />
+              ))}
+              <HudButton data-tip="Bring in a style from Futurepedia's AI Style Atlas by pasting its Copy prompt. Step-by-step help inside." onClick={() => setShowImport(true)}>+ Import a style</HudButton>
+              <p className="text-xs text-neutral-400 leading-relaxed" data-tip="Imported styles are made by an online helper each time, so they are slower and may be rough.">Imported styles stay on this computer. A top model rewrites the whole animation for your topic, so they are slower and marked experimental.</p>
+            </>
+          )}
+          {tab === "script" && (
+            <ScriptTab d={d} set={set} providers={providers} isBuiltIn={isBuiltIn} busy={!!busy}
+              onUseNarration={useNarration} onWrite={writeScenes} onGenerate={generateImported} onHandToClaude={handToClaude} onLoadPage={loadPage} problems={problems} />
+          )}
+          {tab === "look" && (
+            <>
+              <section className="flex flex-col gap-2">
+                <div className="label-etched" data-tip="The shape of the video, and whether puppets sit on top of it.">Shape</div>
+                <div className="flex flex-wrap gap-2">
+                  {FORMATS.map((f) => <HudButton key={f.id} data-tip={f.tip} active={d.format === f.id} onClick={() => { set({ format: f.id }); setCheck(null); }}>{f.label}</HudButton>)}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {[0, 1, 2, 3].map((n) => <HudButton key={n} data-tip={n ? `Leave room for ${n} puppet${n > 1 ? "s" : ""} — the explainer becomes their background.` : "No puppets: the story uses the whole frame."} active={d.puppets === n} onClick={() => { set({ puppets: n }); setCheck(null); }}>{n ? `${n} puppet${n > 1 ? "s" : ""}` : "No puppets"}</HudButton>)}
+                </div>
+                {d.puppets > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {(["circle", "rounded", "square"] as SpotShape[]).map((sh) => <HudButton key={sh} data-tip={`Puppet spots shaped as ${sh}s — match the puppet video's frame.`} active={d.shape === sh} onClick={() => set({ shape: sh })}>{sh}</HudButton>)}
+                  </div>
+                )}
+              </section>
+              <LookTab look={d.look} setLook={setLook} isBuiltIn={isBuiltIn} />
+            </>
+          )}
+          {tab === "make" && (
+            <MakeTab isBuiltIn={isBuiltIn} canRender={canRender} extras={extras} setExtras={setExtras}
+              hasWords={!!d.words?.length} audio={d.audio} onCheck={runCheck} onRender={render} busy={!!busy} made={made} />
+          )}
         </div>
+      </StepColumn>
 
+      {/* RIGHT: the live preview, then the storyboard and what the checks found */}
+      <main className="panel-hud flex-1 min-w-0 min-h-0 p-4 flex flex-col gap-3 overflow-y-auto">
         {isBuiltIn ? <LivePreview spec={spec} problems={problems} /> : <ImportedPreview page={importedPage} name={styleName} />}
 
         {isBuiltIn && check && <CheckView check={check} />}
@@ -234,22 +293,6 @@ export function ExplainerStudio() {
           </div>
         )}
       </main>
-
-      {/* RIGHT: script, look, make */}
-      <aside className="panel-hud w-[380px] shrink-0 p-4 flex flex-col gap-3 min-h-0">
-        <div data-tip="Three pages: what it says, how it looks, and making the files."><Tabs tabs={[{ id: "script", label: "Script" }, { id: "look", label: "Look" }, { id: "make", label: "Make" }]} active={tab} onChange={setTab} /></div>
-        <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-4 pr-1">
-          {tab === "script" && (
-            <ScriptTab d={d} set={set} providers={providers} isBuiltIn={isBuiltIn} busy={!!busy}
-              onUseNarration={useNarration} onWrite={writeScenes} onGenerate={generateImported} onHandToClaude={handToClaude} onLoadPage={loadPage} problems={problems} />
-          )}
-          {tab === "look" && <LookTab look={d.look} setLook={setLook} isBuiltIn={isBuiltIn} />}
-          {tab === "make" && (
-            <MakeTab isBuiltIn={isBuiltIn} canRender={isBuiltIn ? problems.length === 0 : !!importedPage && !importedPage.errors.length} extras={extras} setExtras={setExtras}
-              hasWords={!!d.words?.length} audio={d.audio} onCheck={runCheck} onRender={render} busy={!!busy} made={made} />
-          )}
-        </div>
-      </aside>
 
       {showImport && <ImportDialog onClose={() => setShowImport(false)} onImported={(id) => { refreshStyles(); set({ style: id }); setShowImport(false); }} />}
     </div>
@@ -312,17 +355,34 @@ function LivePreview({ spec, problems }: { spec: Spec; problems: string[] }) {
   }, [playing, stage]);
   const [W, H] = SIZES[spec.format];
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex justify-center rounded-2xl bg-black/40 p-2" style={{ height: "min(52vh, 560px)" }}>
-        {stage ? <canvas ref={canvasRef} style={{ height: "100%", aspectRatio: `${W}/${H}`, maxWidth: "100%", borderRadius: 12 }} data-tip="Live preview — the same drawing code as the final video." />
+    // The preview takes the room the screen has (the "B" layout); the strip
+    // under it shows the scenes and the narration's words, and jumps on click.
+    <div className="forge-ex-preview flex flex-col items-center gap-3">
+      <div className="forge-ex-frame">
+        {stage ? <canvas ref={canvasRef} style={{ width: "100%", height: "100%", objectFit: "contain", aspectRatio: `${W}/${H}` }} data-tip="Live preview — the same drawing code as the final video." />
           : <div className="self-center text-sm text-rose-200 max-w-md" data-tip="The scene list cannot be drawn yet. Fix the lines listed here, or press Sample under Script to start again.">The scene list has problems, so there is nothing to show yet:<ul className="list-disc pl-5 mt-1">{problems.slice(0, 6).map((p) => <li key={p}>{p}</li>)}</ul></div>}
       </div>
       {stage && (
-        <div className="flex items-center gap-3">
-          <HudButton data-tip={playing ? "Pause the preview." : "Play the preview."} onClick={() => setPlaying((p) => !p)}>{playing ? "Pause" : "Play"}</HudButton>
-          <input type="range" min={0} max={stage.R.duration} step={0.01} value={t} onChange={(e) => { setPlaying(false); setT(Number(e.target.value)); }} className="flex-1" data-tip="Drag through the explainer." />
-          <span className="text-xs tabular-nums text-neutral-300 w-24 text-right" data-tip="Where you are in the preview, and how long it is, in seconds.">{t.toFixed(1)} / {stage.R.duration.toFixed(1)} s</span>
-        </div>
+        <>
+          <div className="forge-transport">
+            <button className="play" onClick={() => setPlaying((p) => !p)} aria-label={playing ? "Pause" : "Play"} data-tip={playing ? "Pause the preview." : "Play the preview (no sound here — the narration goes in at render)."}>
+              {playing ? "❚❚" : "▶"}
+            </button>
+            <input type="range" min={0} max={stage.R.duration} step={0.01} value={t} onChange={(e) => { setPlaying(false); setT(Number(e.target.value)); }}
+              style={{ ["--p" as string]: `${(100 * t) / stage.R.duration}%` }} aria-label="Position in the explainer" data-tip="Drag through the explainer." />
+            <span className="time" data-tip="Where you are in the preview, and how long it is.">{t.toFixed(1)} / {stage.R.duration.toFixed(1)} s</span>
+          </div>
+          <TimelineStrip
+            durationMs={stage.R.duration * 1000}
+            timeMs={t * 1000}
+            top={stage.R.scenes.map((sc, i) => ({ startMs: sc.start * 1000, endMs: sc.end * 1000, tip: `Scene ${i + 1}${sc.kind ? `: ${sc.kind}` : ""}, ${sc.start.toFixed(1)}–${sc.end.toFixed(1)} s` }))}
+            bottom={(stage.R.words ?? []).map((w) => ({ startMs: w.start * 1000, endMs: w.end * 1000, color: "rgba(118,255,194,.5)", tip: `“${w.text}” at ${w.start.toFixed(1)} s` }))}
+            tip="The whole explainer: its scenes (top) and the narration's words (bottom), if it is timed to one. Click or drag to jump there."
+            emptyText="The explainer's timeline appears here"
+            emptyTip="Once there is a scene list, its scenes show here."
+            onSeek={(ms) => { setPlaying(false); setT(ms / 1000); }}
+          />
+        </>
       )}
     </div>
   );

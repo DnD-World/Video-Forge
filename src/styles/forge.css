@@ -559,3 +559,11 @@ html[data-motion="off"] body::before { animation: none; }
   .forge-sstep .body { margin-left: 28px; padding: 10px; }
   .forge-studio-foot { padding-top: 8px; }
 }
+
+/* the Explainer in the B layout: the preview fills the room the window has */
+.forge-ex-preview { width: 100%; }
+.forge-ex-frame { width: 100%; height: max(300px, calc(100vh - 300px)); display: flex; justify-content: center; align-items: center; }
+.forge-ex-frame canvas { border-radius: 12px; filter: drop-shadow(0 18px 40px rgba(0, 0, 0, .55)); }
+/* blocks with no colour of their own (an explainer's scenes): the row's alternating navy and mint */
+.forge-strip .lane.voices .blk { background: linear-gradient(90deg, rgba(85, 98, 184, .8), rgba(85, 98, 184, .5)); border-right: 1px solid rgba(0, 0, 0, .6); }
+.forge-strip .lane.voices .blk.alt { background: linear-gradient(90deg, rgba(118, 255, 194, .6), rgba(118, 255, 194, .35)); }
