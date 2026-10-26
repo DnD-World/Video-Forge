@@ -40,6 +40,7 @@ import { autoClean } from "./lib/media/autoClean";
 import videoMark from "./assets/video-mark.jpg";
 import imageMark from "./assets/image-mark.jpg";
 import { VISEME } from "./lib/visemes/visemeMap";
+import { docToProject } from "./lib/project/projectFile";
 
 /** Two corner-bracket accents — the recurring HUD-panel detail. Drop this
  *  inside any element with position:relative that uses .panel-hud. Always
@@ -309,10 +310,8 @@ export default function App() {
     (async () => {
       // Opened with --project: that project replaces the autosave before
       // anything below looks at the store.
-      const doc = (await window.byok.project.startup()) as
-        | { kind?: string; project?: Parameters<ReturnType<typeof useProjectStore.getState>["loadProject"]>[0] }
-        | null;
-      if (!cancelled && doc?.kind === "byok-project" && doc.project) {
+      const doc = docToProject(await window.byok.project.startup());
+      if (!cancelled && doc.ok) {
         useProjectStore.getState().loadProject(doc.project);
       }
       const n = useProjectStore.getState().narration;
