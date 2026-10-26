@@ -122,7 +122,7 @@ body { font-family: "Sora", system-ui, sans-serif; letter-spacing: 0; }
 .btn-primary::before { background: linear-gradient(100deg, var(--navy), #3f63a0 45%, var(--accent)) !important; }
 .btn-primary:hover { box-shadow: 0 0 34px -4px rgba(118, 255, 194, .75); }
 
-.seg { border-radius: 999px; background: rgba(0, 0, 0, .45); }
+.seg { border-radius: 999px; }
 .seg button { border-radius: 999px; font-family: "Sora", sans-serif; letter-spacing: .02em; text-transform: none; }
 .seg button[aria-pressed="true"] { background: var(--accent) !important; color: #001a10 !important; box-shadow: none; }
 
@@ -151,10 +151,10 @@ input, select, textarea { font-family: "Sora", sans-serif; border-radius: 10px; 
 .forge-name { font-size: 1.35rem; font-weight: 500; line-height: 1.1; color: var(--ink); }
 .forge-name small { display: block; font-size: .66rem; font-weight: 300; color: var(--ink-3); letter-spacing: .12em; margin-top: 3px; text-transform: uppercase; }
 
-.forge-twin { position: relative; display: flex; align-items: center; gap: 4px; padding: 4px; border-radius: 999px; background: rgba(0, 0, 0, .45); }
+.forge-twin { position: relative; display: flex; align-items: center; gap: 4px; padding: 4px; border-radius: 999px; }
 .forge-twin .slot-mark { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; position: relative; z-index: 1;
   transition: filter .35s, opacity .35s, transform .35s; border: 0; background: none; padding: 0; cursor: default; }
-.forge-twin .slot-mark img { height: 44px; mix-blend-mode: screen; pointer-events: none; }
+.forge-twin .slot-mark img { height: 44px; pointer-events: none; }
 .forge-twin .slot-mark.off { filter: grayscale(.85) brightness(.85); opacity: .85; transform: scale(.82); cursor: pointer; }
 .forge-twin .slot-mark.off:hover { filter: grayscale(.15) brightness(.95); opacity: 1; transform: scale(.9); }
 .forge-twin .lamp { position: absolute; top: 4px; left: 4px; width: 52px; height: 52px; border-radius: 50%;

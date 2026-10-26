@@ -42,8 +42,8 @@ import { SparkField } from "./components/ui/SparkField";
 import { HistoryBar } from "./components/HistoryBar";
 import { TipLayer } from "./components/ui/TipLayer";
 import { autoClean } from "./lib/media/autoClean";
-import videoMark from "./assets/video-mark.jpg";
-import imageMark from "./assets/image-mark.jpg";
+import videoMark from "./assets/video-mark.png";
+import imageMark from "./assets/image-mark.png";
 import { VISEME } from "./lib/visemes/visemeMap";
 import { docToProject } from "./lib/project/projectFile";
 
