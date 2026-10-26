@@ -31,6 +31,7 @@ import fsp from "node:fs/promises";
 import path from "node:path";
 import { createRequire } from "node:module";
 import { ffmpegBin } from "../../process/ffmpegPath";
+import { childEnv } from "../../net/childEnv";
 import { backgroundTiming } from "../../../src/lib/background/backgroundTiming";
 import { musicGainAt } from "../../../src/lib/audio/ducking";
 import { colorLookCss } from "../../../src/lib/background/colorLook";
@@ -286,13 +287,9 @@ export async function renderHyperframes(input: HyperframesInput): Promise<void> 
   onProgress(0.2, "Rendering frames…");
   const cli = require_.resolve("hyperframes/bin/hyperframes.mjs");
   await run(process.execPath, [cli, "render", input.dir, "--output", input.outputPath, "--fps", String(props.fps), "--crf", String(input.crf), "--quiet"], {
-    env: {
-      ...process.env,
-      ELECTRON_RUN_AS_NODE: "1",
-      // No usage data leaves this machine.
-      DO_NOT_TRACK: "1",
-      HYPERFRAMES_TELEMETRY: "0",
-    },
+    // childEnv() carries the no-update / no-telemetry switches (it is the one
+    // place engine environments are set).
+    env: childEnv({ ELECTRON_RUN_AS_NODE: "1" }),
     signal: input.signal,
     onLine: (l) => {
       const m = l.match(/@hf-progress (\{.*\})/);
