@@ -10,6 +10,7 @@ import { facingView, lookById } from "../characters/core/index.mjs";
 import { WaveformScene } from "./components/canvas/WaveformScene";
 import { BackgroundScene } from "./components/canvas/BackgroundScene";
 import { SubtitleScene } from "./components/canvas/SubtitleScene";
+import { TimelineStrip } from "./components/canvas/TimelineStrip";
 import { usePreviewPlayer } from "./lib/motion/usePreviewPlayer";
 import { buildCues } from "./lib/subtitles/wordTiming";
 import { buildSpeakerVisemeTracks } from "./lib/visemes/speakerTracks";
@@ -58,81 +59,14 @@ function HudCorners() {
 const SNAP_GRID = 0.05;
 const clamp01 = (n: number) => Math.max(0, Math.min(1, n));
 
-/** A side rail that can fold away to a spine.
- *
- *  At the 1280px minimum window width the two 384px rails leave the preview
- *  267px wide for a 1080x1920 frame — too small to judge subtitle size or
- *  waveform detail, which is most of what the preview is for. Folding one rail
- *  hands that width straight to the canvas. */
-function Rail({
-  title, side, open, onToggle, flareRef, onFlare, children,
-}: {
-  title: string;
-  side: "left" | "right";
-  open: boolean;
-  onToggle: () => void;
-  flareRef: MutableRefObject<HTMLElement | null>;
-  onFlare: () => void;
-  children: ReactNode;
-}) {
-  // ‹ collapses a left rail and expands a right one, so the arrow always points
-  // the way the panel will move.
-  const glyph = open ? (side === "left" ? "‹" : "›") : side === "left" ? "›" : "‹";
-  return (
-    <aside
-      ref={flareRef}
-      onClick={onFlare}
-      className={`panel-hud hud-flare-target relative min-h-0 transition-[width] duration-200 ${
-        open ? "w-96 p-5" : "w-9 px-0 py-3"
-      }`}
-    >
-      <HudCorners />
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onToggle();
-        }}
-        title={open ? `Collapse ${title}` : `Expand ${title}`}
-        aria-label={open ? `Collapse ${title}` : `Expand ${title}`}
-        // Was h-6 w-6 — a 24px target for the control that reshapes the whole
-        // window, and the one you reach for most on a 1280px screen. 36px with
-        // its own chamfered plate, so it reads as a control rather than as a
-        // stray glyph floating in the corner of the panel.
-        // The Forge look: a round tab on the panel's inner edge, half over the
-        // gap, so it never sits on top of a panel's title (it did, in the
-        // top corner, once the chamfer that used to make room for it went).
-        className={`absolute top-1/2 -translate-y-1/2 z-20 h-8 w-8 rounded-full grid place-items-center text-base leading-none
-          text-accent bg-black border border-[rgba(118,255,194,.35)]
-          hover:border-accent hover:shadow-[0_0_14px_-2px_rgba(118,255,194,.6)]
-          transition ${side === "left" ? "-right-4" : "-left-4"}`}
-      >
-        {glyph}
-      </button>
-      {open ? (
-        children
-      ) : (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggle();
-          }}
-          data-tip={`Opens the ${title} panel again.`}
-          className="label-etched absolute inset-x-0 top-10 mx-auto whitespace-nowrap hover:text-accent-bright"
-          style={{ writingMode: "vertical-rl" }}
-        >
-          {title}
-        </button>
-      )}
-    </aside>
-  );
-}
-
 const fmtTime = (ms: number) => {
   const s = Math.max(0, Math.floor(ms / 1000));
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 };
 
 type Step = "cast" | "script" | "look" | "make";
+/** How wide the steps column is for each step: Script needs room to write. */
+const STEP_WIDTH: Record<Step, number> = { cast: 420, script: 600, look: 440, make: 440 };
 const STEPS: { id: Step; title: string; sub: string }[] = [
   { id: "cast", title: "Cast", sub: "Who speaks" },
   { id: "script", title: "Script", sub: "What they say" },
@@ -152,7 +86,10 @@ export default function App() {
     try { return localStorage.getItem("vf.mode") === "explainer" ? "explainer" : "puppet"; } catch { return "puppet"; }
   });
   const setMode = (m: "puppet" | "explainer") => { setModeState(m); setSettingsOpen(false); try { localStorage.setItem("vf.mode", m); } catch { /* fine */ } };
-  const view: "canvas" | "settings" | "narration" = settingsOpen ? "settings" : step === "script" ? "narration" : "canvas";
+  // THE "B" LAYOUT (Ak, 26 Oct 2026): the preview stays on screen in every
+  // step — Script included, which used to replace it — and only Settings
+  // takes the whole window.
+  const view: "canvas" | "settings" = settingsOpen ? "settings" : "canvas";
   // Any screen can ask for the Settings page ("Open Settings" buttons in messages).
   useEffect(() => {
     const open = () => setSettingsOpen(true);
@@ -160,13 +97,30 @@ export default function App() {
     return () => window.removeEventListener("forge:open-settings", open);
   }, []);
   const goStep = (s: Step) => { setSettingsOpen(false); setStep(s); };
+  /** One plain line under each step: what is done there so far. */
+  const stepStatus = (id: Step): string => {
+    const st = useProjectStore.getState();
+    if (id === "cast") return st.speakers.length ? `${st.speakers.length} speaker${st.speakers.length > 1 ? "s" : ""}: ${st.speakers.map((x) => x.label).join(", ")}` : "Nobody yet";
+    if (id === "script") {
+      const segs = st.narration?.segments ?? [];
+      if (!segs.length) return st.attachedAudio ? "Your own recording" : "Narration not made yet";
+      return `${segs.length} lines · ${fmtTime(segs[segs.length - 1].endMs)}`;
+    }
+    if (id === "look") return `${st.backgrounds.length ? `${st.backgrounds.length} background clip${st.backgrounds.length > 1 ? "s" : ""}` : "Plain background"}${st.music ? " · music" : ""}`;
+    return `${st.render.format} · ${st.render.width}×${st.render.height}`;
+  };
   const canvasRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const [stageSize, setStageSize] = useState({ w: 0, h: 0 });
   const [snapToGrid, setSnapToGrid] = useState(true);
   const [draggingId, setDraggingId] = useState<string | null>(null);
-  const [castOpen, setCastOpen] = useState(true);
-  const [sceneOpen, setSceneOpen] = useState(true);
+  // The steps column can fold to its numbers, handing the room to the preview.
+  const [folded, setFoldedState] = useState(() => {
+    try { return localStorage.getItem("vf.stepsFolded") === "1"; } catch { return false; }
+  });
+  const setFolded = (f: boolean) => { setFoldedState(f); try { localStorage.setItem("vf.stepsFolded", f ? "1" : "0"); } catch { /* fine */ } };
+  // "Many videos" opens Make on its own tab.
+  const [makeTab, setMakeTab] = useState<"render" | "many">("render");
 
   const fps = useProjectStore((s) => s.fps);
   const render = useProjectStore((s) => s.render);
@@ -423,7 +377,6 @@ export default function App() {
 
   const asideFlare = useCornerFlare<HTMLElement>();
   const mainFlare = useCornerFlare<HTMLElement>();
-  const sceneFlare = useCornerFlare<HTMLElement>();
 
   // Measure the room the preview has, then size the frame to fit inside it —
   // rather than the reverse. CSS can't express "contain" here: aspect-ratio
@@ -440,7 +393,7 @@ export default function App() {
     });
     ro.observe(el);
     return () => ro.disconnect();
-  }, [view]);
+  }, [view, mode]);
 
   const canvasSize = useMemo(() => {
     const ratio = frameRatio;
@@ -517,8 +470,9 @@ export default function App() {
           <small>Talking-character videos</small>
         </div>
         <div className="ml-auto flex gap-2 items-center" role="group" aria-label="Kind of video">
-          <HudButton data-tip="Puppet videos: talking characters, in four steps." active={mode === "puppet" && !settingsOpen} onClick={() => setMode("puppet")}>Puppet video</HudButton>
+          <HudButton data-tip="Puppet videos: talking characters, in four steps." active={mode === "puppet" && !settingsOpen && !(step === "make" && makeTab === "many")} onClick={() => { setMode("puppet"); setMakeTab("render"); }}>Puppet video</HudButton>
           <HudButton data-tip="Explainers: animated pictures, words and charts drawn by code, timed to a narration — with or without puppets on top." active={mode === "explainer" && !settingsOpen} onClick={() => setMode("explainer")}>Explainer</HudButton>
+          <HudButton data-tip="Many videos at once: one row of a spreadsheet per video, all made in a row with the look you set up." active={mode === "puppet" && !settingsOpen && step === "make" && makeTab === "many"} onClick={() => { setMode("puppet"); setMakeTab("many"); goStep("make"); }}>Many videos</HudButton>
         </div>
         <button
           className={`forge-gear ml-3 ${settingsOpen ? "on" : ""}`}
@@ -531,68 +485,99 @@ export default function App() {
         </button>
       </header>
 
-      {!settingsOpen && mode === "puppet" && (
-      <nav className="forge-steps mx-3 mb-3" aria-label="Steps">
-        {STEPS.map((st, i) => {
-          const at = STEPS.findIndex((x) => x.id === step);
-          const state = !settingsOpen && st.id === step ? "on" : i < at ? "done" : "";
-          return (
-            <button key={st.id} className={`forge-step panel-hud ${state}`} data-tip={`Step ${i + 1} of 4: ${st.title} (${st.sub.toLowerCase()}). Click to go there.`} onClick={() => goStep(st.id)} aria-current={state === "on" ? "step" : undefined}>
-              <span className="n">{i + 1}</span>
-              <span className="t">{st.title}<small>{st.sub}</small></span>
+      {mode === "explainer" && !settingsOpen ? <ExplainerStudio /> : view === "settings" ? (
+        <main className="panel-hud relative flex-1 mx-3 mb-3 p-6 min-h-0 overflow-hidden">
+          <HudCorners />
+          <div className="w-full h-full flex flex-col">
+            <button className="btn self-start mb-3" onClick={() => setSettingsOpen(false)} data-tip="Back to the step you were on">
+              ← Back to {STEPS.find((x) => x.id === step)?.title}
             </button>
-          );
-        })}
-      </nav>
-      )}
-
-      {mode === "explainer" && !settingsOpen ? <ExplainerStudio /> : (
-      <div className="flex flex-1 gap-3 px-3 pb-3 min-h-0">
-        {/* LEFT: the cast — step 1 only */}
-        {view === "canvas" && step === "cast" && (
-        <Rail
-          title="Cast"
-          side="left"
-          open={castOpen}
-          onToggle={() => setCastOpen((v) => !v)}
-          flareRef={asideFlare.ref}
-          onFlare={asideFlare.fire}
+            <BackendPanel />
+          </div>
+        </main>
+      ) : (
+      <div className="forge-studio flex flex-1 gap-3 px-3 pb-3 min-h-0">
+        {/* LEFT: the four steps, top to bottom; the one you are on opens in place. */}
+        <aside
+          ref={asideFlare.ref}
+          onClick={asideFlare.fire}
+          className={`forge-studio-left panel-hud hud-flare-target relative min-h-0 ${folded ? "folded" : ""}`}
+          style={{ width: folded ? 84 : STEP_WIDTH[step] }}
+          aria-label="Your video, step by step"
         >
-          <CastPanel />
-        </Rail>
-        )}
+          <HudCorners />
+          <button
+            className="forge-fold"
+            onClick={(e) => { e.stopPropagation(); setFolded(!folded); }}
+            aria-label={folded ? "Open the steps" : "Fold the steps away"}
+            data-tip={folded ? "Opens the steps column again." : "Folds the steps to their numbers, so the preview gets the room."}
+          >
+            {folded ? "›" : "‹"}
+          </button>
+          {!folded && <div className="label-etched forge-stepper-title" data-tip="The four steps that make a video, in order. The one you are on is open.">Your video, step by step</div>}
+          <ol className="forge-stepper">
+            {STEPS.map((st, i) => {
+              const at = STEPS.findIndex((x) => x.id === step);
+              const state = st.id === step ? "on" : i < at ? "done" : "";
+              return (
+                <li key={st.id} className={`forge-sstep ${state}`}>
+                  <button
+                    className="head"
+                    onClick={() => { if (folded && st.id === step) setFolded(false); goStep(st.id); }}
+                    aria-current={state === "on" ? "step" : undefined}
+                    data-tip={`Step ${i + 1} of 4: ${st.title} (${st.sub.toLowerCase()}). ${state === "on" ? "You are here." : "Click to go there."}`}
+                  >
+                    <span className="n">{state === "done" ? "✓" : i + 1}</span>
+                    {!folded && (
+                      <span className="t">
+                        {st.title}
+                        <small>{stepStatus(st.id)}</small>
+                      </span>
+                    )}
+                  </button>
+                  {!folded && st.id === step && (
+                    <div className="body">
+                      {st.id === "cast" ? (
+                        <CastPanel />
+                      ) : st.id === "script" ? (
+                        <NarrationPanel />
+                      ) : st.id === "look" ? (
+                        <ScenePanel key="look" title="Look" tabs={["presets", "background", "subtitles", "music", "sfx", "motion"]} />
+                      ) : (
+                        <ScenePanel key={`make-${makeTab}`} title="Make" tabs={makeTab === "many" ? ["many", "render", "extras", "shape"] : ["render", "many", "extras", "shape"]} />
+                      )}
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+          </ol>
+          {!folded && step !== "make" && (
+            <div className="forge-studio-foot">
+              <button
+                className="forge-next"
+                data-tip="Goes on to the next step."
+                onClick={() => goStep(STEPS[STEPS.findIndex((x) => x.id === step) + 1].id)}
+              >
+                Next: {STEPS[STEPS.findIndex((x) => x.id === step) + 1].title} →
+              </button>
+            </div>
+          )}
+        </aside>
 
-        {/* CENTER: preview canvas, narration, or backend settings */}
+        {/* RIGHT: the preview — always — with the play controls and the timeline strip under it. */}
         <main
           ref={mainFlare.ref}
           onClick={mainFlare.fire}
           // No place-items-center here: a centred grid item has an indefinite
           // height, so the stage's h-full resolved against nothing and never
           // shrank when the window did. The stage stretches; the centring
-          // happens inside it.
-          //
-          // `items-stretch` is stated rather than left to the default, and that
-          // is not belt-and-braces. The stretch IS the layout: the stage is
+          // happens inside it. `items-stretch` IS the layout: the stage is
           // measured to size the canvas, so anything that lets it shrink to its
-          // content collapses it to zero and keeps it there. Leaving it implicit
-          // is what let a stylesheet turn the whole preview off by accident.
-          className={`panel-hud hud-flare-target relative flex-1 p-6 min-h-0 ${
-            view === "canvas" ? "grid items-stretch" : "overflow-hidden"
-          }`}
+          // content collapses it to zero and keeps it there.
+          className="panel-hud hud-flare-target relative flex-1 p-6 min-h-0 min-w-0 grid items-stretch"
         >
           <HudCorners />
-          {view === "settings" ? (
-            <div className="w-full h-full flex flex-col">
-              <button className="btn self-start mb-3" onClick={() => setSettingsOpen(false)} data-tip="Back to the step you were on">
-                ← Back to {STEPS.find((x) => x.id === step)?.title}
-              </button>
-              <BackendPanel />
-            </div>
-          ) : view === "narration" ? (
-            <div className="w-full h-full">
-              <NarrationPanel />
-            </div>
-          ) : (
             <div ref={stageRef} className="min-w-0 min-h-0 flex flex-col items-center justify-center gap-3">
             <div
               ref={canvasRef}
@@ -796,36 +781,18 @@ export default function App() {
                 <span className="hint">No narration yet — make it in Script to hear it here</span>
               )}
             </div>
+            <TimelineStrip
+              // the audio's own length once it has loaded; the narration's end until then
+              durationMs={player.durationMs || (narration?.segments?.length ? narration.segments[narration.segments.length - 1].endMs : 0)}
+              timeMs={player.timeMs}
+              voices={narration?.segments ?? []}
+              backgrounds={backgrounds}
+              colorOf={(id) => speakerColors[id] ?? "rgba(118,255,194,.6)"}
+              labelOf={(id) => speakers.find((x) => x.id === id)?.label ?? ""}
+              onSeek={player.seek}
+            />
             </div>
-          )}
-          {!settingsOpen && step !== "make" && (
-            <button
-              className="forge-next"
-              data-tip="Goes on to the next step."
-              onClick={() => goStep(STEPS[STEPS.findIndex((x) => x.id === step) + 1].id)}
-            >
-              Next: {STEPS[STEPS.findIndex((x) => x.id === step) + 1].title} →
-            </button>
-          )}
         </main>
-
-        {/* RIGHT: Look shows templates and the scene; Make shows render */}
-        {view === "canvas" && (step === "look" || step === "make") && (
-        <Rail
-          title={step === "look" ? "Look" : "Make"}
-          side="right"
-          open={sceneOpen}
-          onToggle={() => setSceneOpen((v) => !v)}
-          flareRef={sceneFlare.ref}
-          onFlare={sceneFlare.fire}
-        >
-          {step === "look" ? (
-            <ScenePanel key="look" title="Look" tabs={["presets", "background", "subtitles", "music", "sfx", "motion"]} />
-          ) : (
-            <ScenePanel key="make" title="Make" tabs={["render", "many", "extras", "shape"]} />
-          )}
-        </Rail>
-        )}
       </div>
       )}
     </div>

@@ -482,3 +482,80 @@ html[data-motion="off"] body::before { animation: none; }
 .shelf-del.armed { border-color: #ff6b6b; background: rgba(120, 20, 20, .9); color: #fff; }
 
 .forge-tip-more { display: block; margin-top: 6px; color: var(--accent); text-decoration: underline; text-underline-offset: 2px; font-weight: 500; }
+
+/* =============================================================================
+   The "B" layout (Ak's pick, 26 Oct 2026): the steps down the left, the one
+   you are on open in place, the preview always on the right, a timeline strip
+   under it.
+   ============================================================================= */
+.forge-studio-left { display: flex; flex-direction: column; padding: 16px 16px 14px !important;
+  transition: width .35s cubic-bezier(.2, .8, .2, 1); flex: none; }
+.forge-studio-left.folded { padding: 16px 10px !important; align-items: center; }
+.forge-studio-left.folded .forge-sstep::after { display: none; }
+.forge-fold { position: absolute; top: 50%; right: -16px; transform: translateY(-50%); z-index: 20; width: 32px; height: 32px;
+  border-radius: 50%; display: grid; place-items: center; font-size: 16px; cursor: pointer; color: var(--accent); background: #000;
+  border: 1px solid rgba(118, 255, 194, .35); transition: border-color .2s, box-shadow .2s; }
+.forge-fold:hover { border-color: var(--accent); box-shadow: 0 0 14px -2px rgba(118, 255, 194, .6); }
+.forge-stepper-title { margin: 2px 0 12px 4px; position: relative; z-index: 1; }
+
+/* the progress line: one segment from each number down to the next, lit
+   (and glowing) for the steps already done */
+.forge-stepper { list-style: none; margin: 0; padding: 0; position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; z-index: 1; }
+.forge-sstep:not(:last-child)::after { content: ""; position: absolute; left: 21px; top: 50px; bottom: -10px; width: 2px; border-radius: 2px;
+  background: var(--line); pointer-events: none; transition: background .4s, box-shadow .4s; }
+.forge-sstep.done::after { background: linear-gradient(var(--accent), rgba(118, 255, 194, .55)); box-shadow: 0 0 10px rgba(118, 255, 194, .6); }
+.forge-sstep.on:not(:last-child)::after { background: linear-gradient(var(--accent), var(--line) 60%); }
+.forge-sstep { position: relative; display: flex; flex-direction: column; min-height: 0; }
+.forge-sstep.on { flex: 1; }
+.forge-sstep .head { display: flex; align-items: center; gap: 12px; width: 100%; padding: 6px 8px 6px 0; border: 0; background: none;
+  color: var(--ink); cursor: pointer; text-align: left; font-family: "Sora", sans-serif; border-radius: 14px; }
+.forge-sstep .n { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; flex: none; font-weight: 600; font-size: 15px;
+  background: #04121a; border: 1px solid var(--line); color: var(--ink-2); transition: all .3s; position: relative; z-index: 1; }
+.forge-sstep .head:hover .n { border-color: var(--accent); }
+.forge-sstep .head:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.forge-sstep .t { font-weight: 600; font-size: 1rem; line-height: 1.2; min-width: 0; }
+.forge-sstep .t small { display: block; font-weight: 300; font-size: .74rem; color: var(--ink-3); margin-top: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.forge-sstep.done .n { background: var(--accent); color: #001a10; border-color: var(--accent); }
+.forge-sstep.on .n { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 0 4px rgba(118, 255, 194, .12), 0 0 22px -2px rgba(118, 255, 194, .75);
+  animation: forge-pulse 2.6s ease-in-out infinite; }
+.forge-sstep.on .t small { color: var(--ink-2); }
+@keyframes forge-pulse { 50% { box-shadow: 0 0 0 7px rgba(118, 255, 194, .06), 0 0 30px 0 rgba(118, 255, 194, .55); } }
+:root[data-hud-motion="off"] .forge-sstep.on .n { animation: none; }
+
+/* the open step: its panel, in a card that scrolls on its own */
+.forge-sstep .body { margin: 8px 0 2px 34px; padding: 14px; min-height: 0; flex: 1;
+  overflow-y: auto; overflow-x: hidden; border-radius: 0 16px 16px 0; background: rgba(4, 18, 26, .45);
+  border: 1px solid rgba(118, 255, 194, .14); animation: forge-open .35s cubic-bezier(.2, .8, .2, 1); }
+@keyframes forge-open { from { opacity: 0; transform: translateY(-6px); } }
+/* the Script panel is two columns in a wide space; in the column it stacks */
+.forge-sstep .body .forge-script { grid-template-columns: minmax(0, 1fr); height: auto; }
+
+.forge-studio-foot { padding-top: 12px; position: relative; z-index: 1; }
+.forge-studio-foot .forge-next { position: static; width: 100%; }
+
+/* the timeline strip under the preview */
+.forge-strip { position: relative; width: min(820px, 100%); height: 52px; border-radius: 12px; cursor: pointer; user-select: none;
+  background: rgba(4, 18, 26, .6); border: 1px solid var(--line); overflow: hidden; touch-action: none; flex: none; }
+.forge-strip.empty { display: grid; place-items: center; cursor: default; font-size: .75rem; color: var(--ink-3); }
+.forge-strip .lane { position: absolute; left: 0; right: 0; }
+.forge-strip .lane.voices { top: 7px; height: 20px; }
+.forge-strip .lane.clips { bottom: 7px; height: 11px; }
+.forge-strip .blk { position: absolute; top: 0; bottom: 0; border-radius: 4px; min-width: 2px; opacity: .85; transition: opacity .2s, filter .2s; }
+.forge-strip .lane.voices .blk:hover { opacity: 1; filter: brightness(1.25); }
+.forge-strip .lane.clips .blk { background: linear-gradient(90deg, rgba(85, 98, 184, .55), rgba(85, 98, 184, .3)); border-right: 1px solid rgba(0, 0, 0, .6); }
+.forge-strip .lane.clips .blk.alt { background: linear-gradient(90deg, rgba(118, 255, 194, .35), rgba(118, 255, 194, .18)); }
+.forge-strip .head { position: absolute; top: 3px; bottom: 3px; width: 2px; margin-left: -1px; background: var(--accent); pointer-events: none;
+  box-shadow: 0 0 10px var(--accent), 0 0 2px var(--accent); border-radius: 2px; }
+/* folded: the numbers sit together at the top, not spread down the column */
+.forge-studio-left.folded .forge-sstep.on { flex: none; }
+/* short windows: smaller step rows, so the open step keeps its room */
+@media (max-height: 820px) {
+  .forge-stepper-title { display: none; }
+  .forge-stepper { gap: 4px; }
+  .forge-sstep .n { width: 34px; height: 34px; font-size: 13px; }
+  .forge-sstep:not(:last-child)::after { left: 16px; top: 40px; bottom: -4px; }
+  .forge-sstep .head { padding: 3px 8px 3px 0; }
+  .forge-sstep .body { margin-left: 28px; padding: 10px; }
+  .forge-studio-foot { padding-top: 8px; }
+}
