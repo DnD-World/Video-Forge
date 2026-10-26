@@ -284,7 +284,15 @@ export default function BackendPanel() {
 
   const save = async (id: string) => {
     if (!draft[id]) return;
-    await window.byok.keys.set(id, draft[id]);
+    try {
+      await window.byok.keys.set(id, draft[id]);
+    } catch (e) {
+      // Nothing was saved (e.g. the key file could not be read). The pasted key
+      // stays in the box so it is not lost, and the reason is shown.
+      const why = (e instanceof Error ? e.message : String(e)).replace(/^Error invoking remote method '[^']+': (Error: )?/, "");
+      setTests((t) => ({ ...t, [id]: { busy: false, result: { ok: false, message: why } } }));
+      return;
+    }
     setDraft((d) => ({ ...d, [id]: "" }));
     // A previous test result describes the old key, so drop it.
     setTests((t) => ({ ...t, [id]: { busy: false } }));
@@ -292,7 +300,13 @@ export default function BackendPanel() {
   };
 
   const remove = async (id: string) => {
-    await window.byok.keys.remove(id);
+    try {
+      await window.byok.keys.remove(id);
+    } catch (e) {
+      const why = (e instanceof Error ? e.message : String(e)).replace(/^Error invoking remote method '[^']+': (Error: )?/, "");
+      setTests((t) => ({ ...t, [id]: { busy: false, result: { ok: false, message: why } } }));
+      return;
+    }
     setTests((t) => ({ ...t, [id]: { busy: false } }));
     refresh();
   };

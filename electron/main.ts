@@ -223,11 +223,14 @@ ipcMain.handle("keys:list", async () => {
 
 ipcMain.handle("keys:set", async (_e, provider: string, value: string) => {
   const result = await keyStore.setKey(provider, value);
+  // A refusal (the key file could not be read) reaches the screen as a message.
+  if (!result.ok) throw new Error(result.problem ?? "The key could not be saved.");
   return result.ok;
 });
 
 ipcMain.handle("keys:delete", async (_e, provider: string) => {
   const result = await keyStore.deleteKey(provider);
+  if (!result.ok) throw new Error(result.problem ?? "The key could not be removed.");
   return result.ok;
 });
 
