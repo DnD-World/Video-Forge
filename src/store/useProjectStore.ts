@@ -143,6 +143,12 @@ interface Actions {
   reset: () => void;
 }
 
+/** Called after the whole project is replaced (open, new, sample), so undo
+ *  history can start over instead of stepping back into the OLD project.
+ *  Set by src/store/projectHistory.ts; a hook rather than an import because
+ *  that file imports this one. */
+export const wholeProjectHook: { fn: (() => void) | null } = { fn: null };
+
 export const useProjectStore = create<ProjectState & Actions>()(
   persist(
     (set) => ({
@@ -324,7 +330,7 @@ export const useProjectStore = create<ProjectState & Actions>()(
       speakers: applySlots(s.speakers, snap).map(migrateSpeaker),
     })),
 
-  loadProject: (p) =>
+  loadProject: (p) => {
     set(() => ({
       ...defaultProject,
       ...p,
@@ -336,9 +342,14 @@ export const useProjectStore = create<ProjectState & Actions>()(
       subtitles: { ...defaultProject.subtitles, ...(p.subtitles ?? {}) },
       musicWaveform: migrateTrack({ ...defaultProject.musicWaveform, ...(p.musicWaveform ?? {}) }),
       speakers: (p.speakers ?? []).map(migrateSpeaker),
-    })),
+    }));
+    wholeProjectHook.fn?.();
+  },
 
-  reset: () => set(defaultProject),
+  reset: () => {
+    set(defaultProject);
+    wholeProjectHook.fn?.();
+  },
     }),
     {
       name: "byok-project", // the autosave

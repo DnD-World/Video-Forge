@@ -286,6 +286,8 @@ ipcMain.handle("dialog:saveFile", async (_e, defaultName: string, filters?: Elec
   if (res.canceled || !res.filePath) return null;
   // The one place outside its own folder the window may write.
   guard().grantWrite(res.filePath);
+  // ...and read back later, so "Recent projects" can reopen it next week.
+  guard().grantReadFile(res.filePath);
   return res.filePath;
 });
 

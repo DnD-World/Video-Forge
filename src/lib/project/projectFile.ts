@@ -25,7 +25,7 @@ export const PROJECT_KIND = "byok-project";
 export const PROJECT_VERSION = 2;
 
 /** Everything that is saved as it is. */
-const PLAIN_FIELDS = [
+export const PLAIN_FIELDS = [
   "render", "fps", "speakers", "script", "language",
   "musicWaveform", "musicColor", "subtitles",
   "pauseSameMs", "pauseTurnMs", "visemeFadeMs", "idleMotion",

@@ -22,6 +22,18 @@ function world() {
   return { base, own, app, picked, secret, grantsFile, make };
 }
 
+test("a file you saved can be read again later (Recent projects) without opening its whole folder", () => {
+  const w = world();
+  const g = w.make();
+  const proj = path.join(w.picked, "lesson.byokproj.json");
+  fs.writeFileSync(proj, "{}");
+  assert.ok(!g.canRead(proj));
+  g.grantReadFile(proj);
+  assert.ok(g.canRead(proj));
+  assert.ok(!g.canRead(path.join(w.picked, "song.mp3")), "its folder stays closed");
+  assert.ok(w.make().canRead(proj), "and it is remembered for next time");
+});
+
 test("the app's own folders may be read; a folder it does not own may not", () => {
   const w = world();
   const g = w.make();
