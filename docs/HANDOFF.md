@@ -68,7 +68,8 @@ Render proof (#7), 26 Oct:
   - the column folds to its numbers.
 - Checked at 1440×900 and 1280×720 with lesson 101.1 data, and installed.
 
-Next: bring the Explainer into the same layout. Phase 3 is on hold until Ak says so.
+Explainer in the B layout too (26 Oct, late): Style/Script/Look/Make down the left (ui/StepColumn.tsx, shared with the puppet screen), live preview filling the right with a strip of scenes + narration words. Installed.
+Next: ask Ak. Phase 3 is on hold until Ak says so.
 Top risk: Google credit ends before Christmas.
 
 ## Phase 1 safety fixes — branch `phase1-vf-safety` (not merged, not pushed)
