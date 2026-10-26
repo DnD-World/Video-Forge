@@ -28,6 +28,21 @@ test("Piper voice servers are told to listen on this computer only", () => {
   assert.match(read("electron/tts/piperEngine.ts"), /"--host", "127\.0\.0\.1"/);
 });
 
+test("paid ElevenLabs lines are gated before the first is bought, and kept as they arrive", () => {
+  const nar = read("electron/tts/buildNarration.ts");
+  const gate = nar.indexOf("paidGate(opts.paid");
+  const buy = nar.indexOf("elevenlabs.synthesize(");
+  assert.ok(gate > 0 && buy > gate, "the gate must come before the first purchase");
+  assert.match(nar, /savePaidLine\(/);
+  // every caller of buildNarration says who is paying
+  assert.match(read("electron/main.ts"), /buildNarration\(segments, speakerOrder, pauses, outputDir\(\), \{ paid: policy \}\)/);
+  assert.match(read("electron/tts/twinNarration.ts"), /\{ paid \}/);
+  assert.match(read("electron/batch/runJob.ts"), /mode: "unattended", allowUnattended: job\.allowPaidVoices === true/);
+  assert.match(read("electron/batch/manyVideos.ts"), /allowUnattended: req\.paid\?\.allow === true/);
+  // batches are off by default
+  assert.match(read("src/store/useSettingsStore.ts"), /paidInBatch: false/);
+});
+
 test("the window is sandboxed, has a content policy, and cannot wander off the app's page", () => {
   const main = read("electron/main.ts");
   assert.match(main, /sandbox: true/);

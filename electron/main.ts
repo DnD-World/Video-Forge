@@ -26,7 +26,8 @@ import { planBackgrounds, pickBackgrounds } from "./llm/backgroundPlanner";
 import { renderVideo, type RenderJob } from "./render/renderVideo";
 import { cacheStats, cleanUp, touch } from "./media/mediaCache";
 import { installExitHandlers, reapOrphansFromLastSession } from "./process/childTree";
-import { buildNarration, type NarrationInput } from "./tts/buildNarration";
+import { buildNarration, estimatePaid, type NarrationInput } from "./tts/buildNarration";
+import { describePaid, type PaidPolicy } from "./tts/paidVoice";
 import { runBatchJob, type BatchJob } from "./batch/runJob";
 import { makeSfxEleven } from "./audio/makeSfxEleven";
 import { getSfxFreesound } from "./audio/getSfxFreesound";
@@ -606,17 +607,49 @@ ipcMain.handle("tts:synthesizePiper", async (_e, pythonPath: string, onnxPath: s
 // the project state); this just executes synthesis + concatenation.
 // ---------------------------------------------------------------------------
 
+/** Paid voices: before a narration that buys ElevenLabs lines starts, say how
+ *  many characters and about how much, and wait for a yes. The yes covers
+ *  exactly that many characters (tts/paidVoice.ts). Lines already bought, or a
+ *  narration already made, cost nothing and are not asked about. */
+const ELEVEN_PRICE_FALLBACK = 0.3; // USD per 1,000 characters, until the user sets theirs
+async function askBeforeBuying(
+  segments: NarrationInput[],
+  pauses: { sameMs: number; turnMs: number },
+  pricePer1000?: number
+): Promise<PaidPolicy> {
+  const est = await estimatePaid(segments, pauses, outputDir());
+  if (est.narrationCached || est.chars === 0) return { mode: "attended", approvedChars: 0 };
+  const price = pricePer1000 && pricePer1000 > 0 ? pricePer1000 : ELEVEN_PRICE_FALLBACK;
+  const opts: Electron.MessageBoxOptions = {
+    type: "question",
+    title: "Paid voice",
+    message: "This narration uses your paid ElevenLabs voice.",
+    detail: describePaid(est, price),
+    buttons: ["Buy and make it", "Cancel"],
+    defaultId: 1,
+    cancelId: 1,
+    noLink: true,
+  };
+  const r = mainWindow && !mainWindow.isDestroyed() ? await dialog.showMessageBox(mainWindow, opts) : await dialog.showMessageBox(opts);
+  if (r.response !== 0) throw new Error("Cancelled — nothing was bought.");
+  return { mode: "attended", approvedChars: est.chars };
+}
+
 ipcMain.handle("tts:generateNarration", async (
   _e,
   segments: NarrationInput[],
   speakerOrder: string[] = [],
-  pauses: { sameMs: number; turnMs: number } = { sameMs: 0, turnMs: 0 }
+  pauses: { sameMs: number; turnMs: number } = { sameMs: 0, turnMs: 0 },
+  paid?: { pricePer1000?: number }
 ) => {
   await rememberNarration({ segments, speakerOrder, pauses });
-  return buildNarration(segments, speakerOrder, pauses, outputDir());
+  const policy = await askBeforeBuying(segments, pauses, paid?.pricePer1000);
+  return buildNarration(segments, speakerOrder, pauses, outputDir(), { paid: policy });
 });
 /** The same script in the other language, same cast (tts/twinNarration.ts). */
-ipcMain.handle("tts:twinNarration", async (_e, target: string) => twinNarration(String(target), outputDir()));
+ipcMain.handle("tts:twinNarration", async (_e, target: string, paid?: { pricePer1000?: number }) =>
+  twinNarration(String(target), outputDir(), (segs, pauses) => askBeforeBuying(segs, pauses, paid?.pricePer1000))
+);
 
 
 // ---------------------------------------------------------------------------

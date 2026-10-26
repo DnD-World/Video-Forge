@@ -39,6 +39,7 @@ import { buildDramaboxNarration } from "../tts/buildDramaboxNarration";
 import { buildLessonNarration } from "../tts/buildLessonNarration";
 import { planBackgrounds, pickBackgrounds, PLAN_RULES_VERSION } from "../llm/backgroundPlanner";
 import { downloadTo } from "../net/mediaSearch";
+import type { PaidPolicy } from "../tts/paidVoice";
 import { renderVideo, type RenderJob, type RenderContext } from "../render/renderVideo";
 import type { ProjectPreset } from "../../src/store/templatesTypes";
 import {
@@ -115,6 +116,11 @@ export interface JobSpeaker {
 export interface BatchJob {
   /** "Made with Video Forge" (remotion/AiBadge.tsx). On unless false. */
   aiLabel?: boolean;
+  /** A job run has nobody at the window to ask, so paid voices (ElevenLabs) are
+   *  refused unless this is true. `maxPaidCredits` caps the characters bought
+   *  (0 or missing: no cap). Lines already bought on an earlier run are free. */
+  allowPaidVoices?: boolean;
+  maxPaidCredits?: number;
   /** A "Label: text" script. See docs/WRITING-SCRIPTS.md.
    *
    *  Not needed when `lessonDir` is given: a finished lesson carries its own
@@ -347,7 +353,12 @@ async function pickBanner(job: BatchJob): Promise<RenderJob["bannerVideo"]> {
 
 export async function runBatchJob(
   job: BatchJob,
-  ctx: RenderContext & { mediaDir: string }
+  ctx: RenderContext & {
+    mediaDir: string;
+    /** Who may spend on paid voices. Many videos shares one across the whole
+     *  sheet so its cap is for the batch; a `--job` run builds its own. */
+    paid?: PaidPolicy;
+  }
 ): Promise<JobResult> {
   const { onProgress } = ctx;
   const preset: ProjectPreset = await resolvePreset(job);
@@ -610,7 +621,12 @@ export async function runBatchJob(
     narrationInput,
     speakers.map((s) => s.id),
     { sameMs: defaultProject.pauseSameMs, turnMs: defaultProject.pauseTurnMs },
-    ctx.outputDir
+    ctx.outputDir,
+    {
+      // Nobody is watching a job: paid voices only if the job (or the batch
+      // settings) said so, and never past the cap.
+      paid: ctx.paid ?? { mode: "unattended", allowUnattended: job.allowPaidVoices === true, maxChars: job.maxPaidCredits, spent: { chars: 0 } },
+    }
   );
 
   if (job.dumpNarrationMeta) {

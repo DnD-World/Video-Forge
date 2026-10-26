@@ -262,7 +262,7 @@ export function RenderBar() {
       const langs: { tag: string; nar?: Nar }[] = [{ tag: language }];
       if (twin) {
         setNote(`Translating the script and making the ${twinLang === "el" ? "Greek" : "English"} narration…`);
-        langs.push({ tag: twinLang, nar: (await window.byok.tts.twinNarration(twinLang)) as Nar });
+        langs.push({ tag: twinLang, nar: (await window.byok.tts.twinNarration(twinLang, { pricePer1000: useSettingsStore.getState().elevenPricePer1000Usd })) as Nar });
       }
       for (const l of langs) {
         for (const sh of shapes) {

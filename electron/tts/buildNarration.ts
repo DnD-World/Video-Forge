@@ -27,6 +27,7 @@ import { analyzeNarration } from "../audio/analyzeNarration";
 import { trimSilence, squeezeSilence } from "../audio/trimSilence";
 import { displayLine } from "../../src/lib/narration/displayText";
 import { withAudioTags } from "../../src/lib/narration/elevenTags";
+import { elevenLineKey, paidGate, readPaidLine, savePaidLine, type PaidPolicy } from "./paidVoice";
 
 /** One line of script, with its speaker's voice already resolved.
  *
@@ -164,13 +165,70 @@ export function moodTag(text: string): string | undefined {
   return undefined;
 }
 
+/** The text ElevenLabs is sent for a line — and so what it charges for. The tag
+ *  is added here and nowhere earlier (see the note in the synthesis loop). */
+function elevenTextFor(seg: NarrationInput, spoken: (t: string) => string): string {
+  return (seg.elevenModel ?? "eleven_v3").startsWith("eleven_v3") ? withAudioTags(spoken(seg.text), seg.direction) : spoken(seg.text);
+}
+
+function elevenKeyFor(seg: NarrationInput, text: string): string {
+  return elevenLineKey({
+    text,
+    voiceId: seg.elevenVoiceId ?? "",
+    model: seg.elevenModel ?? "eleven_v3",
+    stability: seg.eleven?.stability,
+    similarityBoost: seg.eleven?.similarityBoost,
+    style: seg.eleven?.style,
+    speed: seg.eleven?.speed,
+  });
+}
+
+/** Where bought lines are kept, so a failure part-way never makes them be bought again. */
+const paidLinesDir = (outputDir: string) => path.join(outputDir, "eleven-lines");
+
+/** What a narration would buy, without buying anything. Lines already bought
+ *  (or a whole narration already made) cost nothing. */
+export async function estimatePaid(
+  segments: NarrationInput[],
+  pauses: NarrationPauses,
+  outputDir: string
+): Promise<{ narrationCached: boolean; lines: number; chars: number; reusedLines: number }> {
+  const sayList = await loadPronunciations();
+  const key = narrationKey(segments, pauses) + (sayList.length ? `-${crypto.createHash("sha256").update(JSON.stringify(sayList)).digest("hex").slice(0, 8)}` : "");
+  try {
+    await fsp.access(path.join(outputDir, "narration-cache", `${key}.wav`));
+    await fsp.access(path.join(outputDir, "narration-cache", `${key}.json`));
+    return { narrationCached: true, lines: 0, chars: 0, reusedLines: 0 };
+  } catch {
+    /* not made yet */
+  }
+  const accents = await accentMap(segments.map((x) => x.text));
+  const spoken = (t: string) => applyPronunciations(withAccents(t, accents), sayList);
+  const dir = paidLinesDir(outputDir);
+  let lines = 0;
+  let chars = 0;
+  let reusedLines = 0;
+  for (const seg of segments) {
+    if (seg.engine !== "elevenlabs") continue;
+    const text = elevenTextFor(seg, spoken);
+    if (readPaidLine(dir, elevenKeyFor(seg, text))) reusedLines++;
+    else {
+      lines++;
+      chars += text.length;
+    }
+  }
+  return { narrationCached: false, lines, chars, reusedLines };
+}
+
 export async function buildNarration(
   segments: NarrationInput[],
   /** Speaker ids in the order the canvas draws them, so the analysis's
    *  per-frame speaker index lines up with the waveform's tracks. */
   speakerOrder: string[],
   pauses: NarrationPauses,
-  outputDir: string
+  outputDir: string,
+  /** Who may spend money on this narration. Without it, paid lines are refused. */
+  opts: { paid?: PaidPolicy } = {}
 ): Promise<BuiltNarration> {
   if (segments.length === 0) {
     throw new Error(
@@ -247,6 +305,23 @@ export async function buildNarration(
   }
   const spoken = (t: string) => applyPronunciations(withAccents(t, accents), sayList);
 
+  // PAID LINES: counted and checked BEFORE the first one is bought, so a
+  // batch that is not allowed to spend, or a job that outgrew the yes it was
+  // given, stops with nothing spent. Lines bought on an earlier try are on
+  // disk already and cost nothing now.
+  const paidDir = paidLinesDir(outputDir);
+  const elevenPlan = new Map<number, { text: string; key: string }>();
+  let toBuyChars = 0;
+  for (const [i, seg] of segments.entries()) {
+    if (seg.engine !== "elevenlabs") continue;
+    const text = elevenTextFor(seg, spoken);
+    const k = elevenKeyFor(seg, text);
+    elevenPlan.set(i, { text, key: k });
+    if (!readPaidLine(paidDir, k)) toBuyChars += text.length;
+  }
+  const gate = paidGate(opts.paid, toBuyChars);
+  if (!gate.ok) throw new Error(gate.message);
+
   const geminiAudio = new Map<number, Buffer>();
   const geminiIdx = segments.flatMap((s, i) => (s.engine === "gemini" ? [i] : []));
   const lowMatches: string[] = [];
@@ -290,23 +365,38 @@ export async function buildNarration(
       // Greek the subtitle shows and the aligner is given; only the string
       // handed to the API carries "[sighs] ". A tag that leaked into the
       // segment would be drawn on screen and looked for in the audio.
-      const elevenText =
-        (seg.elevenModel ?? "eleven_v3").startsWith("eleven_v3")
-          ? withAudioTags(spoken(seg.text), seg.direction)
-          : spoken(seg.text);
-      const { audioBuffer, credits: spent } = await elevenlabs.synthesize({
-        text: elevenText,
-        voiceId: seg.elevenVoiceId ?? "",
-        modelId: seg.elevenModel,
-        settings: {
-          stability: seg.eleven?.stability,
-          similarityBoost: seg.eleven?.similarityBoost,
-          style: seg.eleven?.style,
-          speed: seg.eleven?.speed,
-        },
-      });
-      credits += spent;
-      buffers.push(trimmed(await pitchShift(Buffer.from(audioBuffer), seg.pitch ?? 0, seg.speed ?? 1)));
+      const plan = elevenPlan.get(i)!;
+      // Bought on an earlier try? Then it is free now.
+      let line = readPaidLine(paidDir, plan.key);
+      if (!line) {
+        try {
+          const { audioBuffer, credits: spent } = await elevenlabs.synthesize({
+            text: plan.text,
+            voiceId: seg.elevenVoiceId ?? "",
+            modelId: seg.elevenModel,
+            settings: {
+              stability: seg.eleven?.stability,
+              similarityBoost: seg.eleven?.similarityBoost,
+              style: seg.eleven?.style,
+              speed: seg.eleven?.speed,
+            },
+          });
+          credits += spent;
+          if (opts.paid?.spent) opts.paid.spent.chars += spent;
+          line = Buffer.from(audioBuffer);
+          // Kept the moment it arrives — not at the end of the narration.
+          try {
+            savePaidLine(paidDir, plan.key, line);
+          } catch { /* a line that cannot be kept is bought again next time, nothing worse */ }
+        } catch (e) {
+          const kept = [...elevenPlan.entries()].filter(([j, p]) => j < i && readPaidLine(paidDir, p.key)).length;
+          throw new Error(
+            `${e instanceof Error ? e.message : String(e)} — stopped at line ${i + 1} of ${segments.length}. ` +
+              (kept ? `The ${kept} paid line${kept === 1 ? "" : "s"} already made ${kept === 1 ? "is" : "are"} kept and will not be bought again when you retry.` : "")
+          );
+        }
+      }
+      buffers.push(trimmed(await pitchShift(line, seg.pitch ?? 0, seg.speed ?? 1)));
       continue;
     }
 

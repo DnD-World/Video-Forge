@@ -206,13 +206,14 @@ declare global {
         generateNarration: (
           segments: import("../electron/tts/buildNarration").NarrationInput[],
           speakerOrder: string[],
-          pauses?: { sameMs: number; turnMs: number }
+          pauses?: { sameMs: number; turnMs: number },
+          paid?: { pricePer1000?: number }
         ) => Promise<{
           filePath: string;
           segments: { speakerId: string; speakerLabel: string; text: string; startMs: number; endMs: number }[];
           analysis: AudioAnalysis | null;
         }>;
-        twinNarration: (target: string) => Promise<{
+        twinNarration: (target: string, paid?: { pricePer1000?: number }) => Promise<{
           filePath: string;
           segments: { speakerId: string; speakerLabel: string; text: string; startMs: number; endMs: number }[];
           analysis: AudioAnalysis | null;

@@ -138,18 +138,20 @@ const api = {
     generateNarration: (
       segments: import("./tts/buildNarration").NarrationInput[],
       speakerOrder: string[],
-      pauses?: { sameMs: number; turnMs: number }
+      pauses?: { sameMs: number; turnMs: number },
+      /** The user's ElevenLabs price per 1,000 characters (Settings). */
+      paid?: { pricePer1000?: number }
     ): Promise<{
       filePath: string;
       segments: { speakerId: string; speakerLabel: string; text: string; startMs: number; endMs: number }[];
       analysis: unknown;
-    }> => ipcRenderer.invoke("tts:generateNarration", segments, speakerOrder, pauses),
+    }> => ipcRenderer.invoke("tts:generateNarration", segments, speakerOrder, pauses, paid),
     /** The last narration again, translated and spoken in `target` ("el", "en"). */
-    twinNarration: (target: string): Promise<{
+    twinNarration: (target: string, paid?: { pricePer1000?: number }): Promise<{
       filePath: string;
       segments: { speakerId: string; speakerLabel: string; text: string; startMs: number; endMs: number }[];
       analysis: unknown;
-    }> => ipcRenderer.invoke("tts:twinNarration", target),
+    }> => ipcRenderer.invoke("tts:twinNarration", target, paid),
   },
 
   project: {
