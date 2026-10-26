@@ -69,7 +69,28 @@ Render proof (#7), 26 Oct:
 - Checked at 1440×900 and 1280×720 with lesson 101.1 data, and installed.
 
 Explainer in the B layout too (26 Oct, late): Style/Script/Look/Make down the left (ui/StepColumn.tsx, shared with the puppet screen), live preview filling the right with a strip of scenes + narration words. Installed.
-Next: ask Ak. Phase 3 is on hold until Ak says so.
+BUILD ORDER (Ak, 26 Oct: "I do not want to choose sequence"). Claude decides the order; Ak switches the effort level when told.
+1. MEDIUM, batch 1 (in progress):
+   - Many videos: own screen. DONE (e589ff6).
+   - Being built on helper branches, not yet merged:
+     - batch1-ex-sfx: Explainer sound effects.
+     - batch1-hear: hear before render (#16).
+     - batch1-undo: undo/redo + recent projects (#18).
+   - Then: merge those three, run the tests, check in the app, and install.
+   - Then #23: merge the long branches into the main branches of both apps, plus the release check.
+2. HIGH: #48 motion library, #13 two character forms with libraries, #49 puppets + code mixing.
+3. MEDIUM: variety. Looks (beards, shoes, 3 shadow looks), wardrobe, free media, emoji pop-ups, Image Forge in the same layout, the rest of Phase 5.
+4. HIGH: #43 timeline.
+
+Waiting on something else:
+- check tuning (Ak's ✓/✗ marks);
+- the mini PC (6a/6b);
+- the credit run (Phase 3), only when Ak says.
+
+Test recipe: run a test copy on a scratch data folder with VIDEOFORGE_USER_DATA, and open DevTools with --remote-debugging-port.
+- Close it with CDP Browser.close; killing processes is not allowed.
+- Seed lesson 101.1 data through the localStorage key byok-project.
+- Install silently: the Setup exe with /S, once Ak's apps are closed.
 Top risk: Google credit ends before Christmas.
 
 ## Phase 1 safety fixes — branch `phase1-vf-safety` (not merged, not pushed)
