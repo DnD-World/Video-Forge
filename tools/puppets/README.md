@@ -16,6 +16,7 @@ the bulk run always ask for the same thing.
 | `pilot.mjs` | Writes `pilot.json`: one character per subject, two looks each, base pictures only. |
 | `vrun.py` | Sends a job list to Vertex AI batch, waits, saves each picture as `<key>.png`, deletes its temporary bucket. Writes `records.jsonl` next to the pictures: model, time, batch, prompt, things to avoid, reference pictures, and whether a picture came back. |
 | `pilot-page.mjs` | The choosing page for the pilot: two looks side by side per subject, with a "Copy my picks" button. |
+| `flow-export.mjs` | Turns a job list (`pilot.json`) or `records.jsonl` into a "Flow job file" that the Flow Prompt Feeder browser extension reads, so pictures can be re-made by hand in Google Flow after the credit ends. Costs nothing. |
 
 ## Commands
 
@@ -37,6 +38,12 @@ python -I tools/puppets/vrun.py tools/puppets/pilot.json puppet-run/pilot pilot2
 
 ```bash
 node tools/puppets/pilot-page.mjs
+```
+
+Flow job file (free; the format is described in the extension's README, in the `flow` folder):
+
+```bash
+node tools/puppets/flow-export.mjs tools/puppets/pilot.json puppet-run/pilot/flow-jobs.json
 ```
 
 `vrun.py` skips any key whose picture already exists, so it is safe to run again after a failure.
