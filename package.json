@@ -18,7 +18,7 @@
     "outros": "electron . --add-outros",
     "ask-forge": "node tools/ask-forge.mjs",
     "brand": "node tools/use-brand.mjs",
-    "test": "node --test tools/lib/forgeLink.test.mjs tools/lib/brand.test.mjs tools/lib/migrateUserData.test.mjs tools/lib/scriptMatch.test.mjs tools/lib/greekAccents.test.mjs tools/lib/mediaCache.test.mjs tools/lib/forgeKeys.test.mjs tools/lib/forgeShelf.test.mjs tools/lib/sheet.test.mjs tools/lib/hoverHelp.test.mjs tools/lib/forgeHub.test.mjs tools/lib/ipcSurface.test.mjs tools/lib/pathGuard.test.mjs tools/lib/paidVoice.test.mjs tools/lib/work.test.mjs tools/lib/vaultFile.test.mjs tools/lib/partFile.test.mjs tools/lib/projectFile.test.mjs explainer/explainer.test.mjs characters/characters.test.mjs",
+    "test": "node --test tools/lib/forgeLink.test.mjs tools/lib/brand.test.mjs tools/lib/migrateUserData.test.mjs tools/lib/scriptMatch.test.mjs tools/lib/greekAccents.test.mjs tools/lib/mediaCache.test.mjs tools/lib/forgeKeys.test.mjs tools/lib/forgeShelf.test.mjs tools/lib/sheet.test.mjs tools/lib/hoverHelp.test.mjs tools/lib/forgeHub.test.mjs tools/lib/ipcSurface.test.mjs tools/lib/pathGuard.test.mjs tools/lib/paidVoice.test.mjs tools/lib/work.test.mjs tools/lib/vaultFile.test.mjs tools/lib/partFile.test.mjs tools/lib/projectFile.test.mjs tools/lib/subtitlePages.test.mjs explainer/explainer.test.mjs characters/characters.test.mjs",
     "test:link": "node --test tools/lib/forgeLink.test.mjs",
     "test:explainer": "node --test explainer/explainer.test.mjs",
     "test:characters": "node --test characters/characters.test.mjs",

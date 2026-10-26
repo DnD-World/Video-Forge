@@ -84,6 +84,24 @@ async function durationOf(file: string): Promise<number> {
   });
 }
 
+/** The lesson's own video timescale (the denominator of its time base):
+ *  Remotion writes 90000, HyperFrames 12288. 90000 when it can't be read. */
+async function timescaleOf(file: string): Promise<number> {
+  return new Promise((resolve) => {
+    const p = spawnTracked(ffprobeBin(), [
+      "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=time_base",
+      "-of", "default=nw=1:nk=1", file,
+    ], { windowsHide: true });
+    let out = "";
+    p.stdout?.on("data", (d) => { out += String(d); });
+    p.on("error", () => resolve(90000));
+    p.on("close", () => {
+      const den = Number(out.trim().split("/")[1]);
+      resolve(Number.isFinite(den) && den > 0 ? den : 90000);
+    });
+  });
+}
+
 /**
  * Re-encode one card so it is byte-compatible with the lesson.
  *
@@ -96,7 +114,8 @@ async function durationOf(file: string): Promise<number> {
 async function normalise(
   src: string,
   dest: string,
-  o: JoinCardsOptions
+  o: JoinCardsOptions,
+  timescale: number
 ): Promise<string | null> {
   // A CARD KEEPS ITS OWN SOUND. The first version always mapped the generated
   // silence and threw the card's audio away, whatever it had — a sting with a
@@ -126,8 +145,11 @@ async function normalise(
     // encoded at the default 12288 against a render at 90000 produced a 34
     // second video whose container claimed 230 seconds — every frame present
     // and correct, every player showing the wrong duration and a scrub bar
-    // that went nowhere. Remotion writes 90000; so do we.
-    "-video_track_timescale", "90000",
+    // that went nowhere. So the card takes the LESSON's own timescale, read
+    // from the file: Remotion writes 90000, HyperFrames 12288. A fixed 90000
+    // against a HyperFrames lesson stamped the outro 54 minutes in (lesson
+    // 101.1, 26 Oct 2026).
+    "-video_track_timescale", String(timescale),
     "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-ac", "2",
     dest,
   ]);
@@ -150,6 +172,7 @@ export async function joinCards(o: JoinCardsOptions): Promise<JoinCardsResult> {
 
   await fsp.mkdir(o.tempDir, { recursive: true });
   const normalised: Record<string, string> = {};
+  const timescale = await timescaleOf(o.mainPath);
 
   for (const { role, src } of wanted) {
     try {
@@ -159,7 +182,7 @@ export async function joinCards(o: JoinCardsOptions): Promise<JoinCardsResult> {
       continue;
     }
     const dest = path.join(o.tempDir, `${role}.mp4`);
-    const problem = await normalise(src, dest, o);
+    const problem = await normalise(src, dest, o, timescale);
     if (problem) {
       warnings.push(`[video-forge] the ${role} could not be prepared and was left out — ${problem}`);
       continue;
