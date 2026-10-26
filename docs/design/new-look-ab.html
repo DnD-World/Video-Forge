@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Video Forge — new look</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#000; --ink:#E9FEF5; --ink2:#9fbfb2; --ink3:#5f7d72;
+  --mint:#76FFC2; --mint-hi:#D4FFEC; --navy:#344080; --navy-hi:#5562B8;
+  --glass:rgba(11,40,55,.38); --glass-hi:rgba(39,96,117,.45); --line:rgba(130,216,183,.16); --line-hot:rgba(118,255,194,.45);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--ink);font:15px/1.5 Sora,system-ui,sans-serif;min-height:100%}
+body{padding:28px 16px 60px;overflow-x:hidden}
+header{max-width:1400px;margin:0 auto 22px}
+h1{font-size:28px;font-weight:700;letter-spacing:-.01em}
+h1 span{background:linear-gradient(90deg,var(--navy-hi),var(--mint));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{color:var(--ink2);max-width:80ch;margin-top:6px}
+.switch{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.switch button{font:600 14px Sora;color:var(--ink);background:var(--glass);border:1px solid var(--line);border-radius:999px;padding:9px 16px;cursor:pointer;transition:.2s}
+.switch button:hover{border-color:var(--line-hot)}
+.switch button[aria-pressed=true]{background:linear-gradient(90deg,var(--navy),#1e7a63);border-color:var(--mint);box-shadow:0 0 22px rgba(118,255,194,.25)}
+
+/* the gallery: three artboards side by side, or one large */
+.boards{max-width:1400px;margin:0 auto;display:grid;gap:22px;grid-template-columns:repeat(auto-fit,minmax(380px,1fr))}
+.boards.one{grid-template-columns:1fr}
+.card{background:#03080a;border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.card h2{font-size:17px;padding:14px 16px 2px}
+.card p{color:var(--ink2);font-size:13px;padding:0 16px 12px}
+.frame{position:relative;width:100%;aspect-ratio:16/10;overflow:hidden;background:#000}
+.board{position:absolute;left:0;top:0;width:1440px;height:900px;transform-origin:0 0}
+.boards:not(.one) .card{cursor:zoom-in}
+.verdict{display:flex;gap:8px;padding:12px 16px 16px;flex-wrap:wrap}
+.verdict label{font-size:13px;display:flex;align-items:center;gap:6px;background:var(--glass);border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer}
+.verdict input{accent-color:var(--mint)}
+
+/* ---------- shared pieces inside an artboard ---------- */
+.aurora{position:absolute;inset:-20%;filter:blur(70px);opacity:.75;animation:drift 18s ease-in-out infinite alternate}
+.aurora i{position:absolute;border-radius:50%}
+.aurora i:nth-child(1){width:55%;height:55%;left:5%;top:10%;background:radial-gradient(circle,var(--navy) 0,transparent 70%)}
+.aurora i:nth-child(2){width:45%;height:50%;right:5%;top:30%;background:radial-gradient(circle,rgba(118,255,194,.35) 0,transparent 70%);animation:drift 14s ease-in-out infinite alternate-reverse}
+.aurora i:nth-child(3){width:40%;height:40%;left:35%;bottom:0;background:radial-gradient(circle,rgba(85,98,184,.5) 0,transparent 70%)}
+@keyframes drift{from{transform:translate(-3%,-2%) rotate(0)}to{transform:translate(3%,3%) rotate(8deg)}}
+.grain{position:absolute;inset:0;opacity:.07;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.particles span{position:absolute;width:3px;height:3px;border-radius:50%;background:var(--mint);box-shadow:0 0 8px var(--mint);opacity:0;animation:rise linear infinite}
+@keyframes rise{0%{opacity:0;transform:translateY(0)}15%{opacity:.8}100%{opacity:0;transform:translateY(-420px)}}
+.glass{background:var(--glass);border:1px solid var(--line);border-radius:22px;backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 20px 60px rgba(0,0,0,.45)}
+.glass.hot{border-color:var(--line-hot);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 0 40px rgba(118,255,194,.12),0 20px 60px rgba(0,0,0,.45)}
+.chip{display:inline-flex;align-items:center;gap:8px;font-size:15px;padding:9px 16px;border-radius:999px;border:1px solid var(--line);background:rgba(7,28,38,.5)}
+.chip.on{border-color:var(--mint);color:var(--mint);box-shadow:0 0 18px rgba(118,255,194,.2)}
+.btn{font:600 16px Sora;color:#022;background:linear-gradient(90deg,var(--mint),#b6ffe0);border:0;border-radius:14px;padding:14px 26px;box-shadow:0 8px 30px rgba(118,255,194,.35);position:relative;overflow:hidden}
+.btn::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.7) 50%,transparent 70%);transform:translateX(-100%);animation:shine 3.2s ease-in-out infinite}
+@keyframes shine{60%,100%{transform:translateX(100%)}}
+.muted{color:var(--ink2)} .tiny{font-size:13px;color:var(--ink3);letter-spacing:.12em;text-transform:uppercase}
+
+/* the stage: a talking character drawn in CSS, sound bars, subtitle */
+.stage{position:relative;overflow:hidden;border-radius:26px;background:radial-gradient(120% 90% at 50% 20%,#123a4a 0,#06141b 55%,#020608 100%)}
+.stage .sky{position:absolute;inset:0;background:radial-gradient(60% 40% at 70% 15%,rgba(118,255,194,.18),transparent 70%)}
+/* a park behind the speaker: two hills, a tree, a soft sun — so the stage never looks empty */
+.stage::before{content:"";position:absolute;left:-10%;right:-10%;bottom:0;height:42%;background:radial-gradient(60% 100% at 25% 100%,#1f6b52 0 60%,transparent 61%),radial-gradient(70% 100% at 80% 100%,#17553f 0 60%,transparent 61%)}
+.stage::after{content:"";position:absolute;left:12%;bottom:22%;width:120px;height:210px;background:radial-gradient(circle at 50% 30%,#2f8a63 0 38%,transparent 39%) top/120px 140px no-repeat,linear-gradient(#3b2a1e,#3b2a1e) 50% 100%/16px 90px no-repeat;filter:drop-shadow(0 0 30px rgba(118,255,194,.15))}
+.stage > *{z-index:1}
+.char{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:300px;height:460px;animation:bob 3s ease-in-out infinite}
+@keyframes bob{50%{transform:translateX(-50%) translateY(-6px)}}
+.char .body{position:absolute;bottom:0;left:40px;width:220px;height:230px;border-radius:110px 110px 30px 30px;background:linear-gradient(160deg,#5562B8,#2a3470)}
+.char .head{position:absolute;top:40px;left:55px;width:190px;height:200px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#ffe1c8,#f0b48f 70%);box-shadow:inset -10px -14px 24px rgba(0,0,0,.18)}
+.char .hair{position:absolute;top:28px;left:48px;width:204px;height:90px;border-radius:100px 100px 40px 40px;background:#2b1d16}
+.char .eye{position:absolute;top:120px;width:22px;height:26px;border-radius:50%;background:#1b1b1b;animation:blink 4.5s infinite}
+.char .eye.l{left:105px}.char .eye.r{left:173px}
+@keyframes blink{0%,46%,50%,100%{transform:scaleY(1)}48%{transform:scaleY(.1)}}
+.char .mouth{position:absolute;top:178px;left:128px;width:44px;height:14px;border-radius:0 0 30px 30px;background:#5c1f22;animation:talk .9s steps(4) infinite}
+@keyframes talk{0%{height:6px;width:40px;left:130px}25%{height:22px;width:34px;left:133px}50%{height:12px;width:44px;left:128px}75%{height:26px;width:28px;left:136px}100%{height:8px;width:40px;left:130px}}
+.bars{display:flex;align-items:flex-end;gap:5px;height:56px}
+.bars i{width:6px;border-radius:3px;background:linear-gradient(var(--mint),var(--navy-hi));animation:bar 1s ease-in-out infinite}
+@keyframes bar{0%,100%{height:12%}50%{height:100%}}
+.sub{position:absolute;left:50%;transform:translateX(-50%);bottom:40px;font:600 30px Sora;padding:8px 18px;border-radius:12px;background:rgba(0,0,0,.45);white-space:nowrap}
+.sub b{color:var(--mint)}
+
+/* ---------- A: Stage first ---------- */
+.A .rail{position:absolute;left:24px;top:24px;bottom:24px;width:84px;display:flex;flex-direction:column;align-items:center;gap:14px;padding:18px 0}
+.A .rail .ico{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;font-size:22px;border:1px solid var(--line)}
+.A .rail .ico.on{border-color:var(--mint);box-shadow:0 0 20px rgba(118,255,194,.3);background:rgba(118,255,194,.08)}
+.A .stage{position:absolute;left:132px;top:24px;right:24px;bottom:186px}
+.A .dock{position:absolute;left:132px;right:24px;bottom:24px;height:140px;display:grid;grid-template-columns:repeat(4,1fr) 230px;gap:14px;padding:16px}
+.A .step{border-radius:16px;padding:14px 16px;border:1px solid var(--line);background:rgba(7,28,38,.45);position:relative;overflow:hidden}
+.A .step.on{border-color:var(--line-hot)}
+.A .step.on::before{content:"";position:absolute;left:0;top:0;height:3px;width:100%;background:linear-gradient(90deg,var(--navy-hi),var(--mint));animation:load 2.5s ease-in-out infinite alternate}
+@keyframes load{from{width:20%}to{width:100%}}
+.A .step h3{font-size:18px}
+.A .inspector{position:absolute;right:48px;top:48px;width:330px;padding:20px;animation:slidein 1s cubic-bezier(.2,.8,.2,1) both}
+@keyframes slidein{from{transform:translateX(40px);opacity:0}}
+
+/* ---------- B: Studio split ---------- */
+.B .top{position:absolute;left:24px;right:24px;top:20px;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 22px}
+.B .left{position:absolute;left:24px;top:104px;bottom:24px;width:420px;padding:22px;display:flex;flex-direction:column;gap:14px}
+.B .stepper{position:relative;padding-left:44px;display:flex;flex-direction:column;gap:16px}
+.B .stepper::before{content:"";position:absolute;left:17px;top:10px;bottom:10px;width:2px;background:var(--line)}
+.B .stepper::after{content:"";position:absolute;left:17px;top:10px;width:2px;height:48%;background:linear-gradient(var(--mint),var(--navy-hi));box-shadow:0 0 12px var(--mint)}
+.B .s{position:relative;padding:14px 16px;border-radius:16px;border:1px solid var(--line);background:rgba(7,28,38,.45)}
+.B .s::before{content:attr(data-n);position:absolute;left:-44px;top:12px;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:#071c26;border:1px solid var(--line)}
+.B .s.done::before{background:var(--mint);color:#022;border-color:var(--mint)}
+.B .s.on{border-color:var(--line-hot)}
+.B .s.on::before{border-color:var(--mint);color:var(--mint);box-shadow:0 0 16px rgba(118,255,194,.4)}
+.B .stage{position:absolute;left:468px;top:104px;right:24px;bottom:150px}
+.B .strip{position:absolute;left:468px;right:24px;bottom:24px;height:104px;display:flex;gap:12px;align-items:center;padding:0 18px}
+.B .clip{height:68px;flex:1;border-radius:12px;background:linear-gradient(135deg,#123a4a,#0b2837);border:1px solid var(--line);position:relative;overflow:hidden}
+.B .clip.on{border-color:var(--mint)}
+.B .playhead{position:absolute;top:10px;bottom:10px;width:2px;background:var(--mint);box-shadow:0 0 12px var(--mint);animation:play 6s linear infinite}
+@keyframes play{from{left:3%}to{left:97%}}
+
+/* ---------- C: Full-bleed + command bar ---------- */
+.C .stage{position:absolute;inset:0;border-radius:0}
+.C .cmd{position:absolute;left:50%;top:34px;transform:translateX(-50%);width:760px;padding:14px 18px;display:flex;align-items:center;gap:14px}
+.C .cmd .q{flex:1;font-size:19px;color:var(--ink2)}
+.C .cmd .caret{display:inline-block;width:2px;height:22px;background:var(--mint);vertical-align:middle;animation:caret 1s steps(2) infinite}
+@keyframes caret{50%{opacity:0}}
+.C .float{position:absolute;padding:18px}
+.C .who{left:34px;top:140px;width:290px;animation:float 6s ease-in-out infinite}
+.C .look{right:34px;top:140px;width:300px;animation:float 7s ease-in-out infinite reverse}
+@keyframes float{50%{transform:translateY(-8px)}}
+.C .film{position:absolute;left:34px;right:34px;bottom:30px;height:118px;display:flex;gap:12px;padding:14px;align-items:stretch}
+.C .scene{flex:1;border-radius:12px;background:linear-gradient(135deg,#123a4a,#071c26);border:1px solid var(--line);padding:10px;font-size:13px;color:var(--ink2)}
+.C .scene.on{border-color:var(--mint);color:var(--ink);box-shadow:0 0 24px rgba(118,255,194,.18)}
+.C .ring{position:absolute;right:64px;bottom:178px;width:120px;height:120px;border-radius:50%;background:conic-gradient(var(--mint) 0 62%,rgba(118,255,194,.12) 0);display:grid;place-items:center;animation:spin 8s linear infinite}
+.C .ring::after{content:"62%";position:absolute;inset:10px;border-radius:50%;background:#04121a;display:grid;place-items:center;font:700 26px Sora;animation:spin 8s linear infinite reverse}
+@keyframes spin{to{transform:rotate(360deg)}}
+.avatar{width:42px;height:42px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#ffe1c8,#f0b48f);border:2px solid var(--mint);flex:none}
+.row{display:flex;align-items:center;gap:12px}
+.mini{font-size:14px}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Video Forge — <span>three new looks</span></h1>
+  <p class="lead">Each look puts every mode (puppet video, explainer, many videos) on one layout with a big preview. Colours are the Forge ones: black, brand navy and mint. Click a look to see it large. Tick what you like in each, then tell me the letter, or mix them ("A's dock with C's command bar").</p>
+  <div class="switch" role="group" aria-label="Show">
+    <button aria-pressed="true" data-show="all">All three side by side</button>
+    <button aria-pressed="false" data-show="A">A · Stage first</button>
+    <button aria-pressed="false" data-show="B">B · Studio steps</button>
+    <button aria-pressed="false" data-show="C">C · Full screen + command bar</button>
+  </div>
+</header>
+
+<main class="boards" id="boards">
+
+<!-- ================= A ================= -->
+<section class="card" data-look="A">
+  <h2>A · Stage first</h2>
+  <p>The video fills the screen. The four steps live in a dock at the bottom; settings for the picked thing slide in from the right.</p>
+  <div class="frame"><div class="board A">
+    <div class="aurora"><i></i><i></i><i></i></div><div class="grain"></div>
+    <nav class="rail glass"><div class="ico on">🎭</div><div class="ico">📊</div><div class="ico">🗂️</div><div style="flex:1"></div><div class="ico">⚙️</div></nav>
+    <div class="stage glass hot"><div class="sky"></div>
+      <div class="particles" data-n="22"></div>
+      <div class="char"><div class="body"></div><div class="hair"></div><div class="head"></div><div class="eye l"></div><div class="eye r"></div><div class="mouth"></div></div>
+      <div class="sub">Dogs learn best with <b>short</b> sessions.</div>
+      <aside class="inspector glass"><div class="tiny">Maria · voice</div><h3 style="font-size:22px;margin:6px 0 12px">Warm, a bit slower</h3><div class="bars" data-n="22"></div><div class="row" style="margin-top:16px;gap:8px"><span class="chip on">Calm</span><span class="chip">Cheerful</span><span class="chip">Serious</span></div></aside>
+    </div>
+    <div class="dock glass">
+      <div class="step"><div class="tiny">1 · Cast</div><h3>2 speakers</h3><span class="muted mini">Maria, Lucky</span></div>
+      <div class="step on"><div class="tiny">2 · Script</div><h3>14 lines</h3><span class="muted mini">0:52 long</span></div>
+      <div class="step"><div class="tiny">3 · Look</div><h3>Park, sunny</h3><span class="muted mini">music on</span></div>
+      <div class="step"><div class="tiny">4 · Make</div><h3>Ready</h3><span class="muted mini">vertical, 1080p</span></div>
+      <div style="display:grid;place-items:center"><button class="btn">Make the video</button></div>
+    </div>
+  </div></div>
+  <div class="verdict"><label><input type="checkbox">The big stage</label><label><input type="checkbox">The bottom dock</label><label><input type="checkbox">The slide-in panel</label></div>
+</section>
+
+<!-- ================= B ================= -->
+<section class="card" data-look="B">
+  <h2>B · Studio steps</h2>
+  <p>A step-by-step column on the left with a glowing progress line, the stage on the right and a clip strip with a moving play head under it.</p>
+  <div class="frame"><div class="board B">
+    <div class="aurora"><i></i><i></i><i></i></div><div class="grain"></div>
+    <div class="top glass"><div class="row"><b style="font-size:20px">Video Forge</b><span class="chip on">Puppet video</span><span class="chip">Explainer</span><span class="chip">Many videos</span></div><span class="muted">Saved 2 s ago</span></div>
+    <div class="left glass">
+      <div class="tiny">Your video, step by step</div>
+      <div class="stepper">
+        <div class="s done" data-n="✓"><b>Who speaks</b><div class="muted mini">Maria and Lucky</div></div>
+        <div class="s on" data-n="2"><b>What they say</b><div class="muted mini">14 lines · 0:52</div><div class="bars" data-n="26" style="height:40px;margin-top:10px"></div></div>
+        <div class="s" data-n="3"><b>How it looks and sounds</b><div class="muted mini">park, music</div></div>
+        <div class="s" data-n="4"><b>Make it</b><div class="muted mini">vertical, 1080p</div></div>
+      </div>
+      <div style="flex:1"></div><button class="btn">Make the video</button>
+    </div>
+    <div class="stage glass hot"><div class="sky"></div><div class="particles" data-n="18"></div>
+      <div class="char"><div class="body"></div><div class="hair"></div><div class="head"></div><div class="eye l"></div><div class="eye r"></div><div class="mouth"></div></div>
+      <div class="sub">Dogs learn best with <b>short</b> sessions.</div>
+    </div>
+    <div class="strip glass"><div class="clip on"></div><div class="clip"></div><div class="clip"></div><div class="clip"></div><div class="clip"></div><div class="clip"></div><div class="playhead"></div></div>
+  </div></div>
+  <div class="verdict"><label><input type="checkbox">The step column</label><label><input type="checkbox">The clip strip</label><label><input type="checkbox">The top mode bar</label></div>
+</section>
+
+<!-- ================= C ================= -->
+<section class="card" data-look="C">
+  <h2>C · Full screen + command bar</h2>
+  <p>The video is the whole window. You type what you want at the top; small floating panels show who is speaking and the look; scenes run along the bottom.</p>
+  <div class="frame"><div class="board C">
+    <div class="stage"><div class="sky"></div><div class="aurora" style="opacity:.45"><i></i><i></i><i></i></div><div class="particles" data-n="30"></div>
+      <div class="char" style="width:340px;height:520px"><div class="body"></div><div class="hair"></div><div class="head"></div><div class="eye l"></div><div class="eye r"></div><div class="mouth"></div></div>
+      <div class="sub" style="bottom:170px">Dogs learn best with <b>short</b> sessions.</div>
+    </div>
+    <div class="cmd glass hot"><span style="font-size:20px">✦</span><span class="q">Make Lucky sound more excited in scene 3<span class="caret"></span></span><span class="chip">Enter</span></div>
+    <div class="float who glass"><div class="tiny">Speaking now</div><div class="row" style="margin-top:10px"><div class="avatar"></div><div><b>Maria</b><div class="muted mini">warm, a bit slower</div></div></div><div class="bars" data-n="20" style="margin-top:12px;height:44px"></div></div>
+    <div class="float look glass"><div class="tiny">The look</div><div class="row" style="margin-top:10px;flex-wrap:wrap;gap:8px"><span class="chip on">Park</span><span class="chip">Sunny</span><span class="chip">Music</span><span class="chip">Subtitles</span></div></div>
+    <div class="ring"></div>
+    <div class="film glass"><div class="scene">1 · Hello</div><div class="scene">2 · Why short</div><div class="scene on">3 · Lucky tries</div><div class="scene">4 · The treat</div><div class="scene">5 · Bye</div><div style="display:grid;place-items:center"><button class="btn">Make it</button></div></div>
+  </div></div>
+  <div class="verdict"><label><input type="checkbox">Full-screen video</label><label><input type="checkbox">The command bar</label><label><input type="checkbox">Floating panels</label></div>
+</section>
+</main>
+
+<script>
+// sound bars and sparks, generated
+document.querySelectorAll(".bars").forEach((b) => {
+  for (let i = 0; i < +b.dataset.n; i++) { const e = document.createElement("i"); e.style.animationDelay = `${(i * 0.07) % 1}s`; e.style.animationDuration = `${0.7 + ((i * 37) % 50) / 100}s`; b.appendChild(e); }
+});
+document.querySelectorAll(".particles").forEach((p) => {
+  for (let i = 0; i < +p.dataset.n; i++) { const s = document.createElement("span"); s.style.left = `${(i * 53) % 100}%`; s.style.top = `${60 + ((i * 29) % 40)}%`; s.style.animationDuration = `${5 + (i % 6)}s`; s.style.animationDelay = `${(i * 0.4) % 6}s`; p.appendChild(s); }
+});
+// fit each 1440×900 artboard into its card
+const fit = () => document.querySelectorAll(".frame").forEach((f) => (f.firstElementChild.style.transform = `scale(${f.clientWidth / 1440})`));
+addEventListener("resize", fit); fit();
+// show one or all
+const boards = document.getElementById("boards");
+const show = (which) => {
+  document.querySelectorAll(".switch button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.show === which)));
+  boards.classList.toggle("one", which !== "all");
+  document.querySelectorAll(".card").forEach((c) => (c.style.display = which === "all" || c.dataset.look === which ? "" : "none"));
+  fit();
+};
+document.querySelectorAll(".switch button").forEach((b) => (b.onclick = () => show(b.dataset.show)));
+document.querySelectorAll(".card").forEach((c) => c.querySelector(".frame").addEventListener("click", () => boards.classList.contains("one") || show(c.dataset.look)));
+</script>
+</body>
+</html>
