@@ -27,4 +27,7 @@ Four steps, left to right: **Cast, Script, Look, Make.**
 - **Many videos**: paste a Google Sheet link (shared "anyone with the link") with one row per video. The app makes them one after another into a folder named after the sheet.
 
 ## Stuck?
-Hover over any button or box. A little bubble tells you what it does.
+Hover over anything: a button, a label, a badge, a number. A little bubble tells you what it is in plain words. No mouse? Press **Tab** to move to it and the bubble shows too. **Esc** closes it.
+
+## Keys (the passwords for online helpers)
+Press the gear, top right, to open **Settings**. Each online helper has its own box: ElevenLabs, Gemini, OpenRouter, NVIDIA, Groq, Cerebras, OpenAI, Mistral, Pixabay, Pexels, Freesound. Paste the key, press **Save**, then **Test**. The badge tells you if it is free, paid, or needs approval first. If a message says a key is missing, it has an **Open Settings** button.
