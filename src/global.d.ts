@@ -191,6 +191,7 @@ declare global {
             }
           | { ok: false; jobId: string; error: string }
         >;
+        cancel: () => Promise<boolean>;
         onProgress: (
           cb: (payload: { jobId: string; pct: number; note?: string }) => void
         ) => () => void;

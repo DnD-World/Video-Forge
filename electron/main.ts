@@ -25,7 +25,8 @@ import { searchSounds } from "./net/soundSearch";
 import { planBackgrounds, pickBackgrounds } from "./llm/backgroundPlanner";
 import { renderVideo, type RenderJob } from "./render/renderVideo";
 import { cacheStats, cleanUp, touch } from "./media/mediaCache";
-import { installExitHandlers, reapOrphansFromLastSession } from "./process/childTree";
+import { installExitHandlers, killAllTracked, reapOrphansFromLastSession } from "./process/childTree";
+import { abortAllWork, busyWith, closeQuestion, isBusy, startWork } from "./process/work";
 import { buildNarration, estimatePaid, type NarrationInput } from "./tts/buildNarration";
 import { describePaid, type PaidPolicy } from "./tts/paidVoice";
 import { runBatchJob, type BatchJob } from "./batch/runJob";
@@ -152,6 +153,39 @@ function createWindow() {
   } else {
     mainWindow.loadFile(path.join(__dirname, "../renderer/index.html"));
   }
+
+  // Closing the window while a video (or a batch) is being made would throw the
+  // work away and, before this, leave the renderer running with nobody to
+  // collect it. Ask first; if the answer is quit, stop what THIS app started.
+  let asking = false;
+  let leaving = false;
+  mainWindow.on("close", (event) => {
+    if (leaving || !isBusy()) return;
+    event.preventDefault();
+    if (asking) return;
+    asking = true;
+    const q = closeQuestion(busyWith());
+    void dialog
+      .showMessageBox(mainWindow!, {
+        type: "warning",
+        title: "Video Forge",
+        message: q.message,
+        detail: q.detail,
+        buttons: ["Keep working", "Stop it and quit"],
+        defaultId: 0,
+        cancelId: 0,
+        noLink: true,
+      })
+      .then(async (r) => {
+        asking = false;
+        if (r.response !== 1) return;
+        leaving = true;
+        manyStop = true;
+        abortAllWork();
+        await killAllTracked(); // by process id: only what this app started
+        mainWindow?.close();
+      });
+  });
 
   mainWindow.on("closed", () => {
     mainWindow = null;
@@ -313,14 +347,17 @@ ipcMain.handle("batch:runMany", async (e, req: ManyRequest) => {
   if (manyRunning) return { ok: false, problem: "A batch is already running." };
   manyRunning = true;
   manyStop = false;
+  const manyAbort = new AbortController();
+  const endWork = startWork("a batch of videos", manyAbort);
   const send = (ev: ManyEvent) => !e.sender.isDestroyed() && e.sender.send("batch:event", ev);
   void runMany(
     req,
-    { projectRoot: app.getAppPath(), outputDir: outputDir(), fontsDir: fontsDir(), mediaDir: path.join(app.getPath("userData"), "media") },
+    { projectRoot: app.getAppPath(), outputDir: outputDir(), fontsDir: fontsDir(), mediaDir: path.join(app.getPath("userData"), "media"), signal: manyAbort.signal },
     send,
-    () => manyStop
+    () => manyStop || manyAbort.signal.aborted
   ).finally(() => {
     manyRunning = false;
+    endWork();
   });
   return { ok: true };
 });
@@ -539,8 +576,18 @@ ipcMain.handle(
 // running and the UI needs to move while it happens.
 // ---------------------------------------------------------------------------
 
+/** The renders running now, so a Stop (or closing the window) can end them. */
+const renderControllers = new Set<AbortController>();
+ipcMain.handle("render:cancel", async () => {
+  for (const c of renderControllers) c.abort();
+  return renderControllers.size > 0;
+});
+
 ipcMain.handle("render:start", async (_e, job: RenderJob) => {
   const jobId = Date.now().toString(36);
+  const controller = new AbortController();
+  renderControllers.add(controller);
+  const endWork = startWork("a video", controller);
   const send = (pct: number, note: string) => {
     // The window can be closed mid-render; dropping the update is correct.
     if (mainWindow && !mainWindow.isDestroyed()) {
@@ -549,14 +596,14 @@ ipcMain.handle("render:start", async (_e, job: RenderJob) => {
   };
 
   // The clips this render uses count as "just used", so a clean-up keeps them.
-  await touch((job.backgrounds ?? []).map((b) => b.filePath).filter((p): p is string => !!p));
-
   try {
+    await touch((job.backgrounds ?? []).map((b) => b.filePath).filter((p): p is string => !!p));
     const result = await renderVideo(job, {
       projectRoot: app.getAppPath(),
       outputDir: outputDir(),
       fontsDir: fontsDir(),
       onProgress: send,
+      signal: controller.signal,
     });
     // On the Forge hub's list of everything made (tools/lib/forgeHub.mjs) —
     // what the Social Forge will post from.
@@ -578,9 +625,17 @@ ipcMain.handle("render:start", async (_e, job: RenderJob) => {
     }
     return { ok: true as const, jobId, ...result };
   } catch (err) {
+    // A Stop is not a failure: say so, and keep the screen's wording calm.
+    if (controller.signal.aborted) {
+      send(0, "Stopped");
+      return { ok: false as const, jobId, error: "Stopped — the half-made video was removed." };
+    }
     const message = err instanceof Error ? err.message : String(err);
     send(0, `Render failed: ${message}`);
     return { ok: false as const, jobId, error: message };
+  } finally {
+    renderControllers.delete(controller);
+    endWork();
   }
 });
 
@@ -644,7 +699,12 @@ ipcMain.handle("tts:generateNarration", async (
 ) => {
   await rememberNarration({ segments, speakerOrder, pauses });
   const policy = await askBeforeBuying(segments, pauses, paid?.pricePer1000);
-  return buildNarration(segments, speakerOrder, pauses, outputDir(), { paid: policy });
+  const endWork = startWork("a narration");
+  try {
+    return await buildNarration(segments, speakerOrder, pauses, outputDir(), { paid: policy });
+  } finally {
+    endWork();
+  }
 });
 /** The same script in the other language, same cast (tts/twinNarration.ts). */
 ipcMain.handle("tts:twinNarration", async (_e, target: string, paid?: { pricePer1000?: number }) =>

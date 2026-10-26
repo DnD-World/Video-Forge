@@ -19,7 +19,7 @@ import path from "node:path";
 import fsp from "node:fs/promises";
 import os from "node:os";
 import { bundle } from "@remotion/bundler";
-import { selectComposition, renderMedia, ensureBrowser } from "@remotion/renderer";
+import { selectComposition, renderMedia, ensureBrowser, makeCancelSignal } from "@remotion/renderer";
 import { renderHyperframes } from "./hyperframes/renderHyperframes";
 import {
   COMPOSITION_ID,
@@ -31,7 +31,7 @@ import type { Puppet } from "../../src/store/puppetTypes";
 import { puppetAssetPaths, validatePuppet } from "../../src/lib/puppets/puppetAssets";
 import { ensureFont } from "../net/fonts";
 import { joinCards } from "./joinCards";
-import { spawn } from "node:child_process";
+import { spawnTracked } from "../process/childTree";
 import { ffmpegBin } from "../process/ffmpegPath";
 import { buildCues } from "../../src/lib/subtitles/wordTiming";
 import { toSrt, toVtt } from "../../src/lib/subtitles/subtitleFiles";
@@ -141,6 +141,9 @@ export interface RenderContext {
    *  here because only main knows where userData is. */
   fontsDir: string;
   onProgress: (pct: number, note: string) => void;
+  /** Aborting stops the render: the processes it started are ended and the
+   *  half-made file is removed. */
+  signal?: AbortSignal;
 }
 
 const AUDIO_PUBLIC_NAME = "narration.wav";
@@ -189,8 +192,14 @@ export async function renderVideo(
   const publicDir = await fsp.mkdtemp(path.join(os.tmpdir(), "video-forge-render-"));
   let audioFileName: string | null = null;
   const warnings: string[] = [];
+  /** The video being written, so a Stop can remove the half of it. */
+  let partialOutput: string | null = null;
+  const stopped = () => {
+    if (ctx.signal?.aborted) throw new Error("Stopped.");
+  };
 
   try {
+    stopped();
     if (job.audioFilePath) {
       await fsp.copyFile(job.audioFilePath, path.join(publicDir, AUDIO_PUBLIC_NAME));
       audioFileName = AUDIO_PUBLIC_NAME;
@@ -585,6 +594,7 @@ export async function renderVideo(
     await fsp.mkdir(outputDir, { recursive: true });
     const stem = job.fileStem ? job.fileStem.replace(/[^\p{L}\p{N}_-]+/gu, "_").slice(0, 40) : "render";
     const outputPath = path.join(outputDir, `${stem}-${Date.now()}.mp4`);
+    partialOutput = outputPath;
     const frames = Math.max(1, Math.round(job.durationSec * job.fps));
 
     // THE ENGINE. HyperFrames by default since 11 Oct 2026 (licence-free for
@@ -600,6 +610,7 @@ export async function renderVideo(
         crf: job.crf ?? 23,
         outputPath,
         onProgress: (f, note) => onProgress(lerp({ from: STAGE.bundle.from, to: 99 }, f), note),
+        signal: ctx.signal,
       });
     } else {
       const serveUrl = await bundle({
@@ -620,7 +631,11 @@ export async function renderVideo(
       }
 
       onProgress(STAGE.render.from, "Rendering frames…");
+      const { cancelSignal, cancel } = makeCancelSignal();
+      ctx.signal?.addEventListener("abort", () => cancel());
+      stopped();
       await renderMedia({
+        cancelSignal,
         composition,
         serveUrl,
         codec: "h264",
@@ -641,6 +656,7 @@ export async function renderVideo(
       });
     }
 
+    stopped();
     for (const w of warnings) onProgress(99, w);
     onProgress(
       100,
@@ -667,7 +683,7 @@ export async function renderVideo(
     if (job.aiLabel) {
       const tagged = joined.outputPath.replace(/\.mp4$/i, ".tagged.mp4");
       const ok = await new Promise<boolean>((resolve) => {
-        const p = spawn(ffmpegBin(), ["-y", "-i", joined.outputPath, "-map", "0", "-c", "copy", "-metadata", "comment=Made with Video Forge", "-metadata", "encoded_by=Video Forge", tagged], { windowsHide: true });
+        const p = spawnTracked(ffmpegBin(), ["-y", "-i", joined.outputPath, "-map", "0", "-c", "copy", "-metadata", "comment=Made with Video Forge", "-metadata", "encoded_by=Video Forge", tagged], { windowsHide: true });
         p.on("error", () => resolve(false));
         p.on("close", (code) => resolve(code === 0));
       });
@@ -695,6 +711,8 @@ export async function renderVideo(
       warnings,
     };
   } finally {
+    // A Stop leaves no half-made video behind.
+    if (ctx.signal?.aborted && partialOutput) await fsp.rm(partialOutput, { force: true }).catch(() => {});
     // Best-effort: a leftover temp dir must never fail an otherwise good render.
     await fsp.rm(publicDir, { recursive: true, force: true }).catch(() => {});
   }

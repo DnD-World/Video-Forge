@@ -113,6 +113,8 @@ const api = {
       | { ok: true; jobId: string; outputPath: string; durationSec: number; frames: number }
       | { ok: false; jobId: string; error: string }
     > => ipcRenderer.invoke("render:start", job),
+    /** Stop the video being made. Whatever is half made is removed. */
+    cancel: (): Promise<boolean> => ipcRenderer.invoke("render:cancel"),
     onProgress: (cb: (payload: { jobId: string; pct: number; note?: string }) => void) => {
       const listener = (_e: unknown, payload: any) => cb(payload);
       ipcRenderer.on("render:progress", listener);
