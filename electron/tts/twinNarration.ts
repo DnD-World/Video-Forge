@@ -14,6 +14,7 @@ import path from "node:path";
 import { app } from "electron";
 import { geminiJson } from "../llm/geminiText";
 import { buildNarration, type NarrationInput } from "./buildNarration";
+import type { PaidPolicy } from "./paidVoice";
 import { DEFAULT_GEMINI_MODEL, DEFAULT_GEMINI_VOICE, geminiModeOf } from "../../src/lib/narration/geminiVoices";
 
 interface LastNarration {
@@ -31,7 +32,13 @@ export async function rememberNarration(n: LastNarration): Promise<void> {
 
 const NAMES: Record<string, string> = { el: "Greek", en: "English" };
 
-export async function twinNarration(target: string, outputDir: string) {
+export async function twinNarration(
+  target: string,
+  outputDir: string,
+  /** Shows the person what the twin will cost and returns their answer (throws
+   *  if they say no). Called once the translated lines are known. */
+  askPaid: (segments: NarrationInput[], pauses: { sameMs: number; turnMs: number }) => Promise<PaidPolicy>
+) {
   let last: LastNarration;
   try {
     last = JSON.parse(await fsp.readFile(file(), "utf8")) as LastNarration;
@@ -64,5 +71,6 @@ export async function twinNarration(target: string, outputDir: string) {
     }
     return { ...s, text, language: target };
   });
-  return buildNarration(segments, last.speakerOrder, last.pauses, outputDir);
+  const paid = await askPaid(segments, last.pauses);
+  return buildNarration(segments, last.speakerOrder, last.pauses, outputDir, { paid });
 }

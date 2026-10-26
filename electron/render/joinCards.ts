@@ -19,7 +19,7 @@
 // long.
 // ---------------------------------------------------------------------------
 
-import { spawn } from "node:child_process";
+import { spawnTracked } from "../process/childTree";
 import fsp from "node:fs/promises";
 import path from "node:path";
 import { ffmpegBin, ffprobeBin } from "../process/ffmpegPath";
@@ -49,9 +49,9 @@ export interface JoinCardsResult {
 
 function run(args: string[]): Promise<{ code: number; err: string }> {
   return new Promise((resolve) => {
-    const p = spawn(ffmpegBin(), args, { windowsHide: true });
+    const p = spawnTracked(ffmpegBin(), args, { windowsHide: true });
     let err = "";
-    p.stderr.on("data", (d) => { err += String(d); });
+    p.stderr?.on("data", (d) => { err += String(d); });
     p.on("error", () => resolve({ code: -1, err: "ffmpeg not found on PATH" }));
     p.on("close", (code) => resolve({ code: code ?? -1, err }));
   });
@@ -60,12 +60,12 @@ function run(args: string[]): Promise<{ code: number; err: string }> {
 /** Does this file carry sound at all? */
 async function hasAudio(file: string): Promise<boolean> {
   return new Promise((resolve) => {
-    const p = spawn(ffprobeBin(), [
+    const p = spawnTracked(ffprobeBin(), [
       "-v", "error", "-select_streams", "a",
       "-show_entries", "stream=index", "-of", "csv=p=0", file,
     ], { windowsHide: true });
     let out = "";
-    p.stdout.on("data", (d) => { out += String(d); });
+    p.stdout?.on("data", (d) => { out += String(d); });
     p.on("error", () => resolve(false));
     p.on("close", () => resolve(out.trim().length > 0));
   });
@@ -73,12 +73,12 @@ async function hasAudio(file: string): Promise<boolean> {
 
 async function durationOf(file: string): Promise<number> {
   return new Promise((resolve) => {
-    const p = spawn(ffprobeBin(), [
+    const p = spawnTracked(ffprobeBin(), [
       "-v", "error", "-show_entries", "format=duration",
       "-of", "default=nw=1:nk=1", file,
     ], { windowsHide: true });
     let out = "";
-    p.stdout.on("data", (d) => { out += String(d); });
+    p.stdout?.on("data", (d) => { out += String(d); });
     p.on("error", () => resolve(0));
     p.on("close", () => resolve(parseFloat(out.trim()) || 0));
   });

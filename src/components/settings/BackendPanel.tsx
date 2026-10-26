@@ -44,7 +44,9 @@ const PROVIDERS: Provider[] = [
     what:
       "Voices, charged by the character. A lesson is about 4,600 credits, so the " +
       "72-lesson course is roughly 334,000 — one month of Pro, or three of Creator " +
-      "with nothing spare for re-renders. Paid — the app shows the cost before using it.",
+      "with nothing spare for re-renders. Paid — before a narration buys anything the app " +
+      "shows the characters and the estimated cost and waits for your yes; batches may not " +
+      "buy unless you allow it below.",
     url: "https://elevenlabs.io/app/settings/api-keys",
     access: "instant",
   },
@@ -132,6 +134,39 @@ interface TestState {
  *  button for now. Ak, 12 Oct 2026: 450 clips / 2.7 GB had piled up. */
 /** LocalAI on this computer — the free picture and sound models Image Forge
  *  also uses. Shows what is there, sorted by kind. */
+/** Paid voices: the price used for "this will cost about…", and whether a
+ *  batch nobody is watching may buy at all (off), and how much at most. */
+function PaidVoiceCard() {
+  const price = useSettingsStore((s) => s.elevenPricePer1000Usd);
+  const setPrice = useSettingsStore((s) => s.setElevenPricePer1000Usd);
+  const allow = useSettingsStore((s) => s.paidInBatch);
+  const setAllow = useSettingsStore((s) => s.setPaidInBatch);
+  const cap = useSettingsStore((s) => s.paidBatchMaxCredits);
+  const setCap = useSettingsStore((s) => s.setPaidBatchMaxCredits);
+  return (
+    <div className="forge-sec space-y-3">
+      <div className="label-etched" data-tip="Paid voices (ElevenLabs) charge per character. These settings decide how the app asks before it spends.">
+        Paid voices
+      </div>
+      <label className="flex items-center gap-2 text-sm">
+        <input type="checkbox" checked={allow} onChange={(e) => setAllow(e.target.checked)} data-tip="Off by default. Many videos can run overnight with nobody to ask, so a paid voice is refused there unless this is on." />
+        Let “Many videos” buy paid voice without asking each time
+      </label>
+      <div className="flex gap-3 flex-wrap text-sm items-center">
+        <label className="flex items-center gap-2">
+          Stop buying after
+          <input type="number" min={0} step={1000} value={cap} onChange={(e) => setCap(Number(e.target.value))} className="w-28" data-tip="The most characters one whole sheet may buy. 0 means no limit. A character is one ElevenLabs credit." />
+          characters
+        </label>
+        <label className="flex items-center gap-2">
+          Price per 1,000 characters (USD)
+          <input type="number" min={0.01} step={0.01} value={price} onChange={(e) => setPrice(Number(e.target.value))} className="w-20" data-tip="Used only to turn characters into money in the question before a paid narration. It is your own plan's price: check it on the ElevenLabs site." />
+        </label>
+      </div>
+    </div>
+  );
+}
+
 function LocalAiCard() {
   const base = useSettingsStore((s) => s.localAiBase);
   const setBase = useSettingsStore((s) => s.setLocalAiBase);
@@ -249,7 +284,15 @@ export default function BackendPanel() {
 
   const save = async (id: string) => {
     if (!draft[id]) return;
-    await window.byok.keys.set(id, draft[id]);
+    try {
+      await window.byok.keys.set(id, draft[id]);
+    } catch (e) {
+      // Nothing was saved (e.g. the key file could not be read). The pasted key
+      // stays in the box so it is not lost, and the reason is shown.
+      const why = (e instanceof Error ? e.message : String(e)).replace(/^Error invoking remote method '[^']+': (Error: )?/, "");
+      setTests((t) => ({ ...t, [id]: { busy: false, result: { ok: false, message: why } } }));
+      return;
+    }
     setDraft((d) => ({ ...d, [id]: "" }));
     // A previous test result describes the old key, so drop it.
     setTests((t) => ({ ...t, [id]: { busy: false } }));
@@ -257,7 +300,13 @@ export default function BackendPanel() {
   };
 
   const remove = async (id: string) => {
-    await window.byok.keys.remove(id);
+    try {
+      await window.byok.keys.remove(id);
+    } catch (e) {
+      const why = (e instanceof Error ? e.message : String(e)).replace(/^Error invoking remote method '[^']+': (Error: )?/, "");
+      setTests((t) => ({ ...t, [id]: { busy: false, result: { ok: false, message: why } } }));
+      return;
+    }
     setTests((t) => ({ ...t, [id]: { busy: false } }));
     refresh();
   };
@@ -298,6 +347,7 @@ export default function BackendPanel() {
       </p>
 
       <LocalAiCard />
+      <PaidVoiceCard />
       <SayItCard />
       <LanguageCard />
       <ClipStorage />

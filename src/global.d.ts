@@ -44,7 +44,6 @@ declare global {
     byok: {
       keys: {
         list: () => Promise<string[]>;
-        get: (provider: string) => Promise<string | null>;
         set: (provider: string, value: string) => Promise<boolean>;
         remove: (provider: string) => Promise<boolean>;
         encryptionAvailable: () => Promise<boolean>;
@@ -192,6 +191,7 @@ declare global {
             }
           | { ok: false; jobId: string; error: string }
         >;
+        cancel: () => Promise<boolean>;
         onProgress: (
           cb: (payload: { jobId: string; pct: number; note?: string }) => void
         ) => () => void;
@@ -207,13 +207,14 @@ declare global {
         generateNarration: (
           segments: import("../electron/tts/buildNarration").NarrationInput[],
           speakerOrder: string[],
-          pauses?: { sameMs: number; turnMs: number }
+          pauses?: { sameMs: number; turnMs: number },
+          paid?: { pricePer1000?: number }
         ) => Promise<{
           filePath: string;
           segments: { speakerId: string; speakerLabel: string; text: string; startMs: number; endMs: number }[];
           analysis: AudioAnalysis | null;
         }>;
-        twinNarration: (target: string) => Promise<{
+        twinNarration: (target: string, paid?: { pricePer1000?: number }) => Promise<{
           filePath: string;
           segments: { speakerId: string; speakerLabel: string; text: string; startMs: number; endMs: number }[];
           analysis: AudioAnalysis | null;

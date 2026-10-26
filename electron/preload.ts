@@ -9,8 +9,6 @@ import { contextBridge, ipcRenderer } from "electron";
 const api = {
   keys: {
     list: (): Promise<string[]> => ipcRenderer.invoke("keys:list"),
-    get: (provider: string): Promise<string | null> =>
-      ipcRenderer.invoke("keys:get", provider),
     set: (provider: string, value: string): Promise<boolean> =>
       ipcRenderer.invoke("keys:set", provider, value),
     remove: (provider: string): Promise<boolean> =>
@@ -115,6 +113,8 @@ const api = {
       | { ok: true; jobId: string; outputPath: string; durationSec: number; frames: number }
       | { ok: false; jobId: string; error: string }
     > => ipcRenderer.invoke("render:start", job),
+    /** Stop the video being made. Whatever is half made is removed. */
+    cancel: (): Promise<boolean> => ipcRenderer.invoke("render:cancel"),
     onProgress: (cb: (payload: { jobId: string; pct: number; note?: string }) => void) => {
       const listener = (_e: unknown, payload: any) => cb(payload);
       ipcRenderer.on("render:progress", listener);
@@ -140,18 +140,20 @@ const api = {
     generateNarration: (
       segments: import("./tts/buildNarration").NarrationInput[],
       speakerOrder: string[],
-      pauses?: { sameMs: number; turnMs: number }
+      pauses?: { sameMs: number; turnMs: number },
+      /** The user's ElevenLabs price per 1,000 characters (Settings). */
+      paid?: { pricePer1000?: number }
     ): Promise<{
       filePath: string;
       segments: { speakerId: string; speakerLabel: string; text: string; startMs: number; endMs: number }[];
       analysis: unknown;
-    }> => ipcRenderer.invoke("tts:generateNarration", segments, speakerOrder, pauses),
+    }> => ipcRenderer.invoke("tts:generateNarration", segments, speakerOrder, pauses, paid),
     /** The last narration again, translated and spoken in `target` ("el", "en"). */
-    twinNarration: (target: string): Promise<{
+    twinNarration: (target: string, paid?: { pricePer1000?: number }): Promise<{
       filePath: string;
       segments: { speakerId: string; speakerLabel: string; text: string; startMs: number; endMs: number }[];
       analysis: unknown;
-    }> => ipcRenderer.invoke("tts:twinNarration", target),
+    }> => ipcRenderer.invoke("tts:twinNarration", target, paid),
   },
 
   project: {

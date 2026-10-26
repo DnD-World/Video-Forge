@@ -9,7 +9,11 @@ import { recordMade } from "../tools/lib/forgeHub.mjs";
 import { removePuppet, listPuppets, orderResult, placeOrder, shelfRoot } from "../tools/lib/forgeShelf.mjs";
 import { fetchSheet, parseCsv, runMany, type ManyEvent, type ManyRequest } from "./batch/manyVideos";
 import { resolveUserData, NEW_APP_NAME } from "./migrateUserData";
-import { listPiperVoices, synthesizeWithPiper, shutdownAllPiperServers } from "./tts/piperEngine";
+import { listPiperVoices, synthesizeWithPiper, shutdownAllPiperServers, setPiperStartGuard } from "./tts/piperEngine";
+import { guard, addReadOnlyRoot, pythonAllowed } from "./security/guard";
+import { OPEN_EXTENSIONS, isAppPage, safeExternalUrl, safeMediaId, safeMediaUrl } from "./security/pathGuard";
+import { pathToFileURL } from "node:url";
+import { haveFile } from "./net/partFile";
 import { analyzeNarration } from "./audio/analyzeNarration";
 import { listMusic } from "./audio/musicLibrary";
 import * as elevenlabs from "./tts/elevenlabsEngine";
@@ -22,8 +26,10 @@ import { searchSounds } from "./net/soundSearch";
 import { planBackgrounds, pickBackgrounds } from "./llm/backgroundPlanner";
 import { renderVideo, type RenderJob } from "./render/renderVideo";
 import { cacheStats, cleanUp, touch } from "./media/mediaCache";
-import { installExitHandlers, reapOrphansFromLastSession } from "./process/childTree";
-import { buildNarration, type NarrationInput } from "./tts/buildNarration";
+import { installExitHandlers, killAllTracked, reapOrphansFromLastSession } from "./process/childTree";
+import { abortAllWork, busyWith, closeQuestion, isBusy, startWork } from "./process/work";
+import { buildNarration, estimatePaid, type NarrationInput } from "./tts/buildNarration";
+import { describePaid, type PaidPolicy } from "./tts/paidVoice";
 import { runBatchJob, type BatchJob } from "./batch/runJob";
 import { makeSfxEleven } from "./audio/makeSfxEleven";
 import { getSfxFreesound } from "./audio/getSfxFreesound";
@@ -81,18 +87,41 @@ function createWindow() {
     // (build/icon.png, via electron-builder); this covers the dev build too.
     icon: path.join(app.getAppPath(), "out", "renderer", "icon-256.png"),
     webPreferences: {
-      preload: path.join(__dirname, "../preload/preload.mjs"),
+      // A CommonJS preload (electron.vite.config.ts): Electron only sandboxes
+      // a window whose preload is not an ES module.
+      preload: path.join(__dirname, "../preload/preload.cjs"),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false,
+      sandbox: true,
     },
   });
 
   mainWindow.once("ready-to-show", () => mainWindow?.show());
 
+  // The window stays on the app's own page. Anything else — a dropped file, a
+  // link, a redirect — is stopped, and a web link goes to the user's browser.
+  const appPages = (isDev && process.env["ELECTRON_RENDERER_URL"])
+    ? [process.env["ELECTRON_RENDERER_URL"]]
+    : [pathToFileURL(path.join(__dirname, "../renderer/index.html")).toString()];
+  const stayHome = (event: Electron.Event, url: string) => {
+    if (isAppPage(url, appPages)) return;
+    event.preventDefault();
+    const web = safeExternalUrl(url);
+    if (web) void shell.openExternal(web);
+  };
+  mainWindow.webContents.on("will-navigate", stayHome);
+  mainWindow.webContents.on("will-redirect", stayHome);
+  mainWindow.webContents.on("will-attach-webview", (event) => event.preventDefault());
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    shell.openExternal(url);
+    // Only web addresses ever reach the system: no file:, smb:, or app protocols.
+    const web = safeExternalUrl(url);
+    if (web) void shell.openExternal(web);
     return { action: "deny" };
+  });
+  // The page needs no camera, microphone, location or the like. Electron's
+  // default is to say yes to everything; this says no, except copying text.
+  mainWindow.webContents.session.setPermissionRequestHandler((_wc, permission, callback) => {
+    callback(permission === "clipboard-sanitized-write");
   });
 
   // Electron ships no right-click menu at all — without this, right-clicking a
@@ -126,6 +155,39 @@ function createWindow() {
     mainWindow.loadFile(path.join(__dirname, "../renderer/index.html"));
   }
 
+  // Closing the window while a video (or a batch) is being made would throw the
+  // work away and, before this, leave the renderer running with nobody to
+  // collect it. Ask first; if the answer is quit, stop what THIS app started.
+  let asking = false;
+  let leaving = false;
+  mainWindow.on("close", (event) => {
+    if (leaving || !isBusy()) return;
+    event.preventDefault();
+    if (asking) return;
+    asking = true;
+    const q = closeQuestion(busyWith());
+    void dialog
+      .showMessageBox(mainWindow!, {
+        type: "warning",
+        title: "Video Forge",
+        message: q.message,
+        detail: q.detail,
+        buttons: ["Keep working", "Stop it and quit"],
+        defaultId: 0,
+        cancelId: 0,
+        noLink: true,
+      })
+      .then(async (r) => {
+        asking = false;
+        if (r.response !== 1) return;
+        leaving = true;
+        manyStop = true;
+        abortAllWork();
+        await killAllTracked(); // by process id: only what this app started
+        mainWindow?.close();
+      });
+  });
+
   mainWindow.on("closed", () => {
     mainWindow = null;
   });
@@ -157,17 +219,19 @@ ipcMain.handle("keys:list", async () => {
   return keyStore.listKeys();
 });
 
-ipcMain.handle("keys:get", async (_e, provider: string) => {
-  return keyStore.getKey(provider);
-});
+// There is deliberately no "keys:get": a key read by the window could be read
+// by anything that ever ran inside it. Main reads keys itself, where they are used.
 
 ipcMain.handle("keys:set", async (_e, provider: string, value: string) => {
   const result = await keyStore.setKey(provider, value);
+  // A refusal (the key file could not be read) reaches the screen as a message.
+  if (!result.ok) throw new Error(result.problem ?? "The key could not be saved.");
   return result.ok;
 });
 
 ipcMain.handle("keys:delete", async (_e, provider: string) => {
   const result = await keyStore.deleteKey(provider);
+  if (!result.ok) throw new Error(result.problem ?? "The key could not be removed.");
   return result.ok;
 });
 
@@ -188,7 +252,7 @@ ipcMain.handle(
     segments?: { speakerId: string; startMs: number; endMs: number }[],
     speakerOrder?: string[]
   ) => {
-    const buf = await fsp.readFile(filePath);
+    const buf = await fsp.readFile(guard().assertRead(filePath));
     return analyzeNarration(buf, segments ?? [], speakerOrder ?? []);
   }
 );
@@ -207,15 +271,22 @@ ipcMain.handle("dialog:openFile", async (_e, filters?: Electron.FileFilter[]) =>
     properties: ["openFile"],
     filters,
   });
-  return res.canceled ? null : res.filePaths[0];
+  if (res.canceled) return null;
+  // A file you picked is a file the window may then read (electron/security).
+  guard().grantRead(res.filePaths[0]);
+  return res.filePaths[0];
 });
 
 ipcMain.handle("dialog:saveFile", async (_e, defaultName: string, filters?: Electron.FileFilter[]) => {
   const res = await dialog.showSaveDialog(mainWindow!, {
-    defaultPath: path.join(app.getPath("downloads"), defaultName),
+    // basename: the window names a file, not a folder to save into
+    defaultPath: path.join(app.getPath("downloads"), path.basename(String(defaultName || "file"))),
     filters,
   });
-  return res.canceled ? null : res.filePath;
+  if (res.canceled || !res.filePath) return null;
+  // The one place outside its own folder the window may write.
+  guard().grantWrite(res.filePath);
+  return res.filePath;
 });
 
 ipcMain.handle("storage:outputDir", async () => {
@@ -252,7 +323,7 @@ ipcMain.handle(
     const bufs: Buffer[] = [];
     for (const p of pictures.slice(0, 3)) {
       try {
-        bufs.push(await fsp.readFile(p));
+        bufs.push(await fsp.readFile(guard().assertRead(p)));
       } catch {
         /* a picture that cannot be read is left out */
       }
@@ -273,21 +344,24 @@ ipcMain.handle("forge:removePuppet", async (_e, slug: string) => removePuppet(sh
 let manyStop = false;
 let manyRunning = false;
 ipcMain.handle("batch:readSheet", async (_e, source: { url?: string; file?: string }) => {
-  const text = source.file ? await fsp.readFile(source.file, "utf8") : await fetchSheet(source.url ?? "");
+  const text = source.file ? await fsp.readFile(guard().assertRead(source.file), "utf8") : await fetchSheet(source.url ?? "");
   return parseCsv(text);
 });
 ipcMain.handle("batch:runMany", async (e, req: ManyRequest) => {
   if (manyRunning) return { ok: false, problem: "A batch is already running." };
   manyRunning = true;
   manyStop = false;
+  const manyAbort = new AbortController();
+  const endWork = startWork("a batch of videos", manyAbort);
   const send = (ev: ManyEvent) => !e.sender.isDestroyed() && e.sender.send("batch:event", ev);
   void runMany(
     req,
-    { projectRoot: app.getAppPath(), outputDir: outputDir(), fontsDir: fontsDir(), mediaDir: path.join(app.getPath("userData"), "media") },
+    { projectRoot: app.getAppPath(), outputDir: outputDir(), fontsDir: fontsDir(), mediaDir: path.join(app.getPath("userData"), "media"), signal: manyAbort.signal },
     send,
-    () => manyStop
+    () => manyStop || manyAbort.signal.aborted
   ).finally(() => {
     manyRunning = false;
+    endWork();
   });
   return { ok: true };
 });
@@ -320,11 +394,13 @@ const mediaDir = () => path.join(app.getPath("userData"), "media");
 ipcMain.handle("media:cacheStats", async () => cacheStats(mediaDir()));
 ipcMain.handle("media:cleanUp", async (_e, limitBytes: number, keep: string[] = []) => cleanUp(mediaDir(), limitBytes, keep));
 
-/** Open a finished video in the computer's own player. Only files inside the
- *  app's output folder, so a page can never ask to run something else. */
+/** Open a finished video in the computer's own player. Only media files inside
+ *  the app's output folder (a real folder check, not a text prefix), so a page
+ *  can never ask to run something else. */
 ipcMain.handle("storage:openPath", async (_e, p: string) => {
-  const full = path.resolve(p);
-  if (!full.toLowerCase().startsWith(path.resolve(outputDir()).toLowerCase())) return false;
+  const full = path.resolve(String(p));
+  if (!OPEN_EXTENSIONS.has(path.extname(full).toLowerCase())) return false;
+  if (!guard().isInside(outputDir(), full)) return false;
   return (await shell.openPath(full)) === "";
 });
 
@@ -378,15 +454,19 @@ ipcMain.handle("sound:search", async (_e, query: string) => searchSounds(query))
  *  Named by provider and id rather than by the query that found it, so the
  *  same clip picked twice reuses one file instead of accumulating copies. */
 ipcMain.handle("media:download", async (_e, id: string, url: string) => {
+  // The id becomes a file name and the address is fetched: both come from the
+  // window, so neither is trusted (no "..\" in the name, https from the stock
+  // libraries only).
+  if (!safeMediaId(id)) throw new Error("That clip has an id this app will not use as a file name.");
+  const safeUrl = safeMediaUrl(url);
+  if (!safeUrl) throw new Error("Clips can only be downloaded over https from Pixabay, Pexels or Freesound.");
+  url = safeUrl;
   const dir = path.join(app.getPath("userData"), "media");
   const ext = (url.split("?")[0].match(/\.(mp4|mov|webm|mp3|wav|ogg)$/i)?.[1] ?? "mp4").toLowerCase();
   const dest = path.join(dir, `${id}.${ext}`);
-  try {
-    await fsp.access(dest);
-    return dest; // already have it
-  } catch {
-    /* not cached yet */
-  }
+  // A whole file under its real name is one; a half-finished download never
+  // has the real name (net/partFile.ts), and an empty file does not count.
+  if (haveFile(dest)) return dest; // already have it
   await downloadTo(url, dest);
   return dest;
 });
@@ -418,12 +498,12 @@ ipcMain.handle("fonts:ensure", async (_e, family: string, weight: number) =>
 );
 
 ipcMain.handle("storage:readFile", async (_e, filePath: string) => {
-  const buf = await fsp.readFile(filePath);
+  const buf = await fsp.readFile(guard().assertRead(filePath));
   return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
 });
 
 ipcMain.handle("storage:writeFile", async (_e, filePath: string, data: ArrayBuffer) => {
-  await fsp.writeFile(filePath, Buffer.from(data));
+  await fsp.writeFile(guard().assertWrite(filePath), Buffer.from(data));
   return true;
 });
 
@@ -467,6 +547,10 @@ ipcMain.handle(
     if (result.errors.length) {
       return { ok: false as const, errors: result.errors, summary: [] as string[] };
     }
+    // Only the app's own folder or the folder of a file you just chose to save.
+    if (!guard().canWriteDir(outDir)) {
+      return { ok: false as const, errors: ["Save into a folder you choose with the Save button."], summary: [] as string[] };
+    }
     await fsp.mkdir(outDir, { recursive: true });
     await fsp.writeFile(
       path.join(outDir, "blocks.json"),
@@ -493,8 +577,18 @@ ipcMain.handle(
 // running and the UI needs to move while it happens.
 // ---------------------------------------------------------------------------
 
+/** The renders running now, so a Stop (or closing the window) can end them. */
+const renderControllers = new Set<AbortController>();
+ipcMain.handle("render:cancel", async () => {
+  for (const c of renderControllers) c.abort();
+  return renderControllers.size > 0;
+});
+
 ipcMain.handle("render:start", async (_e, job: RenderJob) => {
   const jobId = Date.now().toString(36);
+  const controller = new AbortController();
+  renderControllers.add(controller);
+  const endWork = startWork("a video", controller);
   const send = (pct: number, note: string) => {
     // The window can be closed mid-render; dropping the update is correct.
     if (mainWindow && !mainWindow.isDestroyed()) {
@@ -503,14 +597,14 @@ ipcMain.handle("render:start", async (_e, job: RenderJob) => {
   };
 
   // The clips this render uses count as "just used", so a clean-up keeps them.
-  await touch((job.backgrounds ?? []).map((b) => b.filePath).filter((p): p is string => !!p));
-
   try {
+    await touch((job.backgrounds ?? []).map((b) => b.filePath).filter((p): p is string => !!p));
     const result = await renderVideo(job, {
       projectRoot: app.getAppPath(),
       outputDir: outputDir(),
       fontsDir: fontsDir(),
       onProgress: send,
+      signal: controller.signal,
     });
     // On the Forge hub's list of everything made (tools/lib/forgeHub.mjs) —
     // what the Social Forge will post from.
@@ -532,9 +626,17 @@ ipcMain.handle("render:start", async (_e, job: RenderJob) => {
     }
     return { ok: true as const, jobId, ...result };
   } catch (err) {
+    // A Stop is not a failure: say so, and keep the screen's wording calm.
+    if (controller.signal.aborted) {
+      send(0, "Stopped");
+      return { ok: false as const, jobId, error: "Stopped — the half-made video was removed." };
+    }
     const message = err instanceof Error ? err.message : String(err);
     send(0, `Render failed: ${message}`);
     return { ok: false as const, jobId, error: message };
+  } finally {
+    renderControllers.delete(controller);
+    endWork();
   }
 });
 
@@ -545,6 +647,7 @@ ipcMain.handle("render:start", async (_e, job: RenderJob) => {
 // ---------------------------------------------------------------------------
 
 ipcMain.handle("tts:listPiperVoices", async (_e, voicesDir: string) => {
+  if (!guard().canRead(voicesDir)) return [];
   return listPiperVoices(voicesDir);
 });
 
@@ -560,17 +663,54 @@ ipcMain.handle("tts:synthesizePiper", async (_e, pythonPath: string, onnxPath: s
 // the project state); this just executes synthesis + concatenation.
 // ---------------------------------------------------------------------------
 
+/** Paid voices: before a narration that buys ElevenLabs lines starts, say how
+ *  many characters and about how much, and wait for a yes. The yes covers
+ *  exactly that many characters (tts/paidVoice.ts). Lines already bought, or a
+ *  narration already made, cost nothing and are not asked about. */
+const ELEVEN_PRICE_FALLBACK = 0.3; // USD per 1,000 characters, until the user sets theirs
+async function askBeforeBuying(
+  segments: NarrationInput[],
+  pauses: { sameMs: number; turnMs: number },
+  pricePer1000?: number
+): Promise<PaidPolicy> {
+  const est = await estimatePaid(segments, pauses, outputDir());
+  if (est.narrationCached || est.chars === 0) return { mode: "attended", approvedChars: 0 };
+  const price = pricePer1000 && pricePer1000 > 0 ? pricePer1000 : ELEVEN_PRICE_FALLBACK;
+  const opts: Electron.MessageBoxOptions = {
+    type: "question",
+    title: "Paid voice",
+    message: "This narration uses your paid ElevenLabs voice.",
+    detail: describePaid(est, price),
+    buttons: ["Buy and make it", "Cancel"],
+    defaultId: 1,
+    cancelId: 1,
+    noLink: true,
+  };
+  const r = mainWindow && !mainWindow.isDestroyed() ? await dialog.showMessageBox(mainWindow, opts) : await dialog.showMessageBox(opts);
+  if (r.response !== 0) throw new Error("Cancelled — nothing was bought.");
+  return { mode: "attended", approvedChars: est.chars };
+}
+
 ipcMain.handle("tts:generateNarration", async (
   _e,
   segments: NarrationInput[],
   speakerOrder: string[] = [],
-  pauses: { sameMs: number; turnMs: number } = { sameMs: 0, turnMs: 0 }
+  pauses: { sameMs: number; turnMs: number } = { sameMs: 0, turnMs: 0 },
+  paid?: { pricePer1000?: number }
 ) => {
   await rememberNarration({ segments, speakerOrder, pauses });
-  return buildNarration(segments, speakerOrder, pauses, outputDir());
+  const policy = await askBeforeBuying(segments, pauses, paid?.pricePer1000);
+  const endWork = startWork("a narration");
+  try {
+    return await buildNarration(segments, speakerOrder, pauses, outputDir(), { paid: policy });
+  } finally {
+    endWork();
+  }
 });
 /** The same script in the other language, same cast (tts/twinNarration.ts). */
-ipcMain.handle("tts:twinNarration", async (_e, target: string) => twinNarration(String(target), outputDir()));
+ipcMain.handle("tts:twinNarration", async (_e, target: string, paid?: { pricePer1000?: number }) =>
+  twinNarration(String(target), outputDir(), (segs, pauses) => askBeforeBuying(segs, pauses, paid?.pricePer1000))
+);
 
 
 // ---------------------------------------------------------------------------
@@ -678,6 +818,24 @@ app.whenReady().then(async () => {
     }
     return;
   }
+
+  // From here on the app window is asking, so what it asks for is checked
+  // (the headless runs above read the user's own job file and are not).
+  setPiperStartGuard((python, onnx) => {
+    if (!pythonAllowed(python)) {
+      throw new Error("The voice server must be a Python program: use \"python\", or the python file inside your piper-venv folder.");
+    }
+    if (!guard().canRead(onnx)) throw new Error("That voice file is outside the folders this app reads from.");
+  });
+  // The active brand pack's puppet art may live outside the app folder.
+  try {
+    const brand = await loadActiveBrand(app.getAppPath());
+    addReadOnlyRoot(brand?.dir);
+    addReadOnlyRoot(brand?.puppetDir);
+  } catch { /* no brand pack: nothing to add */ }
+  // `--project <file>` came from the command line, i.e. from the user.
+  const projArg = process.argv.indexOf("--project");
+  if (projArg !== -1 && process.argv[projArg + 1]) guard().grantRead(process.argv[projArg + 1]);
 
   createWindow();
   // Give Image Forge the keys typed here before it existed (in the background).

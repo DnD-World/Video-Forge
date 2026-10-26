@@ -18,6 +18,7 @@ import { app, ipcMain, shell, type BrowserWindow } from "electron";
 import fsp from "node:fs/promises";
 import path from "node:path";
 import * as keyStore from "../keyStore";
+import { guard } from "../security/guard";
 import {
   captionCues, chapters, checkImported, checkSpec, extractClip, gifFromSpec, renderImported, renderSpec, stillPng, thumbnails, toSrt, toVtt,
 } from "../../tools/lib/explainerRun.mjs";
@@ -187,6 +188,9 @@ export function registerExplainerIpc(getWindow: () => BrowserWindow | null) {
       const problems = validateSpec(req.spec);
       if (problems.length) throw new Error("The scene list has problems:\n" + problems.join("\n"));
       const out = req.out.toLowerCase().endsWith(".mp4") ? req.out : req.out + ".mp4";
+      // Only where the Save button put it (the .srt/.gif/.png beside it share its name).
+      guard().assertWrite(out);
+      if (req.audio) guard().assertRead(req.audio);
       const made: string[] = [];
       await renderSpec(req.spec, out, { fontCache: dirs.fonts(), audio: req.audio, signal, onProgress: (f) => progress("render", f * 0.85, "Drawing frames…") });
       made.push(out);
@@ -233,13 +237,15 @@ export function registerExplainerIpc(getWindow: () => BrowserWindow | null) {
 
   /** A page the user got from Claude (Hand to Claude) or elsewhere. */
   ipcMain.handle("explainer:importedLoad", (_e, htmlPath: string) =>
-    run("check", async () => saveAndCheckGenerated(await fsp.readFile(htmlPath, "utf8"), path.basename(htmlPath, path.extname(htmlPath))))
+    run("check", async () => saveAndCheckGenerated(await fsp.readFile(guard().assertRead(htmlPath), "utf8"), path.basename(htmlPath, path.extname(htmlPath))))
   );
 
   ipcMain.handle("explainer:importedRender", (_e, req: { id: string; out: string; tint?: unknown; audio?: string }) =>
     run("render", async (signal) => {
       const file = generatedFile(req.id);
       const out = req.out.toLowerCase().endsWith(".mp4") ? req.out : req.out + ".mp4";
+      guard().assertWrite(out);
+      if (req.audio) guard().assertRead(req.audio);
       await renderImported(file, out, { tint: req.tint, audio: req.audio, signal, onProgress: (f) => progress("render", f, "Drawing frames…") });
       return { made: [out] };
     })
@@ -248,12 +254,19 @@ export function registerExplainerIpc(getWindow: () => BrowserWindow | null) {
   /** The puppet-spot map rendered beside an explainer video (name.spots.json), or null. */
   ipcMain.handle("explainer:spotsFor", async (_e, mp4: string) => {
     try {
-      const j = JSON.parse(await fsp.readFile(String(mp4).replace(/\.mp4$/i, ".spots.json"), "utf8"));
+      const spotsFile = String(mp4).replace(/\.mp4$/i, ".spots.json");
+      if (!guard().canRead(spotsFile) && !guard().canWrite(spotsFile)) return null;
+      const j = JSON.parse(await fsp.readFile(spotsFile, "utf8"));
       return { format: j.format, width: j.width, height: j.height, slots: Array.isArray(j.slots) ? j.slots : [] };
     } catch { return null; }
   });
 
-  ipcMain.handle("explainer:reveal", (_e, file: string) => { shell.showItemInFolder(file); return true; });
+  ipcMain.handle("explainer:reveal", (_e, file: string) => {
+    // Showing a file in Explorer is harmless, but only for files this app knows.
+    if (!guard().canRead(file) && !guard().canWrite(file)) return false;
+    shell.showItemInFolder(file);
+    return true;
+  });
 }
 
 function generatedFile(id: string) {

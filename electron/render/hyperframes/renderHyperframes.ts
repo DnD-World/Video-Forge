@@ -26,11 +26,12 @@
 // carries Node 24) and with its usage telemetry switched OFF.
 // ---------------------------------------------------------------------------
 
-import { spawn } from "node:child_process";
 import fsp from "node:fs/promises";
 import path from "node:path";
 import { createRequire } from "node:module";
 import { ffmpegBin } from "../../process/ffmpegPath";
+import { childEnv } from "../../net/childEnv";
+import { killTree, spawnTracked } from "../../process/childTree";
 import { backgroundTiming } from "../../../src/lib/background/backgroundTiming";
 import { musicGainAt } from "../../../src/lib/audio/ducking";
 import { colorLookCss } from "../../../src/lib/background/colorLook";
@@ -54,18 +55,30 @@ const ID = "video-forge";
 
 function run(cmd: string, args: string[], opts: { env?: NodeJS.ProcessEnv; onLine?: (l: string) => void; signal?: AbortSignal } = {}) {
   return new Promise<void>((resolve, reject) => {
-    const p = spawn(cmd, args, { env: opts.env ?? process.env, windowsHide: true });
+    if (opts.signal?.aborted) return reject(new Error("Stopped."));
+    // Tracked: if the app closes, the whole tree (the HyperFrames node process
+    // AND the headless Chrome it started) is ended by process id.
+    const p = spawnTracked(cmd, args, { env: opts.env ?? process.env, windowsHide: true });
     let tail = "";
+    let stopped = false;
     const eat = (d: Buffer) => {
       const s = d.toString();
       tail = (tail + s).slice(-4000);
       if (opts.onLine) for (const l of s.split(/\r?\n/)) if (l.trim()) opts.onLine(l);
     };
-    p.stdout.on("data", eat);
-    p.stderr.on("data", eat);
-    opts.signal?.addEventListener("abort", () => p.kill());
+    p.stdout?.on("data", eat);
+    p.stderr?.on("data", eat);
+    // A Stop ends the process we started and everything it started (by pid,
+    // never by name) — p.kill() alone leaves the browser running.
+    opts.signal?.addEventListener("abort", () => {
+      stopped = true;
+      if (p.pid) void killTree(p.pid);
+    });
     p.on("error", reject);
-    p.on("close", (code) => (code === 0 ? resolve() : reject(new Error(`${path.basename(cmd)} failed (${code}): ${tail.slice(-800)}`))));
+    p.on("close", (code) => {
+      if (stopped) return reject(new Error("Stopped."));
+      code === 0 ? resolve() : reject(new Error(`${path.basename(cmd)} failed (${code}): ${tail.slice(-800)}`));
+    });
   });
 }
 
@@ -286,13 +299,9 @@ export async function renderHyperframes(input: HyperframesInput): Promise<void> 
   onProgress(0.2, "Rendering frames…");
   const cli = require_.resolve("hyperframes/bin/hyperframes.mjs");
   await run(process.execPath, [cli, "render", input.dir, "--output", input.outputPath, "--fps", String(props.fps), "--crf", String(input.crf), "--quiet"], {
-    env: {
-      ...process.env,
-      ELECTRON_RUN_AS_NODE: "1",
-      // No usage data leaves this machine.
-      DO_NOT_TRACK: "1",
-      HYPERFRAMES_TELEMETRY: "0",
-    },
+    // childEnv() carries the no-update / no-telemetry switches (it is the one
+    // place engine environments are set).
+    env: childEnv({ ELECTRON_RUN_AS_NODE: "1" }),
     signal: input.signal,
     onLine: (l) => {
       const m = l.match(/@hf-progress (\{.*\})/);

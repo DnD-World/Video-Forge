@@ -171,7 +171,22 @@ export function ManyVideos() {
         backgrounds: (/^(no|none|off|όχι)$/i.test(pick(row, "backgrounds")) ? "none" : "auto") as "auto" | "none",
         language: pick(row, "language") || undefined,
       }));
-    const r = await window.byok.batch.runMany({ rows: list, cast, preset, runName: runNameFor(url, list.length), aiLabel: useSettingsStore.getState().aiLabel });
+    // PAID VOICES: a sheet can run overnight, so a paid voice is only used when
+    // the user switched that on (Settings), up to the cap they set — and they
+    // are told the worst case here, before anything starts.
+    const st = useSettingsStore.getState();
+    const paid = { allow: st.paidInBatch, maxCredits: st.paidBatchMaxCredits };
+    const usesPaid = speakers.some((s) => s.ttsEngine === "elevenlabs");
+    if (usesPaid) {
+      if (!paid.allow) {
+        return setProblem("This cast uses a paid ElevenLabs voice, and paid voices are switched off for batches. Turn them on in Settings → Paid voices (and set a cap), or give the speakers a free voice.");
+      }
+      const most = paid.maxCredits > 0 ? `${paid.maxCredits.toLocaleString("en-US")} characters` : "no limit (no cap is set)";
+      const money = paid.maxCredits > 0 ? ` — about ${((paid.maxCredits / 1000) * st.elevenPricePer1000Usd).toFixed(2)} USD at ${st.elevenPricePer1000Usd.toFixed(2)} USD per 1,000 characters` : "";
+      const sheetChars = list.reduce((n, r) => n + (r.script?.length ?? 0), 0);
+      if (!window.confirm(`This batch uses a paid ElevenLabs voice.\n\nThe scripts in this sheet are about ${sheetChars.toLocaleString("en-US")} characters in all (every character of an ElevenLabs line is a credit).\nIt will stop buying at: ${most}${money}.\nLines already bought on an earlier run are reused for free.\n\nStart?`)) return;
+    }
+    const r = await window.byok.batch.runMany({ rows: list, cast, preset, runName: runNameFor(url, list.length), aiLabel: st.aiLabel, paid });
     if (!r.ok) return setProblem(r.problem ?? "could not start");
     setRunning(true);
   };

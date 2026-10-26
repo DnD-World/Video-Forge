@@ -92,6 +92,8 @@ export function RenderBar() {
   // stack another listener and progress would arrive multiplied.
   const busyRef = useRef(busy);
   busyRef.current = busy;
+  /** Set by Stop, so the next video in a multi-video render is not started. */
+  const stopRef = useRef(false);
   useEffect(() => {
     // Optional-chained: `window.byok` exists only inside Electron. An unguarded
     // call here throws during mount and takes the WHOLE app down, which is a
@@ -132,6 +134,7 @@ export function RenderBar() {
    *  sound — opened by itself when ready (Ak, 12 Oct 2026). */
   async function start(draft = false, o: { width?: number; height?: number; nar?: Nar; stem?: string; inLoop?: boolean } = {}): Promise<string | null> {
     if (!o.inLoop) {
+      stopRef.current = false;
       setBusy(true);
       setError(null);
       setResult(null);
@@ -253,6 +256,7 @@ export function RenderBar() {
    *  after another, never two at once (one render at a time on this machine). */
   async function renderAll() {
     if (!extraShapes.length && !twin) return void start(false);
+    stopRef.current = false;
     setBusy(true);
     setError(null);
     setResult(null);
@@ -262,10 +266,11 @@ export function RenderBar() {
       const langs: { tag: string; nar?: Nar }[] = [{ tag: language }];
       if (twin) {
         setNote(`Translating the script and making the ${twinLang === "el" ? "Greek" : "English"} narration…`);
-        langs.push({ tag: twinLang, nar: (await window.byok.tts.twinNarration(twinLang)) as Nar });
+        langs.push({ tag: twinLang, nar: (await window.byok.tts.twinNarration(twinLang, { pricePer1000: useSettingsStore.getState().elevenPricePer1000Usd })) as Nar });
       }
       for (const l of langs) {
         for (const sh of shapes) {
+          if (stopRef.current) return;
           const stem = [l.tag, sh.id].filter(Boolean).join("-");
           const ok = await start(false, { width: sh.w, height: sh.h, nar: l.nar, stem: langs.length > 1 || sh.id ? stem : undefined, inLoop: true });
           if (!ok) return;
@@ -342,6 +347,16 @@ export function RenderBar() {
         <div className="flex flex-col gap-1">
           <div className="forge-progress"><i style={{ width: `${pct}%` }} /></div>
           <p className="text-xs text-neutral-400">{pct}% · {note}</p>
+          <button
+            className="btn"
+            onClick={() => {
+              stopRef.current = true;
+              void window.byok.render.cancel();
+            }}
+            data-tip="Stop making the video now. What is half made is thrown away; the narration is kept."
+          >
+            Stop
+          </button>
         </div>
       )}
 

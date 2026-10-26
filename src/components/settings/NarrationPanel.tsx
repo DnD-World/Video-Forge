@@ -206,7 +206,9 @@ export default function NarrationPanel() {
       const res = await window.byok.tts.generateNarration(
         resolvedSegments,
         speakers.map((s) => s.id),
-        { sameMs: pauseSameMs, turnMs: pauseTurnMs }
+        { sameMs: pauseSameMs, turnMs: pauseTurnMs },
+        // A paid voice asks "this will cost about …" before anything is bought.
+        { pricePer1000: useSettingsStore.getState().elevenPricePer1000Usd }
       );
       setResult(res);
       // Publish it so the render bar can attach it and match its length

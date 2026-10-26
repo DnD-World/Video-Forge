@@ -25,6 +25,16 @@ interface SettingsState {
   /** "Made with Video Forge" on every video (remotion/AiBadge.tsx). On by default. */
   aiLabel: boolean;
   setAiLabel: (v: boolean) => void;
+  /** Paid voices (ElevenLabs). The price is only used to turn characters into
+   *  money on the "this will cost" question — check it against your plan. */
+  elevenPricePer1000Usd: number;
+  setElevenPricePer1000Usd: (v: number) => void;
+  /** Whether a batch nobody is watching (Many videos) may buy paid voice at
+   *  all — off until you turn it on — and the most characters one sheet may buy. */
+  paidInBatch: boolean;
+  setPaidInBatch: (v: boolean) => void;
+  paidBatchMaxCredits: number;
+  setPaidBatchMaxCredits: (v: number) => void;
   setMediaLimitGb: (gb: number) => void;
   mediaAutoClean: boolean;
   setMediaAutoClean: (v: boolean) => void;
@@ -61,6 +71,14 @@ export const useSettingsStore = create<SettingsState>()(
       setLocalAiBase: (v) => set({ localAiBase: v }),
       aiLabel: true,
       setAiLabel: (v) => set({ aiLabel: v }),
+      // 0.30 is a starting guess for pay-as-you-go, not a quote: ElevenLabs'
+      // price per character depends on the plan, so the user sets their own.
+      elevenPricePer1000Usd: 0.3,
+      setElevenPricePer1000Usd: (v) => set({ elevenPricePer1000Usd: v > 0 ? v : 0.3 }),
+      paidInBatch: false,
+      setPaidInBatch: (v) => set({ paidInBatch: v }),
+      paidBatchMaxCredits: 50000,
+      setPaidBatchMaxCredits: (v) => set({ paidBatchMaxCredits: Math.max(0, Math.floor(v || 0)) }),
       setMediaLimitGb: (gb) => set({ mediaLimitGb: gb }),
       mediaAutoClean: true,
       setMediaAutoClean: (v) => set({ mediaAutoClean: v }),

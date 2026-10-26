@@ -56,6 +56,13 @@ export function childEnv(extra: Record<string, string> = {}): NodeJS.ProcessEnv 
     ...process.env,
     PYTHONUTF8: "1",
     PYTHONIOENCODING: "utf-8",
+    // HyperFrames checks for a newer version on every render and may then run
+    // `npm install -g hyperframes@…` — a machine-wide install this project
+    // forbids. These are the switches its CLI actually reads. No usage data
+    // leaves the machine either.
+    HYPERFRAMES_NO_UPDATE_CHECK: "1",
+    HYPERFRAMES_NO_AUTO_INSTALL: "1",
+    DO_NOT_TRACK: "1",
     ...(ca ? { SSL_CERT_FILE: ca, REQUESTS_CA_BUNDLE: ca, CURL_CA_BUNDLE: ca } : null),
     ...extra,
   };

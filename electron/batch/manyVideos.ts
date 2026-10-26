@@ -20,6 +20,7 @@ import { parseCsv, sheetCsvUrl } from "./sheet";
 export { parseCsv, sheetCsvUrl };
 import { runBatchJob, type BatchJob, type JobSpeaker } from "./runJob";
 import type { RenderContext } from "../render/renderVideo";
+import type { PaidPolicy } from "../tts/paidVoice";
 
 export async function fetchSheet(url: string): Promise<string> {
   const res = await request(sheetCsvUrl(url), { method: "GET", timeoutMs: 30000 });
@@ -57,6 +58,9 @@ export interface ManyRequest {
   runName: string;
   /** "Made with Video Forge" on each video. */
   aiLabel?: boolean;
+  /** Settings → paid voices in batches. Off unless the user turned it on;
+   *  `maxCredits` is the most characters the WHOLE sheet may buy (0 = no cap). */
+  paid?: { allow: boolean; maxCredits: number };
 }
 
 export type ManyEvent =
@@ -77,6 +81,13 @@ export async function runMany(
   await fsp.writeFile(presetPath, JSON.stringify(req.preset, null, 1));
   let done = 0;
   let failed = 0;
+  // One policy for the whole sheet, so the cap counts every video together.
+  const paid: PaidPolicy = {
+    mode: "unattended",
+    allowUnattended: req.paid?.allow === true,
+    maxChars: req.paid?.maxCredits,
+    spent: { chars: 0 },
+  };
   for (const [index, row] of req.rows.entries()) {
     if (shouldStop()) break;
     onEvent({ type: "row", index, status: "working", pct: 0, note: "starting" });
@@ -97,6 +108,7 @@ export async function runMany(
       };
       const result = await runBatchJob(job, {
         ...ctx,
+        paid,
         onProgress: (pct, note) => onEvent({ type: "row", index, status: "working", pct, note }),
       });
       const named = path.join(folder, `${safe(row.name)}.mp4`);

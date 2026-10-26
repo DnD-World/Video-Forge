@@ -14,6 +14,32 @@ Phase 0 done 26 Oct: WIP committed + pushed, licence removed (UNLICENSED, both f
 Top risks: Image Forge spends without asking in five places; ~11 days of work
 not backed up; Google credit ends before Christmas.
 
+## Phase 1 safety fixes — branch `phase1-vf-safety` (not merged, not pushed)
+
+From `docs/research/ultra-2026-10-25/audit-video-forge.md`: H1–H8, M1, M7.
+What changed that you can feel:
+
+- **The window can only touch what it was given.** Files it may read/write are
+  the app's own folders plus files you picked in an Open/Save dialog
+  (`electron/security/pathGuard.ts`; Open picks are remembered in
+  `picked-files.json` in the data folder). A project that points at a file
+  outside those (picked before this change) needs that file picked again.
+- **Window hardening:** sandboxed, content policy in the built page, can't
+  navigate away, web links only. The preload is now `preload.cjs`.
+- **Paid ElevenLabs voice:** a dialog shows characters + estimated USD before
+  anything is bought; Settings has Paid voices (price, allow in batches —
+  OFF —, cap). `--job` files need `"allowPaidVoices": true` (and optionally
+  `"maxPaidCredits"`) to buy ElevenLabs lines; lessons built from
+  `lessonDir` buy nothing. Bought lines are kept in `renders/eleven-lines/`.
+- **Closing during a render asks first; Stop button on a render.**
+- **Key vault:** atomic saves, `byok.secrets.enc.bak`, refuses to overwrite a
+  file it cannot read.
+- **Downloads** go to `.part` and are renamed only when whole.
+- **Save project** file version 2 keeps music, SFX, backgrounds, logo, cards.
+- Not exercised by running the real app: the close prompt, the dialogs, the
+  Stop button, and the path checks on real files (tests + a sandboxed-window
+  smoke run only).
+
 ## Drawn characters — 24–25 Oct 2026 (foundations built, medium phase next)
 
 Characters drawn by code, as a third kind of speaker (card JSON → any of 20

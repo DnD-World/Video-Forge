@@ -20,6 +20,7 @@ import { builtinPresets } from "../../store/builtinPresets";
 import { sampleProject } from "../../store/sampleProject";
 import type { BrandInfo } from "../../store/builtinCast";
 import { migrateSurface } from "../../store/types";
+import { projectToDoc, docToProject } from "../../lib/project/projectFile";
 
 
 export function PresetsPanel() {
@@ -168,24 +169,10 @@ export function PresetsPanel() {
       { name: "BYOK project", extensions: ["json"] },
     ]);
     if (!target) return;
-    // The analysis is derived from the narration WAV and is megabytes; the file
-    // path is enough to rebuild it on open.
-    const s = useProjectStore.getState();
-    const doc = {
-      kind: "byok-project" as const,
-      version: 1,
-      savedAt: Date.now(),
-      project: {
-        render: s.render, fps: s.fps, speakers: s.speakers,
-        musicWaveform: s.musicWaveform, musicColor: s.musicColor,
-        subtitles: s.subtitles, script: s.script, language: s.language,
-        pauseSameMs: s.pauseSameMs, pauseTurnMs: s.pauseTurnMs,
-        visemeFadeMs: s.visemeFadeMs,
-        narration: s.narration
-          ? { filePath: s.narration.filePath, segments: s.narration.segments, analysis: null }
-          : null,
-      },
-    };
+    // Everything the autosave keeps (music, sound effects, backgrounds, logo,
+    // cards, attached audio…) goes in the file too. The audio analyses are
+    // megabytes; the file paths are enough to rebuild them on open.
+    const doc = projectToDoc(useProjectStore.getState());
     const json = JSON.stringify(doc, null, 2);
     await window.byok.storage.writeFile(target, new TextEncoder().encode(json).buffer as ArrayBuffer);
     setNote(`Saved project to ${target.split(/[\\/]/).pop()}`);
@@ -196,14 +183,32 @@ export function PresetsPanel() {
     if (!src) return;
     try {
       const buf = await window.byok.storage.readFile(src);
-      const doc = JSON.parse(new TextDecoder().decode(buf));
-      if (doc?.kind !== "byok-project" || !doc.project) {
-        setNote("That's not a project file. Presets load with Import… above.");
+      const opened = docToProject(JSON.parse(new TextDecoder().decode(buf)));
+      if (!opened.ok) {
+        setNote(opened.message);
         return;
       }
-      loadProject(doc.project);
-      // Rebuild the analysis from the WAV the project points at, exactly like
-      // the autosave does on startup.
+      loadProject(opened.project);
+      // Rebuild the analysis from the audio files the project points at, exactly
+      // like the autosave does on startup.
+      const music = useProjectStore.getState().music;
+      if (music?.filePath) {
+        try {
+          const analysis = await window.byok.audio.analyzeFile(music.filePath);
+          if (analysis) useProjectStore.getState().setMusic({ ...music, analysis });
+        } catch {
+          /* the file moved: the track is still listed, its waveform idles */
+        }
+      }
+      const attached = useProjectStore.getState().attachedAudio;
+      if (attached?.filePath) {
+        try {
+          const analysis = await window.byok.audio.analyzeFile(attached.filePath);
+          if (analysis) useProjectStore.getState().setAttachedAudio({ ...attached, analysis });
+        } catch {
+          /* same */
+        }
+      }
       const n = useProjectStore.getState().narration;
       if (n?.filePath) {
         try {
