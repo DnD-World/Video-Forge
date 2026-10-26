@@ -1,4 +1,6 @@
 import { ExplainerStudio } from "./components/explainer/ExplainerStudio";
+import { ManyVideosStudio } from "./components/render/ManyVideos";
+import { initManyEvents } from "./store/useManyStore";
 import { HudButton } from "./components/ui/HudButton";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { MutableRefObject, ReactNode } from "react";
@@ -83,10 +85,20 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   // WHAT KIND OF VIDEO (21 Oct 2026): puppet videos (the four steps) or
   // explainers (animated, drawn by code — src/components/explainer). Remembered.
-  const [mode, setModeState] = useState<"puppet" | "explainer">(() => {
-    try { return localStorage.getItem("vf.mode") === "explainer" ? "explainer" : "puppet"; } catch { return "puppet"; }
+  // MANY VIDEOS (26 Oct 2026) is a third kind, with its own screen.
+  type Mode = "puppet" | "explainer" | "many";
+  const [mode, setModeState] = useState<Mode>(() => {
+    try { const m = localStorage.getItem("vf.mode"); return m === "explainer" || m === "many" ? m : "puppet"; } catch { return "puppet"; }
   });
-  const setMode = (m: "puppet" | "explainer") => { setModeState(m); setSettingsOpen(false); try { localStorage.setItem("vf.mode", m); } catch { /* fine */ } };
+  const setMode = (m: Mode) => { setModeState(m); setSettingsOpen(false); try { localStorage.setItem("vf.mode", m); } catch { /* fine */ } };
+  // A batch reports its progress whichever screen is open.
+  useEffect(() => initManyEvents(), []);
+  // The Make tab's "Many videos" pointer opens that screen.
+  useEffect(() => {
+    const open = () => setMode("many");
+    window.addEventListener("forge:open-many", open);
+    return () => window.removeEventListener("forge:open-many", open);
+  }, []);
   // THE "B" LAYOUT (Ak, 26 Oct 2026): the preview stays on screen in every
   // step — Script included, which used to replace it — and only Settings
   // takes the whole window.
@@ -117,8 +129,7 @@ export default function App() {
   const [draggingId, setDraggingId] = useState<string | null>(null);
   // The steps column can fold to its numbers, handing the room to the preview.
   const [folded, setFolded] = useFolded("vf.stepsFolded");
-  // "Many videos" opens Make on its own tab.
-  const [makeTab, setMakeTab] = useState<"render" | "many">("render");
+
 
   const fps = useProjectStore((s) => s.fps);
   const render = useProjectStore((s) => s.render);
@@ -471,9 +482,9 @@ export default function App() {
           <small>Talking-character videos</small>
         </div>
         <div className="ml-auto flex gap-2 items-center" role="group" aria-label="Kind of video">
-          <HudButton data-tip="Puppet videos: talking characters, in four steps." active={mode === "puppet" && !settingsOpen && !(step === "make" && makeTab === "many")} onClick={() => { setMode("puppet"); setMakeTab("render"); }}>Puppet video</HudButton>
+          <HudButton data-tip="Puppet videos: talking characters, in four steps." active={mode === "puppet" && !settingsOpen} onClick={() => setMode("puppet")}>Puppet video</HudButton>
           <HudButton data-tip="Explainers: animated pictures, words and charts drawn by code, timed to a narration — with or without puppets on top." active={mode === "explainer" && !settingsOpen} onClick={() => setMode("explainer")}>Explainer</HudButton>
-          <HudButton data-tip="Many videos at once: one row of a spreadsheet per video, all made in a row with the look you set up." active={mode === "puppet" && !settingsOpen && step === "make" && makeTab === "many"} onClick={() => { setMode("puppet"); setMakeTab("many"); goStep("make"); }}>Many videos</HudButton>
+          <HudButton data-tip="Many videos at once: one row of a spreadsheet per video, all made in a row with the look you set up." active={mode === "many" && !settingsOpen} onClick={() => setMode("many")}>Many videos</HudButton>
         </div>
         <button
           className={`forge-gear ml-3 ${settingsOpen ? "on" : ""}`}
@@ -486,7 +497,7 @@ export default function App() {
         </button>
       </header>
 
-      {mode === "explainer" && !settingsOpen ? <ExplainerStudio /> : view === "settings" ? (
+      {mode === "explainer" && !settingsOpen ? <ExplainerStudio /> : mode === "many" && !settingsOpen ? <ManyVideosStudio onEditProject={() => { setMode("puppet"); goStep("cast"); }} /> : view === "settings" ? (
         <main className="panel-hud relative flex-1 mx-3 mb-3 p-6 min-h-0 overflow-hidden">
           <HudCorners />
           <div className="w-full h-full flex flex-col">
@@ -518,7 +529,7 @@ export default function App() {
           ) : step === "look" ? (
             <ScenePanel key="look" title="Look" tabs={["presets", "background", "subtitles", "music", "sfx", "motion"]} />
           ) : (
-            <ScenePanel key={`make-${makeTab}`} title="Make" tabs={makeTab === "many" ? ["many", "render", "extras", "shape"] : ["render", "many", "extras", "shape"]} />
+            <ScenePanel key="make" title="Make" tabs={["render", "many", "extras", "shape"]} />
           )}
         </StepColumn>
 

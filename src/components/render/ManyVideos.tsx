@@ -1,293 +1,221 @@
 // ---------------------------------------------------------------------------
-// Many videos from one sheet (Make → Many videos, 13 Oct 2026).
+// Many videos from one sheet — its own screen in the "B" layout (26 Oct 2026;
+// before, a tab inside Make). One row per video; the cast and the look are
+// this project's own, each row brings its script.
 //
-// Paste a Google Sheet link (shared "anyone with the link can view") or pick
-// a .csv. One row per video; the columns are listed on screen and in the blank
-// sheet. The cast and the look are this project's own. Check all first — every
-// row's script is matched against the cast — then Make all: one video at a
-// time, in order, with a Stop. electron/batch/manyVideos.ts does the work.
+//   left    four steps: Cast & look (from the puppet video), the Sheet, Check,
+//           Make (one video at a time, with a Stop)
+//   right   the board: every video, its state and its progress
+//
+// The run's state lives in store/useManyStore.ts, so a batch keeps reporting
+// while you work on something else.
 // ---------------------------------------------------------------------------
 
-import { useEffect, useMemo, useState } from "react";
-import { useSettingsStore } from "../../store/useSettingsStore";
-
-/** "<sheet or file name> · 13 Oct 19.40 · 12 videos" — the folder the videos land in. */
-function runNameFor(source: string, count: number): string {
-  let name = "sheet";
-  const file = source.trim().split(/[\\/]/).pop() ?? "";
-  if (/docs\.google\.com/.test(source)) name = "Google Sheet";
-  else if (file) name = file.replace(/\.(csv|tsv|txt)$/i, "").slice(0, 40) || "sheet";
-  const d = new Date();
-  const when = `${d.getDate()} ${d.toLocaleString("en-GB", { month: "short" })} ${String(d.getHours()).padStart(2, "0")}.${String(d.getMinutes()).padStart(2, "0")}`;
-  return `${name} · ${when} · ${count} video${count === 1 ? "" : "s"}`;
-}
+import { useMemo, useState } from "react";
 import { useProjectStore } from "../../store/useProjectStore";
-import { parseScript } from "../../lib/narration/parseScript";
-import { parseDramaboxScript } from "../../lib/narration/parseDramaboxScript";
+import { BLANK_SHEET, checkRows, pick, useManyStore } from "../../store/useManyStore";
+import { NextStep, StepColumn, useFolded } from "../ui/StepColumn";
+import { ErrorLine } from "../ui/ErrorLine";
 
-type Row = Record<string, string>;
-interface Check {
-  ok: boolean;
-  why: string;
-}
-interface Progress {
-  status: "waiting" | "working" | "done" | "failed";
-  pct?: number;
-  note?: string;
-  error?: string;
-  outputPath?: string;
-}
+type ManyStep = "cast" | "sheet" | "check" | "make";
+const STEPS: { id: ManyStep; title: string; sub: string }[] = [
+  { id: "cast", title: "Cast & look", sub: "From your puppet video" },
+  { id: "sheet", title: "Sheet", sub: "One row per video" },
+  { id: "check", title: "Check", sub: "Every script against the cast" },
+  { id: "make", title: "Make", sub: "One video at a time" },
+];
+const WIDTH: Record<ManyStep, number> = { cast: 400, sheet: 460, check: 420, make: 420 };
 
-/** The columns, with the names people actually type for them. */
-const COLS = {
-  name: ["name", "title", "video", "file", "όνομα"],
-  script: ["script", "text", "σενάριο"],
-  topic: ["topic", "about", "θέμα"],
-  template: ["template", "look", "preset"],
-  format: ["format", "shape", "orientation"],
-  music: ["music", "μουσική"],
-  backgrounds: ["backgrounds", "background", "footage"],
-  language: ["language", "lang", "γλώσσα"],
-} as const;
-const pick = (row: Row, key: keyof typeof COLS) => {
-  for (const k of COLS[key]) if (row[k] !== undefined && row[k] !== "") return row[k];
-  return "";
-};
-
-const BLANK =
-  "name,script,topic,template,format,music,backgrounds,language\n" +
-  '"Lesson 1","Καίτη: Καλώς ήρθατε!\nΣερίφης: [nods] Ναι, ξεκινάμε.","dogs learning to sit","","9:16","auto","auto","el"\n';
-
-/** A sheet's "format" cell -> a shape (21 Oct 2026: square and 4:5 added). */
-function shapeOf(v: string): "9:16" | "16:9" | "1:1" | "4:5" | undefined {
-  if (/4[:x]5|feed/i.test(v)) return "4:5";
-  if (/1[:x]1|square/i.test(v)) return "1:1";
-  if (/16[:x]9|wide|land/i.test(v)) return "16:9";
-  if (/9[:x]16|tall|vert|port/i.test(v)) return "9:16";
-  return undefined;
-}
-
-export function ManyVideos() {
+export function ManyVideosStudio({ onEditProject }: { onEditProject: () => void }) {
+  const [step, setStep] = useState<ManyStep>("sheet");
+  const [folded, setFolded] = useFolded("vf.many.stepsFolded");
   const speakers = useProjectStore((s) => s.speakers);
-  const project = useProjectStore((s) => s);
-  const [url, setUrl] = useState("");
-  const [rows, setRows] = useState<Row[]>([]);
-  const [problem, setProblem] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [progress, setProgress] = useState<Record<number, Progress>>({});
-  const [running, setRunning] = useState(false);
-  const [finished, setFinished] = useState<string>("");
+  const render = useProjectStore((s) => s.render);
+  const { rows, problem, running, progress, finished, source } = useManyStore();
+  const checks = useMemo(() => checkRows(rows), [rows, speakers]);
+  const ready = checks.filter((c) => c.ok).length;
+  const done = Object.values(progress).filter((p) => p.status === "done").length;
+  const failed = Object.values(progress).filter((p) => p.status === "failed").length;
 
-  useEffect(
-    () =>
-      window.byok?.batch?.onEvent((raw) => {
-        const e = raw as { type: string; index?: number; status?: Progress["status"]; pct?: number; note?: string; error?: string; outputPath?: string; done?: number; failed?: number; folder?: string };
-        if (e.type === "row" && e.index !== undefined) {
-          setProgress((p) => ({ ...p, [e.index!]: { status: e.status!, pct: e.pct, note: e.note, error: e.error, outputPath: e.outputPath } }));
-        }
-        if (e.type === "finished") {
-          setRunning(false);
-          setFinished(`${e.done} made, ${e.failed} failed — in ${e.folder}`);
-        }
-      }),
-    []
-  );
-
-  const load = async (source: { url?: string; file?: string }) => {
-    setProblem("");
-    setLoading(true);
-    setProgress({});
-    setFinished("");
-    try {
-      const r = await window.byok.batch.readSheet(source);
-      setRows(r.filter((x) => pick(x, "script")));
-      if (!r.length) setProblem("The sheet has no rows under its header.");
-    } catch (e) {
-      setProblem(e instanceof Error ? e.message.replace(/^Error invoking remote method '[^']+': (Error: )?/, "") : String(e));
-    } finally {
-      setLoading(false);
-    }
+  const status: Record<ManyStep, string> = {
+    cast: speakers.length ? `${speakers.map((s) => s.label).join(", ")} · ${render.format}` : "No cast yet — set it up in Puppet video",
+    sheet: rows.length ? `${rows.length} row${rows.length > 1 ? "s" : ""} from ${/docs\.google\.com/.test(source) ? "a Google Sheet" : source.split(/[\\/]/).pop() || "the sheet"}` : "No sheet read yet",
+    check: rows.length ? `${ready} of ${rows.length} ready` : "Read a sheet first",
+    make: running ? `Making… ${done} of ${ready} done` : finished ? finished.split(" — ")[0] : ready ? `Ready to make ${ready}` : "Nothing ready yet",
   };
-
-  // CHECK ALL: every row's script against this project's cast.
-  const checks: Check[] = useMemo(() => {
-    const cast = speakers.map((s) => ({ id: s.id, label: s.label }));
-    return rows.map((row) => {
-      const script = pick(row, "script");
-      if (!script) return { ok: false, why: "no script" };
-      if (!cast.length) return { ok: false, why: "add speakers in Cast first" };
-      const plain = parseScript(script, cast);
-      const prose = plain.segments.length ? null : parseDramaboxScript(script, speakers.map((s) => ({ id: s.id, label: s.label, openingPhrase: s.openingPhrase })) as never);
-      const lines = plain.segments.length || (prose as { blocks?: unknown[] } | null)?.blocks?.length || 0;
-      if (!lines) return { ok: false, why: `no line starts with a cast name (${cast.map((c) => c.label).join(", ")})` };
-      if (plain.unmatchedLines.length) return { ok: true, why: `${lines} lines · ${plain.unmatchedLines.length} not matched to anyone (skipped)` };
-      return { ok: true, why: `${lines} lines` };
-    });
-  }, [rows, speakers]);
-
-  const good = checks.filter((c) => c.ok).length;
-
-  const makeAll = async () => {
-    setFinished("");
-    const cast = speakers.map((s) => ({
-      label: s.label,
-      openingPhrase: s.openingPhrase,
-      puppetPath: s.puppetPath,
-      sheetPath: s.sheetPath,
-      character: s.character,
-      engine: (s.ttsEngine === "dramabox" ? "gemini" : s.ttsEngine ?? "gemini") as "gemini",
-      geminiMode: s.geminiMode,
-      geminiModel: s.geminiModel,
-      geminiVoice: s.geminiVoice,
-      pitch: s.pitch,
-      speed: s.speed,
-      breathMs: s.breathMs,
-      elevenVoiceId: s.elevenVoiceId,
-      borderColor: s.borderColor,
-    }));
-    // The project's own look, carried as a preset — speakers included, so
-    // positions, frames and waveforms are exactly as on screen.
-    const preset = {
-      render: project.render,
-      fps: project.fps,
-      speakers: project.speakers,
-      musicWaveform: project.musicWaveform,
-      musicColor: project.musicColor,
-      subtitles: project.subtitles,
-      backgroundDim: project.backgroundDim,
-      backgroundBlur: project.backgroundBlur,
-      backgroundCrossfadeMs: project.backgroundCrossfadeMs,
-    };
-    const list = rows
-      .map((row, i) => ({ row, ok: checks[i]?.ok }))
-      .filter((x) => x.ok)
-      .map(({ row }, i) => ({
-        name: pick(row, "name") || `video-${i + 1}`,
-        script: pick(row, "script"),
-        topic: pick(row, "topic") || undefined,
-        template: pick(row, "template") || undefined,
-        format: shapeOf(pick(row, "format")),
-        music: (/^(no|none|off|όχι)$/i.test(pick(row, "music")) ? "none" : "auto") as "auto" | "none",
-        backgrounds: (/^(no|none|off|όχι)$/i.test(pick(row, "backgrounds")) ? "none" : "auto") as "auto" | "none",
-        language: pick(row, "language") || undefined,
-      }));
-    // PAID VOICES: a sheet can run overnight, so a paid voice is only used when
-    // the user switched that on (Settings), up to the cap they set — and they
-    // are told the worst case here, before anything starts.
-    const st = useSettingsStore.getState();
-    const paid = { allow: st.paidInBatch, maxCredits: st.paidBatchMaxCredits };
-    const usesPaid = speakers.some((s) => s.ttsEngine === "elevenlabs");
-    if (usesPaid) {
-      if (!paid.allow) {
-        return setProblem("This cast uses a paid ElevenLabs voice, and paid voices are switched off for batches. Turn them on in Settings → Paid voices (and set a cap), or give the speakers a free voice.");
-      }
-      const most = paid.maxCredits > 0 ? `${paid.maxCredits.toLocaleString("en-US")} characters` : "no limit (no cap is set)";
-      const money = paid.maxCredits > 0 ? ` — about ${((paid.maxCredits / 1000) * st.elevenPricePer1000Usd).toFixed(2)} USD at ${st.elevenPricePer1000Usd.toFixed(2)} USD per 1,000 characters` : "";
-      const sheetChars = list.reduce((n, r) => n + (r.script?.length ?? 0), 0);
-      if (!window.confirm(`This batch uses a paid ElevenLabs voice.\n\nThe scripts in this sheet are about ${sheetChars.toLocaleString("en-US")} characters in all (every character of an ElevenLabs line is a credit).\nIt will stop buying at: ${most}${money}.\nLines already bought on an earlier run are reused for free.\n\nStart?`)) return;
-    }
-    const r = await window.byok.batch.runMany({ rows: list, cast, preset, runName: runNameFor(url, list.length), aiLabel: st.aiLabel, paid });
-    if (!r.ok) return setProblem(r.problem ?? "could not start");
-    setRunning(true);
-  };
-
-  const blank = () => {
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([BLANK], { type: "text/csv" }));
-    a.download = "video-forge-many-videos.csv";
-    a.click();
-  };
+  const at = STEPS.findIndex((x) => x.id === step);
+  const nextStep = STEPS[at + 1];
+  const nextButton = nextStep ? <NextStep label={nextStep.title} tip={`Goes on to step ${at + 2}: ${nextStep.title} (${nextStep.sub.toLowerCase()}).`} onClick={() => setStep(nextStep.id)} /> : null;
 
   return (
-    <section className="flex flex-col gap-4">
-      <p className="text-sm text-neutral-400">
-        One row per video. Uses this project's cast and look; each row brings its own script.
-      </p>
-      <div className="flex gap-2">
-        <input
-          type="text"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          placeholder="Paste a Google Sheet link (or a .csv file path)"
-          className="flex-1 min-w-0"
-          data-tip="In the sheet, press Share and set it to “Anyone with the link”, then copy the link. No keys needed."
-        />
-        <button
-          className="btn"
-          disabled={!url.trim() || loading}
-          // A path to a .csv on this computer works in the same box.
-          onClick={() => void load(/^([a-z]:[\\/]|\\\\|\/)/i.test(url.trim()) ? { file: url.trim().replace(/^"|"$/g, "") } : { url })}
-          data-tip="Read the sheet's rows."
-        >
-          {loading ? "Reading…" : "Read"}
-        </button>
-      </div>
-      <div className="flex gap-2 flex-wrap">
-        <button
-          className="btn"
-          onClick={async () => {
-            const p = await window.byok.dialog.openFile([{ name: "Sheet (CSV)", extensions: ["csv", "tsv", "txt"] }]);
-            if (p) void load({ file: p });
-          }}
-          data-tip="A sheet saved as CSV — in Excel: File → Save As → CSV UTF-8."
-        >
-          Or pick a CSV file
-        </button>
-        <button className="btn" onClick={blank} data-tip="An empty sheet with the right columns and one example row. Open it in Google Sheets or Excel.">
-          Get a blank sheet
-        </button>
-      </div>
-      <details className="forge-sec">
-        <summary data-tip="Which columns the sheet can have. Only script is required.">Columns</summary>
-        <ul className="text-sm text-neutral-400 space-y-1 pt-2">
-          <li><b data-tip="The only column you must have: the lines to speak, one per line, like “Name: words”.">script</b> — the lines, «Name: words», one per line (required)</li>
-          <li><b data-tip="What to call the finished video file.">name</b> — the video's file name</li>
-          <li><b data-tip="A few words about the video, used to pick background clips.">topic</b> — a few words, for choosing background clips</li>
-          <li><b data-tip="The name of a look to use, for example “News desk”. Empty means this project’s look.">template</b> — a look by name, e.g. «News desk» (empty = this project's look)</li>
-          <li><b data-tip="The video shape: 9:16 tall, 16:9 wide, 1:1 square or 4:5.">format</b> — 9:16, 16:9, 1:1 or 4:5 · <b data-tip="Music for this video: auto picks one, none leaves it out.">music</b> / <b data-tip="Background clips for this video: auto picks them, none leaves them out.">backgrounds</b> — auto or none · <b data-tip="The language code, for example el for Greek or en for English.">language</b> — el, en…</li>
-        </ul>
-      </details>
+    <div className="forge-studio flex flex-1 gap-3 px-3 pb-3 min-h-0">
+      <StepColumn
+        steps={STEPS.map((x) => ({ ...x, status: status[x.id] }))}
+        current={step}
+        onGo={setStep}
+        width={WIDTH[step]}
+        folded={folded}
+        setFolded={setFolded}
+        title="Many videos, step by step"
+        foot={nextButton}
+      >
+        {step === "cast" && <CastStep onEditProject={onEditProject} />}
+        {step === "sheet" && <SheetStep />}
+        {step === "check" && <CheckStep />}
+        {step === "make" && <MakeStep ready={ready} />}
+        {problem && <div className="mt-3"><ErrorLine text={problem} tip="Something stopped the sheet or the run. The message says what to do next." /></div>}
+      </StepColumn>
 
-      {problem && <p data-tip="There is a problem with the sheet. Fix it in the sheet, then press Check again." className="text-sm text-red-400">{problem}</p>}
-
-      {rows.length > 0 && (
-        <div className="flex flex-col gap-2">
-          <div data-tip="How many rows in the sheet are ready to become a video." className="label-etched">{good} of {rows.length} ready</div>
-          <div className="forge-many">
+      <main className="panel-hud flex-1 min-w-0 min-h-0 p-5 flex flex-col gap-4 overflow-hidden">
+        <div className="flex items-end justify-between gap-4 flex-wrap">
+          <div>
+            <div className="label-etched" data-tip="Every video the sheet will make, in order.">The videos</div>
+            <div className="text-2xl font-semibold mt-1" data-tip="How many videos are made, failed and ready.">
+              {rows.length ? `${done} made · ${failed} failed · ${ready} ready` : "No sheet yet"}
+            </div>
+          </div>
+          {running && <div className="forge-many-pulse" data-tip="A video is being made right now.">making</div>}
+        </div>
+        {rows.length > 0 && (
+          <div className="forge-many-total" data-tip="How far the whole run is.">
+            <i style={{ width: `${ready ? Math.round((100 * (done + failed)) / ready) : 0}%` }} />
+          </div>
+        )}
+        {rows.length === 0 ? (
+          <div className="forge-many-empty" data-tip="Read a sheet in step 2 and its videos appear here.">
+            <b>One row of a spreadsheet = one video.</b>
+            <span>Your cast and look stay the same; each row brings its own script. Read a sheet in step 2.</span>
+          </div>
+        ) : (
+          <div className="forge-many-board">
             {rows.map((row, i) => {
               const c = checks[i];
               const p = progress[i];
+              const state = p?.status ?? (c.ok ? "ready" : "bad");
+              const first = pick(row, "script").split("\n")[0];
               return (
-                <div key={i} className={`row ${p?.status ?? (c.ok ? "ready" : "bad")}`}>
-                  <b>{pick(row, "name") || `video ${i + 1}`}</b>
-                  <span>
-                    {p?.status === "working"
-                      ? `${p.pct ?? 0}% · ${p.note ?? ""}`
-                      : p?.status === "done"
-                        ? "✓ made"
-                        : p?.status === "failed"
-                          ? `✗ ${p.error ?? "failed"}`
-                          : `${c.ok ? "✓" : "⚠"} ${c.why}`}
-                  </span>
+                <div key={i} className={`card ${state}`} data-tip={c.ok ? `Script: ${c.why}.` : `Not ready: ${c.why}. Fix this row in the sheet, then read it again.`}>
+                  <div className="top">
+                    <b>{pick(row, "name") || `video ${i + 1}`}</b>
+                    <span className="st">
+                      {p?.status === "working" ? `${p.pct ?? 0}%` : p?.status === "done" ? "✓ made" : p?.status === "failed" ? "✗ failed" : p?.status === "waiting" ? "waiting" : c.ok ? "ready" : "⚠ check"}
+                    </span>
+                  </div>
+                  <span className="line">{first.length > 90 ? first.slice(0, 88) + "…" : first}</span>
+                  <span className="why">{p?.status === "working" ? p.note : p?.status === "failed" ? p.error : c.why}</span>
                   {p?.status === "working" && <i style={{ width: `${p.pct ?? 0}%` }} />}
                 </div>
               );
             })}
           </div>
-          <div className="flex gap-2">
-            {!running ? (
-              <button className="btn btn-primary" disabled={!good} onClick={() => void makeAll()} data-tip="Make every ✓ row, one video at a time. You can leave it running overnight.">
-                Make all {good}
-              </button>
-            ) : (
-              <button className="btn" onClick={() => void window.byok.batch.stopMany()} data-tip="Finish the video being made, then stop.">
-                Stop after this one
-              </button>
-            )}
-          </div>
-          {finished && <p data-tip="How the run ended. Open the folder to see the videos that were made." className="text-sm text-neutral-300">{finished}</p>}
-        </div>
+        )}
+      </main>
+    </div>
+  );
+}
+
+function CastStep({ onEditProject }: { onEditProject: () => void }) {
+  const speakers = useProjectStore((s) => s.speakers);
+  const render = useProjectStore((s) => s.render);
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="text-sm text-neutral-300" data-tip="Every video in the sheet uses the cast and look you set up in the puppet video.">Every video uses the cast and the look of your puppet video. Each row of the sheet only brings its script (and, if you like, its own shape, music and backgrounds).</p>
+      {speakers.length ? (
+        <ul className="flex flex-wrap gap-2 m-0 p-0 list-none">
+          {speakers.map((s) => (
+            <li key={s.id} className="chip" style={{ borderColor: s.borderColor }} data-tip={`A speaker. Lines in the sheet that start with “${s.label}:” are spoken by them.`}>{s.label}</li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-sm text-amber-200" data-tip="There is nobody to speak the lines yet.">No speakers yet.</p>
       )}
+      <p className="text-xs text-neutral-400" data-tip="The shape and size every video will have, unless its row says otherwise.">Shape: {render.format} · {render.width}×{render.height}</p>
+      <button className="btn" onClick={onEditProject} data-tip="Opens the puppet video, where you change the cast and the look. Come back here after.">Change the cast or the look</button>
+    </div>
+  );
+}
+
+function SheetStep() {
+  const { source, setSource, load, loading } = useManyStore();
+  const blank = () => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([BLANK_SHEET], { type: "text/csv" }));
+    a.download = "video-forge-many-videos.csv";
+    a.click();
+  };
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex gap-2">
+        <input type="text" value={source} onChange={(e) => setSource(e.target.value)} placeholder="Paste a Google Sheet link (or a .csv file path)" className="flex-1 min-w-0"
+          data-tip="In the sheet, press Share and set it to “Anyone with the link”, then copy the link. No keys needed." />
+        <button className="btn" disabled={!source.trim() || loading}
+          // A path to a .csv on this computer works in the same box.
+          onClick={() => void load(/^([a-z]:[\\/]|\\\\|\/)/i.test(source.trim()) ? { file: source.trim().replace(/^"|"$/g, "") } : { url: source })}
+          data-tip="Read the sheet's rows.">
+          {loading ? "Reading…" : "Read"}
+        </button>
+      </div>
+      <div className="flex gap-2 flex-wrap">
+        <button className="btn" onClick={async () => { const p = await window.byok.dialog.openFile([{ name: "Sheet (CSV)", extensions: ["csv", "tsv", "txt"] }]); if (p) void load({ file: p }); }}
+          data-tip="A sheet saved as CSV — in Excel: File → Save As → CSV UTF-8.">Or pick a CSV file</button>
+        <button className="btn" onClick={blank} data-tip="An empty sheet with the right columns and one example row. Open it in Google Sheets or Excel.">Get a blank sheet</button>
+      </div>
+      <details className="forge-sec" open>
+        <summary data-tip="Which columns the sheet can have. Only script is required.">Columns</summary>
+        <ul className="text-sm text-neutral-400 space-y-1 pt-2">
+          <li><b data-tip="The only column you must have: the lines to speak, one per line, like “Name: words”.">script</b> — the lines, «Name: words», one per line (required)</li>
+          <li><b data-tip="What to call the finished video file.">name</b> — the video's file name</li>
+          <li><b data-tip="A few words about the video, used to pick background clips.">topic</b> — a few words, for choosing background clips</li>
+          <li><b data-tip="The name of a look to use, for example “News desk”. Empty means this project’s look.">template</b> — a look by name (empty = this project's look)</li>
+          <li><b data-tip="The video shape: 9:16 tall, 16:9 wide, 1:1 square or 4:5.">format</b> — 9:16, 16:9, 1:1 or 4:5 · <b data-tip="Music for this video: auto picks one, none leaves it out.">music</b> / <b data-tip="Background clips for this video: auto picks them, none leaves them out.">backgrounds</b> — auto or none · <b data-tip="The language code, for example el for Greek or en for English.">language</b> — el, en…</li>
+        </ul>
+      </details>
+    </div>
+  );
+}
+
+function CheckStep() {
+  const rows = useManyStore((s) => s.rows);
+  const speakers = useProjectStore((s) => s.speakers);
+  const checks = useMemo(() => checkRows(rows), [rows, speakers]);
+  if (!rows.length) return <p className="text-sm text-neutral-400" data-tip="The check needs a sheet to look at.">Read a sheet first (step 2).</p>;
+  const bad = checks.map((c, i) => ({ c, i })).filter((x) => !x.c.ok);
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="text-sm text-neutral-300" data-tip="Every row's script was matched against your cast: each line must start with a speaker's name.">{checks.length - bad.length} of {rows.length} rows are ready. Each script was matched against your cast.</p>
+      {bad.length > 0 && (
+        <>
+          <div className="label-etched" data-tip="Rows that will be skipped until they are fixed in the sheet.">Not ready</div>
+          {bad.map(({ c, i }) => (
+            <p key={i} className="text-sm text-amber-200 m-0" data-tip="Fix this row in the sheet, then read the sheet again.">⚠ {pick(rows[i], "name") || `video ${i + 1}`}: {c.why}</p>
+          ))}
+        </>
+      )}
+    </div>
+  );
+}
+
+function MakeStep({ ready }: { ready: number }) {
+  const { running, finished, makeAll, stop } = useManyStore();
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="text-sm text-neutral-300" data-tip="Each ready row becomes one video, made one after the other.">The videos are made one after the other. You can leave it running overnight, and switch to other work in the app meanwhile.</p>
+      {!running ? (
+        <button className="btn btn-primary" disabled={!ready} onClick={() => void makeAll()} data-tip="Make every ready row, one video at a time.">Make all {ready}</button>
+      ) : (
+        <button className="btn" onClick={stop} data-tip="Finish the video being made, then stop.">Stop after this one</button>
+      )}
+      {finished && <p className="text-sm text-neutral-300" data-tip="How the run ended, and the folder the videos are in.">{finished}</p>}
+    </div>
+  );
+}
+
+/** What the Make tab inside the puppet video shows now: the way to this screen. */
+export function ManyVideosPointer({ onOpen }: { onOpen: () => void }) {
+  return (
+    <section className="flex flex-col gap-3">
+      <p className="text-sm text-neutral-300" data-tip="Making many videos from a spreadsheet has its own screen now.">Many videos from one sheet has its own screen, with every video's progress on view.</p>
+      <button className="btn btn-primary" onClick={onOpen} data-tip="Opens the Many videos screen.">Open Many videos</button>
     </section>
   );
 }

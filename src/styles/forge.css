@@ -567,3 +567,32 @@ html[data-motion="off"] body::before { animation: none; }
 /* blocks with no colour of their own (an explainer's scenes): the row's alternating navy and mint */
 .forge-strip .lane.voices .blk { background: linear-gradient(90deg, rgba(85, 98, 184, .8), rgba(85, 98, 184, .5)); border-right: 1px solid rgba(0, 0, 0, .6); }
 .forge-strip .lane.voices .blk.alt { background: linear-gradient(90deg, rgba(118, 255, 194, .6), rgba(118, 255, 194, .35)); }
+
+/* Many videos, its own screen (26 Oct 2026): a board of every video */
+.forge-many-board { flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; align-content: start; padding-right: 4px; }
+.forge-many-board .card { position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 6px; padding: 14px 14px 16px; border-radius: 16px;
+  border: 1px solid var(--line); background: rgba(4, 18, 26, .55); transition: border-color .3s, box-shadow .3s, transform .2s; }
+.forge-many-board .card:hover { transform: translateY(-2px); }
+.forge-many-board .card .top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.forge-many-board .card b { font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.forge-many-board .card .st { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); white-space: nowrap; }
+.forge-many-board .card .line { font-size: .85rem; color: var(--ink-2); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.forge-many-board .card .why { font-size: .74rem; color: var(--ink-3); }
+.forge-many-board .card > i { position: absolute; left: 0; bottom: 0; height: 3px; background: linear-gradient(90deg, var(--navy-hi, #5562B8), var(--accent)); box-shadow: 0 0 10px var(--accent); transition: width .6s ease; }
+.forge-many-board .card.ready { border-color: rgba(118, 255, 194, .28); }
+.forge-many-board .card.ready .st { color: var(--accent); }
+.forge-many-board .card.bad { border-color: rgba(217, 164, 65, .45); }
+.forge-many-board .card.bad .st { color: #d9a441; }
+.forge-many-board .card.waiting .st { color: var(--ink-2); }
+.forge-many-board .card.working { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(118, 255, 194, .1), 0 0 26px -6px rgba(118, 255, 194, .55); animation: forge-pulse 2.6s ease-in-out infinite; }
+.forge-many-board .card.working .st { color: var(--accent); }
+.forge-many-board .card.done { border-color: rgba(118, 255, 194, .55); background: rgba(118, 255, 194, .06); }
+.forge-many-board .card.done .st { color: var(--accent); }
+.forge-many-board .card.failed { border-color: rgba(196, 80, 63, .6); }
+.forge-many-board .card.failed .st { color: #e07a6a; }
+.forge-many-total { height: 6px; border-radius: 6px; background: rgba(255, 255, 255, .06); overflow: hidden; flex: none; }
+.forge-many-total i { display: block; height: 100%; background: linear-gradient(90deg, var(--navy-hi, #5562B8), var(--accent)); box-shadow: 0 0 12px var(--accent); transition: width .6s ease; }
+.forge-many-empty { flex: 1; display: grid; place-content: center; text-align: center; gap: 8px; color: var(--ink-2); padding: 24px; }
+.forge-many-empty b { font-size: 1.3rem; color: var(--ink); }
+.forge-many-pulse { font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); padding: 6px 12px; border-radius: 999px; border: 1px solid var(--accent); animation: forge-pulse 2s ease-in-out infinite; }
+.forge-studio .chip { font-size: .85rem; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: rgba(4, 18, 26, .6); }

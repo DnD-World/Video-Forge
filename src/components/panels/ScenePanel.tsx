@@ -3,7 +3,7 @@
 // Frame settings, subtitles, render, and presets.
 // ---------------------------------------------------------------------------
 
-import { ManyVideos } from "../render/ManyVideos";
+import { ManyVideosPointer } from "../render/ManyVideos";
 import { plainError } from "../../lib/plainError";
 import { useState } from "react";
 import { HudButton } from "../ui/HudButton";
@@ -491,7 +491,7 @@ export function ScenePanel({
         )}
 
         {tab === "render" && <RenderBar />}
-        {tab === "many" && <ManyVideos />}
+        {tab === "many" && <ManyVideosPointer onOpen={() => window.dispatchEvent(new Event("forge:open-many"))} />}
 
         {tab === "presets" && <PresetsPanel />}
       </div>

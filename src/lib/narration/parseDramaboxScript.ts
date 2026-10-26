@@ -110,9 +110,11 @@ export function parseDramaboxScript(
 
   // Longest phrase first, so "A bright young woman" is preferred over
   // "A bright woman" if both were ever configured.
-  const byPhrase = [...speakers].sort(
-    (a, b) => b.openingPhrase.length - a.openingPhrase.length
-  );
+  // Only speakers that HAVE a phrase take part: a missing one crashed the
+  // Many videos check, and an empty one would have matched every block.
+  const byPhrase = speakers
+    .filter((s) => (s.openingPhrase ?? "").trim())
+    .sort((a, b) => b.openingPhrase.length - a.openingPhrase.length);
 
   /** `acting=2.2 pace=0.9`, or with colons, or comma separated — all the ways
    *  someone might reasonably type it. Anything unreadable is reported rather
