@@ -13,6 +13,7 @@ import { listPiperVoices, synthesizeWithPiper, shutdownAllPiperServers, setPiper
 import { guard, addReadOnlyRoot, pythonAllowed } from "./security/guard";
 import { OPEN_EXTENSIONS, isAppPage, safeExternalUrl, safeMediaId, safeMediaUrl } from "./security/pathGuard";
 import { pathToFileURL } from "node:url";
+import { haveFile } from "./net/partFile";
 import { analyzeNarration } from "./audio/analyzeNarration";
 import { listMusic } from "./audio/musicLibrary";
 import * as elevenlabs from "./tts/elevenlabsEngine";
@@ -463,12 +464,9 @@ ipcMain.handle("media:download", async (_e, id: string, url: string) => {
   const dir = path.join(app.getPath("userData"), "media");
   const ext = (url.split("?")[0].match(/\.(mp4|mov|webm|mp3|wav|ogg)$/i)?.[1] ?? "mp4").toLowerCase();
   const dest = path.join(dir, `${id}.${ext}`);
-  try {
-    await fsp.access(dest);
-    return dest; // already have it
-  } catch {
-    /* not cached yet */
-  }
+  // A whole file under its real name is one; a half-finished download never
+  // has the real name (net/partFile.ts), and an empty file does not count.
+  if (haveFile(dest)) return dest; // already have it
   await downloadTo(url, dest);
   return dest;
 });

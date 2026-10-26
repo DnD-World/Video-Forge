@@ -31,7 +31,7 @@
 // ---------------------------------------------------------------------------
 
 import { net } from "electron";
-import { createWriteStream } from "node:fs";
+import { openPartWriter, type PartWriter } from "./partFile";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 
@@ -118,24 +118,34 @@ export async function downloadToFile(
 ): Promise<void> {
   await mkdir(path.dirname(destPath), { recursive: true });
 
+  // The bytes go to <name>.part and take their real name only when the whole
+  // body arrived and its size matches (electron/net/partFile.ts). A dropped
+  // connection therefore leaves nothing under the real name.
   return new Promise((resolve, reject) => {
     const req = net.request({ url, method: init.method ?? "GET", redirect: "follow" });
     for (const [k, v] of Object.entries(init.headers ?? {})) req.setHeader(k, v);
 
     const timeoutMs = init.timeoutMs ?? 120000;
     let done = false;
+    let writer: PartWriter | null = null;
     const timer = setTimeout(() => {
       if (done) return;
       done = true;
       req.abort();
-      reject(new Error("Timed out"));
+      void (writer ? writer.abort() : Promise.resolve()).then(() => reject(new Error("Timed out")));
     }, timeoutMs);
 
-    const finish = (fn: () => void) => {
+    /** Fail once: stop the request, delete the partial file, then report. */
+    const fail = (e: Error) => {
       if (done) return;
       done = true;
       clearTimeout(timer);
-      fn();
+      try {
+        req.abort();
+      } catch {
+        /* already finished */
+      }
+      void (writer ? writer.abort() : Promise.resolve()).then(() => reject(e));
     };
 
     req.on("response", (res) => {
@@ -143,18 +153,41 @@ export async function downloadToFile(
       if (status !== 200) {
         // Drain, or the socket is left hanging.
         res.on("data", () => {});
-        res.on("end", () => finish(() => reject(new Error(`HTTP ${status}`))));
+        res.on("end", () => fail(new Error(`HTTP ${status}`)));
         return;
       }
-      const out = createWriteStream(destPath);
-      res.on("data", (c: Buffer) => out.write(c));
-      res.on("end", () => out.end());
-      res.on("error", (e: Error) => finish(() => reject(e)));
-      out.on("finish", () => finish(() => resolve()));
-      out.on("error", (e) => finish(() => reject(e)));
+      // The promised size — unless the body is compressed in transit, when the
+      // header counts the compressed bytes and is no yardstick.
+      const lenHeader = res.headers["content-length"];
+      const encoding = String(res.headers["content-encoding"] ?? "").toLowerCase();
+      const promised = Number(Array.isArray(lenHeader) ? lenHeader[0] : lenHeader);
+      const expected = Number.isFinite(promised) && promised > 0 && (!encoding || encoding === "identity") ? promised : null;
+
+      const w = openPartWriter(destPath, expected);
+      writer = w;
+      // Electron's response object has no pause/resume, so there is no way to
+      // make the network wait for the disk; the write stream buffers instead
+      // (as it did before). The size check at the end is what keeps this safe.
+      res.on("data", (c: Buffer) => {
+        w.write(c);
+      });
+      res.on("end", () => {
+        if (done) return;
+        w.finish().then(
+          () => {
+            if (done) return;
+            done = true;
+            clearTimeout(timer);
+            resolve();
+          },
+          (e: Error) => fail(e)
+        );
+      });
+      res.on("error", (e: Error) => fail(e));
+      res.on("aborted", () => fail(new Error("The connection dropped during the download.")));
     });
 
-    req.on("error", (e) => finish(() => reject(e)));
+    req.on("error", (e) => fail(e));
     req.end();
   });
 }

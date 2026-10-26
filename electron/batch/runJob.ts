@@ -40,6 +40,7 @@ import { buildLessonNarration } from "../tts/buildLessonNarration";
 import { planBackgrounds, pickBackgrounds, PLAN_RULES_VERSION } from "../llm/backgroundPlanner";
 import { downloadTo } from "../net/mediaSearch";
 import type { PaidPolicy } from "../tts/paidVoice";
+import { haveFile } from "../net/partFile";
 import { renderVideo, type RenderJob, type RenderContext } from "../render/renderVideo";
 import type { ProjectPreset } from "../../src/store/templatesTypes";
 import {
@@ -809,11 +810,8 @@ export async function runBatchJob(
       if (!scene.hit) continue;
       const ext = (scene.hit.url.split("?")[0].match(/\.(mp4|mov|webm)$/i)?.[1] ?? "mp4").toLowerCase();
       const dest = path.join(ctx.mediaDir, `${scene.hit.provider}-${scene.hit.id}.${ext}`);
-      try {
-        await fsp.access(dest);
-      } catch {
-        await downloadTo(scene.hit.url, dest);
-      }
+      // Whole files only: a download that failed leaves nothing under this name.
+      if (!haveFile(dest)) await downloadTo(scene.hit.url, dest);
       picked.push({
         startMs: scene.startMs,
         endMs: scene.endMs,
