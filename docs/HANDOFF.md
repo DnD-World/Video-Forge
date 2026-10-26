@@ -10,9 +10,24 @@ Both forges checked end to end; Ak chose the scope on 26 Oct:
 [FORGES-ULTRA-PLAN.md](FORGES-ULTRA-PLAN.md) (v2: phases with effort levels,
 the puppet library on the Google credit, review rules, motion library, the
 new 128 GB mini PC). Evidence: [research/ultra-2026-10-25/](research/ultra-2026-10-25/).
-Phase 0 done 26 Oct: WIP committed + pushed, licence removed (UNLICENSED, both forges), nelly/ ignored, puppet-run copied to minipc ~/backups/puppet-run. Next: Phase 1 (HIGH).
-Top risks: Image Forge spends without asking in five places; ~11 days of work
-not backed up; Google credit ends before Christmas.
+Phase 0 done 26 Oct: WIP committed + pushed, licence removed (UNLICENSED, both forges), nelly/ ignored, puppet-run copied to minipc ~/backups/puppet-run.
+Phase 1 done 26 Oct (HIGH):
+- Puppet foundations live in Image Forge (`src/lib/puppet`): facts sheet,
+  strictest vote, free pixel checks, every try recorded.
+- The credit-run scripts live in [tools/puppets/](../tools/puppets/README.md).
+- Pilot: 14 base pictures in `puppet-run/pilot/` (index.html = the choosing
+  page), waiting for Ak's picks.
+- Video Forge safety branch merged (see "Phase 1 safety branch" below):
+  150 tests, tsc clean, real window checked. The close prompt, Stop, the
+  paid-voice dialog and path refusals on real files are not yet seen
+  running.
+- The new checks are not yet wired to batch pictures (needed before the
+  credit run).
+- Nano Banana 2.1's batch price is not yet confirmed.
+
+Next: Phase 2 (MEDIUM): headless checks for batch pictures, the review
+workbench, ELI5, the Flow export, the render proof, the new-look A/B.
+Top risk: Google credit ends before Christmas.
 
 ## Phase 1 safety fixes — branch `phase1-vf-safety` (not merged, not pushed)
 
