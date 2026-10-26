@@ -25,8 +25,26 @@ Phase 1 done 26 Oct (HIGH):
   credit run).
 - Nano Banana 2.1's batch price is not yet confirmed.
 
-Next: Phase 2 (MEDIUM): headless checks for batch pictures, the review
-workbench, ELI5, the Flow export, the render proof, the new-look A/B.
+Phase 2, 26 Oct (MEDIUM):
+- Bulk checks: `tools/puppets/check.mjs`. The full panel is slow and the
+  free checkers are flaky (the OpenRouter VL timed out, NVIDIA Omni was
+  overloaded).
+- Import: `to-workshop.mjs`. All 25 Oct puppets are in Image Forge's review
+  as `<slug>-nb21-head|full`: 26 puppets, pixel-checked only.
+- Blip is not imported: its front parts came from an earlier run.
+- Review workbench (Image Forge, Made → Review): seen working on a real
+  imported puppet.
+- ELI5 help on everything in both apps, enforced by coverage tests.
+- Flow job file: an Image Forge menu item, `tools/puppets/flow-export.mjs`,
+  and extension v1.1.0 (C:/Users/strav/Documents/flow). Not tried on the
+  live Flow page (needs a login).
+- New-look A/B page: `docs/design/new-look-ab.html`.
+- Not done:
+  - #7 render proof (needs Ak's OK for a render);
+  - tuning the checks on Ak's ✓/✗ marks (needs his first reviews);
+  - Nano Banana 2.1's batch price.
+
+Next: Phase 3 (LOW), the credit run, alongside Ak's reviews.
 Top risk: Google credit ends before Christmas.
 
 ## Phase 1 safety fixes — branch `phase1-vf-safety` (not merged, not pushed)
