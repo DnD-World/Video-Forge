@@ -148,6 +148,18 @@ const api = {
       segments: { speakerId: string; speakerLabel: string; text: string; startMs: number; endMs: number }[];
       analysis: unknown;
     }> => ipcRenderer.invoke("tts:generateNarration", segments, speakerOrder, pauses, paid),
+    /** One line made again and spliced into the narration; later lines move. */
+    remakeLine: (
+      req: {
+        narrationPath: string;
+        segments: import("./tts/buildNarration").BuiltNarration["segments"];
+        index: number;
+        input: import("./tts/buildNarration").NarrationInput;
+        speakerOrder: string[];
+      },
+      paid?: { pricePer1000?: number }
+    ): Promise<{ filePath: string; segments: import("./tts/buildNarration").BuiltNarration["segments"]; analysis: unknown }> =>
+      ipcRenderer.invoke("tts:remakeLine", req, paid),
     /** The last narration again, translated and spoken in `target` ("el", "en"). */
     twinNarration: (target: string, paid?: { pricePer1000?: number }): Promise<{
       filePath: string;

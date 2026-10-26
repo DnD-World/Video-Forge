@@ -28,8 +28,9 @@ import { renderVideo, type RenderJob } from "./render/renderVideo";
 import { cacheStats, cleanUp, touch } from "./media/mediaCache";
 import { installExitHandlers, killAllTracked, reapOrphansFromLastSession } from "./process/childTree";
 import { abortAllWork, busyWith, closeQuestion, isBusy, startWork } from "./process/work";
-import { buildNarration, estimatePaid, type NarrationInput } from "./tts/buildNarration";
+import { buildNarration, estimatePaid, type BuiltNarration, type NarrationInput } from "./tts/buildNarration";
 import { describePaid, type PaidPolicy } from "./tts/paidVoice";
+import { remakeLine } from "./tts/remakeLine";
 import { runBatchJob, type BatchJob } from "./batch/runJob";
 import { makeSfxEleven } from "./audio/makeSfxEleven";
 import { getSfxFreesound } from "./audio/getSfxFreesound";
@@ -671,15 +672,16 @@ const ELEVEN_PRICE_FALLBACK = 0.3; // USD per 1,000 characters, until the user s
 async function askBeforeBuying(
   segments: NarrationInput[],
   pauses: { sameMs: number; turnMs: number },
-  pricePer1000?: number
+  pricePer1000?: number,
+  fresh = false
 ): Promise<PaidPolicy> {
-  const est = await estimatePaid(segments, pauses, outputDir());
+  const est = await estimatePaid(segments, pauses, outputDir(), fresh);
   if (est.narrationCached || est.chars === 0) return { mode: "attended", approvedChars: 0 };
   const price = pricePer1000 && pricePer1000 > 0 ? pricePer1000 : ELEVEN_PRICE_FALLBACK;
   const opts: Electron.MessageBoxOptions = {
     type: "question",
     title: "Paid voice",
-    message: "This narration uses your paid ElevenLabs voice.",
+    message: fresh ? "This line uses your paid ElevenLabs voice." : "This narration uses your paid ElevenLabs voice.",
     detail: describePaid(est, price),
     buttons: ["Buy and make it", "Cancel"],
     defaultId: 1,
@@ -703,6 +705,23 @@ ipcMain.handle("tts:generateNarration", async (
   const endWork = startWork("a narration");
   try {
     return await buildNarration(segments, speakerOrder, pauses, outputDir(), { paid: policy });
+  } finally {
+    endWork();
+  }
+});
+/** Make one line again and put it into the narration (tts/remakeLine.ts). A paid
+ *  voice shows what it will cost and waits for a yes first; the old narration
+ *  file is never touched. */
+ipcMain.handle("tts:remakeLine", async (
+  _e,
+  req: { narrationPath: string; segments: BuiltNarration["segments"]; index: number; input: NarrationInput; speakerOrder: string[] },
+  paid?: { pricePer1000?: number }
+) => {
+  guard().assertRead(req.narrationPath);
+  const policy = await askBeforeBuying([req.input], { sameMs: 0, turnMs: 0 }, paid?.pricePer1000, true);
+  const endWork = startWork("a line");
+  try {
+    return await remakeLine(req, outputDir(), policy);
   } finally {
     endWork();
   }

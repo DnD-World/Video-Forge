@@ -12,7 +12,7 @@ import { BackgroundScene } from "./components/canvas/BackgroundScene";
 import { SubtitleScene } from "./components/canvas/SubtitleScene";
 import { TimelineStrip } from "./components/canvas/TimelineStrip";
 import { NextStep, StepColumn, useFolded } from "./components/ui/StepColumn";
-import { usePreviewPlayer } from "./lib/motion/usePreviewPlayer";
+import { PreviewPlayerContext, usePreviewPlayer } from "./lib/motion/usePreviewPlayer";
 import { buildCues } from "./lib/subtitles/wordTiming";
 import { buildSpeakerVisemeTracks } from "./lib/visemes/speakerTracks";
 import { visemeBlendAt } from "./lib/visemes/timeline";
@@ -511,6 +511,7 @@ export default function App() {
           decor={<HudCorners />}
           foot={nextButton}
         >
+          <PreviewPlayerContext.Provider value={player}>
           {step === "cast" ? (
             <CastPanel />
           ) : step === "script" ? (
@@ -520,6 +521,7 @@ export default function App() {
           ) : (
             <ScenePanel key={`make-${makeTab}`} title="Make" tabs={makeTab === "many" ? ["many", "render", "extras", "shape"] : ["render", "many", "extras", "shape"]} />
           )}
+          </PreviewPlayerContext.Provider>
         </StepColumn>
 
         {/* RIGHT: the preview — always — with the play controls and the timeline strip under it. */}
@@ -716,6 +718,7 @@ export default function App() {
                 disabled={!player.hasSound}
                 aria-label={player.playing ? "Pause" : "Play with sound"}
                 title={player.hasSound ? "Play with sound (space bar)" : "Make the narration in the Script step to hear it here"}
+                data-tip={player.hasSound ? "Plays the video with its voices and music, so you can hear it before you render. The space bar does the same." : "Plays the video with sound once the narration is made in the Script step."}
               >
                 {player.playing ? "❚❚" : "▶"}
               </button>
@@ -735,7 +738,9 @@ export default function App() {
                   {fmtTime(player.timeMs)} / {fmtTime(player.durationMs)}
                 </span>
               ) : (
-                <span className="hint">No narration yet — make it in Script to hear it here</span>
+                <span className="hint" data-tip={player.soundProblem ? "The narration file is there but could not be opened, so there is no sound. Making the narration again fixes it." : "There is no sound to play yet. Make the narration in the Script step first."}>
+                  {player.soundProblem ? "Can't open the narration sound — make it again in Script" : "No narration yet — make it in Script to hear it here"}
+                </span>
               )}
             </div>
             <TimelineStrip
