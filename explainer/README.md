@@ -30,6 +30,7 @@ empty (read from the `.spots.json` written next to the video).
 | Fonts (bundled list, fallback for missing alphabets) | `core/fonts.mjs`, `tools/lib/explainerFonts.mjs` |
 | Tint | `core/tint.mjs` |
 | Captions / chapters | `core/exports.mjs` |
+| Sound effects: where they fall, which sound, how loud (mixed from `sfx/library` at render; `--sfx 0..1` / `--no-sfx`; `VIDEOFORGE_SFX_DIR` overrides the library) | `core/sfx.mjs`, `sfx.test.mjs` |
 | Prompts, atlas importer, reply parsing | `core/prompts.mjs` |
 | Brand style "Mint Meander" (+ custom colours) | `kits/stravelakis.mjs` |
 | Stage (draws a frame) / page entry | `stage/stage.mjs`, `stage/page.mjs` |

@@ -20,8 +20,9 @@ import path from "node:path";
 import * as keyStore from "../keyStore";
 import { guard } from "../security/guard";
 import {
-  captionCues, chapters, checkImported, checkSpec, extractClip, gifFromSpec, renderImported, renderSpec, stillPng, thumbnails, toSrt, toVtt,
+  captionCues, chapters, checkImported, checkSpec, extractClip, gifFromSpec, renderImported, renderSpec, sfxLibraryDir, stillPng, thumbnails, toSrt, toVtt,
 } from "../../tools/lib/explainerRun.mjs";
+import { SOUNDS } from "../../explainer/core/sfx.mjs";
 import { PROVIDERS, pickModel, rebuildImported, writeSceneList } from "../../tools/lib/explainerLlm.mjs";
 import { ensureGoogleFont, fontFiles, googleFontList } from "../../tools/lib/explainerFonts.mjs";
 import { parseAtlasPrompt, rebuildPrompt, styleSlug } from "../../explainer/core/prompts.mjs";
@@ -149,6 +150,15 @@ export function registerExplainerIpc(getWindow: () => BrowserWindow | null) {
     return Promise.all(faces.map(async (f) => ({ weight: f.weight, range: f.range, data: new Uint8Array(await fsp.readFile(f.file)) })));
   });
 
+  /** The few library sounds the explainer uses, for hearing the cues in the live preview. Missing library = []. */
+  ipcMain.handle("explainer:sfxData", async () => {
+    const out: { file: string; data: Uint8Array }[] = [];
+    for (const file of new Set(Object.values(SOUNDS).map((s) => s.file))) {
+      try { out.push({ file, data: new Uint8Array(await fsp.readFile(path.join(sfxLibraryDir(), `${file}.wav`))) }); } catch { /* not in this library */ }
+    }
+    return out;
+  });
+
   ipcMain.handle("explainer:ensureGoogleFont", async (_e, family: string) => { await ensureGoogleFont(String(family), dirs.fonts()); return true; });
 
   // ---- models -----------------------------------------------------------------------
@@ -192,8 +202,9 @@ export function registerExplainerIpc(getWindow: () => BrowserWindow | null) {
       guard().assertWrite(out);
       if (req.audio) guard().assertRead(req.audio);
       const made: string[] = [];
-      await renderSpec(req.spec, out, { fontCache: dirs.fonts(), audio: req.audio, signal, onProgress: (f) => progress("render", f * 0.85, "Drawing frames…") });
+      const R = await renderSpec(req.spec, out, { fontCache: dirs.fonts(), audio: req.audio, signal, onProgress: (f) => progress("render", f * 0.85, "Drawing frames…") });
       made.push(out);
+      if (R.sfx.creditsFile) made.push(R.sfx.creditsFile);
       const stem = out.replace(/\.mp4$/i, "");
       const x = req.extras ?? {};
       if (x.gif) { progress("render", 0.88, "Making the GIF…"); await gifFromSpec(req.spec, `${stem}.gif`, { fontCache: dirs.fonts(), ...x.gif }); made.push(`${stem}.gif`); }
@@ -208,7 +219,7 @@ export function registerExplainerIpc(getWindow: () => BrowserWindow | null) {
         const ch = chapters(req.spec, resolveSpec(req.spec));
         if (ch) { await fsp.writeFile(`${stem}.chapters.txt`, ch + "\n"); made.push(`${stem}.chapters.txt`); }
       }
-      return { made, spots: out.replace(/\.mp4$/i, ".spots.json") };
+      return { made, spots: out.replace(/\.mp4$/i, ".spots.json"), sfx: { mixed: R.sfx.mixed, libraryMissing: R.sfx.libraryMissing } };
     })
   );
 

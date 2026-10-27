@@ -4,7 +4,8 @@
 //
 //   npm run explainer:render -- scene-list.json [--format 9:16] [--puppets 2]
 //        [--shape circle] [--scheme day] [--tint sepia] [--audio narration.wav] [--out file.mp4]
-//        [--faces]               also <out>-faces.mp4 with sample faces in the spots
+//        [--sfx 0..1 | --no-sfx] sound effects amount (default on, 0.6)
+//        [--faces]              also <out>-faces.mp4 with sample faces in the spots
 //        [--gif FROM-TO]         also a GIF of that range, e.g. --gif 3-9
 //        [--clip FROM-TO]        also a short MP4 of that range
 //        [--still SECONDS]       also a PNG of that moment
@@ -34,12 +35,14 @@ function parseArgs() {
     const k = a[i];
     if (!k.startsWith("--")) { o.spec = path.resolve(k); continue; }
     if (["--faces", "--thumbs", "--captions", "--chapters"].includes(k)) { o[k.slice(2)] = true; continue; }
+    if (k === "--no-sfx") { o.sfx = { on: false }; continue; }
     const v = a[++i];
     if (k === "--format") o.format = v;
     else if (k === "--puppets") o.puppets = Number(v);
     else if (k === "--shape") o.shape = v;
     else if (k === "--scheme") o.scheme = v;
     else if (k === "--tint") o.tint = v;
+    else if (k === "--sfx") o.sfx = { on: true, amount: Number(v) };
     else if (k === "--audio") o.audio = path.resolve(v);
     else if (k === "--out") o.out = path.resolve(v);
     else if (k === "--imported") o.imported = path.resolve(v);
@@ -66,6 +69,7 @@ async function main() {
   if (o.format) spec.format = o.format;
   if (o.scheme) spec.scheme = o.scheme;
   if (o.tint) spec.tint = o.tint;
+  if (o.sfx) spec.sfx = o.sfx;
   if (o.puppets != null) spec.puppets = o.puppets ? { count: o.puppets, shape: o.shape } : undefined;
   const name = `${path.basename(o.spec, ".json")}-${spec.format.replace(":", "x")}${spec.puppets?.count ? `-p${spec.puppets.count}` : ""}`;
   o.out ??= path.join(ROOT, "explainer", "checks", "renders", `${name}.mp4`);
@@ -73,6 +77,9 @@ async function main() {
   const t0 = Date.now();
   const R = await renderSpec(spec, o.out, { fontCache: FONT_CACHE, audio: o.audio, onProgress: progress });
   console.log(`\nVideo: ${o.out} (${((Date.now() - t0) / 1000).toFixed(1)} s)`);
+  if (R.sfx?.mixed) console.log(`Sound effects: ${R.sfx.mixed} mixed; credits: ${R.sfx.creditsFile}`);
+  else if (R.sfx?.libraryMissing) console.log("Sound effects: skipped - the sound library was not found (set VIDEOFORGE_SFX_DIR)");
+  if (R.sfx?.cues?.length && process.env.SFX_DEBUG) console.log("CUES " + JSON.stringify(R.sfx.cues));
   const base = o.out.replace(/\.mp4$/i, "");
   if (o.faces && R.holes.length) { await withSampleFaces(o.out, holesFor(R.slots, R.W, R.H), `${base}-faces.mp4`); console.log(`With sample faces: ${base}-faces.mp4`); }
   if (o.gif) { await gifFromSpec(spec, `${base}.gif`, { fontCache: FONT_CACHE, ...o.gif }); console.log(`GIF: ${base}.gif`); }
