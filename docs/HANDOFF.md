@@ -119,6 +119,22 @@ BUILD ORDER (Ak, 26 Oct: "I do not want to choose sequence"). Claude decides the
      promote our things and show what is being installed (electron-builder
      NSIS installerSidebar 164×314 / installerHeader 150×57 images, a
      welcome/finish page showing the app's screens and the sister Forge).
+   - 27 Oct night (HIGH, Ak's notes on batch 2):
+     - Step 1 (a6561d1): both arms behind the body when facing the camera
+       (in front only while crossing it), round smiles, beards on the jaw,
+       real shoes, picture vs drawn told apart in Cast. Proof: npm run
+       moves:sheet -- --faces / --shoes.
+     - Step 2 (dc67506): motion layer (characters/core/motion.mjs): springs,
+       overlap, anticipation, weight, breath, planted feet; 30 fps default,
+       60 added. Ak's review page: characters/samples/motion-ab.html.
+     - Step 3 (f5ce272): photoreal puppets bent on the skeleton
+       (characters/photoreal/*), A-pose + T-pose mixed per arm; works for
+       full-body moves. Review page (private, ignored folder):
+       node tools/photoreal-review.mjs → characters/checks/review-photoreal-nikos.html.
+       Known: torn sleeve bit on the hanging arm's shoulder; side walk, hand
+       shapes, talking face not wired yet. Ak asked: portraits only as LAST
+       resort. 6 Nikos pictures made on the credit (~$0.10), in
+       characters/checks/photoreal/ (never commit: Nikos is private).
 3. MEDIUM: variety. Looks (beards, shoes, 3 shadow looks), wardrobe, free media, emoji pop-ups, Image Forge in the same layout, the rest of Phase 5.
 4. HIGH: #43 timeline.
 
