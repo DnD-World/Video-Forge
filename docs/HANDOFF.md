@@ -1,4 +1,4 @@
-# Handoff — updated 25 Oct 2026
+# Handoff — updated 27 Oct 2026
 
 Everything a fresh session needs. `PLAN.md` holds the long history; this is the
 working state. Newest sections first. Plans: `docs/V2-PLAN.md` (Video Forge),
@@ -70,15 +70,47 @@ Render proof (#7), 26 Oct:
 
 Explainer in the B layout too (26 Oct, late): Style/Script/Look/Make down the left (ui/StepColumn.tsx, shared with the puppet screen), live preview filling the right with a strip of scenes + narration words. Installed.
 BUILD ORDER (Ak, 26 Oct: "I do not want to choose sequence"). Claude decides the order; Ak switches the effort level when told.
-1. MEDIUM, batch 1 (in progress):
-   - Many videos: own screen. DONE (e589ff6).
-   - Being built on helper branches, not yet merged:
-     - batch1-ex-sfx: Explainer sound effects.
-     - batch1-hear: hear before render (#16).
-     - batch1-undo: undo/redo + recent projects (#18).
-   - Then: merge those three, run the tests, check in the app, and install.
-   - Then #23: merge the long branches into the main branches of both apps, plus the release check.
-2. HIGH: #48 motion library, #13 two character forms with libraries, #49 puppets + code mixing.
+1. MEDIUM, batch 1: DONE 27 Oct (0.3.0).
+   - Many videos screen; undo/redo + Recent + New project (#18); hear before
+     render (#16: play any line or character, remake one line); Explainer
+     sound effects; transparent header logos (both apps).
+   - Seen in a test copy: undo/redo on the cast, sound effects section, adding
+     speakers. NOT seen: saving through the real Save window then Recent; a
+     line remake with a real voice; the sound effects by ear.
+   - #23: pull requests open, NOT merged (merging needs Ak — the permission
+     system blocks Claude merging without review):
+     DnD-World/Video-Forge#9 and Stravelakis/image-forge#11. Release gate:
+     no tag (CHANGELOG entries, audit, docs site, Lighthouse, smoke test,
+     media refresh not done).
+   - Installers built: Video Forge Setup 0.3.0, Image Forge Setup 1.1.1. The
+     Image Forge silent install hung (a hidden "Image Forge Setup" window);
+     Video Forge 0.3.0 installs after it. Ak to look at that window.
+2. HIGH, batch 2: BUILT 27 Oct (on dramabox-knobs-and-chatterbox-removal-rlrwzu,
+   backed up to origin as batch2-motion; not in PR #9).
+   - #48 motion library core (aed9eab, b839fbf): moves are data
+     (characters/core/moves.mjs, 21 starter moves in characters/moves/shelf.mjs),
+     8 styles, hand shapes, props (cup, box, chair…), script tags
+     ([walks in], [sits down], [gives the box to Maria]) drive drawn
+     characters in the preview and the render; picture puppets slide in/out;
+     sound-bar rings follow. Proof: npm run moves:sheet (real canvas),
+     characters/samples/moves.html. Seen frame by frame in a test copy.
+     NOT seen: a full render with moves (needs Ak's OK to render).
+   - #13 core (2917198): one character, two forms — Kind switch (picture
+     puppet / drawn, both kept), who they are, personality, subjects, 24
+     prepared drawn characters, "Order a puppet of this character" (opens the
+     Image Forge order filled in). formOf() is the one rule for which form
+     shows. NOT built yet (Phase 5 Characters screen): the AI "describe it"
+     and "drawn version of this puppet" buttons — the logic (cardDiff,
+     applyDiff, readPuppetPick) is built and tested; the test copy has no keys.
+   - #49 (dedc76c): (a) puppets share walk-in/out; (b) a picture puppet cut
+     into limbs moved by the skeleton (characters/experiments/cutout.mjs) and
+     (c) a puppet head on a drawn body. A/B sheet: tools/mixing-sheet.mjs →
+     characters/checks/mixing-nikos.png (ignored folder: Nikos is private).
+     Ak judges B and C before going further.
+   - Known small faults for Phase 5: Dad preset's stubble draws as a white
+     patch; the Mentor's robe reads like a shield; thumbs on the stick-figure
+     look are faint; a seated drawn character facing the camera still reads
+     weakly; a picture puppet can't hold props yet.
 3. MEDIUM: variety. Looks (beards, shoes, 3 shadow looks), wardrobe, free media, emoji pop-ups, Image Forge in the same layout, the rest of Phase 5.
 4. HIGH: #43 timeline.
 
