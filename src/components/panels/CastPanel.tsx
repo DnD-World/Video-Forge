@@ -25,6 +25,7 @@ import { useSettingsStore } from "../../store/useSettingsStore";
 import { usePlayer } from "../../lib/motion/usePreviewPlayer";
 import { plainError } from "../../lib/plainError";
 import { PuppetShelf } from "./PuppetShelf";
+import { CharacterAvatar } from "../canvas/CharacterAvatar";
 import { DRAWN_PRESETS, LOOKS, SUBJECTS, defaultCard, describeCard, formOf, normalizeCard } from "../../../characters/core/index.mjs";
 import { resolveAssetDir } from "../../lib/puppets/puppetAssets";
 import { useSpeakerLibraryStore } from "../../store/useSpeakerLibraryStore";
@@ -276,10 +277,11 @@ export function CastPanel() {
             className={`who ${s.id === active ? "on" : ""}`}
             style={{ ["--c" as string]: s.borderColor }}
             onClick={() => setActive(s.id)}
-            data-tip={`Everything about ${s.label}: voice, look, sound bars and place.`}
+            data-tip={`Everything about ${s.label}: voice, look, sound bars and place. ${formOf(s) === "drawn" ? "A drawn character: full movement." : "A picture puppet: rich detail and texture."}`}
           >
             <i />
             {s.label}
+            <KindBadge drawn={formOf(s) === "drawn"} />
           </button>
         ))}
         <button className={`who add ${adding ? "on" : ""}`} onClick={() => setAdding((v) => !v)} data-tip="Add a speaker: a ready-made puppet, or a new one." aria-expanded={adding}>
@@ -288,50 +290,105 @@ export function CastPanel() {
       </div>
       {adding && (
         <div className="forge-add">
-          {/* Every character this computer has, each with its own face,
-              blinking — hover and it talks (Ak, 13 Oct 2026). */}
-          {(brand?.cast.length ?? 0) > 0 && (
-            <>
-              <div className="label-etched" data-tip="Characters that come with this app's brand pack, voice and all.">Ready-made</div>
-              <div className="forge-shelf">
-                {brand!.cast.map((c) => (
-                  <button
-                    key={c.file}
-                    className="shelf-face"
-                    onClick={() => {
-                      addBuiltin(c);
-                      setAdding(false);
-                    }}
-                    data-tip={`Add ${c.label}, with their face and voice. ${c.note}`}
-                  >
-                    <LiveFace path={builtinPuppetPath(brand!.puppetDir, c.file)} label={c.label} color={c.borderColor} />
-                    <span>{c.label}</span>
-                  </button>
-                ))}
+          {/* TWO KINDS, TWO HALVES (Ak, 27 Oct 2026): picture puppets and drawn
+              characters do different things well, so the menu says which is which. */}
+          <div className="forge-kinds">
+            <section className="kind pic" aria-label="Picture puppets">
+              <h3 data-tip="Made as pictures by Image Forge: real detail, texture and light. They talk, blink and gesture with a few arm poses.">
+                <KindBadge drawn={false} /> Picture puppets <small>rich detail and texture</small>
+              </h3>
+            {/* Every character this computer has, each with its own face,
+                blinking — hover and it talks (Ak, 13 Oct 2026). */}
+            {(brand?.cast.length ?? 0) > 0 && (
+              <>
+                <div className="label-etched" data-tip="Characters that come with this app's brand pack, voice and all.">Ready-made</div>
+                <div className="forge-shelf">
+                  {brand!.cast.map((c) => (
+                    <button
+                      key={c.file}
+                      className="shelf-face"
+                      onClick={() => {
+                        addBuiltin(c);
+                        setAdding(false);
+                      }}
+                      data-tip={`Add ${c.label}, with their face and voice. ${c.note}`}
+                    >
+                      <LiveFace path={builtinPuppetPath(brand!.puppetDir, c.file)} label={c.label} color={c.borderColor} />
+                      <span>{c.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+            {shelf.length > 0 && (
+              <>
+                <div className="label-etched" data-tip="Puppets made by Image Forge's puppet maker on this computer.">Made in Image Forge</div>
+                <div className="forge-shelf">
+                  {shelf.map((p) => (
+                    <button
+                      key={p.slug}
+                      className="shelf-face"
+                      onClick={() => {
+                        addSpeakerFrom({ label: p.name, puppetPath: p.rigPath, borderColor: "#76FFC2", bgColor: "#1a1a1a", bgOpacity: 0, borderOpacity: 1, outlineShape: "circle", size: 0.28, waveform: { ...defaultTrackWaveform(speakers.length % 2 === 1 ? 1 : -1), enabled: p.framing !== "full" } });
+                        setAdding(false);
+                      }}
+                      data-tip={`Add ${p.name}${p.framing === "waist" ? " (waist up, with hands)" : p.framing === "full" ? " (full body, no ring around them)" : ""}, made in Image Forge. Choose a voice in Voice.`}
+                    >
+                      <LiveFace path={p.rigPath} label={p.name} />
+                      <span>{p.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+              <div className="flex flex-wrap gap-2 pt-1">
+                <button
+                  className="btn btn-primary"
+                  onClick={() => {
+                    addSpeaker();
+                    setOrderFor("__new__");
+                    setAdding(false);
+                  }}
+                  data-tip="Add a new speaker and describe their puppet; Image Forge makes it and it arrives on the shelf by itself."
+                >
+                  Order one from Image Forge
+                </button>
+                <button
+                  className="btn"
+                  onClick={() => void window.byok.forge.openImageForge()}
+                  data-tip="Open Image Forge to make the puppet yourself there (Wizards → Make a puppet). It appears here when it is done."
+                >
+                  Open Image Forge
+                </button>
               </div>
-            </>
-          )}
-          {shelf.length > 0 && (
-            <>
-              <div className="label-etched" data-tip="Puppets made by Image Forge's puppet maker on this computer.">Made in Image Forge</div>
+            </section>
+            <section className="kind drawn" aria-label="Drawn characters">
+              <h3 data-tip="Drawn by this app as it plays: they walk in and out, sit, jump, dance, wave and hold things. Any drawing style.">
+                <KindBadge drawn /> Drawn characters <small>full movement</small>
+              </h3>
               <div className="forge-shelf">
-                {shelf.map((p) => (
+                {DRAWN_PRESETS.map((p, i) => (
                   <button
-                    key={p.slug}
+                    key={p.id}
                     className="shelf-face"
                     onClick={() => {
-                      addSpeakerFrom({ label: p.name, puppetPath: p.rigPath, borderColor: "#76FFC2", bgColor: "#1a1a1a", bgOpacity: 0, borderOpacity: 1, outlineShape: "circle", size: 0.28, waveform: { ...defaultTrackWaveform(speakers.length % 2 === 1 ? 1 : -1), enabled: p.framing !== "full" } });
+                      addSpeakerFrom({
+                        label: p.name, form: "drawn", character: normalizeCard({ ...p.card, name: p.name, look: "sticker" }).card,
+                        description: p.description, personality: p.personality, subjects: p.subjects,
+                        borderColor: DRAWN_COLORS[i % DRAWN_COLORS.length], bgColor: "#1a1a1a", bgOpacity: 0, borderOpacity: 0, outlineShape: "none", size: 0.32,
+                        waveform: { ...defaultTrackWaveform(speakers.length % 2 === 1 ? 1 : -1), enabled: false },
+                      });
                       setAdding(false);
                     }}
-                    data-tip={`Add ${p.name}${p.framing === "waist" ? " (waist up, with hands)" : p.framing === "full" ? " (full body, no ring around them)" : ""}, made in Image Forge. Choose a voice in Voice.`}
+                    data-tip={`Add ${p.name}: ${p.description} Change anything afterwards.`}
                   >
-                    <LiveFace path={p.rigPath} label={p.name} />
+                    <DrawnFace card={p.card} name={p.name} />
                     <span>{p.name}</span>
                   </button>
                 ))}
               </div>
-            </>
-          )}
+            </section>
+          </div>
           {library.length > 0 && (
             <>
               <div className="label-etched" data-tip="Speakers you saved with 'Save to library': face, voice and frame together.">My library</div>
@@ -347,37 +404,20 @@ export function CastPanel() {
                     }}
                     data-tip={`Add ${l.label} from your library, voice and all.`}
                   >
-                    {l.puppetPath ? (
+                    {formOf(l) === "drawn" && l.character ? (
+                      <DrawnFace card={l.character} name={l.label} />
+                    ) : l.puppetPath ? (
                       <LiveFace path={l.puppetPath} label={l.label} color={l.borderColor} />
                     ) : (
                       <span className="initial" style={{ borderColor: l.borderColor }}>{l.label.slice(0, 1)}</span>
                     )}
-                    <span>{l.label}</span>
+                    <span>{l.label} <KindBadge drawn={formOf(l) === "drawn"} /></span>
                   </button>
                 ))}
               </div>
             </>
           )}
-          <div className="label-etched pt-1" data-tip="A character nobody has made yet.">Someone new</div>
-          <div className="flex flex-wrap gap-2">
-            <button
-              className="btn btn-primary"
-              onClick={() => {
-                addSpeaker();
-                setOrderFor("__new__");
-                setAdding(false);
-              }}
-              data-tip="Add a new speaker and describe their puppet here; Image Forge makes it and it arrives on the shelf by itself."
-            >
-              Order it from Image Forge
-            </button>
-            <button
-              className="btn"
-              onClick={() => void window.byok.forge.openImageForge()}
-              data-tip="Open Image Forge to make the puppet yourself there (Wizards → Make a puppet). It appears here when it is done."
-            >
-              Open Image Forge
-            </button>
+          <div className="flex flex-wrap gap-2 pt-1">
             <button className="btn" onClick={() => setAdding(false)} data-tip="Close this menu without adding anyone.">
               Never mind
             </button>
@@ -784,5 +824,31 @@ function CharacterKind({ sp, update, onOrder }: {
         </>
       )}
     </div>
+  );
+}
+
+/** Colours for drawn characters added from the menu, so two never match. */
+const DRAWN_COLORS = ["#5be3b5", "#7fd3ff", "#ffb35b", "#ff7fb0", "#b48cff", "#f2e35b"];
+
+/** The kind of a character, at a glance: a picture or a drawing. */
+function KindBadge({ drawn }: { drawn: boolean }) {
+  return (
+    <span className={`kind-badge ${drawn ? "drawn" : "pic"}`} aria-label={drawn ? "drawn character" : "picture puppet"}>
+      {drawn ? (
+        <svg viewBox="0 0 16 16" aria-hidden><path d="M3 13l1-4 7-7 3 3-7 7-4 1z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" /></svg>
+      ) : (
+        <svg viewBox="0 0 16 16" aria-hidden><rect x="2" y="3" width="12" height="10" rx="2" fill="none" stroke="currentColor" strokeWidth="1.6" /><circle cx="6" cy="7" r="1.4" fill="currentColor" /><path d="M3 12l3.5-3 2.5 2 2-1.5 2 2.5" fill="none" stroke="currentColor" strokeWidth="1.4" /></svg>
+      )}
+    </span>
+  );
+}
+
+/** A drawn character's face for the menus: the real engine, drawn once. */
+function DrawnFace({ card, name }: { card: Partial<import("../../../characters/core/index.mjs").CharacterCard>; name: string }) {
+  const full = normalizeCard({ ...card, name, look: (card as { look?: string }).look ?? "sticker", framing: "head" }).card;
+  return (
+    <span className="drawn-face">
+      <CharacterAvatar card={full} size={72} timeMs={400} viseme={0} bgOpacity={0} borderOpacity={0} />
+    </span>
   );
 }

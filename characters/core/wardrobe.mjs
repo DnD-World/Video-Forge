@@ -27,6 +27,60 @@ export const SLOTS = ["top", "outer", "full", "bottom", "feet", "neck", "head", 
 const MULTI = new Set(["hair"]);
 export const PATTERNS = ["none", "stripes", "checks", "dots", "corduroy"];
 
+// ---- shoes ------------------------------------------------------------------------------
+// Drawn for the way the figure faces (Ak, 25 + 27 Oct 2026: "shoes need real
+// design"; the old ovals pointed sideways even from the front). Facing the
+// camera a shoe is a rounded toe box seen from the front, splayed a little
+// outwards; side on it is a profile — heel, ankle, instep, rounded toe — and
+// in between the two outlines blend point for point. Each kind is that same
+// outline with its own proportions and details.
+/** A leg's end lifted by a stroke's radius, so its round cap sits on the floor. */
+export const ankle = (p, r) => [p[0], p[1] - r];
+const lerpP = (a, b, k) => a.map((p, i) => [p[0] + (b[i][0] - p[0]) * k, p[1] + (b[i][1] - p[1]) * k]);
+const smoothK = (k) => k * k * (3 - 2 * k);
+
+function shoe(G, foot, s, o, colors) {
+  const { S, sk, look, pen } = G;
+  const big = look.bigShoes ? 1.9 : 1;
+  const k = smoothK(Math.min(1, Math.max(0, Math.max(sk.side, sk.turn * 0.65))));
+  // sized from the leg: a shoe is always wider than the trouser leg above it
+  const lw = Math.max(0.026, sk.legW);
+  const L = lw * 2.7 * big * (o.len ?? 1), H = lw * 1.05 * big * (o.high ?? 1), W = lw * 1.85 * big * (o.wide ?? 1);
+  const front = [[-W / 2, 0], [-W / 2, -H * 0.45], [-W * 0.38, -H * 0.86], [-W * 0.13, -H], [W * 0.13, -H], [W * 0.38, -H * 0.86], [W / 2, -H * 0.45], [W / 2, 0]];
+  const hb = lw * 0.62 * big; // heel behind the ankle
+  const side = [[-hb, 0], [-hb * 1.1, -H * 0.78], [-hb * 0.45, -H * 1.12], [hb * 0.45, -H * 1.12], [L * 0.45, -H * 0.72], [L * 0.74, -H * 0.56], [L * 0.94, -H * 0.3], [L * 0.97, 0]];
+  const splay = s * 0.004 * (1 - k);
+  const ox = foot[0] + splay, oy = foot[1];
+  const at = (pts) => pts.map(([x, y]) => [(ox + x) * S, (oy + y) * S]);
+  const shape = lerpP(front, side, k);
+  // a boot's shaft first, behind the foot part
+  if (o.shaft) {
+    const sw = (W * 0.78) * (1 - k) + lw * 1.35 * big * k, sx = (-hb * 0.2) * k;
+    pen.rpoly(at([[sx - sw / 2, -H * 0.6], [sx + sw / 2, -H * 0.6], [sx + sw / 2, -H - o.shaft], [sx - sw / 2, -H - o.shaft]]), sw * 0.25 * S);
+    G.fill(colors[0], { noShade: true });
+  }
+  pen.blob(at(shape));
+  G.fill(o.upper ?? colors[0], o.upper === G.card.skin ? { role: "skin", noShade: true } : { noShade: true });
+  // the sole: a band along the bottom of the outline
+  const xs = shape.map((p) => p[0]), x0 = Math.min(...xs), x1 = Math.max(...xs), th = o.sole * big;
+  pen.rpoly(at([[x0 - 0.002, -th], [x1 + 0.002, -th], [x1 + 0.002, 0.002], [x0 - 0.002, 0.002]]), th * 0.45 * S);
+  G.fill(o.soleColor ?? shade(colors[0], -0.45), { noShade: true });
+  o.detail?.(G, at, { W, H, L, k, big }, colors);
+}
+
+/** Bare feet: the shoe outline, lower, in skin, with no sole. */
+export const barefoot = (G, foot, s) => shoe(G, foot, s, { high: 0.62, wide: 0.9, sole: 0.0001, soleColor: G.card.skin, upper: G.card.skin }, [G.card.skin]);
+
+const laces = (G, at, { W, H, L, k }, c) => {
+  for (let i = 0; i < 3; i++) {
+    const fx = (i - 1) * W * 0.16, fy = -H * (0.92 - i * 0.04);
+    const sx = L * (0.28 + i * 0.1), sy = -H * (0.86 - i * 0.07);
+    const x = fx + (sx - fx) * k, y = fy + (sy - fy) * k;
+    G.pen.poly(at([[x - 0.006, y + 0.002], [x + 0.006, y - 0.002]]), false);
+    G.line(c, 0.003, { feature: true });
+  }
+};
+
 // ---- shape helpers ----------------------------------------------------------------------
 
 const vNotch = (sk, depth = 0.45, open = 0.42) => {
@@ -69,8 +123,12 @@ const sleeve = (len) => (G, c, arm) => {
 };
 const trouserLegs = (len) => (G, c) => {
   for (const leg of G.sk.legs) {
-    G.pen.poly(G.U(legPath(leg, len)), false);
-    G.line(c[0], G.sk.legW * (G.look.limb === "line" ? 2.8 : 1.3));
+    const w = G.sk.legW * (G.look.limb === "line" ? 2.8 : 1.3);
+    // stop at the ankle: the stroke's round end must not poke below the floor
+    const pts = legPath(leg, len);
+    if (len > 1.5) pts[pts.length - 1] = ankle(pts[pts.length - 1], w / 2);
+    G.pen.poly(G.U(pts), false);
+    G.line(c[0], w);
   }
 };
 const crew = (G, c) => { // a round neckline
@@ -184,15 +242,29 @@ export const ITEMS = [
       G.fill(c[0]);
       for (let i = 0; i < 3; i++) { G.pen.curve(G.U([[-sk.sx * (0.7 - i * 0.3) + l, sk.sy + 0.02 + i * 0.01], [sk.sx * (0.2 + i * 0.2), sk.waistY - 0.02 + i * 0.03], [w * (0.9 + i * 0.15), sk.hy * (0.55 - i * 0.05)]])); G.line(shade(G.tone(c[0]), -0.35), 0.0025, { feature: !G.look.incise, ink: true }); }
     } },
-  // feet
+  // feet (shoe() above: front, side and everything between)
   { id: "sneakers", label: "Sneakers", slot: "feet", colors: ["#f2f2f2", "#d7261e"],
-    feet: (G, c, foot, s) => { const S = G.S; G.pen.ellipse((foot[0] + 0.016) * S, (foot[1] - 0.012) * S, 0.034 * S, 0.016 * S); G.fill(c[0], { noShade: true }); G.pen.poly([[(foot[0] - 0.01) * S, (foot[1] - 0.016) * S], [(foot[0] + 0.03) * S, (foot[1] - 0.016) * S]], false); G.line(c[1] ?? "#d7261e", 0.004, { feature: true }); } },
+    feet: (G, c, foot, s) => shoe(G, foot, s, { high: 1.12, wide: 1.06, sole: 0.011, soleColor: "#ffffff",
+      detail: (G, at, d, c) => {
+        laces(G, at, d, shade(c[0], -0.35));
+        // the side stripe shows as the foot turns
+        if (d.k > 0.25) { G.pen.curve(at([[d.L * 0.15, -d.H * 0.3], [d.L * 0.45, -d.H * 0.55], [d.L * 0.72, -d.H * 0.42]])); G.line(c[1] ?? "#d7261e", 0.006, { feature: true }); }
+        else { G.pen.poly(at([[-d.W * 0.42, -d.H * 0.25], [d.W * 0.42, -d.H * 0.25]]), false); G.line(c[1] ?? "#d7261e", 0.004, { feature: true }); }
+      } }, c) },
   { id: "shoes", label: "Shoes", slot: "feet", colors: ["#16181d"],
-    feet: (G, c, foot) => { const S = G.S, big = G.look.bigShoes ? 2.1 : 1; G.pen.ellipse((foot[0] + 0.012 * big) * S, (foot[1] - 0.008 * big) * S, 0.03 * big * S, 0.014 * big * S); G.fill(c[0], { noShade: true }); } },
+    feet: (G, c, foot, s) => shoe(G, foot, s, { high: 0.86, len: 1.05, sole: 0.005, soleColor: shade(c[0], -0.3),
+      detail: (G, at, d) => { G.pen.ellipse(...at([[d.k * d.L * 0.62, -d.H * 0.62]])[0], (0.009 + 0.006 * d.k) * G.S, 0.0035 * G.S); G.ctx.fillStyle = "rgba(255,255,255,0.35)"; G.ctx.fill(); } }, c) },
   { id: "boots", label: "Boots", slot: "feet", colors: ["#5a3622"],
-    feet: (G, c, foot) => { const S = G.S; G.pen.rpoly([[(foot[0] - 0.018) * S, (foot[1] - 0.07) * S], [(foot[0] + 0.016) * S, (foot[1] - 0.07) * S], [(foot[0] + 0.046) * S, (foot[1] - 0.004) * S], [(foot[0] - 0.02) * S, (foot[1] - 0.004) * S]], 0.008 * S); G.fill(c[0], { noShade: true }); } },
+    feet: (G, c, foot, s) => shoe(G, foot, s, { high: 1.05, wide: 1.08, sole: 0.009, shaft: 0.05, soleColor: "#2b1d12", detail: laces }, [c[0], c[0]]) },
   { id: "sandals", label: "Sandals", slot: "feet", colors: ["#7a4a24"],
-    feet: (G, c, foot) => { const S = G.S; G.pen.ellipse((foot[0] + 0.012) * S, (foot[1] - 0.007) * S, 0.027 * S, 0.01 * S); G.fill(G.card.skin, { role: "skin", noShade: true }); for (const k of [-0.03, -0.012]) { G.pen.poly([[(foot[0] - 0.006) * S, (foot[1] + k) * S], [(foot[0] + 0.02) * S, (foot[1] + k * 0.5) * S]], false); G.line(c[0], 0.004, { feature: true }); } G.pen.poly([[(foot[0] - 0.015) * S, foot[1] * S], [(foot[0] + 0.04) * S, foot[1] * S]], false); G.line(c[0], 0.005, { feature: true }); } },
+    feet: (G, c, foot, s) => shoe(G, foot, s, { high: 0.75, sole: 0.006, soleColor: c[0], upper: G.card.skin,
+      detail: (G, at, d, cc) => {
+        for (const t of [0.35, 0.65]) {
+          const fy = -d.H * (0.45 + t * 0.4), sxx = d.L * t;
+          const a = [[-d.W * 0.48 * (1 - d.k) + (sxx - 0.012) * d.k, fy * (1 - d.k) + -d.H * 0.7 * d.k], [d.W * 0.48 * (1 - d.k) + (sxx + 0.012) * d.k, fy * (1 - d.k) + -d.H * 0.35 * d.k]];
+          G.pen.poly(at(a), false); G.line(c[0], 0.005, { feature: true });
+        }
+      } }, c) },
   // head
   { id: "cap", label: "Cap", slot: "head", colors: ["#d7261e"],
     head: (G, c) => { const { sk } = G, S = G.S; G.pen.ellipse(0, -sk.ry * 0.38 * S, sk.rx * 1.02 * S, sk.ry * 0.72 * S, 0, Math.PI, Math.PI * 2); G.fill(c[0]); G.pen.rpoly([[sk.rx * 0.2 * S, -sk.ry * 0.42 * S], [sk.rx * 1.45 * S, -sk.ry * 0.36 * S], [sk.rx * 1.35 * S, -sk.ry * 0.28 * S], [sk.rx * 0.2 * S, -sk.ry * 0.3 * S]], 0.01 * S); G.fill(shade(c[0], -0.15), { noShade: true }); } },

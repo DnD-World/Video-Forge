@@ -35,7 +35,8 @@ async function main() {
       look: arg("look", "sticker"), style: arg("style", "neutral"), framing: arg("framing", "full"),
       view: arg("view") !== undefined ? Number(arg("view")) : null, cols: Number(arg("cols", 6)), cell: Number(arg("cell", 220)),
     };
-    const url = process.argv.includes("--presets") ? await p.js(`window.__presets(${JSON.stringify(opts)})`) : await p.js(`window.__sheet(${JSON.stringify(opts)})`);
+    const fn = process.argv.includes("--presets") ? "__presets" : process.argv.includes("--faces") ? "__faces" : process.argv.includes("--shoes") ? "__shoes" : "__sheet";
+    const url = await p.js(`window.${fn}(${JSON.stringify(opts)})`);
     const file = path.join(OUT, `moves-${arg("out", "sheet")}.png`);
     await fs.writeFile(file, Buffer.from(url.split(",")[1], "base64"));
     if (p.consoleErrors.length) { console.error(p.consoleErrors.join("\n")); process.exitCode = 1; }

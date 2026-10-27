@@ -72,3 +72,62 @@ window.__presets = ({ look = "sticker", cols = 6, cell = 200 }) => {
   });
   return cv.toDataURL("image/png");
 };
+
+// faces close up: beards and smiles at every turn (front → side)
+window.__faces = ({ look = "sticker", cell = 200 }) => {
+  const views = [0, 0.5, 1, 1.5, 2];
+  const rows = [
+    { label: "full beard", over: { beard: "full", moustache: "thick", hairColor: "#5a3825" } },
+    { label: "short beard", over: { beard: "short", hairColor: "#262a33" } },
+    { label: "stubble", over: { beard: "stubble", hairColor: "#262a33" } },
+    { label: "goatee", over: { beard: "goatee", moustache: "thin", hairColor: "#a8322b" } },
+    { label: "smile", over: { expression: "smile" } },
+    { label: "big smile", over: { expression: "smile" }, smile: 0.6 },
+    { label: "grumpy", over: { expression: "grumpy" } },
+  ];
+  const cv = document.createElement("canvas");
+  cv.width = 120 + views.length * cell; cv.height = rows.length * cell;
+  const ctx = cv.getContext("2d");
+  ctx.fillStyle = "#0d1b2a"; ctx.fillRect(0, 0, cv.width, cv.height);
+  const layer = document.createElement("canvas");
+  rows.forEach((r, i) => {
+    ctx.fillStyle = "#e8f1f2"; ctx.font = "600 14px sans-serif"; ctx.fillText(r.label, 10, i * cell + cell / 2);
+    views.forEach((v, j) => {
+      const x0 = 120 + j * cell, y0 = i * cell;
+      ctx.save(); ctx.beginPath(); ctx.rect(x0 + 2, y0 + 2, cell - 4, cell - 4); ctx.clip();
+      ctx.fillStyle = BG[look] ?? "#24395a"; ctx.fillRect(x0, y0, cell, cell);
+      const card = { ...normalizeCard({ name: "F", ...r.over }).card, look };
+      const fr = frameFor(card, look, "head", { x: x0 + 6, y: y0 + 6, w: cell - 12, h: cell - 12 });
+      drawFigure(ctx, card, { look, S: fr.S, x: fr.x, y: fr.y, state: { t: 0, view: v, smile: r.smile ?? 0 }, layerSize: { w: cv.width, h: cv.height }, layerCanvas: layer });
+      ctx.restore();
+    });
+  });
+  return cv.toDataURL("image/png");
+};
+
+// shoes close up: every kind at every turn, and mid-walk side on
+window.__shoes = ({ look = "sticker", cell = 220 }) => {
+  const cols = [{ v: 0 }, { v: 0.5 }, { v: 1 }, { v: 2 }, { v: 2, walk: true }];
+  const kinds = ["shoes", "sneakers", "boots", "sandals", null];
+  const cv = document.createElement("canvas");
+  cv.width = 110 + cols.length * cell; cv.height = kinds.length * cell;
+  const ctx = cv.getContext("2d");
+  ctx.fillStyle = "#0d1b2a"; ctx.fillRect(0, 0, cv.width, cv.height);
+  const layer = document.createElement("canvas");
+  kinds.forEach((kind, i) => {
+    ctx.fillStyle = "#e8f1f2"; ctx.font = "600 14px sans-serif"; ctx.fillText(kind ?? "barefoot", 10, i * cell + cell / 2);
+    cols.forEach((c, j) => {
+      const x0 = 110 + j * cell, y0 = i * cell;
+      ctx.save(); ctx.beginPath(); ctx.rect(x0 + 2, y0 + 2, cell - 4, cell - 4); ctx.clip();
+      ctx.fillStyle = BG[look] ?? "#24395a"; ctx.fillRect(x0, y0, cell, cell);
+      ctx.fillStyle = "rgba(0,0,0,0.07)"; ctx.fillRect(x0, y0 + cell * 0.86, cell, cell * 0.14);
+      const wear = [{ id: "jeans", colors: ["#3a6fb0"] }, ...(kind ? [{ id: kind, colors: kind === "sneakers" ? ["#f2f2f2", "#d7261e"] : kind === "boots" ? ["#5a3622"] : kind === "sandals" ? ["#7a4a24"] : ["#16181d"] }] : [])];
+      const card = { ...normalizeCard({ name: "F", wear }).card, look };
+      const S = cell * 2.4;
+      const state = { t: 0.4, view: c.v, ...(c.walk ? { walk: { phase: 1.1, amount: 1 } } : {}) };
+      drawFigure(ctx, card, { look, S, x: x0 + cell / 2 - (c.v >= 2 ? cell * 0.06 : 0), y: y0 + cell * 0.88, state, layerSize: { w: cv.width, h: cv.height }, layerCanvas: layer });
+      ctx.restore();
+    });
+  });
+  return cv.toDataURL("image/png");
+};
