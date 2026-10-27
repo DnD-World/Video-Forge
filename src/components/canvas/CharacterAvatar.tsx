@@ -13,7 +13,7 @@
 // ---------------------------------------------------------------------------
 
 import { useLayoutEffect, useRef } from "react";
-import { characterState, drawFigure, frameFor, lookById, type CharacterCard, type HeadPose, type PoseSpan } from "../../../characters/core/index.mjs";
+import { characterState, drawFigure, frameFor, lookById, type CharacterCard, type HeadPose, type MoveState, type PoseSpan } from "../../../characters/core/index.mjs";
 import type { OutlineShape } from "../../store/types";
 
 interface Props {
@@ -36,6 +36,8 @@ interface Props {
   mirror?: boolean;
   /** This speaker is the one talking now (their hands move more). */
   active?: boolean;
+  /** A move from the motion library playing now (moveTracks.ts), or null. */
+  move?: MoveState | null;
   bgOpacity: number;
   borderOpacity: number;
   bgColor?: string;
@@ -49,7 +51,7 @@ const SHAPE_RADIUS: Record<OutlineShape, string> = { circle: "50%", rounded: "18
 
 export function CharacterAvatar({
   card, size, timeMs, viseme, prevViseme, mix = 1, lidFrom, lidTo, lidMix, browLeft, browRight, head,
-  poseSpans, view = 0, mirror = false, active = false,
+  poseSpans, view = 0, mirror: mirror0 = false, active = false, move = null,
   bgOpacity, borderOpacity, bgColor = "#1a1a1a", borderColor = "#d98a3d", outlineShape = "none",
   frameWidth, sizeFraction,
 }: Props) {
@@ -69,8 +71,10 @@ export function CharacterAvatar({
     const look = lookById(card.look);
     const { S, x, y } = frameFor(card, look, card.framing, { x: 0, y: 0, w: px, h: px });
     const state = characterState({
-      timeMs, viseme, prevViseme, mix, lidFrom, lidTo, lidMix, browLeft, browRight, head, poseSpans, view, active,
+      timeMs, viseme, prevViseme, mix, lidFrom, lidTo, lidMix, browLeft, browRight, head, poseSpans, view, active, move,
     });
+    // walking across the picture faces the way they walk
+    const mirror = move?.facing ? move.facing === "left" : mirror0;
     if (!layer.current && typeof document !== "undefined") layer.current = document.createElement("canvas");
     drawFigure(ctx, card, { look, S, x, y, mirror, state, layerSize: { w: px, h: px }, layerCanvas: layer.current ?? undefined });
   });
