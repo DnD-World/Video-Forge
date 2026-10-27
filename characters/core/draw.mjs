@@ -169,7 +169,7 @@ export function frameFor(card, look0, framing = "full", box) {
  * Draw the character. Returns measurements for the checks (px, canvas space,
  * before the caller's own transforms): { mouth, eyes, head }.
  */
-export function drawCharacter(ctx, card, { look: look0 = card.look, S, x = 0, y = 0, mirror = false, state = {} } = {}) {
+export function drawCharacter(ctx, card, { look: look0 = card.look, S, x = 0, y = 0, mirror = false, state = {}, headless = false } = {}) {
   const look = typeof look0 === "string" ? lookById(look0) : look0;
   const t = state.t ?? 0;
   const sk = solveRig(card, look, state);
@@ -270,35 +270,39 @@ export function drawCharacter(ctx, card, { look: look0 = card.look, S, x = 0, y 
   }
   phase("neck");
 
-  // ---- head group (rotates as one)
-  // a raised hood hides the hair (only a fringe would show; the hood draws its own edge)
-  const hooded = wear.some((w) => w.id === "hoodie_up");
-  const hair = hooded ? {} : HAIR[card.hair] ?? HAIR.short;
-  const hairColor = card.hairColor ?? "#262a33";
-  ctx.save();
-  ctx.translate(sk.head[0] * S, sk.head[1] * S);
-  ctx.rotate(sk.rot);
-  phase("hairBack");
-  hair.back?.(G, sk, S, hairColor, t);
-  const ears = sk.face.ears.filter((e) => e.visible && card.ears !== "none");
-  const earR = { small: 0.14, round: 0.18, big: 0.24 }[card.ears] ?? 0.14;
-  const drawEar = (e) => { pen.ellipse(e.x * S, e.y * S, sk.R * earR * 0.8 * S, sk.R * earR * 1.15 * S); G.fill(card.skin, { role: "skin", noShade: true }); };
-  ears.filter((e) => Math.abs(e.x) > sk.rx * 0.8).forEach(drawEar);
-  // the head
-  const headPts = () => {
-    if (card.headShape === "square") return pen.rpoly([[-sk.rx * S, -sk.ry * S], [sk.rx * S, -sk.ry * S], [sk.rx * S, sk.ry * S], [-sk.rx * S, sk.ry * S]], sk.R * 0.45 * S);
-    if (card.headShape === "egg") return pen.blob([[0, -sk.ry * S], [sk.rx * 0.9 * S, -sk.ry * 0.45 * S], [sk.rx * S, sk.ry * 0.35 * S], [0, sk.ry * S], [-sk.rx * S, sk.ry * 0.35 * S], [-sk.rx * 0.9 * S, -sk.ry * 0.45 * S]]);
-    return pen.ellipse(0, 0, sk.rx * S, sk.ry * S);
-  };
-  headPts();
-  G.fill(card.skin, { role: "skin" });
-  ears.filter((e) => Math.abs(e.x) <= sk.rx * 0.8).forEach(drawEar);
-  const face = drawFace(G, state);
-  hair.front?.(G, sk, S, hairColor, t);
-  if (card.highlight) highlight(G, sk, S, card.highlight);
-  phase("head");
-  phase("face");
-  ctx.restore();
+  // ---- head group (rotates as one). headless: the body only, for a
+  // picture puppet's own head on top (experiment #49c)
+  let face = { mouth: { x: 0, y: 0, w: 0, h: 0 }, eyes: [] };
+  if (!headless) {
+    // a raised hood hides the hair (only a fringe would show; the hood draws its own edge)
+    const hooded = wear.some((w) => w.id === "hoodie_up");
+    const hair = hooded ? {} : HAIR[card.hair] ?? HAIR.short;
+    const hairColor = card.hairColor ?? "#262a33";
+    ctx.save();
+    ctx.translate(sk.head[0] * S, sk.head[1] * S);
+    ctx.rotate(sk.rot);
+    phase("hairBack");
+    hair.back?.(G, sk, S, hairColor, t);
+    const ears = sk.face.ears.filter((e) => e.visible && card.ears !== "none");
+    const earR = { small: 0.14, round: 0.18, big: 0.24 }[card.ears] ?? 0.14;
+    const drawEar = (e) => { pen.ellipse(e.x * S, e.y * S, sk.R * earR * 0.8 * S, sk.R * earR * 1.15 * S); G.fill(card.skin, { role: "skin", noShade: true }); };
+    ears.filter((e) => Math.abs(e.x) > sk.rx * 0.8).forEach(drawEar);
+    // the head
+    const headPts = () => {
+      if (card.headShape === "square") return pen.rpoly([[-sk.rx * S, -sk.ry * S], [sk.rx * S, -sk.ry * S], [sk.rx * S, sk.ry * S], [-sk.rx * S, sk.ry * S]], sk.R * 0.45 * S);
+      if (card.headShape === "egg") return pen.blob([[0, -sk.ry * S], [sk.rx * 0.9 * S, -sk.ry * 0.45 * S], [sk.rx * S, sk.ry * 0.35 * S], [0, sk.ry * S], [-sk.rx * S, sk.ry * 0.35 * S], [-sk.rx * 0.9 * S, -sk.ry * 0.45 * S]]);
+      return pen.ellipse(0, 0, sk.rx * S, sk.ry * S);
+    };
+    headPts();
+    G.fill(card.skin, { role: "skin" });
+    ears.filter((e) => Math.abs(e.x) <= sk.rx * 0.8).forEach(drawEar);
+    face = drawFace(G, state);
+    hair.front?.(G, sk, S, hairColor, t);
+    if (card.highlight) highlight(G, sk, S, card.highlight);
+    phase("head");
+    phase("face");
+    ctx.restore();
+  }
 
   // ---- front arm last
   drawArm(sk.arms[1]);
