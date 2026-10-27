@@ -559,7 +559,7 @@ function MakeTab(p: {
       {p.isBuiltIn && (
         <section className="flex flex-col gap-2">
           <div className="label-etched" data-tip="Step 2: little sounds that land on the pictures, like a swish when the scene changes.">2 · Sound effects</div>
-          <Toggle label="Sound effects" checked={p.sfx.on} onChange={(v) => p.setSfx({ on: v })} data-tip="Adds small sounds: a swish when the scene changes, a pop when something appears. They are mixed into the video." />
+          <Toggle label="Add them to the video" checked={p.sfx.on} onChange={(v) => p.setSfx({ on: v })} data-tip="Adds small sounds: a swish when the scene changes, a pop when something appears. They are mixed into the video." />
           {p.sfx.on && (
             <>
               <Slider label="How many" value={p.sfx.amount} min={0} max={1} step={0.05} onChange={(v) => p.setSfx({ amount: v })}

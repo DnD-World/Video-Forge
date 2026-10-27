@@ -592,10 +592,11 @@ export default function App() {
                 />
               )}
 
-              {/* Only on an empty frame — once there is narration it sat behind
+              {/* Only on an empty frame, at the top so it never sits on the sample
+                  subtitle. Once there is narration it sat behind
                   the subtitles and read as part of them. */}
               {!narration && !attachedAudio && (
-                <span className="label-etched text-center leading-relaxed relative z-10" data-tip="The shape of your video, how many pictures per second, and its size in pixels. Change them in the Look step.">
+                <span className="label-etched text-center leading-relaxed absolute top-4 inset-x-0 z-10" data-tip="The shape of your video, how many pictures per second, and its size in pixels. Change them in the Look step.">
                   {render.format} · {fps} FPS
                   <br />
                   {render.width}×{render.height}
