@@ -173,6 +173,7 @@ const api = {
     removeStyle: (id: string): Promise<boolean> => ipcRenderer.invoke("explainer:removeStyle", id),
     googleFonts: (): Promise<{ family: string; category: string }[]> => ipcRenderer.invoke("explainer:googleFonts"),
     fontData: (family: string): Promise<{ weight: number; range: string | null; data: Uint8Array }[]> => ipcRenderer.invoke("explainer:fontData", family),
+    sfxData: (): Promise<{ file: string; data: Uint8Array }[]> => ipcRenderer.invoke("explainer:sfxData"),
     providers: (): Promise<{ id: string; label: string; hasKey: boolean }[]> => ipcRenderer.invoke("explainer:providers"),
     writeScenes: (req: unknown): Promise<any> => ipcRenderer.invoke("explainer:writeScenes", req),
     validate: (spec: unknown): Promise<string[]> => ipcRenderer.invoke("explainer:validate", spec),

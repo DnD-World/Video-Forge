@@ -234,11 +234,12 @@ declare global {
         removeStyle: (id: string) => Promise<boolean>;
         googleFonts: () => Promise<{ family: string; category: string }[]>;
         fontData: (family: string) => Promise<{ weight: number; range: string | null; data: Uint8Array }[]>;
+        sfxData: () => Promise<{ file: string; data: Uint8Array }[]>;
         providers: () => Promise<{ id: string; label: string; hasKey: boolean }[]>;
         writeScenes: (req: { script: string; words?: ExWord[]; format: string; provider: string; model?: string; base?: Record<string, unknown> }) => Promise<{ spec: any; attempts: number; ms: number; problems: string[]; model: string }>;
         validate: (spec: unknown) => Promise<string[]>;
         check: (spec: unknown) => Promise<ExCheck>;
-        render: (req: { spec: unknown; out: string; audio?: string; extras?: Record<string, unknown> }) => Promise<{ made: string[]; spots?: string }>;
+        render: (req: { spec: unknown; out: string; audio?: string; extras?: Record<string, unknown> }) => Promise<{ made: string[]; spots?: string; sfx?: { mixed: number; libraryMissing: boolean } }>;
         importedPrompt: (req: Record<string, unknown>) => Promise<{ file: string; chars: number }>;
         importedGenerate: (req: Record<string, unknown>) => Promise<ExCheck & { id: string; file: string; model: string; ms: number }>;
         importedLoad: (htmlPath: string) => Promise<ExCheck & { id: string; file: string }>;

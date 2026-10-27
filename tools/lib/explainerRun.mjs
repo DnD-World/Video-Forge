@@ -23,6 +23,7 @@ import { buildExplainerPage } from "./explainerPage.mjs";
 import { MIN_SIZE, safeMargin, rectHitsHole } from "../../explainer/core/frame.mjs";
 import { contrast } from "../../explainer/core/math.mjs";
 import { resolveTint, tintPixels } from "../../explainer/core/tint.mjs";
+import { planSfx, creditsText, SOUNDS } from "../../explainer/core/sfx.mjs";
 export { captionCues, chapters, toSrt, toVtt } from "../../explainer/core/exports.mjs";
 
 const require_ = createRequire(import.meta.url);
@@ -278,6 +279,62 @@ async function muxAudio(video, audio, out) {
   await runFfmpeg(["-i", video, "-i", audio, "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-shortest", out]);
 }
 
+// ---- sound effects -------------------------------------------------------------------
+
+/** Where the shipped sound-effects library is (VIDEOFORGE_SFX_DIR overrides, for tests and other installs). */
+export function sfxLibraryDir() {
+  return process.env.VIDEOFORGE_SFX_DIR || path.join(ROOT, "sfx", "library");
+}
+
+/**
+ * Mix the planned cues into one stereo track as long as the video: each cue's
+ * file is started `lead` seconds before the cue time, so the sound is felt AT
+ * the cue. Returns the wav path, or null when no cue's sound file exists.
+ * (amix divides by its input count; volume=N undoes that, so each cue keeps
+ * its own gain on every ffmpeg version.)
+ */
+export async function mixSfxTrack(cues, { dir = sfxLibraryDir(), duration, out }) {
+  const usable = [];
+  for (const c of cues) {
+    const file = path.join(dir, `${c.sound}.wav`);
+    try { await fs.access(file); usable.push({ ...c, file }); } catch { /* sound missing: skipped */ }
+  }
+  if (!usable.length) return null;
+  const args = ["-f", "lavfi", "-t", String(duration), "-i", "anullsrc=r=44100:cl=stereo"];
+  const parts = [];
+  usable.forEach((c, i) => {
+    const snd = SOUNDS[c.kind];
+    args.push("-i", c.file);
+    const startAt = c.t - snd.lead;
+    const chain = ["aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo"];
+    if (snd.reverse) chain.push("areverse");
+    if (snd.skip) chain.push(`atrim=start=${snd.skip}`, "asetpts=PTS-STARTPTS");
+    if (startAt < 0) chain.push(`atrim=start=${(-startAt).toFixed(3)}`, "asetpts=PTS-STARTPTS");
+    if (snd.maxLen) chain.push(`atrim=end=${snd.maxLen}`, "asetpts=PTS-STARTPTS", `afade=t=out:st=${Math.max(0, snd.maxLen - 0.2)}:d=0.2`);
+    if (snd.reverse) chain.push("afade=t=in:d=0.5");
+    chain.push(`volume=${c.gain}`);
+    const ms = Math.max(0, Math.round(startAt * 1000));
+    chain.push(`adelay=${ms}|${ms}`);
+    parts.push(`[${i + 1}:a]${chain.join(",")}[c${i}]`);
+  });
+  const ins = ["[0:a]", ...usable.map((_, i) => `[c${i}]`)].join("");
+  parts.push(`${ins}amix=inputs=${usable.length + 1}:duration=first:dropout_transition=0,volume=${usable.length + 1},alimiter=limit=0.92[mix]`);
+  args.push("-filter_complex", parts.join(";"), "-map", "[mix]", "-c:a", "pcm_s16le", out);
+  await runFfmpeg(args);
+  return out;
+}
+
+/** Narration (optional) and sound effects (optional) onto a silent video. */
+async function muxTracks(video, { narration, effects, out }) {
+  if (!effects) return muxAudio(video, narration, out);
+  const args = ["-i", video, "-i", effects];
+  if (narration) {
+    args.push("-i", narration, "-filter_complex", "[1:a]volume=0.85[fx];[fx][2:a]amix=inputs=2:duration=longest:dropout_transition=0,volume=2[a]", "-map", "0:v", "-map", "[a]");
+  } else args.push("-map", "0:v", "-map", "1:a");
+  args.push("-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-shortest", out);
+  await runFfmpeg(args);
+}
+
 /**
  * Render a scene list to MP4. Also writes <out>.spots.json (where a puppet
  * render must put each face). Returns the resolved frame info.
@@ -291,10 +348,18 @@ export async function renderSpec(spec, out, { fontCache, audio, crf, onProgress,
     await p.js("window.__exReady.then(() => true)");
     const silent = path.join(work, "video.mp4");
     await encodeFrames({ W: R.W, H: R.H, fps: R.fps, frames: Math.round(R.duration * R.fps), getFrame: (t) => p.js(`window.__exRGBA(${t})`), out: silent, crf, onProgress, signal });
-    if (audio) await muxAudio(silent, audio, out);
+    // sound effects: planned from the scene list, mixed from the shipped library
+    const plan = planSfx(spec);
+    let effects = null, creditsFile = null;
+    if (plan.cues.length) effects = await mixSfxTrack(plan.cues, { duration: R.duration, out: path.join(work, "sfx.wav") });
+    if (effects) {
+      await muxTracks(silent, { narration: audio, effects, out });
+      creditsFile = out.replace(/\.mp4$/i, ".sound-credits.txt");
+      await fs.writeFile(creditsFile, creditsText(plan.cues));
+    } else if (audio) await muxAudio(silent, audio, out);
     else await fs.copyFile(silent, out);
     await fs.writeFile(out.replace(/\.mp4$/i, ".spots.json"), JSON.stringify({ format: spec.format, width: R.W, height: R.H, slots: R.slots }, null, 2));
-    return R;
+    return { ...R, sfx: { planned: plan.cues.length, mixed: effects ? plan.cues.length : 0, on: plan.on, cues: plan.cues, creditsFile, libraryMissing: plan.cues.length > 0 && !effects } };
   } finally {
     p.close();
     await fs.rm(work, { recursive: true, force: true });

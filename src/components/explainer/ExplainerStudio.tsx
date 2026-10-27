@@ -27,6 +27,8 @@ import { BUNDLED_FONTS } from "../../../explainer/core/fonts.mjs";
 import { TINT_PRESETS } from "../../../explainer/core/tint.mjs";
 import { SCHEMES } from "../../../explainer/kits/stravelakis.mjs";
 import { estimateSeconds } from "../../../explainer/core/prompts.mjs";
+import { DEFAULT_AMOUNT, SOUNDS, countCues, planSfx, type SfxCue } from "../../../explainer/core/sfx.mjs";
+import { loadSfxAudio, playCue, type SfxAudio } from "./sfxPreview";
 import type { Format, Spec, Word, SpotShape } from "../../../explainer/types";
 import sample from "../../../explainer/samples/how-it-works.json";
 import { useProjectStore } from "../../store/useProjectStore";
@@ -53,18 +55,19 @@ const EX_STEPS: { id: ExStep; title: string; sub: string }[] = [
 const EX_WIDTH: Record<ExStep, number> = { style: 380, script: 480, look: 440, make: 440 };
 
 type Look = { scheme: string; custom: boolean; background: string; accent: string; tint: string; tintAmount: number; font: string };
-type Draft = { style: string; format: Format; puppets: number; shape: SpotShape; script: string; words: Word[] | null; audio: string | null; spec: Spec; look: Look; provider: string };
+type Sfx = { on: boolean; amount: number };
+type Draft = { style: string; format: Format; puppets: number; shape: SpotShape; script: string; words: Word[] | null; audio: string | null; spec: Spec; look: Look; provider: string; sfx: Sfx };
 
 const DEFAULT_DRAFT: Draft = {
   style: BUILT_IN, format: "16:9", puppets: 0, shape: "circle", script: "", words: null, audio: null,
-  spec: sample as unknown as Spec, provider: "groq",
+  spec: sample as unknown as Spec, provider: "groq", sfx: { on: true, amount: DEFAULT_AMOUNT },
   look: { scheme: "night", custom: false, background: "#3a0d16", accent: "#f2b880", tint: "none", tintAmount: 1, font: "Sora" },
 };
 
 function loadDraft(): Draft {
   try {
     const d = JSON.parse(localStorage.getItem("vf.explainer.draft") ?? "null");
-    if (d && d.spec) return { ...DEFAULT_DRAFT, ...d, look: { ...DEFAULT_DRAFT.look, ...d.look } };
+    if (d && d.spec) return { ...DEFAULT_DRAFT, ...d, look: { ...DEFAULT_DRAFT.look, ...d.look }, sfx: { ...DEFAULT_DRAFT.sfx, ...d.sfx } };
   } catch { /* storage unavailable: start fresh */ }
   return DEFAULT_DRAFT;
 }
@@ -75,6 +78,7 @@ function effectiveSpec(d: Draft): Spec {
   s.puppets = d.puppets ? { count: d.puppets, shape: d.shape } : undefined;
   s.colors = d.look.custom ? { background: d.look.background, accent: d.look.accent } : undefined;
   s.tint = d.look.tint !== "none" ? { preset: d.look.tint, amount: d.look.tintAmount } : undefined;
+  s.sfx = { on: d.sfx.on, amount: d.sfx.amount };
   if (d.words?.length) s.words = d.words;
   else delete s.words;
   return s;
@@ -141,6 +145,10 @@ export function ExplainerStudio() {
   const isBuiltIn = d.style === BUILT_IN;
   const spec = useMemo(() => effectiveSpec(d), [d]);
   const problems = useMemo(() => validateSpec(spec), [spec]);
+  const plan = useMemo(() => (problems.length ? null : planSfx(spec)), [spec, problems]);
+  // the library sounds for hearing the cues in the preview; null = none on this computer
+  const [sfxAudio, setSfxAudio] = useState<SfxAudio | null | undefined>(undefined);
+  useEffect(() => { loadSfxAudio().then(setSfxAudio); }, []);
 
   const act = async (label: string, fn: () => Promise<void>) => {
     setMessage(null);
@@ -179,6 +187,7 @@ export function ExplainerStudio() {
         },
       });
       setMade(r.made);
+      if (r.sfx?.libraryMissing) { setMessage({ tone: "bad", text: "The video is made, but without sound effects: the sound library was not found on this computer." }); return; }
     } else if (importedPage) {
       const r = await window.byok.explainer.importedRender({ id: importedPage.id, out, audio: d.audio ?? undefined, tint: d.look.tint !== "none" ? { preset: d.look.tint, amount: d.look.tintAmount } : undefined });
       setMade(r.made);
@@ -274,6 +283,7 @@ export function ExplainerStudio() {
           )}
           {tab === "make" && (
             <MakeTab isBuiltIn={isBuiltIn} canRender={canRender} extras={extras} setExtras={setExtras}
+              sfx={d.sfx} setSfx={(p) => set({ sfx: { ...d.sfx, ...p } })} cues={plan?.cues ?? []} duration={plan?.duration ?? 0} heard={!!sfxAudio}
               hasWords={!!d.words?.length} audio={d.audio} onCheck={runCheck} onRender={render} busy={!!busy} made={made} />
           )}
         </div>
@@ -281,7 +291,7 @@ export function ExplainerStudio() {
 
       {/* RIGHT: the live preview, then the storyboard and what the checks found */}
       <main className="panel-hud flex-1 min-w-0 min-h-0 p-4 flex flex-col gap-3 overflow-y-auto">
-        {isBuiltIn ? <LivePreview spec={spec} problems={problems} /> : <ImportedPreview page={importedPage} name={styleName} />}
+        {isBuiltIn ? <LivePreview spec={spec} problems={problems} cues={plan?.cues ?? []} audio={sfxAudio} /> : <ImportedPreview page={importedPage} name={styleName} />}
 
         {isBuiltIn && check && <CheckView check={check} />}
         {message && <div data-tip={message.tone === "good" ? "What just happened." : "Something went wrong. The message says what to fix."} className={`rounded-xl px-3 py-2 text-sm ${message.tone === "good" ? "bg-emerald-400/10 text-emerald-200 border border-emerald-400/30" : "bg-rose-400/10 text-rose-200 border border-rose-400/30"}`}>{message.text}</div>}
@@ -314,10 +324,14 @@ function StyleCard({ active, title, sub, tip, onClick, onRemove }: { active: boo
 }
 
 /** The built-in style, drawn live by the same code as the render. */
-function LivePreview({ spec, problems }: { spec: Spec; problems: string[] }) {
+function LivePreview({ spec, problems, cues, audio }: { spec: Spec; problems: string[]; cues: SfxCue[]; audio: SfxAudio | null | undefined }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [t, setT] = useState(1.5);
   const [playing, setPlaying] = useState(false);
+  const tRef = useRef(t);
+  const cueRef = useRef({ cues, audio });
+  cueRef.current = { cues, audio };
+  useEffect(() => { if (!playing) tRef.current = t; }, [t, playing]);
   const [fontsReady, setFontsReady] = useState(false);
   const stage = useMemo(() => {
     if (problems.length) return null;
@@ -345,8 +359,14 @@ function LivePreview({ spec, problems }: { spec: Spec; problems: string[] }) {
   useEffect(() => {
     if (!playing || !stage) return;
     let raf = 0, last = performance.now();
+    cueRef.current.audio?.ctx.resume().catch(() => undefined);
     const tick = (now: number) => {
-      setT((x) => { const n = x + (now - last) / 1000; return n >= stage.R.duration ? 0 : n; });
+      // the sound effects play as the head passes the moment each one starts
+      const from = tRef.current, to = from + (now - last) / 1000;
+      const { cues: cs, audio: au } = cueRef.current;
+      if (au) for (const c of cs) { const s = c.t - SOUNDS[c.kind].lead; if (s > from && s <= to) playCue(au, c); }
+      tRef.current = to >= stage.R.duration ? 0 : to;
+      setT(tRef.current);
       last = now;
       raf = requestAnimationFrame(tick);
     };
@@ -365,7 +385,7 @@ function LivePreview({ spec, problems }: { spec: Spec; problems: string[] }) {
       {stage && (
         <>
           <div className="forge-transport">
-            <button className="play" onClick={() => setPlaying((p) => !p)} aria-label={playing ? "Pause" : "Play"} data-tip={playing ? "Pause the preview." : "Play the preview (no sound here — the narration goes in at render)."}>
+            <button className="play" onClick={() => setPlaying((p) => !p)} aria-label={playing ? "Pause" : "Play"} data-tip={playing ? "Pause the preview." : audio && cues.length ? "Play the preview. You hear the sound effects here; the narration goes in when you render." : "Play the preview. No sound here: you hear the sound effects and narration in the rendered video."}>
               {playing ? "❚❚" : "▶"}
             </button>
             <input type="range" min={0} max={stage.R.duration} step={0.01} value={t} onChange={(e) => { setPlaying(false); setT(Number(e.target.value)); }}
@@ -523,6 +543,7 @@ function MakeTab(p: {
   isBuiltIn: boolean; canRender: boolean; hasWords: boolean; audio: string | null; busy: boolean; made: string[];
   extras: { gif: boolean; gifFrom: number; gifTo: number; clip: boolean; clipFrom: number; clipTo: number; still: boolean; stillAt: number; thumbs: boolean; captions: boolean; chapters: boolean };
   setExtras: (f: (x: any) => any) => void; onCheck: () => void; onRender: () => void;
+  sfx: Sfx; setSfx: (p: Partial<Sfx>) => void; cues: SfxCue[]; duration: number; heard: boolean;
 }) {
   const x = p.extras;
   const tog = (k: string) => (v: boolean) => p.setExtras((e: any) => ({ ...e, [k]: v }));
@@ -537,7 +558,24 @@ function MakeTab(p: {
       )}
       {p.isBuiltIn && (
         <section className="flex flex-col gap-2">
-          <div className="label-etched" data-tip="Step 2: pick extra files to make along with the video.">2 · Extras</div>
+          <div className="label-etched" data-tip="Step 2: little sounds that land on the pictures, like a swish when the scene changes.">2 · Sound effects</div>
+          <Toggle label="Sound effects" checked={p.sfx.on} onChange={(v) => p.setSfx({ on: v })} data-tip="Adds small sounds: a swish when the scene changes, a pop when something appears. They are mixed into the video." />
+          {p.sfx.on && (
+            <>
+              <Slider label="How many" value={p.sfx.amount} min={0} max={1} step={0.05} onChange={(v) => p.setSfx({ amount: v })}
+                format={(v) => (v < 0.35 ? "subtle" : v < 0.75 ? "balanced" : "lively")} data-tip="Subtle: only scene changes and the ending. Lively: a sound for almost everything that appears." />
+              <CueStrip cues={p.cues} duration={p.duration} />
+              <div className="text-xs text-neutral-400" data-tip="Where the sounds fall, and whether you can hear them while previewing.">
+                {p.cues.length ? `${p.cues.length} sounds placed${Object.entries(countCues(p.cues)).map(([k, n]) => ` · ${n}× ${SOUNDS[k as keyof typeof SOUNDS].label}`).join("")}. ` : "No sounds placed. "}
+                {p.heard ? "Press play in the preview to hear them." : "You hear them in the rendered video."}
+              </div>
+            </>
+          )}
+        </section>
+      )}
+      {p.isBuiltIn && (
+        <section className="flex flex-col gap-2">
+          <div className="label-etched" data-tip="Step 3: pick extra files to make along with the video.">3 · Extras</div>
           <Toggle label="Thumbnails (3 × 1280×720)" checked={x.thumbs} onChange={tog("thumbs")} data-tip="Three YouTube thumbnails: title, key number, takeaway." />
           <Toggle label="Chapter list for YouTube" checked={x.chapters} onChange={tog("chapters")} data-tip="00:00 lines for the video description (YouTube needs 3+ chapters of 10 s)." />
           <Toggle label={p.hasWords ? "Captions (.srt + .vtt)" : "Captions (need the project's narration)"} checked={x.captions && p.hasWords} onChange={tog("captions")} data-tip="Caption files from the narration's word times — good for YouTube search." />
@@ -550,7 +588,7 @@ function MakeTab(p: {
         </section>
       )}
       <section className="flex flex-col gap-2">
-        <div className="label-etched" data-tip="The last step: make the video file.">{p.isBuiltIn ? "3 · Render" : "Render"}</div>
+        <div className="label-etched" data-tip="The last step: make the video file.">{p.isBuiltIn ? "4 · Render" : "Render"}</div>
         {p.audio && <div className="text-xs text-neutral-400" data-tip="This voice recording will be inside the finished video.">Narration audio goes in: {p.audio.split(/[\\/]/).pop()}</div>}
         <HudButton tone="good" data-tip="Choose where to save, then the video (and the extras) are made." disabled={p.busy || !p.canRender} onClick={p.onRender}>Render the video</HudButton>
         {!p.canRender && <div className="text-xs text-neutral-400" data-tip="The Render button stays off until this is done.">{p.isBuiltIn ? "Fix the scene list first (Script → Scene list)." : "Write or load the page first (Script)."}</div>}
@@ -563,6 +601,20 @@ function MakeTab(p: {
         </section>
       )}
     </>
+  );
+}
+
+/** A thin bar for the whole video with one tick per sound effect; hover a tick to see what it is. */
+function CueStrip({ cues, duration }: { cues: SfxCue[]; duration: number }) {
+  if (!cues.length || !duration) return null;
+  return (
+    <div className="relative h-6 rounded-md bg-white/5 border border-white/10" data-tip="Every sound effect on the video's timeline, left to right. Hover a mark to see what it is.">
+      {cues.map((c) => (
+        <span key={`${c.kind}-${c.t}`} className="absolute top-1 bottom-1 w-[3px] -ml-px rounded-full"
+          style={{ left: `${(100 * c.t) / duration}%`, background: c.kind === "whoosh" || c.kind === "riser" ? "rgba(118,255,194,.9)" : c.kind === "ding" ? "rgba(255,214,120,.95)" : "rgba(255,255,255,.7)" }}
+          data-tip={`${c.t.toFixed(1)} s: ${SOUNDS[c.kind].label} (${c.why})`} />
+      ))}
+    </div>
   );
 }
 

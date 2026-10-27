@@ -60,6 +60,10 @@ export function validateSpec(spec) {
   if (!spec || typeof spec !== "object") return ["the scene list is not an object"];
   if (!FORMATS[spec.format]) errs.push(`format must be one of ${Object.keys(FORMATS).join(", ")}`);
   if (spec.calm != null && typeof spec.calm !== "boolean") errs.push("calm must be true or false");
+  if (spec.sfx != null) {
+    if (typeof spec.sfx !== "object" || (spec.sfx.on != null && typeof spec.sfx.on !== "boolean")) errs.push('sfx must look like { "on": true, "amount": 0–1 }');
+    else if (spec.sfx.amount != null && !(typeof spec.sfx.amount === "number" && spec.sfx.amount >= 0 && spec.sfx.amount <= 1)) errs.push("sfx.amount must be a number from 0 (subtle) to 1 (lively)");
+  }
   if (spec._note != null && typeof spec._note !== "string") errs.push("_note must be text");
   if (spec.puppets) {
     const n = spec.puppets.count;
@@ -148,5 +152,7 @@ export function resolveSpec(spec) {
     font: spec.font ?? "Sora", colors: spec.colors ?? null, tint: resolveTint(spec.tint),
     // calm: the background holds still (GIFs: only the story moves, so the file stays small)
     calm: spec.calm === true,
+    // sound effects: { on, amount } — planned by core/sfx.mjs
+    sfx: spec.sfx,
   };
 }
