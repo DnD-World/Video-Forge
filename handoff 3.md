@@ -1,4 +1,4 @@
-# BYOK-Vid-Creator — Handoff 3 (Comprehensive)
+# Video Forge — Handoff 3 (Comprehensive)
 
 Self-contained: this document is written so a new session can pick up the
 project without needing to read `handoff 1.md` or `handoff 2.md` first,
@@ -7,7 +7,7 @@ on *why* a specific decision happened is ever needed. This one answers
 three questions: what was the original plan, what's the plan now, and
 exactly where do things stand today.
 
-Repo: https://github.com/DnD-World/BYOK-Vid-Creator (Ak / Lambros
+Repo: https://github.com/DnD-World/Video-Forge (Ak / Lambros
 Stravelakis, org DnD-World). Real git workflow — Ak provides a
 session-scoped fine-grained GitHub PAT when direct pushes are wanted;
 never persisted anywhere.

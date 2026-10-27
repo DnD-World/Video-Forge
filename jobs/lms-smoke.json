@@ -1,0 +1,45 @@
+{
+  "lessonDir": "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out/101.1",
+  "language": "el",
+  "format": "9:16",
+  "previewSec": 8,
+  "backgrounds": "none",
+  "crf": 20,
+  "cast": [
+    {
+      "label": "Τσίκα",
+      "aliases": [
+        "tsika"
+      ],
+      "puppetPath": "C:/Users/strav/Documents/CLAUDE SPACE/BYOK-Vid-Creator/brands/skilitsa/puppet/tsika.rig.json",
+      "engine": "dramabox",
+      "borderColor": "#ff9a3c"
+    },
+    {
+      "label": "Καίτη",
+      "aliases": [
+        "kaiti"
+      ],
+      "puppetPath": "C:/Users/strav/Documents/CLAUDE SPACE/BYOK-Vid-Creator/brands/skilitsa/puppet/kaiti.rig.json",
+      "engine": "dramabox",
+      "borderColor": "#ff5fa2"
+    },
+    {
+      "label": "Σερίφης",
+      "aliases": [
+        "serifis"
+      ],
+      "puppetPath": "C:/Users/strav/Documents/CLAUDE SPACE/BYOK-Vid-Creator/brands/skilitsa/puppet/serifis.rig.json",
+      "engine": "dramabox",
+      "borderColor": "#3cb4ff"
+    }
+  ],
+  "introPath": "C:/Users/strav/Documents/CLAUDE SPACE/BYOK-Vid-Creator/brands/skilitsa/intros/cut-2s/I1_reading-2s.mp4",
+  "logoPath": "C:/Users/strav/Documents/CLAUDE SPACE/BYOK-Vid-Creator/brands/skilitsa/skilitsa logo banner.png",
+  "logoPosition": "bottom-center",
+  "logoSize": 0.22,
+  "logoOpacity": 0.85,
+  "subtitleFont": "Comfortaa",
+  "subtitleFontWeight": 700,
+  "presetPath": "C:/Users/strav/Documents/CLAUDE SPACE/BYOK-Vid-Creator/brands/skilitsa/presets/lms-1xx.json"
+}

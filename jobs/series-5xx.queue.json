@@ -1,0 +1,32 @@
+[
+  {
+    "job": "jobs/lms-5xx-template.json",
+    "lessonDir": "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out/501",
+    "outputName": "501"
+  },
+  {
+    "job": "jobs/lms-5xx-template.json",
+    "lessonDir": "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out/503",
+    "outputName": "503"
+  },
+  {
+    "job": "jobs/lms-5xx-template.json",
+    "lessonDir": "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out/504.1",
+    "outputName": "504.1"
+  },
+  {
+    "job": "jobs/lms-5xx-template.json",
+    "lessonDir": "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out/504.2",
+    "outputName": "504.2"
+  },
+  {
+    "job": "jobs/lms-5xx-template.json",
+    "lessonDir": "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out/504.3",
+    "outputName": "504.3"
+  },
+  {
+    "job": "jobs/lms-5xx-template.json",
+    "lessonDir": "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out/505",
+    "outputName": "505"
+  }
+]

@@ -1,9 +1,12 @@
+import { LanguageCard, SayItCard } from "./SayItCard";
+import { plainError } from "../../lib/plainError";
 import { useEffect, useState } from "react";
 import { useSettingsStore } from "../../store/useSettingsStore";
 import { Toggle } from "../ui/Toggle";
 import { HudButton } from "../ui/HudButton";
 import TtsTestPanel from "./TtsTestPanel";
-import ChatterboxTestPanel from "./ChatterboxTestPanel";
+import { Slider } from "../ui/Slider";
+import { projectClipPaths } from "../../lib/media/autoClean";
 
 // Every provider carries its own plain-English explanation and a direct link
 // to the page that issues the key. The `access` field is the important one:
@@ -13,19 +16,19 @@ import ChatterboxTestPanel from "./ChatterboxTestPanel";
 /** The shipped accent. Kept beside the picker rather than imported from the
  *  settings store's initial state, so "Default" means a stated value rather
  *  than whatever the store happened to be constructed with. */
-const DEFAULT_ACCENT = "#e8a24a";
+const DEFAULT_ACCENT = "#76FFC2";
 
-/** The four colourways the identity system ships, offered as one click each.
+/** The Forge colours (stravelakis mint and navy, the logos' spark), offered as one click each.
  *  A freeform picker is still there — this is for the common case. */
 const ACCENT_PRESETS = [
-  { name: "Brass", hex: "#c9a227" },
-  { name: "Amber", hex: "#e8a24a" },
-  { name: "Nickel", hex: "#9fc6d8" },
-  { name: "Jade", hex: "#5fc9a5" },
-  { name: "Oxblood", hex: "#d8c39b" },
+  { name: "Mint", hex: "#76FFC2" },
+  { name: "Soft mint", hex: "#82D8B7" },
+  { name: "Navy", hex: "#5562B8" },
+  { name: "Spark", hex: "#FF8A30" },
+  { name: "Ice", hex: "#9FC6D8" },
 ];
 
-type Access = "instant" | "approval";
+type Access = "instant" | "paid" | "approval";
 
 interface Provider {
   id: string;
@@ -37,10 +40,66 @@ interface Provider {
 
 const PROVIDERS: Provider[] = [
   {
+    id: "elevenlabs",
+    label: "ElevenLabs",
+    what:
+      "Voices, charged by the character. A lesson is about 4,600 credits, so the " +
+      "72-lesson course is roughly 334,000 — one month of Pro, or three of Creator " +
+      "with nothing spare for re-renders. Paid — before a narration buys anything the app " +
+      "shows the characters and the estimated cost and waits for your yes; batches may not " +
+      "buy unless you allow it below.",
+    url: "https://elevenlabs.io/app/settings/api-keys",
+    access: "instant",
+  },
+  {
+    id: "gemini",
+    label: "Gemini",
+    what:
+      "Plans the background footage for every line, and (soon) voices and pictures. " +
+      "A Google AI Studio key — no Google Cloud project needed, and there is a free tier.",
+    url: "https://aistudio.google.com/apikey",
+    access: "instant",
+  },
+  {
+    id: "openrouter",
+    label: "OpenRouter",
+    what: "Fish Audio, the voice with the funny foreign accent. Free model; the key is free too.",
+    url: "https://openrouter.ai/keys",
+    access: "instant",
+  },
+  {
     id: "nvidia",
     label: "NVIDIA",
     what: "Writes and polishes your script with GLM-5.2. Free to use.",
     url: "https://build.nvidia.com/",
+    access: "instant",
+  },
+  {
+    id: "groq",
+    label: "Groq",
+    what: "A fast, free-tier brain for writing explainer scene lists and character cards. The easiest one to start with.",
+    url: "https://console.groq.com/keys",
+    access: "instant",
+  },
+  {
+    id: "cerebras",
+    label: "Cerebras",
+    what: "Another fast brain for explainers and character cards. Has a free tier.",
+    url: "https://cloud.cerebras.ai/platform/",
+    access: "instant",
+  },
+  {
+    id: "openai",
+    label: "OpenAI",
+    what: "A paid brain for explainers and character cards. It can also look at a picture to build a character from it.",
+    url: "https://platform.openai.com/api-keys",
+    access: "paid",
+  },
+  {
+    id: "mistral",
+    label: "Mistral",
+    what: "A brain for explainers and character cards. Has a free tier.",
+    url: "https://console.mistral.ai/api-keys",
     access: "instant",
   },
   {
@@ -75,8 +134,11 @@ const PROVIDERS: Provider[] = [
 //                NO synthesis code anywhere in the app. It could pass its test
 //                and still never speak, which is the most misleading state a
 //                setting can be in.
-//   Drive, 11L — on the cut list as "stubs only, don't build". A COMING SOON
+//   Drive      — on the cut list as "stubs only, don't build". A COMING SOON
 //                badge on something nobody intends to build is a promise.
+//
+// ElevenLabs was on that list too and came back on 20 Aug 2026, with the code
+// behind it in the same change — which is the rule below, kept.
 //
 // If any of these is ever genuinely wanted, add it back WITH the code behind
 // it, in the same change.
@@ -85,6 +147,10 @@ const ACCESS_BADGE: Record<Access, { text: string; className: string }> = {
   instant: {
     text: "FREE · INSTANT",
     className: "bg-emerald-500/15 text-emerald-300",
+  },
+  paid: {
+    text: "PAID · INSTANT",
+    className: "bg-sky-500/15 text-sky-300",
   },
   approval: {
     text: "NEEDS APPROVAL",
@@ -95,6 +161,137 @@ const ACCESS_BADGE: Record<Access, { text: string; className: string }> = {
 interface TestState {
   busy: boolean;
   result?: { ok: boolean; message: string };
+}
+
+/** Downloaded background clips: size, limit, automatic clean-up, and a
+ *  button for now. Ak, 12 Oct 2026: 450 clips / 2.7 GB had piled up. */
+/** LocalAI on this computer — the free picture and sound models Image Forge
+ *  also uses. Shows what is there, sorted by kind. */
+/** Paid voices: the price used for "this will cost about…", and whether a
+ *  batch nobody is watching may buy at all (off), and how much at most. */
+function PaidVoiceCard() {
+  const price = useSettingsStore((s) => s.elevenPricePer1000Usd);
+  const setPrice = useSettingsStore((s) => s.setElevenPricePer1000Usd);
+  const allow = useSettingsStore((s) => s.paidInBatch);
+  const setAllow = useSettingsStore((s) => s.setPaidInBatch);
+  const cap = useSettingsStore((s) => s.paidBatchMaxCredits);
+  const setCap = useSettingsStore((s) => s.setPaidBatchMaxCredits);
+  return (
+    <div className="forge-sec space-y-3">
+      <div className="label-etched" data-tip="Paid voices (ElevenLabs) charge per character. These settings decide how the app asks before it spends.">
+        Paid voices
+      </div>
+      <label className="flex items-center gap-2 text-sm">
+        <input type="checkbox" checked={allow} onChange={(e) => setAllow(e.target.checked)} data-tip="Off by default. Many videos can run overnight with nobody to ask, so a paid voice is refused there unless this is on." />
+        Let “Many videos” buy paid voice without asking each time
+      </label>
+      <div className="flex gap-3 flex-wrap text-sm items-center">
+        <label data-tip="A safety limit on spending. The app stops buying voice once a whole sheet has used this many characters." className="flex items-center gap-2">
+          Stop buying after
+          <input type="number" min={0} step={1000} value={cap} onChange={(e) => setCap(Number(e.target.value))} className="w-28" data-tip="The most characters one whole sheet may buy. 0 means no limit. A character is one ElevenLabs credit." />
+          characters
+        </label>
+        <label data-tip="What your plan charges per 1,000 characters. It is only used to show a cost estimate." className="flex items-center gap-2">
+          Price per 1,000 characters (USD)
+          <input type="number" min={0.01} step={0.01} value={price} onChange={(e) => setPrice(Number(e.target.value))} className="w-20" data-tip="Used only to turn characters into money in the question before a paid narration. It is your own plan's price: check it on the ElevenLabs site." />
+        </label>
+      </div>
+    </div>
+  );
+}
+
+function LocalAiCard() {
+  const base = useSettingsStore((s) => s.localAiBase);
+  const setBase = useSettingsStore((s) => s.setLocalAiBase);
+  const [state, setState] = useState<{ ok: boolean; models?: string[]; problem?: string } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const test = async () => {
+    setBusy(true);
+    setState(await window.byok.local.models(base));
+    setBusy(false);
+  };
+  useEffect(() => {
+    void test();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const kind = (id: string) =>
+    /image|flux|sdxl|stable-diffusion|dreamshaper|kontext/i.test(id) && !/audio|sfx/i.test(id)
+      ? "Pictures"
+      : /audio|sfx|tts|whisper|piper|bark|voice/i.test(id)
+        ? "Sound and voice"
+        : "Text";
+  const groups = (state?.models ?? []).reduce<Record<string, string[]>>((g, id) => ((g[kind(id)] ??= []).push(id), g), {});
+  return (
+    <div className="forge-sec space-y-3">
+      <div className="label-etched" data-tip="Free models running on this computer (LocalAI, in Docker). Image Forge's puppet maker draws with them; nothing is sent to the internet.">
+        Your own machine (LocalAI)
+      </div>
+      <div className="flex gap-2">
+        <input type="text" value={base} onChange={(e) => setBase(e.target.value)} className="flex-1 min-w-0" data-tip="Where LocalAI answers. Usually http://127.0.0.1:8080." />
+        <button className="btn" onClick={() => void test()} disabled={busy} data-tip="Ask LocalAI what it has.">
+          {busy ? "Testing…" : "Test"}
+        </button>
+      </div>
+      {state && !state.ok && <p data-tip="LocalAI did not answer. Start LocalAI on this computer, then press Test again." className="text-sm text-amber-300">{state.problem}</p>}
+      {state?.ok && (
+        <div className="space-y-1 text-sm">
+          <p data-tip="LocalAI answered, and this is how many models it has ready." className="text-emerald-300">✓ Answering · {state.models?.length ?? 0} models</p>
+          {Object.entries(groups).map(([k, ids]) => (
+            <p key={k} className="text-neutral-400">
+              <b className="text-neutral-200 font-medium">{k}:</b> {ids.join(", ")}
+            </p>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ClipStorage() {
+  const limit = useSettingsStore((s) => s.mediaLimitGb);
+  const setLimit = useSettingsStore((s) => s.setMediaLimitGb);
+  const auto = useSettingsStore((s) => s.mediaAutoClean);
+  const setAuto = useSettingsStore((s) => s.setMediaAutoClean);
+  const [stats, setStats] = useState<{ files: number; bytes: number } | null>(null);
+  const [note, setNote] = useState<string | null>(null);
+  const refresh = () => void window.byok.mediaCache.stats().then(setStats);
+  useEffect(refresh, []);
+  const gb = (b: number) => `${(b / 1e9).toFixed(1)} GB`;
+  const over = stats && stats.bytes > limit * 1e9;
+  return (
+    <div className="border border-accent/25 bg-metal-800/60 p-4 space-y-3">
+      <h3 data-tip="Stock clips the app downloaded for backgrounds. Here you see how much room they use and can clear them." className="label-lit text-sm">Downloaded background clips</h3>
+      <p className="text-sm text-neutral-400" title="Stock clips are downloaded for each video's background and kept so re-renders are fast.">
+        {stats ? `${stats.files} clips, ${gb(stats.bytes)}` : "Counting…"}
+        {over && !auto ? " — over your limit. Clean up, or switch on automatic clean-up." : ""}
+      </p>
+      <Slider
+        label="Keep at most"
+        data-tip="The most disk space the downloaded background clips may use. Past this, the oldest ones can be cleaned away."
+        value={limit}
+        min={0.5} max={20} step={0.5}
+        format={(v) => `${v} GB`}
+        onChange={setLimit}
+      />
+      <div className="flex items-center gap-3" title="Old clips are removed after every render and when the app starts, until the folder is under your limit. Clips your open project uses are kept.">
+        <Toggle label="Clean up automatically" checked={auto} onChange={setAuto} />
+      </div>
+      <div className="flex items-center gap-3">
+        <HudButton
+          data-tip="Deletes the stock clips this app downloaded, except ones your open project uses. They download again if needed."
+          onClick={async () => {
+            if (!window.confirm("Remove every downloaded background clip except the ones this project uses? They download again if a video needs them.")) return;
+            const r = await window.byok.mediaCache.cleanUp(0, projectClipPaths());
+            setNote(`Removed ${r.removed} clips, freed ${gb(r.freedBytes)}.`);
+            refresh();
+          }}
+        >
+          Clean up now
+        </HudButton>
+        {note && <span data-tip="What the clean-up just did." className="text-sm text-neutral-400">{note}</span>}
+      </div>
+    </div>
+  );
 }
 
 export default function BackendPanel() {
@@ -120,7 +317,15 @@ export default function BackendPanel() {
 
   const save = async (id: string) => {
     if (!draft[id]) return;
-    await window.byok.keys.set(id, draft[id]);
+    try {
+      await window.byok.keys.set(id, draft[id]);
+    } catch (e) {
+      // Nothing was saved (e.g. the key file could not be read). The pasted key
+      // stays in the box so it is not lost, and the reason is shown.
+      const why = plainError(e, "Press Save to try again.");
+      setTests((t) => ({ ...t, [id]: { busy: false, result: { ok: false, message: why } } }));
+      return;
+    }
     setDraft((d) => ({ ...d, [id]: "" }));
     // A previous test result describes the old key, so drop it.
     setTests((t) => ({ ...t, [id]: { busy: false } }));
@@ -128,7 +333,13 @@ export default function BackendPanel() {
   };
 
   const remove = async (id: string) => {
-    await window.byok.keys.remove(id);
+    try {
+      await window.byok.keys.remove(id);
+    } catch (e) {
+      const why = plainError(e, "Press Clear to try again.");
+      setTests((t) => ({ ...t, [id]: { busy: false, result: { ok: false, message: why } } }));
+      return;
+    }
     setTests((t) => ({ ...t, [id]: { busy: false } }));
     refresh();
   };
@@ -152,7 +363,7 @@ export default function BackendPanel() {
             ok: false,
             message: msg.includes("No handler registered")
               ? "This build of the app doesn't have the connectivity test yet — fully quit and restart the app (Ctrl+C the dev server and run npm run dev again)."
-              : `Test couldn't run — ${msg}`,
+              : `Test couldn't run — ${msg}. Press Test to try again.`,
           },
         },
       }));
@@ -161,60 +372,27 @@ export default function BackendPanel() {
 
   return (
     <div className="p-6 space-y-4 overflow-y-auto h-full">
-      <h2 className="label-lit text-base">API Keys &amp; Backend</h2>
+      <h2 data-tip="Where you paste the keys for online helpers and set the app up. A key is like a password for a service." className="label-lit text-base">Keys and settings</h2>
       <p className="text-sm">
-        Keys are encrypted with your OS keychain and never leave this machine.
+        Keys are encrypted with your computer's password store and never leave this machine.
         Paste a key, press Save, then press Test to confirm it actually works —
         Test makes one real call to the provider.
       </p>
 
-      <div className="border border-accent/25 bg-metal-800/60 p-4 space-y-3">
-        <h3 className="label-lit text-sm">Appearance</h3>
-        <div className="flex items-center gap-3 flex-wrap">
-          <input
-            type="color"
-            value={accentColor}
-            onChange={(e) => setAccentColor(e.target.value)}
-            className="h-9 w-9 border border-accent/30 bg-transparent p-0"
-          />
-          <span className="text-sm flex-1 min-w-[16rem]">
-            Accent color — recolors glows, highlights, and active states everywhere
-          </span>
-          {/* A colour picker with no way back is a trap: pick something unusable
-              and the control you would use to fix it is now unreadable. */}
-          <HudButton
-            onClick={() => setAccentColor(DEFAULT_ACCENT)}
-            disabled={accentColor.toLowerCase() === DEFAULT_ACCENT}
-            title={`Back to the default brass (${DEFAULT_ACCENT})`}
-          >
-            Default
-          </HudButton>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="label-etched">Presets</span>
-          {ACCENT_PRESETS.map((p) => (
-            <button
-              key={p.hex}
-              onClick={() => setAccentColor(p.hex)}
-              title={`${p.name} — ${p.hex}`}
-              aria-label={p.name}
-              className="h-7 w-7 cut-sm border border-white/15 hover:border-white/50 transition-colors"
-              style={{ background: p.hex }}
-            />
-          ))}
-        </div>
-        <Toggle
-          label="Interface motion (breathing glow & click effects)"
-          checked={motionEnabled}
-          onChange={setMotionEnabled}
-        />
-      </div>
+      <LocalAiCard />
+      <PaidVoiceCard />
+      <SayItCard />
+      <LanguageCard />
+      <ClipStorage />
 
+      {/* Appearance was here — removed 13 Oct 2026 (Ak): the Forge look is the
+          look, and motion is always on (the system's reduced-motion setting is
+          still respected). */}
       {!encryptionAvailable && (
         <p className="text-sm text-accent-bright border border-accent-deep/40 bg-accent-deep/10 px-3 py-2">
-          Your OS keychain isn't available, so keys are being saved to a
+          Your computer's password store isn't available, so keys are being saved to a
           local file instead of encrypted storage. They still never leave
-          this machine, but consider unlocking your OS keychain for
+          this machine, but consider unlocking your computer's password store for
           stronger protection.
         </p>
       )}
@@ -229,24 +407,25 @@ export default function BackendPanel() {
             className="border p-4 border-accent/25 bg-metal-800/60"
           >
             <div className="flex items-center justify-between mb-1 gap-3">
-              <span className="text-base text-neutral-200">
+              <span data-tip="The name of the online service this key box is for." className="text-base text-neutral-200">
                 {p.label}
-                <span className={`ml-2 px-2 py-0.5 text-sm ${badge.className}`}>
+                <span data-tip="Whether the service is free, paid, or needs approval before you get a key." className={`ml-2 px-2 py-0.5 text-sm ${badge.className}`}>
                   {badge.text}
                 </span>
               </span>
               {isSaved && (
-                <span className="text-sm text-emerald-400 shrink-0">saved ✓</span>
+                <span data-tip="A key for this service is already saved on this computer." className="text-sm text-emerald-400 shrink-0">saved ✓</span>
               )}
             </div>
 
-            <p className="text-sm mb-2">{p.what}</p>
+            <p data-tip="What this service does for you in the app, and what it costs." className="text-sm mb-2">{p.what}</p>
 
             <a
               href={p.url}
               target="_blank"
               rel="noreferrer"
               className="text-sm text-accent-bright underline hover:text-accent inline-block mb-3"
+              data-tip={`Opens the ${p.label} website where you can get your own key. A key is like a password that lets this app use the service.`}
             >
               Get a key →
             </a>
@@ -255,6 +434,7 @@ export default function BackendPanel() {
                   <input
                     type="password"
                     placeholder={isSaved ? "Replace key…" : "Paste key…"}
+                    data-tip={`Paste your ${p.label} key here. It stays on this computer.`}
                     value={draft[p.id] ?? ""}
                     onChange={(e) =>
                       setDraft((d) => ({ ...d, [p.id]: e.target.value }))
@@ -263,6 +443,7 @@ export default function BackendPanel() {
                   />
                   <button
                     onClick={() => save(p.id)}
+                    data-tip={`Keeps the key you pasted for ${p.label}.`}
                     className="btn cut-sm btn-primary px-4 py-2 text-sm font-display font-semibold uppercase tracking-[0.1em]"
                   >
                     Save
@@ -271,6 +452,7 @@ export default function BackendPanel() {
                     <>
                       <button
                         onClick={() => test(p.id)}
+                        data-tip={`Checks that your ${p.label} key really works.`}
                         disabled={state?.busy}
                         className="btn cut-sm px-4 py-2 text-sm font-display uppercase tracking-[0.1em] hover:text-accent-bright disabled:opacity-40"
                       >
@@ -278,6 +460,7 @@ export default function BackendPanel() {
                       </button>
                       <button
                         onClick={() => remove(p.id)}
+                        data-tip={`Forgets your ${p.label} key. You can paste it again later.`}
                         className="btn cut-sm px-4 py-2 text-sm font-display uppercase tracking-[0.1em] hover:text-red-400"
                       >
                         Clear
@@ -301,17 +484,18 @@ export default function BackendPanel() {
       })}
 
       <div className="border border-accent/25 bg-metal-800/60 p-4">
-        <h3 className="label-lit text-sm mb-2">Voice Engines — no API key needed</h3>
+        <h3 data-tip="Voices that run on your own computer. They need no key and no sign-up." className="label-lit text-sm mb-2">Free voices on your computer — no key needed</h3>
         <p className="text-sm">
-          Chatterbox and Piper run entirely on your own machine, so there's
-          nothing to sign up for and nothing to paste. What they ask for below
-          are <em>folder paths</em> on this computer — where you installed them —
-          not keys. Chatterbox is the quality voice; Piper is the fast one for
-          quick tests.
+          Piper runs entirely on your own machine, so there's nothing to sign up
+          for and nothing to paste. What it asks for below are{" "}
+          <em data-tip="A folder path is the address of a folder on your computer, like C:\Piper.">folder paths</em> on this computer — where you installed it — not
+          keys. Piper is the fast local voice, correct and flat, and it is right
+          for checking timing. DramaBox is the one that acts, and it generates on
+          a rented GPU rather than here — the app writes its files from the
+          Narration tab.
         </p>
       </div>
 
-      <ChatterboxTestPanel />
 
       <TtsTestPanel />
     </div>

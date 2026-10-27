@@ -16,21 +16,60 @@ import fsp from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
 import { synthesizeWithPiper } from "./piperEngine";
-import * as chatterbox from "./chatterboxEngine";
+import * as elevenlabs from "./elevenlabsEngine";
+import { synthesizeGemini, type GeminiMode } from "./geminiEngine";
+import { synthesizeFish } from "./fishEngine";
+import { pitchShift } from "../audio/pitchShift";
+import { accentMap, applyPronunciations, withAccents } from "./greekAccents";
+import { loadPronunciations } from "./pronunciations";
 import { concatWavBuffers } from "../audio/concatWav";
 import { analyzeNarration } from "../audio/analyzeNarration";
 import { trimSilence, squeezeSilence } from "../audio/trimSilence";
+import { displayLine } from "../../src/lib/narration/displayText";
+import { withAudioTags } from "../../src/lib/narration/elevenTags";
+import { elevenLineKey, paidGate, readPaidLine, savePaidLine, type PaidPolicy } from "./paidVoice";
 
 /** One line of script, with its speaker's voice already resolved.
  *
- *  Piper and Chatterbox can be mixed within one script — the engine is a
- *  per-speaker choice, so a fast Piper voice and a cloned Chatterbox voice can
- *  appear in the same narration. */
-export type NarrationInput = chatterbox.NarrationSegmentInput & {
-  engine?: "chatterbox" | "piper";
+ *  THIS IS THE PIPER PATH ONLY. DramaBox does not synthesise here — it runs on
+ *  a rented GPU, and the app's side of it is writing the two files that box
+ *  reads (`buildBlocks.ts`) and assembling the WAVs that come back
+ *  (`buildDramaboxNarration.ts`). Chatterbox, the third engine, was removed on
+ *  18 Aug 2026. */
+export interface NarrationInput {
+  speakerId: string;
+  speakerLabel: string;
+  text: string;
+  language: string;
+  engine?: "piper" | "elevenlabs" | "gemini" | "fish";
+  /** Semitones up (+) or down (−), applied after the voice is made. 0 = as is. */
+  pitch?: number;
+  /** Speaking speed, 1 = as made (Cast step). */
+  speed?: number;
+  /** Pause before this speaker's next line when they keep talking, ms.
+   *  Overrides the project's 'breath'. */
+  breathMs?: number;
+  /** Gemini: Live (unlimited free, checked word by word) or TTS (10 a day). */
+  gemini?: { mode: GeminiMode; model: string; voice: string; persona?: string };
+  /** How this one line is delivered — the words outside the quotes.
+   *
+   *  Carried this far ONLY for ElevenLabs v3, which takes its acting from a
+   *  bracketed tag inside the text. Piper has nowhere to put it and ignores
+   *  it, exactly as it always has. */
+  direction?: string;
   piperPythonPath?: string;
   piperOnnxPath?: string;
-};
+  /** ElevenLabs: the voice id and this character's settings. */
+  elevenVoiceId?: string;
+  /** `eleven_v3` (acts, reads tags) or `eleven_multilingual_v2`. */
+  elevenModel?: string;
+  eleven?: {
+    stability?: number;
+    similarityBoost?: number;
+    style?: number;
+    speed?: number;
+  };
+}
 
 export interface NarrationPauses {
   /** Between two lines by the same speaker — a breath. */
@@ -49,6 +88,12 @@ export interface BuiltNarration {
     endMs: number;
     /** When each word was really said, when forced alignment has run. */
     words?: { text: string; startMs: number; endMs: number }[];
+    /** What the line feels, when the script said so, and any sound the voice
+     *  makes before the first word. Both carried through to the face — see
+     *  NarrationSegment in store/types.ts. */
+    mood?: string;
+    tags?: string[];
+    openingSound?: string;
   }[];
   analysis: ReturnType<typeof analyzeNarration>;
   /** Moments the voice measurably stopped. Empty for engines whose output is
@@ -82,16 +127,101 @@ function narrationKey(segments: NarrationInput[], pauses: NarrationPauses): stri
       s.engine,
       s.piperOnnxPath,
       s.language,
-      s.voiceMode,
-      s.predefinedVoiceId,
-      s.referenceAudioFilename,
-      s.exaggeration,
-      s.cfgWeight,
+      // THE VOICE AND ITS SETTINGS COUNT. Changing an ElevenLabs voice or its
+      // speed changes every sample and not one character of the script, so a
+      // key without them serves the old audio for the new voice — and the
+      // change looks like it did nothing. That has already happened twice in
+      // this file's history, which is what the version string above is for.
+      s.elevenVoiceId,
+      // THE MODEL AND THE DIRECTION COUNT TOO, for the same reason. v3 and v2
+      // are different voices of the same voice, and on v3 the direction
+      // becomes an audio tag that is part of what is sent — changing
+      // "speaks evenly" to "snaps furiously" changes the audio and leaves the
+      // spoken words identical.
+      s.elevenModel,
+      s.engine === "elevenlabs" ? s.direction : undefined,
+      s.eleven?.stability,
+      s.eleven?.similarityBoost,
+      s.eleven?.style,
+      s.eleven?.speed,
+      s.pitch || 0,
+      s.speed || 1,
+      s.breathMs ?? null,
+      s.engine === "fish" ? ["fish", s.direction] : s.engine === "gemini" ? [s.gemini?.mode, s.gemini?.model, s.gemini?.voice, s.gemini?.persona, s.direction] : undefined,
     ]),
     pauses.sameMs,
     pauses.turnMs,
   ]);
   return crypto.createHash("sha256").update(material).digest("hex").slice(0, 16);
+}
+
+/** Tags about pace, not feeling — the voice already did those. */
+const PACE_TAGS = new Set(["short pause", "long pause", "slow", "very slow", "fast", "very fast", "whispers", "shouting"]);
+export function moodTag(text: string): string | undefined {
+  for (const m of text.matchAll(/\[([^\]]+)\]/g)) {
+    const t = m[1].trim().toLowerCase();
+    if (!PACE_TAGS.has(t)) return t;
+  }
+  return undefined;
+}
+
+/** The text ElevenLabs is sent for a line — and so what it charges for. The tag
+ *  is added here and nowhere earlier (see the note in the synthesis loop). */
+function elevenTextFor(seg: NarrationInput, spoken: (t: string) => string): string {
+  return (seg.elevenModel ?? "eleven_v3").startsWith("eleven_v3") ? withAudioTags(spoken(seg.text), seg.direction) : spoken(seg.text);
+}
+
+function elevenKeyFor(seg: NarrationInput, text: string): string {
+  return elevenLineKey({
+    text,
+    voiceId: seg.elevenVoiceId ?? "",
+    model: seg.elevenModel ?? "eleven_v3",
+    stability: seg.eleven?.stability,
+    similarityBoost: seg.eleven?.similarityBoost,
+    style: seg.eleven?.style,
+    speed: seg.eleven?.speed,
+  });
+}
+
+/** Where bought lines are kept, so a failure part-way never makes them be bought again. */
+const paidLinesDir = (outputDir: string) => path.join(outputDir, "eleven-lines");
+
+/** What a narration would buy, without buying anything. Lines already bought
+ *  (or a whole narration already made) cost nothing. */
+export async function estimatePaid(
+  segments: NarrationInput[],
+  pauses: NarrationPauses,
+  outputDir: string,
+  /** Re-making a line wants a NEW take, so nothing made earlier is reused. */
+  fresh = false
+): Promise<{ narrationCached: boolean; lines: number; chars: number; reusedLines: number }> {
+  const sayList = await loadPronunciations();
+  const key = narrationKey(segments, pauses) + (sayList.length ? `-${crypto.createHash("sha256").update(JSON.stringify(sayList)).digest("hex").slice(0, 8)}` : "");
+  if (!fresh) {
+    try {
+      await fsp.access(path.join(outputDir, "narration-cache", `${key}.wav`));
+      await fsp.access(path.join(outputDir, "narration-cache", `${key}.json`));
+      return { narrationCached: true, lines: 0, chars: 0, reusedLines: 0 };
+    } catch {
+      /* not made yet */
+    }
+  }
+  const accents = await accentMap(segments.map((x) => x.text));
+  const spoken = (t: string) => applyPronunciations(withAccents(t, accents), sayList);
+  const dir = paidLinesDir(outputDir);
+  let lines = 0;
+  let chars = 0;
+  let reusedLines = 0;
+  for (const seg of segments) {
+    if (seg.engine !== "elevenlabs") continue;
+    const text = elevenTextFor(seg, spoken);
+    if (!fresh && readPaidLine(dir, elevenKeyFor(seg, text))) reusedLines++;
+    else {
+      lines++;
+      chars += text.length;
+    }
+  }
+  return { narrationCached: false, lines, chars, reusedLines };
 }
 
 export async function buildNarration(
@@ -100,7 +230,9 @@ export async function buildNarration(
    *  per-frame speaker index lines up with the waveform's tracks. */
   speakerOrder: string[],
   pauses: NarrationPauses,
-  outputDir: string
+  outputDir: string,
+  /** Who may spend money on this narration. Without it, paid lines are refused. */
+  opts: { paid?: PaidPolicy; fresh?: boolean } = {}
 ): Promise<BuiltNarration> {
   if (segments.length === 0) {
     throw new Error(
@@ -117,11 +249,14 @@ export async function buildNarration(
   // The WAV is cached; the analysis is recomputed from it, because the
   // spectrum is far larger than the audio and reading it back would cost more
   // than the FFT it saves.
-  const key = narrationKey(segments, pauses);
+  // The say-it-like-this list changes what is spoken, so it is part of the key.
+  const sayList = await loadPronunciations();
+  const key = narrationKey(segments, pauses) + (sayList.length ? `-${crypto.createHash("sha256").update(JSON.stringify(sayList)).digest("hex").slice(0, 8)}` : "");
   const cacheDir = path.join(outputDir, "narration-cache");
   const cachedWav = path.join(cacheDir, `${key}.wav`);
   const cachedMeta = path.join(cacheDir, `${key}.json`);
   try {
+    if (opts.fresh) throw new Error("a new take was asked for");
     const [buffer, metaRaw] = await Promise.all([
       fsp.readFile(cachedWav),
       fsp.readFile(cachedMeta, "utf8"),
@@ -160,39 +295,144 @@ export async function buildNarration(
   const trimmed = (b: Buffer): Buffer => squeezeSilence(trimSilence(b).buffer).buffer;
 
   const buffers: Buffer[] = [];
-  for (const seg of segments) {
-    if (seg.engine === "piper") {
-      if (!seg.piperPythonPath || !seg.piperOnnxPath) {
-        throw new Error(
-          `Speaker "${seg.speakerLabel}" is set to Piper but has no voice selected — pick one in the left rail.`
-        );
+  /** Only ever spent, never refunded — worth reporting at the end. */
+  let credits = 0;
+
+  // GEMINI LINES ARE MADE FOUR AT A TIME. A Live take plus its check is
+  // 15–20 seconds, so a 50-line lesson one by one is a quarter of an hour.
+  // The free tier caps tokens per minute, not requests; four in flight sits
+  // well inside it. Results land in their own slot, so order is kept.
+  // Capitalised Greek words get their accent back before any voice reads
+  // them (greekAccents.ts). Spoken text only; subtitles use seg.text as is.
+  const accents = await accentMap(segments.map((x) => x.text));
+  if (accents.size) {
+    console.log(`[video-forge] accents restored for ${accents.size} capitalised word(s): ${[...accents.values()].slice(0, 8).join(", ")}`);
+  }
+  const spoken = (t: string) => applyPronunciations(withAccents(t, accents), sayList);
+
+  // PAID LINES: counted and checked BEFORE the first one is bought, so a
+  // batch that is not allowed to spend, or a job that outgrew the yes it was
+  // given, stops with nothing spent. Lines bought on an earlier try are on
+  // disk already and cost nothing now.
+  const paidDir = paidLinesDir(outputDir);
+  const elevenPlan = new Map<number, { text: string; key: string }>();
+  let toBuyChars = 0;
+  for (const [i, seg] of segments.entries()) {
+    if (seg.engine !== "elevenlabs") continue;
+    const text = elevenTextFor(seg, spoken);
+    const k = elevenKeyFor(seg, text);
+    elevenPlan.set(i, { text, key: k });
+    if (opts.fresh || !readPaidLine(paidDir, k)) toBuyChars += text.length;
+  }
+  const gate = paidGate(opts.paid, toBuyChars);
+  if (!gate.ok) throw new Error(gate.message);
+
+  const geminiAudio = new Map<number, Buffer>();
+  const geminiIdx = segments.flatMap((s, i) => (s.engine === "gemini" ? [i] : []));
+  const lowMatches: string[] = [];
+  for (let k = 0; k < geminiIdx.length; k += 4) {
+    await Promise.all(
+      geminiIdx.slice(k, k + 4).map(async (i) => {
+        const seg = segments[i];
+        if (!seg.gemini) throw new Error(`Speaker "${seg.speakerLabel}" has no Gemini voice chosen.`);
+        const take = await synthesizeGemini({
+          text: spoken(seg.text),
+          direction: seg.direction,
+          persona: seg.gemini.persona,
+          language: seg.language,
+          mode: seg.gemini.mode,
+          model: seg.gemini.model,
+          voice: seg.gemini.voice,
+        });
+        if (take.match < 0.85) lowMatches.push(`${seg.speakerLabel}: ${seg.text.slice(0, 60)}`);
+        geminiAudio.set(i, take.audioBuffer);
+      })
+    );
+  }
+  if (lowMatches.length) {
+    console.log(
+      `[video-forge] ${lowMatches.length} Gemini line(s) never matched the script after 3 tries — listen to these:\n  ` +
+        lowMatches.join("\n  ")
+    );
+  }
+
+  for (const [i, seg] of segments.entries()) {
+    if (seg.engine === "fish") {
+      buffers.push(trimmed(await pitchShift(await synthesizeFish(spoken(seg.text), seg.direction), seg.pitch ?? 0, seg.speed ?? 1)));
+      continue;
+    }
+    if (seg.engine === "gemini") {
+      buffers.push(trimmed(await pitchShift(geminiAudio.get(i)!, seg.pitch ?? 0, seg.speed ?? 1)));
+      continue;
+    }
+    if (seg.engine === "elevenlabs") {
+      // THE TAG IS ADDED HERE AND NOWHERE EARLIER. `seg.text` stays the clean
+      // Greek the subtitle shows and the aligner is given; only the string
+      // handed to the API carries "[sighs] ". A tag that leaked into the
+      // segment would be drawn on screen and looked for in the audio.
+      const plan = elevenPlan.get(i)!;
+      // Bought on an earlier try? Then it is free now.
+      let line = opts.fresh ? null : readPaidLine(paidDir, plan.key);
+      if (!line) {
+        try {
+          const { audioBuffer, credits: spent } = await elevenlabs.synthesize({
+            text: plan.text,
+            voiceId: seg.elevenVoiceId ?? "",
+            modelId: seg.elevenModel,
+            settings: {
+              stability: seg.eleven?.stability,
+              similarityBoost: seg.eleven?.similarityBoost,
+              style: seg.eleven?.style,
+              speed: seg.eleven?.speed,
+            },
+          });
+          credits += spent;
+          if (opts.paid?.spent) opts.paid.spent.chars += spent;
+          line = Buffer.from(audioBuffer);
+          // Kept the moment it arrives — not at the end of the narration.
+          try {
+            savePaidLine(paidDir, plan.key, line);
+          } catch { /* a line that cannot be kept is bought again next time, nothing worse */ }
+        } catch (e) {
+          const kept = [...elevenPlan.entries()].filter(([j, p]) => j < i && readPaidLine(paidDir, p.key)).length;
+          throw new Error(
+            `${e instanceof Error ? e.message : String(e)} — stopped at line ${i + 1} of ${segments.length}. ` +
+              (kept ? `The ${kept} paid line${kept === 1 ? "" : "s"} already made ${kept === 1 ? "is" : "are"} kept and will not be bought again when you retry.` : "")
+          );
+        }
       }
-      const { audioBuffer } = await synthesizeWithPiper(
-        seg.piperPythonPath,
-        seg.piperOnnxPath,
-        seg.text
-      );
-      buffers.push(trimmed(Buffer.from(audioBuffer)));
+      buffers.push(trimmed(await pitchShift(line, seg.pitch ?? 0, seg.speed ?? 1)));
       continue;
     }
 
-    const { audioBuffer } = await chatterbox.synthesize({
-      text: seg.text,
-      language: seg.language,
-      voiceMode: seg.voiceMode,
-      predefinedVoiceId: seg.predefinedVoiceId,
-      referenceAudioFilename: seg.referenceAudioFilename,
-      exaggeration: seg.exaggeration,
-      cfgWeight: seg.cfgWeight,
-    });
-    buffers.push(trimmed(Buffer.from(audioBuffer)));
+    if (!seg.piperPythonPath || !seg.piperOnnxPath) {
+      throw new Error(
+        `Speaker "${seg.speakerLabel}" has no Piper voice selected — pick one in the left rail. ` +
+          `DramaBox voices are not synthesised here: write its files from the Narration tab.`
+      );
+    }
+    const { audioBuffer } = await synthesizeWithPiper(
+      seg.piperPythonPath,
+      seg.piperOnnxPath,
+      spoken(seg.text)
+    );
+    buffers.push(trimmed(await pitchShift(Buffer.from(audioBuffer), seg.pitch ?? 0, seg.speed ?? 1)));
   }
 
   // Nothing in front of the first line — leading silence only delays the video.
   // After that, a breath between a speaker's own lines and a longer beat when
   // the turn changes.
+  // MONEY, SAID OUT LOUD. A character is a credit, and a re-render spends them
+  // again — unlike the GPU, where a second attempt costs only minutes.
+  if (credits > 0) {
+    console.log(
+      `[video-forge] ElevenLabs: ${credits.toLocaleString()} credits spent on this narration ` +
+        `(about ${(credits / 4640).toFixed(1)} lessons' worth).`
+    );
+  }
+
   const gaps = segments.map((seg, i) =>
-    i === 0 ? 0 : seg.speakerId === segments[i - 1].speakerId ? pauses.sameMs : pauses.turnMs
+    i === 0 ? 0 : seg.speakerId === segments[i - 1].speakerId ? seg.breathMs ?? pauses.sameMs : pauses.turnMs
   );
   const { buffer, segments: timing } = concatWavBuffers(buffers, gaps);
 
@@ -203,9 +443,20 @@ export async function buildNarration(
   const resolved = segments.map((seg, i) => ({
     speakerId: seg.speakerId,
     speakerLabel: seg.speakerLabel,
-    text: seg.text,
+    // SAID ONE WAY, SHOWN ANOTHER — the same rule the DramaBox path follows.
+    // These engines are handed the text above and say it literally, so a script
+    // written with "Hahaha" is spoken as written whichever engine reads it. The
+    // subtitle should still say «Χαχαχα». Applied here, after synthesis, so it
+    // can never change what was spoken.
+    // [x] markings are performed, never shown.
+    text: displayLine(seg.text.replace(/\[[^\]]*\]\s*/g, "")).trim(),
     startMs: timing[i].startMs,
     endMs: timing[i].endMs,
+    // The first feeling tag drives the face: [laughs] bobs the head, [nods]
+    // nods, [shakes head] shakes. Until 12 Oct 2026 the tags were stripped
+    // here and the face never heard about them outside the course lessons.
+    mood: moodTag(seg.text),
+    tags: [...seg.text.matchAll(/\[([^\]]+)\]/g)].map((m) => m[1].trim().toLowerCase()),
   }));
 
   // Written after the real file, and failures are swallowed: a cache that

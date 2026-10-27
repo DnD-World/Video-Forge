@@ -26,15 +26,15 @@ interface Upcoming {
 //
 // "Media library" stays because it genuinely isn't built. Loading a single file
 // from disk is not the same thing as a folder the app indexes and browses.
+// Intro and outro left on 19 Aug 2026 — they are real controls in the Frame
+// tab now. A row here that is actually built is worse than no row at all.
 const UPCOMING: Upcoming[] = [
-  { label: "Intro card", note: "Title card before the narration", kind: "toggle" },
-  { label: "Outro card", note: "Sign-off card after the narration", kind: "toggle" },
   { label: "Media library", note: "Your own downloaded clips and sounds", kind: "button" },
 ];
 
 export function RoadmapSection() {
   return (
-    <section className="flex flex-col gap-3 opacity-50">
+    <section className="flex flex-col gap-3 opacity-50" data-tip="Ideas that are not built yet. They are greyed out and do nothing.">
       <h2 className="label-etched">Coming Soon</h2>
       <p className="text-sm text-neutral-500">
         Planned and greyed out until they're wired up.

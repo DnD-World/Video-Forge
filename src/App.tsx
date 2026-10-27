@@ -1,35 +1,51 @@
+import { ExplainerStudio } from "./components/explainer/ExplainerStudio";
+import { ManyVideosStudio } from "./components/render/ManyVideos";
+import { initManyEvents } from "./store/useManyStore";
+import { HudButton } from "./components/ui/HudButton";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { MutableRefObject, ReactNode } from "react";
 import { Toggle } from "./components/ui/Toggle";
 import { SpeakerAvatar } from "./components/canvas/SpeakerAvatar";
 import { PuppetAvatar } from "./components/canvas/PuppetAvatar";
+import { CharacterAvatar } from "./components/canvas/CharacterAvatar";
+import { facingView, lookById } from "../characters/core/index.mjs";
 import { WaveformScene } from "./components/canvas/WaveformScene";
 import { BackgroundScene } from "./components/canvas/BackgroundScene";
 import { SubtitleScene } from "./components/canvas/SubtitleScene";
-import { usePreviewClock } from "./lib/motion/usePreviewClock";
+import { TimelineStrip } from "./components/canvas/TimelineStrip";
+import { NextStep, StepColumn, useFolded } from "./components/ui/StepColumn";
+import { PreviewPlayerContext, usePreviewPlayer } from "./lib/motion/usePreviewPlayer";
 import { buildCues } from "./lib/subtitles/wordTiming";
 import { buildSpeakerVisemeTracks } from "./lib/visemes/speakerTracks";
 import { visemeBlendAt } from "./lib/visemes/timeline";
 import { useFileUrls } from "./lib/assets/useFileUrls";
 import { useSubtitleFont } from "./lib/assets/useSubtitleFont";
 import { usePuppets } from "./lib/puppets/usePuppets";
+import { AiBadge } from "../remotion/AiBadge";
+import { viewFor } from "./lib/motion/facing";
 import { CastPanel } from "./components/panels/CastPanel";
 import { ScenePanel } from "./components/panels/ScenePanel";
 import { buildTracks } from "./lib/waveform/buildTracks";
 import BackendPanel from "./components/settings/BackendPanel";
 import NarrationPanel from "./components/settings/NarrationPanel";
 import { useProjectStore } from "./store/useProjectStore";
-import { useChatterboxVoicesStore } from "./store/useChatterboxVoicesStore";
 import { useSettingsStore } from "./store/useSettingsStore";
 import { deriveAccentShades, rgbTripleToHex } from "./lib/color/deriveShades";
 import { headMotion, motionTransform } from "./lib/motion/idleMotion";
 import {
   blinkAt, browAt, buildSpeakerBrowTracks,
-  buildSpeakerHeadTracks, headPoseAt,
+  buildSpeakerHeadTracks, headPoseAt, buildSpeakerPoseTracks, poseAt,
 } from "./lib/motion/facePerformance";
 import { sampleAnalysis } from "./lib/waveform/audioAnalysis";
 import { useCornerFlare } from "./lib/motion/useCornerFlare";
+import { SparkField } from "./components/ui/SparkField";
+import { HistoryBar } from "./components/HistoryBar";
+import { TipLayer } from "./components/ui/TipLayer";
+import { autoClean } from "./lib/media/autoClean";
+import videoMark from "./assets/video-mark.png";
+import imageMark from "./assets/image-mark.png";
 import { VISEME } from "./lib/visemes/visemeMap";
+import { docToProject } from "./lib/project/projectFile";
 
 /** Two corner-bracket accents — the recurring HUD-panel detail. Drop this
  *  inside any element with position:relative that uses .panel-hud. Always
@@ -47,81 +63,74 @@ function HudCorners() {
 const SNAP_GRID = 0.05;
 const clamp01 = (n: number) => Math.max(0, Math.min(1, n));
 
-/** A side rail that can fold away to a spine.
- *
- *  At the 1280px minimum window width the two 384px rails leave the preview
- *  267px wide for a 1080x1920 frame — too small to judge subtitle size or
- *  waveform detail, which is most of what the preview is for. Folding one rail
- *  hands that width straight to the canvas. */
-function Rail({
-  title, side, open, onToggle, flareRef, onFlare, children,
-}: {
-  title: string;
-  side: "left" | "right";
-  open: boolean;
-  onToggle: () => void;
-  flareRef: MutableRefObject<HTMLElement | null>;
-  onFlare: () => void;
-  children: ReactNode;
-}) {
-  // ‹ collapses a left rail and expands a right one, so the arrow always points
-  // the way the panel will move.
-  const glyph = open ? (side === "left" ? "‹" : "›") : side === "left" ? "›" : "‹";
-  return (
-    <aside
-      ref={flareRef}
-      onClick={onFlare}
-      className={`panel-hud hud-flare-target relative min-h-0 transition-[width] duration-200 ${
-        open ? "w-96 p-5" : "w-9 px-0 py-3"
-      }`}
-    >
-      <HudCorners />
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onToggle();
-        }}
-        title={open ? `Collapse ${title}` : `Expand ${title}`}
-        aria-label={open ? `Collapse ${title}` : `Expand ${title}`}
-        // Was h-6 w-6 — a 24px target for the control that reshapes the whole
-        // window, and the one you reach for most on a 1280px screen. 36px with
-        // its own chamfered plate, so it reads as a control rather than as a
-        // stray glyph floating in the corner of the panel.
-        className={`absolute top-2 z-20 h-9 w-9 grid place-items-center text-lg leading-none
-          text-accent-bright/80 hover:text-accent-bright cut-sm
-          bg-[color-mix(in_srgb,var(--accent)_16%,var(--metal-lo))]
-          hover:bg-[color-mix(in_srgb,var(--accent)_30%,var(--metal-lo))]
-          transition-colors ${side === "left" ? "right-2" : "left-2"}`}
-      >
-        {glyph}
-      </button>
-      {open ? (
-        children
-      ) : (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggle();
-          }}
-          className="label-etched absolute inset-x-0 top-10 mx-auto whitespace-nowrap hover:text-accent-bright"
-          style={{ writingMode: "vertical-rl" }}
-        >
-          {title}
-        </button>
-      )}
-    </aside>
-  );
-}
+const fmtTime = (ms: number) => {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+};
+
+type Step = "cast" | "script" | "look" | "make";
+/** How wide the steps column is for each step: Script needs room to write. */
+const STEP_WIDTH: Record<Step, number> = { cast: 420, script: 600, look: 440, make: 440 };
+const STEPS: { id: Step; title: string; sub: string }[] = [
+  { id: "cast", title: "Cast", sub: "Who speaks" },
+  { id: "script", title: "Script", sub: "What they say" },
+  { id: "look", title: "Look", sub: "How it looks and sounds" },
+  { id: "make", title: "Make", sub: "Preview, render, publish" },
+];
 
 export default function App() {
-  const [view, setView] = useState<"canvas" | "settings" | "narration">("canvas");
+  // THE FOUR STEPS (Ak, 11 Oct 2026): Cast → Script → Look → Make, with
+  // Settings behind a gear. `view` is what the centre shows; it follows the
+  // step, so the rest of this file keeps reading one value.
+  const [step, setStep] = useState<Step>("cast");
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  // WHAT KIND OF VIDEO (21 Oct 2026): puppet videos (the four steps) or
+  // explainers (animated, drawn by code — src/components/explainer). Remembered.
+  // MANY VIDEOS (26 Oct 2026) is a third kind, with its own screen.
+  type Mode = "puppet" | "explainer" | "many";
+  const [mode, setModeState] = useState<Mode>(() => {
+    try { const m = localStorage.getItem("vf.mode"); return m === "explainer" || m === "many" ? m : "puppet"; } catch { return "puppet"; }
+  });
+  const setMode = (m: Mode) => { setModeState(m); setSettingsOpen(false); try { localStorage.setItem("vf.mode", m); } catch { /* fine */ } };
+  // A batch reports its progress whichever screen is open.
+  useEffect(() => initManyEvents(), []);
+  // The Make tab's "Many videos" pointer opens that screen.
+  useEffect(() => {
+    const open = () => setMode("many");
+    window.addEventListener("forge:open-many", open);
+    return () => window.removeEventListener("forge:open-many", open);
+  }, []);
+  // THE "B" LAYOUT (Ak, 26 Oct 2026): the preview stays on screen in every
+  // step — Script included, which used to replace it — and only Settings
+  // takes the whole window.
+  const view: "canvas" | "settings" = settingsOpen ? "settings" : "canvas";
+  // Any screen can ask for the Settings page ("Open Settings" buttons in messages).
+  useEffect(() => {
+    const open = () => setSettingsOpen(true);
+    window.addEventListener("forge:open-settings", open);
+    return () => window.removeEventListener("forge:open-settings", open);
+  }, []);
+  const goStep = (s: Step) => { setSettingsOpen(false); setStep(s); };
+  /** One plain line under each step: what is done there so far. */
+  const stepStatus = (id: Step): string => {
+    const st = useProjectStore.getState();
+    if (id === "cast") return st.speakers.length ? `${st.speakers.length} speaker${st.speakers.length > 1 ? "s" : ""}: ${st.speakers.map((x) => x.label).join(", ")}` : "Nobody yet";
+    if (id === "script") {
+      const segs = st.narration?.segments ?? [];
+      if (!segs.length) return st.attachedAudio ? "Your own recording" : "Narration not made yet";
+      return `${segs.length} lines · ${fmtTime(segs[segs.length - 1].endMs)}`;
+    }
+    if (id === "look") return `${st.backgrounds.length ? `${st.backgrounds.length} background clip${st.backgrounds.length > 1 ? "s" : ""}` : "Plain background"}${st.music ? " · music" : ""}`;
+    return `${st.render.format} · ${st.render.width}×${st.render.height}`;
+  };
   const canvasRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const [stageSize, setStageSize] = useState({ w: 0, h: 0 });
   const [snapToGrid, setSnapToGrid] = useState(true);
   const [draggingId, setDraggingId] = useState<string | null>(null);
-  const [castOpen, setCastOpen] = useState(true);
-  const [sceneOpen, setSceneOpen] = useState(true);
+  // The steps column can fold to its numbers, handing the room to the preview.
+  const [folded, setFolded] = useFolded("vf.stepsFolded");
+
 
   const fps = useProjectStore((s) => s.fps);
   const render = useProjectStore((s) => s.render);
@@ -146,9 +155,18 @@ export default function App() {
   // video is what the preview animates to.
   const activeAnalysis = attachedAudio?.analysis ?? narration?.analysis ?? null;
 
-  // One clock shared by every canvas overlay. Loops over the narration so the
-  // preview shows the real audio cycling rather than drifting into silence.
-  const previewTimeMs = usePreviewClock(activeAnalysis?.durationMs);
+  // One clock shared by every canvas overlay — the narration's own audio
+  // while it plays, so lips, subtitles and voices cannot drift apart.
+  const musicVolume = useProjectStore((s) => s.musicVolume);
+  const musicDuck = useProjectStore((s) => s.musicDuck);
+  const player = usePreviewPlayer({
+    voicePath: attachedAudio?.filePath ?? narration?.filePath ?? null,
+    voiceAnalysis: activeAnalysis,
+    musicPath: music?.filePath ?? null,
+    musicVolume,
+    musicDuck,
+  });
+  const previewTimeMs = player.timeMs;
 
   // Who is talking right now, for the "speaking heads move a little more" cue.
   // Read from the same analysis the waveform uses so the two never disagree.
@@ -157,10 +175,31 @@ export default function App() {
     if (!m || m.speaker < 0) return null;
     return speakers[m.speaker]?.id ?? null;
   }, [activeAnalysis, previewTimeMs, speakers]);
-  const cues = useMemo(
-    () => buildCues(narration?.segments ?? [], subtitles.maxChars),
-    [narration, subtitles.maxChars]
-  );
+  // With no narration yet, a sample line — so subtitle choices show on screen
+  // while you make them (Ak, 12 Oct 2026). Never rendered: the render has its
+  // own segments.
+  const projectLanguage = useProjectStore((s) => s.language);
+  const aiLabel = useSettingsStore((s) => s.aiLabel);
+  const cues = useMemo(() => {
+    if (narration?.segments?.length) return buildCues(narration.segments, subtitles.maxChars);
+    // GREEK AND ENGLISH TAKING TURNS (Ak, 13 Oct 2026), so a font and size
+    // can be judged in both alphabets — accents and all — before any voice
+    // exists. The project's own language goes first.
+    const el = "Έτσι θα φαίνονται οι υπότιτλοί σου στο βίντεο.";
+    const en = "This is how your subtitles will look in the video.";
+    const pair = projectLanguage === "el" ? [el, en] : [en, el];
+    const first = speakers[0];
+    return buildCues(
+      Array.from({ length: 60 }, (_, i) => ({
+        speakerId: first?.id ?? "sample",
+        speakerLabel: first?.label ?? "",
+        text: pair[i % 2],
+        startMs: i * 4000,
+        endMs: i * 4000 + 3800,
+      })),
+      subtitles.maxChars
+    );
+  }, [narration, subtitles.maxChars, projectLanguage, speakers]);
 
   // Lip-sync, driven by exactly the same word timings as the subtitles.
   const visemeTracks = useMemo(
@@ -168,6 +207,22 @@ export default function App() {
     [narration, fps]
   );
   const sheetUrls = useFileUrls(speakers.map((sp) => sp.sheetPath));
+  // A stand-in background for the Look step while the video has none yet,
+  // so dim, blur and colour can be judged by eye: the newest downloaded clip
+  // in the right shape (Ak, 12 Oct 2026).
+  const backgroundBlur = useProjectStore((s) => s.backgroundBlur);
+  const backgroundColorLook = useProjectStore((s) => s.backgroundColorLook);
+  const [sampleClip, setSampleClip] = useState<string | null>(null);
+  useEffect(() => {
+    if (step !== "look" || backgrounds.length > 0) return;
+    let alive = true;
+    window.byok?.media?.library?.().then((items) => {
+      const vids = items.filter((i) => i.kind === "video").sort((a, b) => b.modifiedMs - a.modifiedMs);
+      if (alive) setSampleClip(vids[0]?.filePath ?? null);
+    }).catch(() => {});
+    return () => { alive = false; };
+  }, [step, backgrounds.length]);
+  const sampleUrls = useFileUrls(sampleClip ? [sampleClip] : [], "video/mp4");
   const backgroundUrls = useFileUrls(
     backgrounds.map((b) => b.filePath),
     "video/mp4"
@@ -189,6 +244,11 @@ export default function App() {
     () => buildSpeakerBrowTracks(narration?.segments ?? []),
     [narration]
   );
+  // Arm poses from [waves], [points]… and greetings (12 Oct 2026).
+  const poseTracks = useMemo(
+    () => buildSpeakerPoseTracks(narration?.segments ?? [], Object.fromEntries(speakers.map((sp) => [sp.id, sp.gestures ?? 0.5]))),
+    [narration, speakers]
+  );
   const headTracks = useMemo(
     () => buildSpeakerHeadTracks(narration?.segments ?? []),
     [narration]
@@ -203,8 +263,10 @@ export default function App() {
   );
   const accentColor = useSettingsStore((s) => s.accentColor);
   const motionEnabled = useSettingsStore((s) => s.motionEnabled);
+  const [forgeGoing, setForgeGoing] = useState(false);
 
-  const isPortrait = render.format === "9:16";
+  // the frame's own proportions, so square and 4:5 preview correctly too
+  const frameRatio = render.width / render.height;
 
   // The autosave stores the narration's path and timings but not its analysis —
   // a ten-minute spectrum is megabytes and localStorage would refuse it. The
@@ -216,10 +278,20 @@ export default function App() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      // Opened with --project: that project replaces the autosave before
+      // anything below looks at the store.
+      const doc = docToProject(await window.byok.project.startup());
+      if (!cancelled && doc.ok) {
+        useProjectStore.getState().loadProject(doc.project);
+      }
       const n = useProjectStore.getState().narration;
       if (n?.filePath && !n.analysis) {
         try {
-          const analysis = await window.byok.audio.analyzeFile(n.filePath);
+          const analysis = await window.byok.audio.analyzeFile(
+            n.filePath,
+            n.segments,
+            useProjectStore.getState().speakers.map((s) => s.id)
+          );
           if (!cancelled && analysis) setNarration({ ...n, analysis });
         } catch {
           // The file was moved or deleted. Keeping the segments is still worth
@@ -281,44 +353,24 @@ export default function App() {
   // an app where clicking is constant work rather than an occasional flourish,
   // and reveal-on-scroll belongs to a marketing page, not a control surface
   // the user is already looking at.
+  // Downloaded background clips are trimmed to the Settings limit at start-up.
+  useEffect(() => {
+    void autoClean().then((msg) => msg && console.log(`[video-forge] ${msg}`));
+  }, []);
+
   useEffect(() => {
     window.DecoNoir?.init({
       // One ground, tinted from --accent, so it follows the Appearance picker
       // instead of being a fixed steel or gold that fights a chosen colour.
-      ground: "on",
-      grain: true,
-      glow: true,
+      // The Forge look replaces the ground and grain with SparkField.
+      ground: "off",
+      grain: false,
+      glow: false,
       spark: false,
       reveal: false,
     });
   }, []);
 
-  // Keep the Chatterbox status honest.
-  //
-  // It was reported once, when Start Server succeeded, and then believed
-  // forever. The server does not last forever: in dev every main-process edit
-  // restarts Electron and kills the child it spawned, and in a packaged build
-  // a crash or an out-of-memory does the same. The panel went on showing
-  // "running ✓" over a server that had been gone for an hour, and everything
-  // failed with "failed to fetch" against a green tick — which sends you
-  // looking at the network, the port, the install, anywhere except the one
-  // true cause.
-  //
-  // Twelve seconds is one localhost ping; the voice lists are only re-fetched
-  // when the answer actually changes. Also on window focus, because coming
-  // back to the app after leaving it running is exactly when it will have died
-  // without anyone watching.
-  const refreshChatterbox = useChatterboxVoicesStore((s) => s.refresh);
-  useEffect(() => {
-    void refreshChatterbox();
-    const id = window.setInterval(() => void refreshChatterbox(), 12000);
-    const onFocus = () => void refreshChatterbox();
-    window.addEventListener("focus", onFocus);
-    return () => {
-      window.clearInterval(id);
-      window.removeEventListener("focus", onFocus);
-    };
-  }, [refreshChatterbox]);
 
   // The grain is ambient motion, so it answers to the app's own motion toggle
   // as well as to prefers-reduced-motion.
@@ -333,10 +385,8 @@ export default function App() {
     document.documentElement.setAttribute("data-hud-motion", motionEnabled ? "on" : "off");
   }, [motionEnabled]);
 
-  const headerFlare = useCornerFlare<HTMLElement>();
   const asideFlare = useCornerFlare<HTMLElement>();
   const mainFlare = useCornerFlare<HTMLElement>();
-  const sceneFlare = useCornerFlare<HTMLElement>();
 
   // Measure the room the preview has, then size the frame to fit inside it —
   // rather than the reverse. CSS can't express "contain" here: aspect-ratio
@@ -353,13 +403,14 @@ export default function App() {
     });
     ro.observe(el);
     return () => ro.disconnect();
-  }, [view]);
+  }, [view, mode]);
 
   const canvasSize = useMemo(() => {
-    const ratio = isPortrait ? 9 / 16 : 16 / 9;
-    const w = Math.floor(Math.min(stageSize.w, stageSize.h * ratio));
+    const ratio = frameRatio;
+    // 58px is kept free under the frame for the transport bar.
+    const w = Math.floor(Math.min(stageSize.w, Math.max(0, stageSize.h - 58) * ratio));
     return { w: Math.max(0, w), h: Math.max(0, Math.floor(w / ratio)) };
-  }, [stageSize, isPortrait]);
+  }, [stageSize, frameRatio]);
 
   // Avatar dragging. The listeners live on window rather than the avatar so a
   // fast drag that outruns the cursor doesn't drop the gesture the moment the
@@ -387,6 +438,9 @@ export default function App() {
     };
   }, [draggingId, snapToGrid, updateSpeaker]);
 
+  const nextStep = STEPS[STEPS.findIndex((x) => x.id === step) + 1];
+  const nextButton = nextStep ? <NextStep label={nextStep.title} tip={`Goes on to step ${STEPS.indexOf(nextStep) + 1}: ${nextStep.title} (${nextStep.sub.toLowerCase()}).`} onClick={() => goStep(nextStep.id)} /> : null;
+
   return (
     // No background class here on purpose: the brushed-metal ground is a fixed
     // layer behind the whole app, and an opaque shell would paint over it.
@@ -397,89 +451,106 @@ export default function App() {
     // position:relative, but loose text in a static container would not. The
     // library's own demo lifts its wrapper the same way.
     <div className="relative z-[1] h-full w-full flex flex-col text-neutral-200">
-      <div className="scanlines" />
 
-      {/* Top bar */}
-      <header
-        ref={headerFlare.ref}
-        onClick={headerFlare.fire}
-        className="panel-hud hud-flare-target relative m-3 px-6 py-3 flex items-center justify-between"
-      >
-        <HudCorners />
-        <h1 className="title-deco uppercase text-2xl">
-          BYOK-Vid-Creator
-        </h1>
-        <div className="flex items-center gap-3">
-          <span className="label-etched hidden sm:inline mr-2">Deterministic Video Studio</span>
-          <button
-            onClick={() => setView("canvas")}
-            className={`label-etched px-3 py-1.5 border ${
-              view === "canvas" ? "border-accent text-accent-bright" : "border-accent/30 hover:border-accent hover:text-accent-bright"
-            }`}
-          >
-            Canvas
+      <SparkField moving={motionEnabled} />
+      <TipLayer />
+
+      {/* Top bar — the Forge look (11 Oct 2026). The twin marks are the switch
+          between the two Forges: this app's mark is lit, Image Forge's is
+          greyed, and clicking it slides the light over and opens Image Forge. */}
+      <header className="panel-hud forge-bar relative m-3 px-4 py-2 flex items-center gap-4">
+        <div className={`forge-twin ${forgeGoing ? "going" : ""}`}>
+          <div className="lamp" />
+          <button className="slot-mark" title="Video Forge" aria-label="Video Forge (this app)" tabIndex={-1}>
+            <img src={videoMark} alt="" />
           </button>
           <button
-            onClick={() => setView("narration")}
-            className={`label-etched px-3 py-1.5 border ${
-              view === "narration" ? "border-accent text-accent-bright" : "border-accent/30 hover:border-accent hover:text-accent-bright"
-            }`}
+            className="slot-mark off"
+            title="Open Image Forge"
+            aria-label="Open Image Forge"
+            onClick={async () => {
+              setForgeGoing(true);
+              const ok = await window.byok.forge.openImageForge();
+              setTimeout(() => setForgeGoing(false), 900);
+              if (!ok) alert("Image Forge isn't installed on this computer yet. Install Image Forge, then press this button again.");
+            }}
           >
-            Narration
-          </button>
-          <button
-            onClick={() => setView("settings")}
-            className={`label-etched px-3 py-1.5 border ${
-              view === "settings" ? "border-accent text-accent-bright" : "border-accent/30 hover:border-accent hover:text-accent-bright"
-            }`}
-          >
-            ⚙ Backend Settings
+            <img src={imageMark} alt="" />
           </button>
         </div>
+        <div className="forge-name" data-tip="The name of this app. It makes videos with talking characters, using your own keys for the online helpers.">
+          Video Forge
+          <small>Talking-character videos</small>
+        </div>
+        <div className="ml-auto"><HistoryBar /></div>
+        <div className="flex gap-2 items-center" role="group" aria-label="Kind of video">
+          <HudButton data-tip="Puppet videos: talking characters, in four steps." active={mode === "puppet" && !settingsOpen} onClick={() => setMode("puppet")}>Puppet video</HudButton>
+          <HudButton data-tip="Explainers: animated pictures, words and charts drawn by code, timed to a narration — with or without puppets on top." active={mode === "explainer" && !settingsOpen} onClick={() => setMode("explainer")}>Explainer</HudButton>
+          <HudButton data-tip="Many videos at once: one row of a spreadsheet per video, all made in a row with the look you set up." active={mode === "many" && !settingsOpen} onClick={() => setMode("many")}>Many videos</HudButton>
+        </div>
+        <button
+          className={`forge-gear ml-3 ${settingsOpen ? "on" : ""}`}
+          title="Settings — keys and preferences"
+          aria-label="Settings"
+          aria-pressed={settingsOpen}
+          onClick={() => setSettingsOpen((v) => !v)}
+        >
+          ⚙
+        </button>
       </header>
 
-      <div className="flex flex-1 gap-3 px-3 pb-3 min-h-0">
-        {/* LEFT: the cast — one tab per speaker, plus music */}
-        <Rail
-          title="Cast"
-          side="left"
-          open={castOpen}
-          onToggle={() => setCastOpen((v) => !v)}
+      {mode === "explainer" && !settingsOpen ? <ExplainerStudio /> : mode === "many" && !settingsOpen ? <ManyVideosStudio onEditProject={() => { setMode("puppet"); goStep("cast"); }} /> : view === "settings" ? (
+        <main className="panel-hud relative flex-1 mx-3 mb-3 p-6 min-h-0 overflow-hidden">
+          <HudCorners />
+          <div className="w-full h-full flex flex-col">
+            <button className="btn self-start mb-3" onClick={() => setSettingsOpen(false)} data-tip="Back to the step you were on">
+              ← Back to {STEPS.find((x) => x.id === step)?.title}
+            </button>
+            <BackendPanel />
+          </div>
+        </main>
+      ) : (
+      <div className="forge-studio flex flex-1 gap-3 px-3 pb-3 min-h-0">
+        {/* LEFT: the four steps, top to bottom; the one you are on opens in place. */}
+        <StepColumn
+          steps={STEPS.map((st) => ({ ...st, status: stepStatus(st.id) }))}
+          current={step}
+          onGo={goStep}
+          width={STEP_WIDTH[step]}
+          folded={folded}
+          setFolded={setFolded}
           flareRef={asideFlare.ref}
           onFlare={asideFlare.fire}
+          decor={<HudCorners />}
+          foot={nextButton}
         >
-          <CastPanel />
-        </Rail>
+          <PreviewPlayerContext.Provider value={player}>
+          {step === "cast" ? (
+            <CastPanel />
+          ) : step === "script" ? (
+            <NarrationPanel />
+          ) : step === "look" ? (
+            <ScenePanel key="look" title="Look" tabs={["presets", "background", "subtitles", "music", "sfx", "motion"]} />
+          ) : (
+            <ScenePanel key="make" title="Make" tabs={["render", "many", "extras", "shape"]} />
+          )}
+          </PreviewPlayerContext.Provider>
+        </StepColumn>
 
-        {/* CENTER: preview canvas, narration, or backend settings */}
+        {/* RIGHT: the preview — always — with the play controls and the timeline strip under it. */}
         <main
           ref={mainFlare.ref}
           onClick={mainFlare.fire}
           // No place-items-center here: a centred grid item has an indefinite
           // height, so the stage's h-full resolved against nothing and never
           // shrank when the window did. The stage stretches; the centring
-          // happens inside it.
-          //
-          // `items-stretch` is stated rather than left to the default, and that
-          // is not belt-and-braces. The stretch IS the layout: the stage is
+          // happens inside it. `items-stretch` IS the layout: the stage is
           // measured to size the canvas, so anything that lets it shrink to its
-          // content collapses it to zero and keeps it there. Leaving it implicit
-          // is what let a stylesheet turn the whole preview off by accident.
-          className={`panel-hud hud-flare-target relative flex-1 p-6 min-h-0 ${
-            view === "canvas" ? "grid items-stretch" : "overflow-hidden"
-          }`}
+          // content collapses it to zero and keeps it there.
+          className="panel-hud hud-flare-target relative flex-1 p-6 min-h-0 min-w-0 grid items-stretch"
         >
           <HudCorners />
-          {view === "settings" ? (
-            <div className="w-full h-full">
-              <BackendPanel />
-            </div>
-          ) : view === "narration" ? (
-            <div className="w-full h-full">
-              <NarrationPanel />
-            </div>
-          ) : (
-            <div ref={stageRef} className="min-w-0 min-h-0 grid place-items-center">
+            <div ref={stageRef} className="min-w-0 min-h-0 flex flex-col items-center justify-center gap-3">
             <div
               ref={canvasRef}
               className="slot-recessed relative grid place-items-center overflow-hidden"
@@ -493,6 +564,9 @@ export default function App() {
                 fps={fps}
                 crossfadeMs={backgroundCrossfadeMs}
                 dim={backgroundDim}
+                blurPx={backgroundBlur * canvasSize.w}
+                colorLook={backgroundColorLook}
+                sampleUrl={step === "look" ? sampleUrls[sampleClip ?? ""] ?? null : null}
               />
 
               <WaveformScene
@@ -518,11 +592,16 @@ export default function App() {
                 />
               )}
 
-              <span className="label-etched text-center leading-relaxed relative z-10">
-                {render.format} · {fps} FPS
-                <br />
-                {render.width}×{render.height}
-              </span>
+              {/* Only on an empty frame, at the top so it never sits on the sample
+                  subtitle. Once there is narration it sat behind
+                  the subtitles and read as part of them. */}
+              {!narration && !attachedAudio && (
+                <span className="label-etched text-center leading-relaxed absolute top-4 inset-x-0 z-10" data-tip="The shape of your video, how many pictures per second, and its size in pixels. Change them in the Look step.">
+                  {render.format} · {fps} FPS
+                  <br />
+                  {render.width}×{render.height}
+                </span>
+              )}
 
               {speakers.map((sp) => {
                 // The puppet wins when a speaker has both. Resolved once here
@@ -566,10 +645,35 @@ export default function App() {
                   }}
                   className="z-10"
                 >
-                  {loaded ? (
+                  {sp.character ? (
+                    // a drawn character: same signals as the puppet, drawn by code
+                    <CharacterAvatar
+                      card={sp.character}
+                      size={sp.size * canvasSize.w}
+                      timeMs={previewTimeMs}
+                      viseme={blend.to}
+                      prevViseme={blend.from}
+                      mix={blend.mix}
+                      lidFrom={blinkAt(sp.id, previewTimeMs, idleMotion)}
+                      browLeft={browAt(browTracks[sp.id], previewTimeMs)}
+                      browRight={browAt(browTracks[sp.id], previewTimeMs)}
+                      head={headPoseAt(sp.id, headTracks[sp.id], previewTimeMs, idleMotion)}
+                      poseSpans={poseTracks[sp.id]}
+                      {...facingView(sp.facing, sp, speakers.filter((o) => o.id !== sp.id), { dialogue: lookById(sp.character.look).profile ? 2 : 1 })}
+                      active={activeSpeakerId === sp.id}
+                      bgOpacity={sp.bgOpacity}
+                      borderOpacity={sp.borderOpacity}
+                      bgColor={sp.bgColor}
+                      borderColor={sp.borderColor}
+                      outlineShape={sp.outlineShape}
+                      frameWidth={sp.frameWidth}
+                      sizeFraction={sp.size}
+                    />
+                  ) : loaded ? (
                     <PuppetAvatar
                       puppet={loaded.puppet}
                       urls={loaded.urls}
+                      urlsReady={loaded.ready}
                       viseme={blend.to}
                       prevViseme={blend.from}
                       mix={blend.mix}
@@ -578,6 +682,8 @@ export default function App() {
                       browLeft={browAt(browTracks[sp.id], previewTimeMs)}
                       browRight={browAt(browTracks[sp.id], previewTimeMs)}
                       head={headPoseAt(sp.id, headTracks[sp.id], previewTimeMs, idleMotion)}
+                      pose={poseAt(poseTracks[sp.id], previewTimeMs)}
+                      {...viewFor(sp, speakers, loaded.puppet)}
                       // size is a fraction of frame width; the render resolves
                       // it against the output width the exact same way.
                       size={sp.size * canvasSize.w}
@@ -586,6 +692,8 @@ export default function App() {
                       bgColor={sp.bgColor}
                       borderColor={sp.borderColor}
                       outlineShape={sp.outlineShape}
+                      frameWidth={sp.frameWidth}
+                      sizeFraction={sp.size}
                     />
                   ) : (
                     <SpeakerAvatar
@@ -614,23 +722,61 @@ export default function App() {
                 timeMs={previewTimeMs}
                 speakerColors={speakerColors}
               />
+              {aiLabel && <AiBadge width={canvasSize.w} height={canvasSize.h} />}
             </div>
+            {/* The transport: play with sound, scrub, time. Space bar too. */}
+            <div className="forge-transport">
+              <button
+                className="play"
+                onClick={player.toggle}
+                disabled={!player.hasSound}
+                aria-label={player.playing ? "Pause" : "Play with sound"}
+                title={player.hasSound ? "Play with sound (space bar)" : "Make the narration in the Script step to hear it here"}
+                data-tip={player.hasSound ? "Plays the video with its voices and music, so you can hear it before you render. The space bar does the same." : "Plays the video with sound once the narration is made in the Script step."}
+              >
+                {player.playing ? "❚❚" : "▶"}
+              </button>
+              <input
+                type="range"
+                min={0}
+                max={Math.max(1, Math.round(player.durationMs))}
+                value={Math.round(Math.min(player.timeMs, player.durationMs || player.timeMs))}
+                onChange={(e) => player.seek(Number(e.target.value))}
+                disabled={!player.hasSound}
+                style={{ ["--p" as string]: `${player.durationMs ? (100 * player.timeMs) / player.durationMs : 0}%` }}
+                aria-label="Position in the video"
+                data-tip="Drag to jump to any moment in the video."
+              />
+              {player.hasSound ? (
+                <span className="time">
+                  {fmtTime(player.timeMs)} / {fmtTime(player.durationMs)}
+                </span>
+              ) : (
+                <span className="hint" data-tip={player.soundProblem ? "The narration file is there but could not be opened, so there is no sound. Making the narration again fixes it." : "There is no sound to play yet. Make the narration in the Script step first."}>
+                  {player.soundProblem ? "Can't open the narration sound — make it again in Script" : "No narration yet — make it in Script to hear it here"}
+                </span>
+              )}
             </div>
-          )}
+            <TimelineStrip
+              // the audio's own length once it has loaded; the narration's end until then
+              durationMs={player.durationMs || (narration?.segments?.length ? narration.segments[narration.segments.length - 1].endMs : 0)}
+              timeMs={player.timeMs}
+              top={(narration?.segments ?? []).map((v) => ({
+                startMs: v.startMs,
+                endMs: v.endMs,
+                color: speakerColors[v.speakerId] ?? "rgba(118,255,194,.6)",
+                tip: `${speakers.find((x) => x.id === v.speakerId)?.label ?? v.speakerLabel}: “${v.text.length > 90 ? v.text.slice(0, 88) + "…" : v.text}”`,
+              }))}
+              bottom={backgrounds.map((b, i) => ({ startMs: b.startMs, endMs: b.endMs, tip: `Background clip ${i + 1}` }))}
+              tip="The whole video: who speaks when (top, in their colour) and the background clips (bottom). Click or drag to jump to that moment."
+              emptyText="The video's timeline appears here once the narration is made"
+              emptyTip="Once the narration is made (step 2), this strip shows who speaks when and which background is on, and you can click it to jump anywhere."
+              onSeek={player.seek}
+            />
+            </div>
         </main>
-
-        {/* RIGHT: the scene — frame, subtitles, render, presets */}
-        <Rail
-          title="Scene"
-          side="right"
-          open={sceneOpen}
-          onToggle={() => setSceneOpen((v) => !v)}
-          flareRef={sceneFlare.ref}
-          onFlare={sceneFlare.fire}
-        >
-          <ScenePanel />
-        </Rail>
       </div>
+      )}
     </div>
   );
 }

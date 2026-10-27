@@ -11,7 +11,10 @@
 import { HudButton } from "../ui/HudButton";
 import { Slider } from "../ui/Slider";
 import { Toggle } from "../ui/Toggle";
-import { WAVEFORM_STYLES, type TrackWaveform } from "../../store/types";
+import { WAVEFORM_STYLES, type TrackWaveform, type OutlineShape } from "../../store/types";
+import { useEffect, useState } from "react";
+import { WaveformScene } from "../canvas/WaveformScene";
+import { buildTracks } from "../../lib/waveform/buildTracks";
 
 // Read from the one list in types.ts rather than repeated here. The lab styles
 // rendered correctly for a week and could not be selected, because the union
@@ -24,12 +27,18 @@ const STYLES = WAVEFORM_STYLES;
 const STYLE_LABEL: Partial<Record<TrackWaveform["style"], string>> = {
   bloomBars: "bloom bars",
   boil: "boiling",
+  mesh: "mesh",
 };
+
+/** Looks that draw round a centre rather than sampling a path along an edge.
+ *  They hide the edge controls. Only the mesh is left, and nothing uses it. */
+const isOrbit = (style: string) => style === "mesh";
 const POSITIONS: TrackWaveform["position"][] = [
-  "speaker", "circular", "top", "bottom", "left", "right",
+  "speaker", "frame", "circular", "top", "bottom", "left", "right",
 ];
 const POSITION_LABEL: Record<TrackWaveform["position"], string> = {
   speaker: "around face",
+  frame: "around the video",
   circular: "circular",
   top: "top",
   bottom: "bottom",
@@ -44,32 +53,82 @@ interface Props {
   label: string;
   /** Music has no face to ring, so it doesn't get the "around face" option. */
   canAnchorToFace?: boolean;
+  /** The speaker's colour and frame shape: when given, styles are chosen from
+   *  live picture tiles drawn on that frame, not from a list of names (Ak,
+   *  12 Oct 2026: "the visuals are the way to understand which to choose"). */
+  face?: { color: string; shape: OutlineShape };
 }
 
-export function WaveformControls({ value, onChange, label, canAnchorToFace = true }: Props) {
+/** One clock for all the tiles, so they move together and cost one loop. */
+function useTileClock() {
+  const [t, setT] = useState(0);
+  useEffect(() => {
+    let raf = 0;
+    const start = performance.now();
+    const tick = (now: number) => {
+      setT(now - start);
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+  return t;
+}
+
+const TILE = 96;
+
+function StyleTiles({ value, onChange, face }: { value: TrackWaveform; onChange: (p: Partial<TrackWaveform>) => void; face: { color: string; shape: OutlineShape } }) {
+  const t = useTileClock();
+  return (
+    <div className="forge-waves">
+      {STYLES.filter((s) => !isOrbit(s)).map((s) => {
+        const tracks = buildTracks(
+          [{ borderColor: face.color, outlineShape: face.shape, x: 0.5, y: 0.5, size: 0.42, waveform: { ...value, style: s, enabled: true, position: "speaker" } }],
+          { ...value, enabled: false },
+          face.color
+        );
+        return (
+          <button key={s} className={`wave ${value.style === s ? "on" : ""}`} onClick={() => onChange({ style: s })} aria-label={STYLE_LABEL[s] ?? s} data-tip={`Draws the voice as "${STYLE_LABEL[s] ?? s}". The picture shows how it will move.`}>
+            <span className="pic" style={{ width: TILE, height: TILE }}>
+              <i className={`frame ${face.shape}`} style={{ borderColor: face.shape === "none" ? "transparent" : face.color }} />
+              <WaveformScene tracks={tracks} width={TILE} height={TILE} timeMs={t} analysis={null} musicAnalysis={null} />
+            </span>
+            <span className="name">{STYLE_LABEL[s] ?? s}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+export function WaveformControls({ value, onChange, label, canAnchorToFace = true, face }: Props) {
   return (
     <div className="space-y-4">
-      <Toggle label={label} checked={value.enabled} onChange={(v) => onChange({ enabled: v })} />
+      <Toggle label={label} checked={value.enabled} onChange={(v) => onChange({ enabled: v })} data-tip="Turns the moving picture that dances to the sound on or off." />
 
       {value.enabled && (
         <>
           <div>
-            <div className="label-etched mb-2">Style</div>
-            <div className="flex flex-wrap gap-2">
-              {STYLES.map((s) => (
-                <HudButton key={s} active={value.style === s} onClick={() => onChange({ style: s })}>
-                  {STYLE_LABEL[s] ?? s}
-                </HudButton>
-              ))}
-            </div>
+            <div className="label-etched mb-2" data-tip="How the moving bars look. Each picture is drawn on this speaker's own frame.">Style</div>
+            {face ? (
+              <StyleTiles value={value} onChange={onChange} face={face} />
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {STYLES.map((s) => (
+                  <HudButton key={s} active={value.style === s} onClick={() => onChange({ style: s })} data-tip={`Draws the sound as "${STYLE_LABEL[s] ?? s}".`}>
+                    {STYLE_LABEL[s] ?? s}
+                  </HudButton>
+                ))}
+              </div>
+            )}
           </div>
 
-          {value.style !== "rings" && (
+          {!isOrbit(value.style) && (
             <div>
-              <div className="label-etched mb-2">Position</div>
+              <div data-tip="Where the moving sound bars sit on the picture." className="label-etched mb-2">Position</div>
               <div className="flex flex-wrap gap-2">
                 {POSITIONS.filter((p) => p !== "speaker" || canAnchorToFace).map((p) => (
-                  <HudButton key={p} active={value.position === p} onClick={() => onChange({ position: p })}>
+                  <HudButton key={p} active={value.position === p} onClick={() => onChange({ position: p })} data-tip={`Places the moving picture ${POSITION_LABEL[p]}.`}>
                     {POSITION_LABEL[p]}
                   </HudButton>
                 ))}
@@ -83,70 +142,73 @@ export function WaveformControls({ value, onChange, label, canAnchorToFace = tru
             </div>
           )}
 
-          {value.position === "speaker" && value.style !== "rings" && (
+          {value.position === "speaker" && !isOrbit(value.style) && (
             <Slider
+              data-tip="How far the ring sits out from the character. Bigger = further away."
               label="Ring Size" value={value.ringSize} min={0.6} max={3} step={0.02}
               onChange={(v) => onChange({ ringSize: v })} format={(v) => `${v.toFixed(2)}x`}
             />
           )}
 
           <Slider
-            label="Height" value={value.scale} min={0.2} max={2.5} step={0.02}
+            data-tip="How tall the bars get when the voice is loud. Higher = more dramatic." label="Height" value={value.scale} min={0.2} max={2.5} step={0.02}
             onChange={(v) => onChange({ scale: v })} format={(v) => `${v.toFixed(2)}x`}
           />
           <Slider
-            label="Count" value={value.density} min={8} max={160} step={1}
+            data-tip="How many bars or dots are drawn. More = finer detail." label="Count" value={value.density} min={8} max={160} step={1}
             onChange={(v) => onChange({ density: Math.round(v) })} format={(v) => `${Math.round(v)}`}
           />
           <Slider
-            label="Thickness" value={value.thickness} min={0.2} max={3} step={0.05}
+            data-tip="How fat each bar or line is." label="Thickness" value={value.thickness} min={0.2} max={3} step={0.05}
             onChange={(v) => onChange({ thickness: v })} format={(v) => `${v.toFixed(2)}x`}
           />
           <Slider
-            label="Smoothing" value={value.smoothing} min={0} max={1} step={0.02}
+            data-tip="How much neighbouring bars follow each other. Higher = flowing waves, 0 = jumpy." label="Smoothing" value={value.smoothing} min={0} max={1} step={0.02}
             onChange={(v) => onChange({ smoothing: v })}
             format={(v) => (v === 0 ? "raw" : `${Math.round(v * 100)}%`)}
           />
           <Slider
-            label="Lane Offset" value={value.lane} min={-3} max={3} step={0.1}
+            data-tip="Slides the picture sideways, so two speakers' pictures do not sit on top of each other." label="Lane Offset" value={value.lane} min={-3} max={3} step={0.1}
             onChange={(v) => onChange({ lane: v })} format={(v) => v.toFixed(1)}
           />
           <Slider
-            label="Sparkle" value={value.sparkle} min={0} max={1} step={0.05}
+            data-tip="Adds twinkling extras. 0 = none." label="Sparkle" value={value.sparkle} min={0} max={1} step={0.05}
             onChange={(v) => onChange({ sparkle: v })}
             format={(v) => (v === 0 ? "off" : `${Math.round(v * 100)}%`)}
           />
 
-          {value.style === "dots" && (
+          {(value.style === "dots" || value.style === "particles" || value.style === "sparks") && (
             <Slider
-              label="Dot Size" value={value.dotSize} min={0.2} max={4} step={0.05}
+              data-tip="How big each dot or particle is." label={value.style === "dots" ? "Dot Size" : "Particle size"} value={value.dotSize} min={0.2} max={4} step={0.05}
               onChange={(v) => onChange({ dotSize: v })} format={(v) => `${v.toFixed(2)}x`}
             />
           )}
 
-          {value.style !== "rings" && value.position !== "circular" && (
+          {!isOrbit(value.style) && value.position !== "circular" && (
             <Toggle
+              data-tip="On = the picture touches the very edge. Off = it leaves a little gap."
               label="Flush to edge" checked={value.edgeFlush}
               onChange={(v) => onChange({ edgeFlush: v })}
             />
           )}
 
-          {value.style === "rings" && (
+          {isOrbit(value.style) && (
             <>
               <Slider
+                data-tip="How big the ring is."
                 label="Ring Size" value={value.ringSize} min={0.2} max={2} step={0.02}
                 onChange={(v) => onChange({ ringSize: v })} format={(v) => `${v.toFixed(2)}x`}
               />
               <Slider
-                label="Center Opening" value={value.ringInnerRadius} min={0} max={0.9} step={0.01}
+                data-tip="How much empty space is left in the middle of the ring. Higher = bigger hole." label="Center Opening" value={value.ringInnerRadius} min={0} max={0.9} step={0.01}
                 onChange={(v) => onChange({ ringInnerRadius: v })} format={(v) => `${Math.round(v * 100)}%`}
               />
               <Slider
-                label="Ring X" value={value.ringX} min={0} max={1} step={0.01}
+                data-tip="Moves the ring left or right across the picture." label="Ring X" value={value.ringX} min={0} max={1} step={0.01}
                 onChange={(v) => onChange({ ringX: v })} format={(v) => `${Math.round(v * 100)}%`}
               />
               <Slider
-                label="Ring Y" value={value.ringY} min={0} max={1} step={0.01}
+                data-tip="Moves the ring up or down the picture." label="Ring Y" value={value.ringY} min={0} max={1} step={0.01}
                 onChange={(v) => onChange({ ringY: v })} format={(v) => `${Math.round(v * 100)}%`}
               />
             </>

@@ -1,0 +1,598 @@
+/* =============================================================================
+   THE FORGE LOOK — shared by Video Forge and Image Forge.
+   Chosen by Ak on 11 Oct 2026 from docs/design/looks-pick.html (look A,
+   "Star sparks"): pure black, tiny orange-red sparks like the logos', the
+   stravelakis.com navy and mint for the interface, Sora for every word.
+
+   HOW IT IS BUILT. The app's screens were written against the Deco Noir
+   system (src/styles/deco-noir.css), which is token-driven. This file is
+   loaded AFTER it and after index.css, and does three things:
+     1. replaces the tokens — colour, type, the corner size;
+     2. undoes the Deco Noir signature, the chamfered corner, everywhere,
+        and rounds things instead (panels 18px, controls into pills);
+     3. switches off its brushed-metal ground and grain — the sparks in
+        src/components/ui/SparkField.tsx are the ground now.
+   Nothing in a component had to change for the look to switch, which is
+   also how to switch it back: remove the import in main.tsx.
+   ============================================================================= */
+
+:root {
+  /* ---- colour: stravelakis.com tokens meeting the Forge logos ---- */
+  --bg: #000;
+  --bg-2: #03080b;
+  --metal-hi: rgba(39, 96, 117, .42);   /* panel-600 #276075 */
+  --metal: rgba(11, 40, 55, .30);       /* panel-900 #0B2837 */
+  --metal-lo: rgba(7, 28, 38, .22);     /* ink #071C26 */
+  --line: rgba(130, 216, 183, .16);
+  --line-hot: rgba(118, 255, 194, .45);
+  --ink: #E9FEF5;                       /* mint-50 */
+  --ink-2: #A9C3CE;
+  --ink-3: #7F9BA7;
+  --accent: #76FFC2;                    /* mint-400 */
+  --accent-hi: #D4FFEC;
+  --accent-lo: #344080;                 /* the brand navy — gradients run navy → mint */
+  --accent-rgb: 118 255 194;
+  --accent-2: #5562B8;
+  --navy: #344080;
+  --navy-hi: #5562B8;
+  --spark: #FF8A30;                     /* the logos' sparks */
+  --spark-red: #E8401C;
+  --good: #76FFC2; --warn: #FFB547; --crit: #FF5A4A;
+  --glow: .3;
+
+  /* the hairline that runs navy into mint, like the logos' metal */
+  --edge: linear-gradient(135deg, rgba(85, 98, 184, .55), rgba(118, 255, 194, .22) 45%,
+    rgba(85, 98, 184, .10) 70%, rgba(118, 255, 194, .30));
+
+  /* ---- type: Sora everywhere (bundled, works offline) ---- */
+  --display-deco: "Sora", system-ui, sans-serif;
+  --display: "Sora", system-ui, sans-serif;
+  --body: "Sora", system-ui, sans-serif;
+  --data: "Sora", ui-monospace, monospace;
+
+  /* ---- geometry: no chamfers ---- */
+  --cut: 0px; --cut-sm: 0px; --cut-lg: 0px;
+  --plate: 0; --orn: 0; --bevel: 0;
+  --radius: 18px;
+}
+
+html, body { background: #000; }
+body { font-family: "Sora", system-ui, sans-serif; letter-spacing: 0; }
+
+/* ---- the Deco Noir ground and grain: off; SparkField is the ground ---- */
+#dn-field, #dn-grain, .scanlines { display: none !important; }
+
+/* ---- 2. corners: every chamfer becomes a curve ---- */
+.cut, .cut-sm, .cut-lg, .panel-hud, .panel-hud::before, .panel-hud::after,
+.btn::before, .btn::after, .slot, .paddle, .check .box, .check .box::after,
+.seg, .barrow .bar, .hud-flare-target::after, ::-webkit-scrollbar-thumb,
+.frame, .frame > .bevel, .frame > .bevel > .face {
+  clip-path: none !important;
+}
+.plate, .orn, .fan, .flute, .zig, .hud-corner { display: none !important; }
+
+/* Panels: see-through so the sparks show, with the gradient hairline drawn
+   as a ring only (the mask cuts the middle out). */
+.panel-hud {
+  background: rgba(11, 40, 55, .16) !important;
+  border-radius: var(--radius);
+  box-shadow: none;
+  backdrop-filter: blur(3px);
+}
+/* Breathing room inside panels. :where() keeps this at zero specificity, so
+   a panel that sets its own padding (the header's px-4 py-2) still wins. */
+:where(.panel-hud) { padding: 10px 12px; }
+.panel-hud::before {
+  inset: 0 !important;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--edge) !important;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  z-index: 0 !important;
+}
+.panel-hud::after { display: none; }
+.frame { border-radius: var(--radius); background: var(--edge); }
+.frame > .bevel, .frame > .bevel > .face { border-radius: calc(var(--radius) - 1px); background: #000; }
+.cut, .cut-sm { border-radius: 12px; }
+.cut-lg { border-radius: var(--radius); }
+
+/* ---- controls into pills ---- */
+.btn {
+  border-radius: 999px !important;
+  font-family: "Sora", sans-serif !important;
+  letter-spacing: .02em !important;
+  text-transform: none !important;
+  font-weight: 500;
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--ink-2);
+  transition: color .2s, border-color .2s, box-shadow .3s, transform .15s;
+}
+.btn::before { inset: 0 !important; border-radius: inherit; background: rgba(0, 0, 0, .35) !important; box-shadow: none !important; }
+.btn::after { display: none !important; }
+.btn:hover { color: var(--ink); border-color: var(--accent); }
+.btn[aria-pressed="true"], .btn-primary {
+  color: #001a10 !important;
+  border-color: transparent;
+  box-shadow: 0 0 22px -6px rgba(118, 255, 194, .6);
+}
+.btn[aria-pressed="true"]::before { background: var(--accent) !important; }
+.btn-primary::before { background: linear-gradient(100deg, var(--navy), #3f63a0 45%, var(--accent)) !important; }
+.btn-primary:hover { box-shadow: 0 0 34px -4px rgba(118, 255, 194, .75); }
+
+.seg { border-radius: 999px; }
+.seg button { border-radius: 999px; font-family: "Sora", sans-serif; letter-spacing: .02em; text-transform: none; }
+.seg button[aria-pressed="true"] { background: var(--accent) !important; color: #001a10 !important; box-shadow: none; }
+
+.slot { border-radius: 999px; background: rgba(0, 0, 0, .55); }
+.paddle { border-radius: 50%; background: var(--ink-2); }
+.lever input:checked + .slot .paddle { background: var(--accent); }
+.check .box { border-radius: 6px; background: rgba(0, 0, 0, .55); }
+.check .box::after { border-radius: 3px; }
+
+input, select, textarea { font-family: "Sora", sans-serif; border-radius: 10px; }
+
+/* ---- type ---- */
+.title-deco { font-family: "Sora", sans-serif; letter-spacing: 0; font-weight: 500; text-transform: none; }
+.label-etched { font-family: "Sora", sans-serif !important; letter-spacing: .12em !important; font-size: .74rem !important; color: var(--ink-3); }
+.label-lit { font-family: "Sora", sans-serif !important; letter-spacing: .12em !important; font-size: .8rem !important; color: var(--accent); text-shadow: none; }
+
+/* ---- scrollbars: thin mint thread ---- */
+::-webkit-scrollbar-track { background: transparent; box-shadow: none; }
+::-webkit-scrollbar-thumb { border-radius: 99px; background: rgba(118, 255, 194, .28); background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background: rgba(118, 255, 194, .55); background-clip: padding-box; }
+
+/* =============================================================================
+   The top bar and the Forge switch (twin marks — Ak's pick, 11 Oct 2026)
+   ============================================================================= */
+.forge-bar { border-radius: var(--radius); }
+.forge-name { font-size: 1.35rem; font-weight: 500; line-height: 1.1; color: var(--ink); }
+.forge-name small { display: block; font-size: .66rem; font-weight: 300; color: var(--ink-3); letter-spacing: .12em; margin-top: 3px; text-transform: uppercase; }
+
+.forge-twin { position: relative; display: flex; align-items: center; gap: 4px; padding: 4px; border-radius: 999px; }
+.forge-twin .slot-mark { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; position: relative; z-index: 1;
+  transition: filter .35s, opacity .35s, transform .35s; border: 0; background: none; padding: 0; cursor: default; }
+.forge-twin .slot-mark img { height: 44px; pointer-events: none; }
+.forge-twin .slot-mark.off { filter: grayscale(.85) brightness(.85); opacity: .85; transform: scale(.82); cursor: pointer; }
+.forge-twin .slot-mark.off:hover { filter: grayscale(.15) brightness(.95); opacity: 1; transform: scale(.9); }
+.forge-twin .lamp { position: absolute; top: 4px; left: 4px; width: 52px; height: 52px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(118, 255, 194, .18), transparent 70%); box-shadow: inset 0 0 0 1px rgba(118, 255, 194, .35);
+  transition: transform .45s cubic-bezier(.2, .8, .2, 1); }
+.forge-twin.going .lamp { transform: translateX(56px); }
+
+.forge-nav { display: flex; gap: 8px; }
+.forge-pill { padding: 8px 18px; border-radius: 999px; border: 1px solid var(--line); color: var(--ink-2); font-size: .9rem; background: transparent;
+  transition: color .2s, border-color .2s, background .2s; cursor: pointer; }
+.forge-pill:hover { color: var(--ink); border-color: var(--accent); }
+.forge-pill.on { background: var(--accent); color: #001a10; border-color: var(--accent); font-weight: 500; }
+
+@media (prefers-reduced-motion: reduce) {
+  .forge-twin .lamp, .forge-twin .slot-mark { transition: none; }
+}
+
+/* =============================================================================
+   The four steps (11 Oct 2026): Cast → Script → Look → Make
+   ============================================================================= */
+.forge-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.forge-step { display: flex !important; align-items: center; gap: 12px; padding: 10px 16px !important; cursor: pointer; text-align: left;
+  border: 0; color: var(--ink); transition: background .25s; font-family: "Sora", sans-serif; }
+.forge-step .n { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font-weight: 600; font-size: 14px; flex: none;
+  border: 1px solid var(--line); color: var(--ink-2); transition: all .25s; position: relative; z-index: 1; }
+.forge-step .t { font-weight: 500; font-size: .95rem; line-height: 1.2; position: relative; z-index: 1; }
+.forge-step .t small { display: block; font-weight: 300; font-size: .72rem; color: var(--ink-3); }
+.forge-step:hover .n { border-color: var(--accent); }
+.forge-step.done .n { background: rgba(118, 255, 194, .14); color: var(--accent); border-color: rgba(118, 255, 194, .4); }
+.forge-step.on { background: rgba(118, 255, 194, .07) !important; }
+.forge-step.on .n { background: var(--accent); color: #001a10; border-color: var(--accent); box-shadow: 0 0 22px -4px rgba(118, 255, 194, .7); }
+.forge-step:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.forge-gear { width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--line); background: transparent; color: var(--ink-2);
+  font-size: 18px; display: grid; place-items: center; cursor: pointer; transition: all .2s; }
+.forge-gear:hover, .forge-gear.on { color: var(--accent); border-color: var(--accent); box-shadow: 0 0 18px -6px rgba(118, 255, 194, .7); }
+
+.forge-next { position: absolute; right: 18px; bottom: 16px; z-index: 30; padding: 12px 24px; border-radius: 999px; border: 0; cursor: pointer;
+  font: 600 15px "Sora", sans-serif; color: #001a10; background: linear-gradient(100deg, var(--navy), #3f63a0 45%, var(--accent));
+  box-shadow: 0 0 26px -6px rgba(118, 255, 194, .65); transition: box-shadow .3s, transform .15s; }
+.forge-next:hover { box-shadow: 0 0 36px -4px rgba(118, 255, 194, .85); }
+.forge-next:active { transform: scale(.97); }
+
+/* ---- the template gallery (Look step) ---- */
+.forge-tpls { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.forge-tpl { display: flex; flex-direction: column; text-align: left; padding: 0; border-radius: 14px; overflow: hidden; cursor: pointer;
+  border: 1px solid var(--line); background: rgba(0, 0, 0, .45); color: var(--ink); transition: transform .25s, border-color .25s, box-shadow .25s; }
+.forge-tpl:hover { transform: translateY(-2px); border-color: var(--mint-soft, #82D8B7); }
+.forge-tpl.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 0 26px -8px rgba(118, 255, 194, .6); }
+.forge-tpl:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.forge-tpl .scr { position: relative; width: 100%; aspect-ratio: 9 / 16; background: #03090c; overflow: hidden; display: block; }
+.forge-tpl .lab { width: 100%; padding: 8px 10px; font-size: .85rem; font-weight: 500; }
+.forge-tpl .lab small { display: block; font-weight: 300; font-size: .68rem; color: var(--ink-3); line-height: 1.35; margin-top: 2px; }
+.forge-tpl .dot { position: absolute; aspect-ratio: 1; border-radius: 50%; background: #0B2837; border: 2px solid var(--c); }
+.forge-tpl .d1-0 { left: 35%; top: 22%; }
+.forge-tpl .d2-0 { left: 14%; top: 26%; } .forge-tpl .d2-1 { left: 56%; top: 26%; }
+.forge-tpl .d3-0 { left: 35%; top: 10%; } .forge-tpl .d3-1 { left: 12%; top: 44%; } .forge-tpl .d3-2 { left: 58%; top: 44%; }
+/* halo: a ring of bars around each face */
+.forge-tpl .halo .dot::before { content: ""; position: absolute; inset: -22%; border-radius: 50%;
+  background: repeating-conic-gradient(var(--c) 0 3deg, transparent 3deg 10deg);
+  -webkit-mask: radial-gradient(circle, transparent 57%, #000 58%, #000 72%, transparent 73%); mask: radial-gradient(circle, transparent 57%, #000 58%, #000 72%, transparent 73%); opacity: .7; }
+/* broadcast: a frosted slab with flat bars along the bottom */
+.forge-tpl .broadcast .slab { position: absolute; left: 0; right: 0; bottom: 18%; height: 14%; background: linear-gradient(90deg, rgba(52,64,128,.7), rgba(17,55,74,.7));
+  background-image: repeating-linear-gradient(90deg, rgba(118,255,194,.75) 0 3px, transparent 3px 7px); background-size: 100% 40%; background-repeat: no-repeat; background-position: bottom; }
+/* orbit: frameless faces with a bloom behind */
+.forge-tpl .orbit .dot { border-color: transparent; box-shadow: 0 0 18px 4px color-mix(in srgb, var(--c) 55%, transparent); }
+.forge-tpl .cap { position: absolute; left: 10%; right: 10%; bottom: 7%; height: 5px; border-radius: 3px; background: rgba(233,254,245,.45); }
+.forge-tpl .cap::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 28%; border-radius: inherit; background: var(--accent); }
+@media (prefers-reduced-motion: no-preference) {
+  [data-hud-motion="on"] .forge-tpl:hover .dot, [data-hud-motion="on"] .forge-tpl.on .dot { animation: forge-talk .8s ease-in-out infinite alternate; }
+  [data-hud-motion="on"] .forge-tpl:hover .dot:nth-child(2), [data-hud-motion="on"] .forge-tpl.on .dot:nth-child(2) { animation-delay: .4s; }
+  [data-hud-motion="on"] .forge-tpl:hover .cap::after, [data-hud-motion="on"] .forge-tpl.on .cap::after { animation: forge-words 1.8s linear infinite; }
+  [data-hud-motion="on"] .forge-tpl:hover .halo .dot::before { animation: forge-spin 6s linear infinite; }
+}
+@keyframes forge-talk { to { transform: scale(1.06); filter: brightness(1.25); } }
+@keyframes forge-words { to { left: 72%; } }
+@keyframes forge-spin { to { transform: rotate(360deg); } }
+
+/* ---- the transport under the preview (play with sound) ---- */
+.forge-transport { display: flex; align-items: center; gap: 12px; height: 46px; width: min(560px, 100%); }
+.forge-transport .play { width: 44px; height: 44px; border-radius: 50%; border: 0; flex: none; cursor: pointer; font-size: 15px;
+  background: var(--accent); color: #001a10; box-shadow: 0 0 22px -6px rgba(118, 255, 194, .7); transition: transform .15s, opacity .2s; }
+.forge-transport .play:hover { transform: scale(1.06); }
+.forge-transport .play:disabled { opacity: .35; cursor: not-allowed; box-shadow: none; }
+.forge-transport input[type=range] { flex: 1; -webkit-appearance: none; appearance: none; height: 5px; border-radius: 4px; cursor: pointer;
+  background: linear-gradient(90deg, var(--navy-hi), var(--accent)) 0 / var(--p, 0%) 100% no-repeat, rgba(130, 216, 183, .18); }
+.forge-transport input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--ink);
+  box-shadow: 0 0 0 4px rgba(118, 255, 194, .25); border: 0; }
+.forge-transport input[type=range]:disabled { opacity: .4; cursor: not-allowed; }
+.forge-transport .time { font-size: .8rem; color: var(--ink-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.forge-transport .hint { font-size: .75rem; color: var(--ink-3); white-space: nowrap; }
+
+/* =============================================================================
+   CONTROLS, ONE STYLE (Ak's review, 12 Oct 2026)
+   - rounded everywhere, nothing sharp;
+   - two button kinds only: PRIMARY = colour + glow, no frame line;
+     SECONDARY = outline, no glow;
+   - soft round sliders and switches (the Deco Noir ones were angular);
+   - drop-down menus solid, never see-through.
+   ============================================================================= */
+
+/* every boxed area drawn with Tailwind's border utilities */
+[class~="border"], [class*=" border-"], .slot-recessed, textarea, input[type="text"], input[type="number"], input[type="search"], input:not([type]) {
+  border-radius: 14px;
+}
+[class*="border-accent"] { border-color: var(--line) !important; }
+.slot-recessed { border-radius: 16px !important; }
+
+/* text fields */
+input[type="text"], input[type="number"], input[type="search"], input:not([type]), textarea {
+  background: rgba(0, 0, 0, .45) !important; border: 1px solid var(--line) !important; color: var(--ink);
+  padding: .55rem .8rem; outline: none; transition: border-color .2s, box-shadow .2s;
+}
+input[type="text"]:focus, input[type="number"]:focus, input:not([type]):focus, textarea:focus {
+  border-color: var(--accent) !important; box-shadow: 0 0 0 3px rgba(118, 255, 194, .15);
+}
+
+/* ---- buttons ---- */
+.btn { border: 1px solid var(--line) !important; box-shadow: none !important; padding: .55rem 1.1rem; font-size: .85rem; }
+.btn::before { background: transparent !important; }
+.btn:hover { border-color: var(--accent) !important; color: var(--ink) !important; }
+/* PRIMARY: colour + glow, and no frame line */
+.btn-primary, .btn[aria-pressed="true"] { border-color: transparent !important; color: #001a10 !important; font-weight: 600; }
+.btn-primary { box-shadow: 0 0 24px -6px rgba(118, 255, 194, .65) !important; }
+.btn-primary::before { background: linear-gradient(100deg, var(--navy), #3f63a0 45%, var(--accent)) !important; }
+.btn[aria-pressed="true"]::before { background: var(--accent) !important; }
+.btn-primary:hover { box-shadow: 0 0 34px -4px rgba(118, 255, 194, .85) !important; }
+.btn-good::before { background: transparent !important; }
+.btn-crit:hover { border-color: var(--crit) !important; color: var(--crit) !important; }
+.btn:disabled { opacity: .4; }
+
+/* ---- drop-downs: solid ---- */
+.picktrigger { border-radius: 12px !important; background: #03090c !important; border: 1px solid var(--line) !important; padding: .6rem .85rem; box-shadow: none !important; }
+.picktrigger:hover { border-color: var(--mint-soft, #82D8B7) !important; }
+.picktrigger .chev { border-top-color: var(--accent) !important; }
+.picklist { border-radius: 14px !important; background: #050f15 !important; border: 1px solid rgba(118, 255, 194, .25) !important;
+  box-shadow: 0 18px 50px -10px rgba(0, 0, 0, .9), 0 0 0 1px rgba(0, 0, 0, .6) !important; backdrop-filter: none !important; opacity: 1 !important; }
+.pickopt { border-radius: 9px !important; padding: .5rem .7rem !important; color: var(--ink-2) !important; }
+.pickopt:hover, .pickopt[aria-selected="true"] { background: rgba(118, 255, 194, .12) !important; color: var(--accent) !important; }
+
+/* ---- tabs: soft ---- */
+.tabs { border-bottom: 1px solid var(--line) !important; gap: 4px; }
+.tab { font-family: "Sora", sans-serif !important; letter-spacing: .02em !important; text-transform: none !important; font-size: .85rem !important;
+  border-radius: 10px 10px 0 0; padding: .55rem .9rem !important; color: var(--ink-3) !important; }
+.tab:hover { color: var(--ink) !important; }
+.tab[aria-selected="true"] { color: var(--accent) !important; }
+.tab[aria-selected="true"]::after { left: 10px !important; right: 10px !important; height: 2px !important; border-radius: 2px;
+  background: var(--accent) !important; box-shadow: 0 0 10px rgba(118, 255, 194, .7) !important; }
+
+/* ---- sliders: soft and round ---- */
+input[type="range"] { -webkit-appearance: none; appearance: none; height: 22px !important; background: transparent !important; cursor: pointer !important; }
+input[type="range"]::-webkit-slider-runnable-track { height: 6px !important; border-radius: 6px !important; border: 0 !important; box-shadow: none !important;
+  background: linear-gradient(90deg, rgba(85, 98, 184, .55), rgba(118, 255, 194, .45)) !important; }
+input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px !important; height: 18px !important; margin-top: -6px !important;
+  border-radius: 50% !important; border: 0 !important; clip-path: none !important; background: var(--ink) !important;
+  box-shadow: 0 0 0 4px rgba(118, 255, 194, .22), 0 2px 8px rgba(0, 0, 0, .6) !important; }
+input[type="range"]:hover::-webkit-slider-thumb { box-shadow: 0 0 0 6px rgba(118, 255, 194, .3), 0 2px 8px rgba(0, 0, 0, .6) !important; }
+input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
+
+/* ---- switches: a soft pill ---- */
+.lever .slot { width: 46px !important; height: 26px !important; border-radius: 99px !important; background: rgba(130, 216, 183, .14) !important;
+  box-shadow: none !important; border: 1px solid var(--line); }
+.lever .paddle { width: 18px !important; height: 18px !important; top: 3px !important; left: 3px !important; border-radius: 50% !important;
+  background: var(--ink-2) !important; box-shadow: 0 1px 4px rgba(0, 0, 0, .5) !important; }
+.lever .paddle::after { display: none !important; }
+.lever input:checked + .slot { background: rgba(118, 255, 194, .4) !important; border-color: var(--accent); }
+.lever input:checked + .slot .paddle { transform: translateX(20px) !important; background: var(--accent) !important; }
+.state { font-family: "Sora", sans-serif !important; font-size: .8rem !important; letter-spacing: .04em !important; min-width: 0 !important; }
+.state .lamp { display: none !important; }
+
+/* ---- ELI5 hover help: a [data-tip] gets a soft bubble ---- */
+/* :where() = no weight, so an element's own position (absolute buttons like
+   .forge-next) still wins. Found 21 Oct 2026: the plain selector made the
+   Next button a full-width block that pushed the preview off the stage. */
+:where([data-tip]) { position: relative; }
+/* The bubble itself is drawn by components/ui/TipLayer.tsx, once for the
+   whole window: drawn inside its panel (the first version) it was cut off by
+   the panel's scroll edge — the lowest choices had no help at all (Ak, 13 Oct). */
+.forge-tip { position: fixed; z-index: 2147483647; max-width: 300px; padding: 8px 11px; border-radius: 12px; background: #071C26;
+  border: 1px solid rgba(118, 255, 194, .3); color: var(--ink); font: 400 12px/1.45 "Sora", sans-serif; letter-spacing: 0;
+  text-transform: none; box-shadow: 0 10px 30px -8px rgba(0, 0, 0, .9); pointer-events: none; white-space: normal; animation: forge-tip-in .12s ease-out; }
+@keyframes forge-tip-in { from { opacity: 0; transform: translateY(2px); } }
+
+/* =============================================================================
+   CAST: one tab per speaker (12 Oct 2026)
+   ============================================================================= */
+.forge-who { display: flex; flex-wrap: wrap; gap: 6px; }
+.forge-who .who { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--line); background: rgba(0, 0, 0, .35); color: var(--ink-2); font: 500 .9rem "Sora", sans-serif; transition: all .2s; }
+.forge-who .who i { width: 10px; height: 10px; border-radius: 50%; background: var(--c); box-shadow: 0 0 8px var(--c); }
+.forge-who .who:hover { color: var(--ink); border-color: var(--c, var(--accent)); }
+.forge-who .who.on { color: #001a10; background: var(--c); border-color: var(--c); box-shadow: 0 0 22px -6px var(--c); }
+.forge-who .who.on i { background: #001a10; box-shadow: none; }
+.forge-who .add { width: 38px; justify-content: center; padding: 8px 0; font-size: 1.1rem; color: var(--accent); }
+
+.forge-sec { border-radius: 14px; background: rgba(0, 0, 0, .28); border: 1px solid var(--line); padding: 10px 14px 14px; }
+.forge-sec > summary { list-style: none; cursor: pointer; font: 500 .95rem "Sora", sans-serif; color: var(--ink); display: flex; align-items: center; gap: 8px; }
+.forge-sec > summary::-webkit-details-marker { display: none; }
+.forge-sec > summary::before { content: "›"; color: var(--accent); transition: transform .2s; display: inline-block; width: 10px; }
+.forge-sec[open] > summary::before { transform: rotate(90deg); }
+
+.forge-shapes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.forge-shapes .shape { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 4px 8px; border-radius: 12px; cursor: pointer;
+  border: 1px solid var(--line); background: rgba(0, 0, 0, .35); color: var(--ink-3); font: 400 .72rem "Sora", sans-serif; transition: all .2s; }
+.forge-shapes .shape:hover { border-color: var(--c); color: var(--ink); }
+.forge-shapes .shape.on { border-color: var(--c); color: var(--ink); box-shadow: 0 0 0 1px var(--c), 0 0 18px -6px var(--c); }
+.forge-shapes .shape i { width: 34px; height: 34px; border: 2px solid var(--c); background: rgba(11, 40, 55, .6); }
+.forge-shapes .shape i.circle { border-radius: 50%; }
+.forge-shapes .shape i.rounded { border-radius: 10px; }
+.forge-shapes .shape i.square { border-radius: 2px; }
+.forge-shapes .shape i.none { border-style: dashed; border-color: rgba(233, 254, 245, .25); border-radius: 50%; }
+
+.forge-swatch { width: 34px; height: 34px; border-radius: 50% !important; border: 2px solid var(--line) !important; padding: 0 !important; cursor: pointer; background: none !important; overflow: hidden; }
+.forge-swatch::-webkit-color-swatch-wrapper { padding: 0; }
+.forge-swatch::-webkit-color-swatch { border: 0; border-radius: 50%; }
+
+/* ---- colour moods for the background (Look → Background) ---- */
+.forge-looks { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.forge-looks .look { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 6px 4px 7px; border-radius: 12px; cursor: pointer;
+  border: 1px solid var(--line); background: rgba(0, 0, 0, .35); color: var(--ink-3); font: 400 .7rem "Sora", sans-serif; transition: all .2s; }
+.forge-looks .look:hover { border-color: var(--mint-soft, #82D8B7); color: var(--ink); }
+.forge-looks .look.on { border-color: var(--accent); color: var(--ink); box-shadow: 0 0 0 1px var(--accent), 0 0 16px -6px rgba(118, 255, 194, .7); }
+/* a little landscape, so each mood shows what it does to colour */
+.forge-looks .look i { width: 100%; height: 30px; border-radius: 8px;
+  background: linear-gradient(180deg, #7ec8ff 0%, #bfe6ff 45%, #3f9b4a 46%, #2d6e33 70%, #c9a46a 71%, #e4c38f 100%); }
+
+/* ---- Make: summary + progress ---- */
+.forge-make-sum { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; border-radius: 14px; background: rgba(0, 0, 0, .3); border: 1px solid var(--line); }
+.forge-make-sum b { font-size: 1.6rem; font-weight: 500; color: var(--ink); font-variant-numeric: tabular-nums; }
+.forge-make-sum small { color: var(--ink-3); font-size: .75rem; }
+.forge-progress { height: 8px; border-radius: 99px; background: rgba(130, 216, 183, .14); overflow: hidden; }
+.forge-progress i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--navy-hi), var(--accent)); box-shadow: 0 0 12px rgba(118, 255, 194, .6); transition: width .25s; }
+
+.forge-tpl .rounded .dot, .forge-tpl .news .dot, .forge-tpl .interview .dot, .forge-tpl .broadcast .dot { border-radius: 22%; }
+.forge-tpl .news .slab { position: absolute; left: 0; right: 0; bottom: 6%; height: 9%; background: rgba(7, 28, 38, .9); border-top: 2px solid var(--accent); }
+.forge-tpl .cap { top: auto; bottom: 46%; }
+.forge-tpl .cap.low { bottom: 9%; }
+.forge-tpl .cap.bold { height: 9px; }
+.forge-tpl .podcast .dot, .forge-tpl .promo .dot { box-shadow: 0 0 14px -2px var(--c); }
+.forge-tpl .lab { padding: 6px 8px; font-size: .78rem; }
+.forge-tpl .lab small { font-size: .62rem; }
+
+/* ---- Script step: two columns ---- */
+.forge-script { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 18px; }
+.forge-script-text { min-height: 300px; font: 400 .95rem/1.75 "Sora", sans-serif !important; padding: 14px 16px !important; }
+
+/* ---- clips on this computer (Look → Background) ---- */
+.forge-clips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-height: 460px; overflow-y: auto; padding-right: 2px; }
+.forge-clips .clip { position: relative; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); background: #000; aspect-ratio: 9 / 16; }
+.forge-clips .clip video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.forge-clips .clip:hover { border-color: var(--accent); }
+.forge-clips .clip .use { position: absolute; left: 6px; right: 6px; bottom: 6px; padding: 4px 0; font-size: .72rem; background: rgba(0, 0, 0, .65) !important; opacity: 0; transition: opacity .2s; }
+.forge-clips .clip:hover .use { opacity: 1; }
+.forge-clips .clip.wide { aspect-ratio: 16 / 9; }
+
+/* ---- waveform styles as live pictures (Cast → Waveform) ---- */
+.forge-waves { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.forge-waves .wave { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 2px 6px; border-radius: 12px; cursor: pointer;
+  border: 1px solid var(--line); background: rgba(0, 0, 0, .4); color: var(--ink-3); font: 400 .7rem "Sora", sans-serif; transition: all .2s; }
+.forge-waves .wave:hover { border-color: var(--mint-soft, #82D8B7); color: var(--ink); }
+.forge-waves .wave.on { border-color: var(--accent); color: var(--ink); box-shadow: 0 0 0 1px var(--accent), 0 0 16px -6px rgba(118, 255, 194, .7); }
+.forge-waves .pic { position: relative; display: block; }
+.forge-waves .pic > div, .forge-waves .pic > svg, .forge-waves .pic > canvas { position: absolute; inset: 0; }
+.forge-waves .frame { position: absolute; left: 29%; top: 29%; width: 42%; height: 42%; border: 2px solid; background: rgba(11, 40, 55, .7); }
+.forge-waves .frame.circle { border-radius: 50%; } .forge-waves .frame.rounded { border-radius: 24%; } .forge-waves .frame.square { border-radius: 3px; } .forge-waves .frame.none { border-radius: 50%; }
+
+/* ---- puppets from Image Forge (Cast → Look) ---- */
+.forge-shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 8px; }
+.shelf-face { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px; border-radius: 18px; cursor: pointer;
+  background: rgba(0, 0, 0, .35); border: 1px solid var(--line); color: var(--ink-2); font: 400 11px "Sora", sans-serif; transition: border-color .2s, box-shadow .2s, transform .15s; }
+.shelf-face img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 50%; background: radial-gradient(circle at 50% 35%, #1b3a4a, #04121a 70%); }
+.shelf-face span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.shelf-face:hover { border-color: var(--line-hot); transform: translateY(-1px); }
+.shelf-face.on { border-color: var(--accent); color: var(--ink); box-shadow: 0 0 20px -8px rgba(118, 255, 194, .8); }
+.shelf-insp { width: 44px; height: 44px; padding: 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); cursor: pointer; background: none; }
+.shelf-insp img { width: 100%; height: 100%; object-fit: cover; }
+
+/* ---- the faint moving grain on the black ground (Ak, 13 Oct 2026: "the very
+   black background into a very black background with a slight little noise").
+   Behind everything — the panels and the video itself stay clean. A static
+   noise tile, nudged in steps, is near-free; still when motion is off. ---- */
+body::before {
+  content: ""; position: fixed; inset: -60px; z-index: 0; pointer-events: none; opacity: .055;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1.4 -0.2'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>");
+  animation: forge-grain 1.2s steps(6) infinite;
+}
+@keyframes forge-grain {
+  0% { transform: translate(0, 0); } 17% { transform: translate(-22px, 14px); } 33% { transform: translate(18px, -26px); }
+  50% { transform: translate(-30px, -10px); } 67% { transform: translate(26px, 22px); } 83% { transform: translate(-12px, 30px); } 100% { transform: translate(0, 0); }
+}
+@media (prefers-reduced-motion: reduce) { body::before { animation: none; } }
+html[data-motion="off"] body::before { animation: none; }
+
+/* ---- Cast "+" menu (13 Oct 2026) ---- */
+.forge-add { margin-top: 10px; padding: 12px; border-radius: 20px; border: 1px solid var(--line); background: rgba(3, 8, 11, .7); display: flex; flex-direction: column; gap: 8px; }
+.forge-who .who.add.on { border-color: var(--accent); color: var(--accent); }
+.shelf-face .initial { width: 100%; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; font: 600 22px "Sora", sans-serif; color: var(--ink);
+  border: 2px solid var(--line); background: radial-gradient(circle at 50% 35%, #1b3a4a, #04121a 70%); }
+
+/* ---- Make → Many videos ---- */
+.forge-many { display: flex; flex-direction: column; gap: 6px; max-height: 340px; overflow-y: auto; }
+.forge-many .row { position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 2px; padding: 9px 12px; border-radius: 14px; border: 1px solid var(--line); background: rgba(0, 0, 0, .35); font-size: 12.5px; }
+.forge-many .row b { font-weight: 500; color: var(--ink); }
+.forge-many .row span { color: var(--ink-3); }
+.forge-many .row.bad span, .forge-many .row.failed span { color: #ffb547; }
+.forge-many .row.done { border-color: rgba(118, 255, 194, .4); }
+.forge-many .row.done span { color: var(--accent); }
+.forge-many .row.working { border-color: var(--line-hot); }
+.forge-many .row i { position: absolute; left: 0; bottom: 0; height: 2px; background: var(--accent); transition: width .4s; }
+
+/* PRIMARY, READABLE (13 Oct 2026). The navy start of the gradient put dark text
+   on dark blue — "too dark to read" (Ak). Same blue → mint journey, lighter
+   blue, so the dark text reads from end to end. Disabled is clearly grey, not
+   a dimmed copy of the real thing. */
+.btn-primary::before, .forge-next { background: linear-gradient(100deg, #8fb4ff, #9fd8ff 45%, var(--accent)) !important; }
+.btn-primary, .forge-next { color: #04121f !important; }
+.btn-primary:disabled { opacity: 1; filter: grayscale(1) brightness(.55); cursor: not-allowed; }
+
+/* Live faces in the shelf and the "+" menu (LiveFace.tsx). */
+.live-face { display: grid; place-items: center; margin: 0 auto; }
+.shelf-del { position: absolute; top: 2px; right: 2px; z-index: 2; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px;
+  border: 1px solid var(--line); background: rgba(3, 9, 12, .85); color: var(--ink-2); font: 500 11px "Sora", sans-serif; cursor: pointer; opacity: 0; transition: opacity .15s; }
+.relative:hover > .shelf-del, .shelf-del.armed { opacity: 1; }
+.shelf-del:hover { border-color: #ff6b6b; color: #ffb4b4; }
+.shelf-del.armed { border-color: #ff6b6b; background: rgba(120, 20, 20, .9); color: #fff; }
+
+.forge-tip-more { display: block; margin-top: 6px; color: var(--accent); text-decoration: underline; text-underline-offset: 2px; font-weight: 500; }
+
+/* =============================================================================
+   The "B" layout (Ak's pick, 26 Oct 2026): the steps down the left, the one
+   you are on open in place, the preview always on the right, a timeline strip
+   under it.
+   ============================================================================= */
+.forge-studio-left { display: flex; flex-direction: column; padding: 16px 16px 14px !important;
+  transition: width .35s cubic-bezier(.2, .8, .2, 1); flex: none; }
+.forge-studio-left.folded { padding: 16px 10px !important; align-items: center; }
+.forge-studio-left.folded .forge-sstep::after { display: none; }
+.forge-fold { position: absolute; top: 50%; right: -16px; transform: translateY(-50%); z-index: 20; width: 32px; height: 32px;
+  border-radius: 50%; display: grid; place-items: center; font-size: 16px; cursor: pointer; color: var(--accent); background: #000;
+  border: 1px solid rgba(118, 255, 194, .35); transition: border-color .2s, box-shadow .2s; }
+.forge-fold:hover { border-color: var(--accent); box-shadow: 0 0 14px -2px rgba(118, 255, 194, .6); }
+.forge-stepper-title { margin: 2px 0 12px 4px; position: relative; z-index: 1; }
+
+/* the progress line: one segment from each number down to the next, lit
+   (and glowing) for the steps already done */
+.forge-stepper { list-style: none; margin: 0; padding: 0; position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; z-index: 1; }
+.forge-sstep:not(:last-child)::after { content: ""; position: absolute; left: 21px; top: 50px; bottom: -10px; width: 2px; border-radius: 2px;
+  background: var(--line); pointer-events: none; transition: background .4s, box-shadow .4s; }
+.forge-sstep.done::after { background: linear-gradient(var(--accent), rgba(118, 255, 194, .55)); box-shadow: 0 0 10px rgba(118, 255, 194, .6); }
+.forge-sstep.on:not(:last-child)::after { background: linear-gradient(var(--accent), var(--line) 60%); }
+.forge-sstep { position: relative; display: flex; flex-direction: column; min-height: 0; }
+.forge-sstep.on { flex: 1; }
+.forge-sstep .head { display: flex; align-items: center; gap: 12px; width: 100%; padding: 6px 8px 6px 0; border: 0; background: none;
+  color: var(--ink); cursor: pointer; text-align: left; font-family: "Sora", sans-serif; border-radius: 14px; }
+.forge-sstep .n { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; flex: none; font-weight: 600; font-size: 15px;
+  background: #04121a; border: 1px solid var(--line); color: var(--ink-2); transition: all .3s; position: relative; z-index: 1; }
+.forge-sstep .head:hover .n { border-color: var(--accent); }
+.forge-sstep .head:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.forge-sstep .t { font-weight: 600; font-size: 1rem; line-height: 1.2; min-width: 0; }
+.forge-sstep .t small { display: block; font-weight: 300; font-size: .74rem; color: var(--ink-3); margin-top: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.forge-sstep.done .n { background: var(--accent); color: #001a10; border-color: var(--accent); }
+.forge-sstep.on .n { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 0 4px rgba(118, 255, 194, .12), 0 0 22px -2px rgba(118, 255, 194, .75);
+  animation: forge-pulse 2.6s ease-in-out infinite; }
+.forge-sstep.on .t small { color: var(--ink-2); }
+@keyframes forge-pulse { 50% { box-shadow: 0 0 0 7px rgba(118, 255, 194, .06), 0 0 30px 0 rgba(118, 255, 194, .55); } }
+:root[data-hud-motion="off"] .forge-sstep.on .n { animation: none; }
+
+/* the open step: its panel, in a card that scrolls on its own */
+.forge-sstep .body { margin: 8px 0 2px 34px; padding: 14px; min-height: 0; flex: 1;
+  overflow-y: auto; overflow-x: hidden; border-radius: 0 16px 16px 0; background: rgba(4, 18, 26, .45);
+  border: 1px solid rgba(118, 255, 194, .14); animation: forge-open .35s cubic-bezier(.2, .8, .2, 1); }
+@keyframes forge-open { from { opacity: 0; transform: translateY(-6px); } }
+/* the Script panel is two columns in a wide space; in the column it stacks */
+.forge-sstep .body .forge-script { grid-template-columns: minmax(0, 1fr); height: auto; }
+
+.forge-studio-foot { padding-top: 12px; position: relative; z-index: 1; }
+.forge-studio-foot .forge-next { position: static; width: 100%; }
+
+/* the timeline strip under the preview */
+.forge-strip { position: relative; width: min(820px, 100%); height: 52px; border-radius: 12px; cursor: pointer; user-select: none;
+  background: rgba(4, 18, 26, .6); border: 1px solid var(--line); overflow: hidden; touch-action: none; flex: none; }
+.forge-strip.empty { display: grid; place-items: center; cursor: default; font-size: .75rem; color: var(--ink-3); }
+.forge-strip .lane { position: absolute; left: 0; right: 0; }
+.forge-strip .lane.voices { top: 7px; height: 20px; }
+.forge-strip .lane.clips { bottom: 7px; height: 11px; }
+.forge-strip .blk { position: absolute; top: 0; bottom: 0; border-radius: 4px; min-width: 2px; opacity: .85; transition: opacity .2s, filter .2s; }
+.forge-strip .lane.voices .blk:hover { opacity: 1; filter: brightness(1.25); }
+.forge-strip .lane.clips .blk { background: linear-gradient(90deg, rgba(85, 98, 184, .55), rgba(85, 98, 184, .3)); border-right: 1px solid rgba(0, 0, 0, .6); }
+.forge-strip .lane.clips .blk.alt { background: linear-gradient(90deg, rgba(118, 255, 194, .35), rgba(118, 255, 194, .18)); }
+.forge-strip .head { position: absolute; top: 3px; bottom: 3px; width: 2px; margin-left: -1px; background: var(--accent); pointer-events: none;
+  box-shadow: 0 0 10px var(--accent), 0 0 2px var(--accent); border-radius: 2px; }
+/* folded: the numbers sit together at the top, not spread down the column */
+.forge-studio-left.folded .forge-sstep.on { flex: none; }
+/* short windows: smaller step rows, so the open step keeps its room */
+@media (max-height: 820px) {
+  .forge-stepper-title { display: none; }
+  .forge-stepper { gap: 4px; }
+  .forge-sstep .n { width: 34px; height: 34px; font-size: 13px; }
+  .forge-sstep:not(:last-child)::after { left: 16px; top: 40px; bottom: -4px; }
+  .forge-sstep .head { padding: 3px 8px 3px 0; }
+  .forge-sstep .body { margin-left: 28px; padding: 10px; }
+  .forge-studio-foot { padding-top: 8px; }
+}
+
+/* the Explainer in the B layout: the preview fills the room the window has */
+.forge-ex-preview { width: 100%; }
+.forge-ex-frame { width: 100%; height: max(300px, calc(100vh - 300px)); display: flex; justify-content: center; align-items: center; }
+.forge-ex-frame canvas { border-radius: 12px; filter: drop-shadow(0 18px 40px rgba(0, 0, 0, .55)); }
+/* blocks with no colour of their own (an explainer's scenes): the row's alternating navy and mint */
+.forge-strip .lane.voices .blk { background: linear-gradient(90deg, rgba(85, 98, 184, .8), rgba(85, 98, 184, .5)); border-right: 1px solid rgba(0, 0, 0, .6); }
+.forge-strip .lane.voices .blk.alt { background: linear-gradient(90deg, rgba(118, 255, 194, .6), rgba(118, 255, 194, .35)); }
+
+/* Many videos, its own screen (26 Oct 2026): a board of every video */
+.forge-many-board { flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; align-content: start; padding-right: 4px; }
+.forge-many-board .card { position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 6px; padding: 14px 14px 16px; border-radius: 16px;
+  border: 1px solid var(--line); background: rgba(4, 18, 26, .55); transition: border-color .3s, box-shadow .3s, transform .2s; }
+.forge-many-board .card:hover { transform: translateY(-2px); }
+.forge-many-board .card .top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.forge-many-board .card b { font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.forge-many-board .card .st { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); white-space: nowrap; }
+.forge-many-board .card .line { font-size: .85rem; color: var(--ink-2); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.forge-many-board .card .why { font-size: .74rem; color: var(--ink-3); }
+.forge-many-board .card > i { position: absolute; left: 0; bottom: 0; height: 3px; background: linear-gradient(90deg, var(--navy-hi, #5562B8), var(--accent)); box-shadow: 0 0 10px var(--accent); transition: width .6s ease; }
+.forge-many-board .card.ready { border-color: rgba(118, 255, 194, .28); }
+.forge-many-board .card.ready .st { color: var(--accent); }
+.forge-many-board .card.bad { border-color: rgba(217, 164, 65, .45); }
+.forge-many-board .card.bad .st { color: #d9a441; }
+.forge-many-board .card.waiting .st { color: var(--ink-2); }
+.forge-many-board .card.working { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(118, 255, 194, .1), 0 0 26px -6px rgba(118, 255, 194, .55); animation: forge-pulse 2.6s ease-in-out infinite; }
+.forge-many-board .card.working .st { color: var(--accent); }
+.forge-many-board .card.done { border-color: rgba(118, 255, 194, .55); background: rgba(118, 255, 194, .06); }
+.forge-many-board .card.done .st { color: var(--accent); }
+.forge-many-board .card.failed { border-color: rgba(196, 80, 63, .6); }
+.forge-many-board .card.failed .st { color: #e07a6a; }
+.forge-many-total { height: 6px; border-radius: 6px; background: rgba(255, 255, 255, .06); overflow: hidden; flex: none; }
+.forge-many-total i { display: block; height: 100%; background: linear-gradient(90deg, var(--navy-hi, #5562B8), var(--accent)); box-shadow: 0 0 12px var(--accent); transition: width .6s ease; }
+.forge-many-empty { flex: 1; display: grid; place-content: center; text-align: center; gap: 8px; color: var(--ink-2); padding: 24px; }
+.forge-many-empty b { font-size: 1.3rem; color: var(--ink); }
+.forge-many-pulse { font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); padding: 6px 12px; border-radius: 999px; border: 1px solid var(--accent); animation: forge-pulse 2s ease-in-out infinite; }
+.forge-studio .chip { font-size: .85rem; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: rgba(4, 18, 26, .6); }

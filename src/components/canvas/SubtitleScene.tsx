@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 // ---------------------------------------------------------------------------
 // Subtitles, as a PURE function of (cues, config, size, timeMs).
 //
@@ -17,6 +18,7 @@
 // identically in both, since both are Chromium on Windows.
 // ---------------------------------------------------------------------------
 
+import type { CSSProperties } from "react";
 import type { Surface, SubtitleConfig, SubtitleTransition } from "../../store/types";
 import { cueAt, type SubtitleCue } from "../../lib/subtitles/wordTiming";
 import { emojiFor } from "../../lib/subtitles/emoji";
@@ -146,6 +148,84 @@ function toUpperGreek(s: string): string {
     .normalize("NFC");
 }
 
+/** How the word being spoken is marked out from the rest of the line.
+ *
+ *  Everything here is applied to the WORD, over a line that already has the
+ *  configured stroke and colour. Each option is a whole treatment rather than a
+ *  dial, because they are not variations of one idea: a halo adds light, a box
+ *  removes it, and a lift does not touch colour at all. */
+function emphasisStyle(
+  kind: "glow" | "stroke" | "halo" | "box" | "lift",
+  active: boolean,
+  activeColor: string,
+  restColor: string,
+  glowPx: number,
+  strokePx: number
+): CSSProperties {
+  if (!active) {
+    // The unspoken words. `box` and `lift` put a shadow under everything so the
+    // line does not change weight as the highlight moves along it.
+    const settled: CSSProperties = { color: restColor };
+    if (kind === "box" || kind === "lift" || kind === "stroke") {
+      settled.textShadow = `0 ${(strokePx * 0.35).toFixed(1)}px ${(strokePx * 0.6).toFixed(1)}px rgba(0,0,0,.85)`;
+    }
+    return settled;
+  }
+
+  switch (kind) {
+    case "stroke":
+      return {
+        color: activeColor,
+        textShadow: `0 ${(strokePx * 0.4).toFixed(1)}px ${(strokePx * 0.55).toFixed(1)}px rgba(0,0,0,.85)`,
+      };
+    case "halo":
+      return {
+        color: activeColor,
+        textShadow: [
+          `0 0 ${(glowPx * 0.5).toFixed(1)}px ${activeColor}`,
+          `0 0 ${glowPx.toFixed(1)}px ${activeColor}`,
+          `0 0 ${(glowPx * 2.2).toFixed(1)}px ${activeColor}`,
+          `0 ${(strokePx * 0.35).toFixed(1)}px ${(strokePx * 0.6).toFixed(1)}px rgba(0,0,0,.9)`,
+        ].join(", "),
+      };
+    case "box":
+      return {
+        // Dark ink on the accent, because accent-on-accent is unreadable and
+        // white on a mid-orange fails contrast at subtitle sizes.
+        color: "#171310",
+        background: activeColor,
+        borderRadius: "0.12em",
+        padding: "0 0.16em",
+        // The block IS the contrast; a stroke on top of it only muddies the
+        // letterforms.
+        WebkitTextStrokeWidth: 0,
+        textShadow: "none",
+      };
+    case "lift":
+      return {
+        color: activeColor,
+        // Scaled about its own centre so the line does not reflow. inline-block
+        // is required for a transform to apply to an inline element at all.
+        display: "inline-block",
+        // 1.14 was too much. A word grows about its own centre, so 14% on a
+        // 300px word pushes 21px past each end — wider than the space beside
+        // it, so the spoken word visibly touched the next one ("βρίσκειςτην",
+        // 16 Sep 2026). The space was never missing; it was covered.
+        transform: "translateY(-0.06em) scale(1.08)",
+        // And room kept for what is left of the growth, in the word's own box,
+        // so the layout accounts for it instead of the neighbours absorbing it.
+        marginInline: "0.18em",
+        textShadow: `0 ${(strokePx * 0.45).toFixed(1)}px ${strokePx.toFixed(1)}px rgba(0,0,0,.9), 0 0 ${(glowPx * 0.8).toFixed(1)}px ${activeColor}`,
+      };
+    case "glow":
+    default:
+      return {
+        color: activeColor,
+        textShadow: glowPx > 0 ? `0 0 ${glowPx}px ${activeColor}` : "none",
+      };
+  }
+}
+
 export function SubtitleScene({
   cues, config, width, height, timeMs, speakerColors, glass, externalPane,
 }: SubtitleSceneProps) {
@@ -249,20 +329,33 @@ export function SubtitleScene({
       >
         {cue.words.map((w, i) => {
           const isActive = timeMs >= w.startMs && timeMs < w.endMs;
+          // WHAT GROWS AND WHAT DOES NOT. "lift" scales the spoken word, and a
+          // scaled inline-block swallows the space that follows it inside the
+          // same box — which ran the words together ("ΜαΣερίφημου", 15 Sep
+          // 2026). So the transform goes on an inner span holding only the
+          // word, and the space stays in the outer one, unscaled.
+          const { display, transform, marginInline, ...outer } = emphasisStyle(
+            config.activeEmphasis ?? "glow",
+            isActive,
+            activeColor,
+            config.color,
+            glowPx,
+            strokePx
+          );
+          const grow = { display, transform, marginInline };
           return (
+            <Fragment key={i}>
             <span
-              key={i}
               style={{
-                color: isActive ? activeColor : config.color,
-                textShadow:
-                  isActive && glowPx > 0
-                    ? `0 0 ${glowPx}px ${activeColor}`
-                    : "none",
+                ...outer,
                 // A trailing space inside the span, rather than a gap between
-                // flex items, so the line wraps like ordinary text does.
+                // flex items, so the line wraps like ordinary text does — a
+                // whitespace-only node BETWEEN flex items is dropped, which is
+                // what made the words touch when the space was moved out.
                 whiteSpace: "pre-wrap",
               }}
             >
+              <span style={grow}>
               {(() => {
                 const swap = config.emoji ? emojiFor(w.text) : { text: w.text, isEmoji: false };
                 if (!swap.isEmoji) {
@@ -285,8 +378,10 @@ export function SubtitleScene({
                   </span>
                 );
               })()}
+              </span>
               {i < cue.words.length - 1 ? " " : ""}
             </span>
+            </Fragment>
           );
         })}
       </div>

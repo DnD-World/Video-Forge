@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Forge Looks — Pick One</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* stravelakis.com tokens, meeting the Forge logos */
+    --black: #000;
+    --panel: rgba(11, 40, 55, .16);      /* panel-900 #0B2837, see-through so the sky shows */
+    --panel-hi: rgba(30, 70, 91, .42);   /* panel-700 #1E465B */
+    --navy: #344080;                     /* planned brand navy, = logo indigo */
+    --navy-hi: #5562B8;
+    --mint: #76FFC2;                     /* mint-400 */
+    --mint-soft: #82D8B7;
+    --ember: #FF9A4D;                    /* the logo's sparks */
+    --text: #E9FEF5;
+    --muted: #8FA9B5;
+    --line: rgba(130, 216, 183, .16);
+    /* hairline that runs navy into mint, like the logos' metal */
+    --edge: linear-gradient(135deg, rgba(85, 98, 184, .55), rgba(118, 255, 194, .22) 45%, rgba(85, 98, 184, .10) 70%, rgba(118, 255, 194, .30));
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #000; color: var(--text); font-family: Sora, system-ui, sans-serif; }
+  .intro { max-width: 1280px; margin: 0 auto; padding: 48px 24px 8px; display: flex; gap: 28px; align-items: center; flex-wrap: wrap; }
+  .intro img { width: 120px; mix-blend-mode: screen; }
+  .intro h1 { font-weight: 400; font-size: clamp(30px, 5vw, 52px); margin: 0 0 8px; letter-spacing: -.02em; }
+  .intro h1 b { font-weight: 400; background: linear-gradient(90deg, var(--navy-hi), var(--mint)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .intro p { color: var(--muted); margin: 0; max-width: 680px; line-height: 1.6; }
+  .jump { max-width: 1280px; margin: 18px auto 0; padding: 0 24px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .jump a { color: var(--text); text-decoration: none; font-size: 14px; padding: 9px 18px; border-radius: 50px; border: 1px solid var(--line); }
+  .jump a:hover { border-color: var(--mint); }
+
+  section.look { max-width: 1280px; margin: 40px auto 0; padding: 0 24px; }
+  .look h2 { font-weight: 500; font-size: 22px; margin: 0 0 4px; }
+  .look h2 span { color: var(--mint); font-weight: 300; margin-right: 10px; }
+  .look .why { color: var(--muted); font-size: 14px; margin: 0 0 14px; }
+
+  /* ---------- the app mock ---------- */
+  .frame { position: relative; aspect-ratio: 16 / 9; border-radius: 22px; overflow: hidden; background: #000; border: 1px solid #0d1a20; isolation: isolate; container-type: inline-size; }
+  .frame canvas.sky { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; }
+  .frame canvas.fx { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 5; pointer-events: none; }
+  .app { position: absolute; inset: 0; z-index: 1; display: grid; grid-template-rows: 9% 1fr; gap: 1.4cqw; padding: 1.4cqw; font-size: 1.05cqw; }
+  .bar { display: flex; align-items: center; gap: 1.2cqw; padding: 0 1.2cqw; border-radius: 1.2cqw; background: var(--panel); border: 0; position: relative; backdrop-filter: blur(2px); }
+  .bar .mark { height: 78%; mix-blend-mode: screen; }
+  .bar .name { font-size: 1.55cqw; font-weight: 500; letter-spacing: .01em; }
+  .bar .name small { display: block; font-size: .8cqw; font-weight: 300; color: var(--muted); letter-spacing: .08em; }
+  .bar .nav { margin-left: auto; display: flex; gap: .6cqw; }
+  .pill { padding: .55cqw 1.2cqw; border-radius: 5cqw; border: 1px solid var(--line); color: var(--muted); cursor: pointer; transition: all .2s; white-space: nowrap; }
+  .pill:hover { color: var(--text); border-color: var(--mint-soft); }
+  .pill.on { color: #001a10; background: var(--mint); border-color: var(--mint); font-weight: 500; }
+  .sister { display: flex; align-items: center; gap: .5cqw; padding: .3cqw .9cqw .3cqw .4cqw; border-radius: 5cqw; border: 1px dashed rgba(85, 98, 184, .55); color: var(--muted); cursor: pointer; }
+  .sister img { height: 2.2cqw; mix-blend-mode: screen; }
+  .sister:hover { color: var(--text); border-color: var(--navy-hi); }
+
+  .body { display: grid; grid-template-columns: 24% 1fr 24%; gap: 1.4cqw; min-height: 0; }
+  .panel { border-radius: 1.4cqw; background: var(--panel); border: 0; position: relative; padding: 1.3cqw; display: flex; flex-direction: column; gap: 1cqw; backdrop-filter: blur(2px); min-height: 0; overflow: hidden; }
+  /* the gradient hairline, drawn as a ring only (the mask cuts the middle out) */
+  .bar::before, .panel::before { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; background: var(--edge); pointer-events: none;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
+  .label { font-size: .78cqw; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  .tabs { display: flex; gap: 1.2cqw; border-bottom: 1px solid var(--line); }
+  .tabs b { font-weight: 400; color: var(--muted); padding-bottom: .5cqw; cursor: pointer; }
+  .tabs b.on { color: var(--text); box-shadow: inset 0 -2px 0 var(--mint); }
+  .field { border-radius: .8cqw; background: rgba(0, 0, 0, .42); border: 1px solid var(--line); padding: .75cqw 1cqw; display: flex; justify-content: space-between; align-items: center; }
+  .field i { font-style: normal; color: var(--muted); font-size: .8cqw; }
+  .hint { color: var(--muted); font-size: .85cqw; line-height: 1.5; }
+  .slider { height: .35cqw; border-radius: 1cqw; background: rgba(130, 216, 183, .14); position: relative; }
+  .slider::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: var(--v, 40%); border-radius: inherit; background: linear-gradient(90deg, var(--navy-hi), var(--mint)); }
+  .slider::before { content: ""; position: absolute; left: var(--v, 40%); top: 50%; width: 1.1cqw; height: 1.1cqw; border-radius: 50%; transform: translate(-50%, -50%); background: var(--text); box-shadow: 0 0 0 .25cqw rgba(118, 255, 194, .25); z-index: 1; }
+
+  .stage { display: grid; place-items: center; border-radius: 1.4cqw; border: 1px solid var(--line); background: radial-gradient(60% 50% at 50% 45%, rgba(52, 64, 128, .16), transparent 70%); position: relative; }
+  .phone { height: 92%; aspect-ratio: 9 / 16; border-radius: 1.2cqw; background: #020406; border: 1px solid rgba(130, 216, 183, .22); position: relative; overflow: hidden; }
+  .avatar { position: absolute; width: 34%; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; font-size: 1.6cqw; }
+  .avatar::before { content: ""; position: absolute; inset: -14%; border-radius: 50%; background: repeating-conic-gradient(var(--c) 0 2.2deg, transparent 2.2deg 7.5deg); -webkit-mask: radial-gradient(circle, transparent 58%, #000 59%, #000 70%, transparent 71%); mask: radial-gradient(circle, transparent 58%, #000 59%, #000 70%, transparent 71%); animation: pulse 1.6s ease-in-out infinite alternate; }
+  .avatar span { width: 100%; height: 100%; border-radius: 50%; background: radial-gradient(circle at 40% 35%, rgba(255, 255, 255, .12), rgba(255, 255, 255, .02)); border: 1px solid var(--c); display: grid; place-items: center; }
+  @keyframes pulse { from { opacity: .45; transform: scale(.96); } to { opacity: 1; transform: scale(1.03); } }
+  .sub { position: absolute; left: 8%; right: 8%; bottom: 7%; text-align: center; font-size: .95cqw; line-height: 1.4; }
+  .sub em { font-style: normal; color: var(--mint); }
+
+  .btn { border-radius: 5cqw; padding: .9cqw 1.3cqw; text-align: center; cursor: pointer; border: 1px solid var(--line); transition: transform .15s, box-shadow .3s; user-select: none; }
+  .btn:active { transform: scale(.97); }
+  .btn.primary { margin-top: auto; background: linear-gradient(100deg, var(--navy), #3f63a0 45%, var(--mint)); color: #001a10; font-weight: 600; border: 0; box-shadow: 0 0 2cqw -0.4cqw rgba(118, 255, 194, .55); }
+  .btn.primary:hover { box-shadow: 0 0 3cqw -0.2cqw rgba(118, 255, 194, .75); }
+
+  /* Look C: the anvil as the Render button */
+  .anvil { margin-top: auto; position: relative; height: 5.4cqw; cursor: pointer; filter: drop-shadow(0 0 1.2cqw rgba(118, 255, 194, .35)); transition: transform .15s, filter .3s; }
+  .anvil:hover { filter: drop-shadow(0 0 2cqw rgba(118, 255, 194, .6)); }
+  .anvil:active { transform: translateY(.15cqw) scale(.985); }
+  .anvil svg { width: 100%; height: 100%; display: block; }
+  .anvil b { position: absolute; left: 0; right: 0; top: 18%; text-align: center; color: #001a10; font-weight: 600; font-size: 1.2cqw; letter-spacing: .04em; pointer-events: none; }
+
+  .verdict { margin-top: 14px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .verdict button { font: 500 14px Sora, sans-serif; padding: 10px 20px; border-radius: 50px; cursor: pointer; background: transparent; color: var(--text); border: 1px solid var(--line); }
+  .verdict button.on { background: var(--mint); color: #001a10; border-color: var(--mint); }
+  footer { max-width: 1280px; margin: 40px auto 80px; padding: 0 24px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+  footer .cta { font: 500 17px Sora, sans-serif; padding: 14px 28px; border-radius: 50px; border: 0; cursor: pointer; background: var(--mint); color: #001a10; }
+  #out { color: var(--muted); font-size: 14px; white-space: pre-line; }
+  @media (max-width: 720px) { .intro { padding-top: 32px; } .intro img { width: 84px; } }
+</style>
+</head>
+<body>
+<div class="intro">
+  <img src="video-mark.jpg" alt="">
+  <div>
+    <h1>Pick the <b>Forge look</b></h1>
+    <p>Pure black, stravelakis navy and mint, the logos' colours. Each screen below is live: watch the background, hover the buttons, and <b style="color:var(--mint);font-weight:500">click anywhere</b> for the spark burst. Mark each one, then copy your verdict to Claude.</p>
+  </div>
+</div>
+<nav class="jump"><a href="#A">A · Star sparks</a><a href="#B">B · Embers</a><a href="#C">C · Anvil button</a></nav>
+
+<template id="mock">
+  <div class="frame">
+    <canvas class="sky"></canvas>
+    <div class="app">
+      <div class="bar">
+        <img class="mark" src="video-mark.jpg" alt="">
+        <div class="name">Video Forge<small>AI VIDEO GENERATOR · BYOK</small></div>
+        <div class="nav">
+          <span class="pill on">Canvas</span><span class="pill">Narration</span><span class="pill">Batch</span><span class="pill">Settings</span>
+        </div>
+        <span class="sister"><img src="image-mark.jpg" alt="">Image Forge</span>
+      </div>
+      <div class="body">
+        <div class="panel">
+          <div class="label">Cast</div>
+          <div class="tabs"><b class="on">Καίτη</b><b>Σερίφης</b><b>Τσίκα</b></div>
+          <div class="label">Voice</div>
+          <div class="field">Gemini 2.5 Native Audio <i>free · unlimited</i></div>
+          <div class="field">Kore <i>firm</i></div>
+          <div class="hint">Write [laughs] or [whispers] in a line to have it acted, never read out.</div>
+          <div class="label">Size</div>
+          <div class="slider" style="--v:55%"></div>
+          <div class="label">Position</div>
+          <div class="slider" style="--v:28%"></div>
+        </div>
+        <div class="stage">
+          <div class="phone">
+            <div class="avatar" style="--c:#76FFC2;left:33%;top:12%"><span>Κ</span></div>
+            <div class="avatar" style="--c:#5562B8;left:8%;top:46%"><span>Σ</span></div>
+            <div class="avatar" style="--c:#82D8B7;left:58%;top:46%"><span>Τ</span></div>
+            <div class="sub">Η σκυλίτσα μου <em>κυνηγάει</em> πεταλούδες.</div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="label">Scene</div>
+          <div class="tabs"><b class="on">Frame</b><b>Background</b><b>Subtitles</b></div>
+          <div class="label">Aspect ratio</div>
+          <div style="display:flex;gap:.6cqw"><span class="pill on">9:16</span><span class="pill">16:9</span><span class="pill">1:1</span></div>
+          <div class="label">Intro &amp; outro</div>
+          <div class="field">intro-sofa.mp4 <i>2.0 s</i></div>
+          <div class="field">outro-wave.mp4 <i>2.0 s</i></div>
+          <div class="slot"></div>
+        </div>
+      </div>
+    </div>
+    <canvas class="fx"></canvas>
+  </div>
+</template>
+
+<section class="look" id="A">
+  <h2><span>A</span>Star sparks</h2>
+  <p class="why">Deep space: tiny orange-red specks, like the logo's sparks, drifting and twinkling. Click: 3–4 sparks fly up and to the right.</p>
+  <div class="host" data-mode="stars"></div>
+  <div class="verdict" data-id="A"></div>
+</section>
+
+<section class="look" id="B">
+  <h2><span>B</span>Embers</h2>
+  <p class="why">The forge: tiny embers rise from the bottom, flicker and cool from orange to deep red as they climb. Click: 3–4 sparks fly up and to the right.</p>
+  <div class="host" data-mode="embers"></div>
+  <div class="verdict" data-id="B"></div>
+</section>
+
+<section class="look" id="C">
+  <h2><span>C</span>Anvil button</h2>
+  <p class="why">Star sparks, plus the anvil from the logos as the Render button. Clicking it strikes the anvil: sparks fly up and to the right off the horn.</p>
+  <div class="host" data-mode="stars" data-anvil="1"></div>
+  <div class="verdict" data-id="C"></div>
+</section>
+
+<footer>
+  <button class="cta" id="copy">Copy my verdict</button>
+  <span id="out"></span>
+</footer>
+
+<script>
+const ANVIL_SVG = `<svg viewBox="0 0 300 70" preserveAspectRatio="none"><defs><linearGradient id="ag" x1="0" x2="1"><stop offset="0" stop-color="#344080"/><stop offset=".5" stop-color="#3f63a0"/><stop offset="1" stop-color="#76FFC2"/></linearGradient></defs>
+<path d="M4 6 H232 Q262 6 296 14 Q270 22 246 24 Q226 26 220 34 L214 46 Q214 54 232 56 L236 66 H70 L74 56 Q92 54 92 46 L86 34 Q80 24 54 22 Q22 20 4 6 Z" fill="url(#ag)"/>
+<path d="M8 7 H232 Q258 7 286 13" stroke="rgba(255,255,255,.55)" stroke-width="1.2" fill="none"/></svg>`;
+
+const ember = [255, 138, 48], hot = [255, 196, 120], red = [232, 64, 28], deep = [150, 30, 12], mint = [118, 255, 194], mintSoft = [130, 216, 183], white = [233, 254, 245], navy = [85, 98, 184];
+const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
+const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function Look(host) {
+  const node = document.getElementById("mock").content.firstElementChild.cloneNode(true);
+  host.appendChild(node);
+  const mode = host.dataset.mode;
+  if (host.dataset.anvil) {
+    const a = document.createElement("div"); a.className = "anvil"; a.innerHTML = ANVIL_SVG + "<b>RENDER</b>";
+    node.querySelector(".slot").replaceWith(a);
+    a.addEventListener("click", (e) => { e.stopPropagation(); const r = node.getBoundingClientRect(), ar = a.getBoundingClientRect(); burst(ar.right - r.left - ar.width * 0.03, ar.top - r.top + ar.height * 0.15, 4); });
+  } else {
+    const b = document.createElement("div"); b.className = "btn primary"; b.textContent = "Render";
+    node.querySelector(".slot").replaceWith(b);
+  }
+  const sky = node.querySelector("canvas.sky"), fx = node.querySelector("canvas.fx");
+  const g = sky.getContext("2d"), f = fx.getContext("2d");
+  let W = 0, H = 0, dpr = Math.min(2, devicePixelRatio || 1), P = [], S = [];
+  function size() {
+    W = node.clientWidth; H = node.clientHeight;
+    for (const c of [sky, fx]) { c.width = W * dpr; c.height = H * dpr; }
+    g.setTransform(dpr, 0, 0, dpr, 0, 0); f.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const n = Math.round((W * H) / (mode === "stars" ? 5200 : 10400));
+    P = Array.from({ length: n }, () => spawn(true));
+  }
+  function spawn(anywhere) {
+    if (mode === "stars") {
+      const r = Math.random();
+      return { x: Math.random() * W, y: Math.random() * H, r: Math.random() < .93 ? .25 + Math.random() * .55 : .8 + Math.random() * .6,
+        c: r < .45 ? ember : r < .75 ? red : r < .92 ? hot : deep, tw: Math.random() * 6.28, ts: .6 + Math.random() * 2.2,
+        vx: (Math.random() - .5) * .04, vy: -.01 - Math.random() * .03, a: .25 + Math.random() * .75 };
+    }
+    return { x: Math.random() * W, y: anywhere ? Math.random() * H : H + 4, r: .3 + Math.random() * .9, life: anywhere ? Math.random() : 0,
+      vy: -(.12 + Math.random() * .45), sway: Math.random() * 6.28, ss: .5 + Math.random() * 1.5, fl: Math.random() * 6.28 };
+  }
+  function burst(x, y, n) {
+    const count = n ?? 3 + Math.round(Math.random());
+    for (let i = 0; i < count; i++) {
+      // north-east only: straight up (-90°) to straight right (0°), kept off the edges
+      const ang = -Math.PI / 2 * (.12 + Math.random() * .76);
+      const sp = 1.5 + Math.random() * 1.7;
+      S.push({ x, y, px: x, py: y, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp, t: 0, life: 30 + Math.random() * 20,
+        hot: Math.random() < .5, grav: .025 });
+    }
+  }
+  node.addEventListener("click", (e) => { const r = node.getBoundingClientRect(); burst(e.clientX - r.left, e.clientY - r.top); });
+  node.querySelectorAll(".pill, .tabs b, .btn").forEach((el) => el.addEventListener("click", () => {
+    const grp = el.parentElement; if (el.classList.contains("btn")) return;
+    grp.querySelectorAll(".on").forEach((o) => o.classList.remove("on")); el.classList.add("on");
+  }));
+  let t = 0;
+  function frame() {
+    t += 1 / 60;
+    g.clearRect(0, 0, W, H);
+    for (const p of P) {
+      if (mode === "stars") {
+        if (!still) { p.x += p.vx; p.y += p.vy; if (p.y < -2) { p.y = H + 2; p.x = Math.random() * W; } }
+        const a = p.a * (.55 + .45 * Math.sin(p.tw + t * p.ts));
+        g.fillStyle = `rgba(${p.c},${a})`; g.beginPath(); g.arc(p.x, p.y, p.r, 0, 6.283); g.fill();
+        if (p.r > 1) { g.fillStyle = `rgba(${p.c},${a * .12})`; g.beginPath(); g.arc(p.x, p.y, p.r * 3.2, 0, 6.283); g.fill(); }
+      } else {
+        if (!still) { p.y += p.vy; p.x += Math.sin(p.sway + t * p.ss) * .18; p.life += .0016 * (1 + Math.abs(p.vy)); }
+        if (p.y < -4 || p.life > 1) Object.assign(p, spawn(false));
+        const h = 1 - p.y / H; // 0 bottom -> 1 top
+        const c = mix(ember, red, Math.min(1, h * 1.2));
+        const a = Math.max(0, (1 - p.life) * (.55 + .45 * Math.sin(p.fl + t * 9))) * (.35 + .65 * (1 - h * .6));
+        g.fillStyle = `rgba(${c},${a})`; g.beginPath(); g.arc(p.x, p.y, p.r, 0, 6.283); g.fill();
+        g.fillStyle = `rgba(${c},${a * .15})`; g.beginPath(); g.arc(p.x, p.y, p.r * 3, 0, 6.283); g.fill();
+      }
+    }
+    f.clearRect(0, 0, W, H);
+    S = S.filter((s) => s.t < s.life);
+    for (const s of S) {
+      s.px = s.x; s.py = s.y; s.x += s.vx; s.y += s.vy; s.vy += s.grav; s.vx *= .97; s.vy *= .97; s.t++;
+      const k = 1 - s.t / s.life, c = mix(red, s.hot ? hot : ember, k);  // born hot, cooling to red
+      f.strokeStyle = `rgba(${c},${k})`; f.lineWidth = .9; f.lineCap = "round";
+      f.beginPath(); f.moveTo(s.px - s.vx * 2.2, s.py - s.vy * 2.2); f.lineTo(s.x, s.y); f.stroke();
+      f.fillStyle = `rgba(${c},${k})`; f.beginPath(); f.arc(s.x, s.y, .9, 0, 6.283); f.fill();
+    }
+    requestAnimationFrame(frame);
+  }
+  size(); addEventListener("resize", size); frame();
+}
+document.querySelectorAll(".host").forEach(Look);
+
+const LABELS = { good: "Love it", ok: "OK", no: "No" };
+let votes = {};
+try { votes = JSON.parse(localStorage.getItem("vf-looks") || "{}"); } catch {}
+document.querySelectorAll(".verdict").forEach((v) => {
+  const id = v.dataset.id;
+  v.innerHTML = Object.entries(LABELS).map(([k, l]) => `<button data-v="${k}">${l}</button>`).join("");
+  const paint = () => v.querySelectorAll("button").forEach((b) => b.classList.toggle("on", votes[id] === b.dataset.v));
+  v.querySelectorAll("button").forEach((b) => b.onclick = () => { votes[id] = b.dataset.v; try { localStorage.setItem("vf-looks", JSON.stringify(votes)); } catch {} paint(); });
+  paint();
+});
+document.getElementById("copy").onclick = async () => {
+  const names = { A: "Star sparks", B: "Embers", C: "Anvil button" };
+  const lines = Object.keys(names).map((k) => `${k} ${names[k]}: ${LABELS[votes[k]] ?? "not marked"}`).join("\n");
+  try { await navigator.clipboard.writeText(lines); document.getElementById("out").textContent = "Copied — paste it to Claude."; }
+  catch { document.getElementById("out").textContent = lines; }
+};
+</script>
+</body>
+</html>

@@ -1,4 +1,9 @@
-export type AspectRatio = "9:16" | "16:9";
+import type { CharacterCard } from "../../characters/core/index.mjs";
+import type { DramaboxParams } from "../lib/narration/dramaboxParams";
+import type { ExpressionOptions } from "../lib/narration/expression";
+
+/** 1:1 and 4:5 joined 16:9 and 9:16 on 21 Oct 2026 (Ak: "we need 4:5 all over"). */
+export type AspectRatio = "9:16" | "16:9" | "1:1" | "4:5";
 export type Engine = "remotion" | "ffmpeg";
 export type Fps = 10 | 24 | 30;
 
@@ -31,8 +36,19 @@ export interface RenderSettings {
  *  "ribbon", "boil", "particles", "sparks" and "bloomBars" are DERIVED FROM
  *  TIME, not accumulated frame to frame — see src/lib/waveform/emitters.ts for
  *  why that is not optional in a renderer that draws frames out of order. */
+// "lines" is gone, removed 18 Aug 2026. It and "wave" were the same drawing
+// code and differed by one boolean — whether the points were joined with
+// straight segments or a smooth curve. That is not two looks, it is one look
+// and a worse version of it, and offering both only ever cost a decision.
+// "rings" went on 19 Aug 2026 and the four "orbits" that replaced it went the
+// same day. Both were attempts at the loops in "inspiration looks/look just at
+// the waveforms.jpeg" and neither came close. Two failures at one picture is
+// enough: the look is not being chased again before the 72 lessons are made.
+//
+// "mesh" stays. It is the other half of that picture, it landed nearer, and it
+// is worth returning to — but nothing uses it yet.
 export const WAVEFORM_STYLES = [
-  "bars", "lines", "wave", "mirror", "dots", "rings",
+  "bars", "wave", "mirror", "dots", "mesh",
   "ribbon", "particles", "sparks", "bloomBars", "boil",
 ] as const;
 
@@ -43,7 +59,8 @@ export interface TrackWaveform {
   style: WaveformStyle;
   /** "speaker" rings the owning speaker's own face rather than the frame —
    *  the halo look. Music has no face, so it falls back to "circular". */
-  position: "circular" | "speaker" | "top" | "bottom" | "left" | "right";
+  /** "frame" runs round the edge of the whole video, working inward (13 Oct 2026). */
+  position: "circular" | "speaker" | "top" | "bottom" | "left" | "right" | "frame";
   scale: number;       // 0.2–2.5, amplitude-extension multiplier
   density: number;     // sample/bar count, 8–160
   thickness: number;   // 0.2–3, bar/stroke width multiplier
@@ -152,6 +169,9 @@ export function migrateSurface(sp: {
 export interface WaveformConfig {
   position: "circular" | "top" | "bottom" | "left" | "right";
   behavior: "single" | "single-colorshift" | "dual" | "dual-plus-music" | "triple";
+  /** Still names "lines" because this type exists to READ files written when
+   *  it was a choice. migrateTrack turns it into "wave", which is what it
+   *  always drew, only smoothed. */
   style: "bars" | "lines" | "wave" | "mirror" | "dots" | "rings";
   colorA: string;
   colorB: string;
@@ -164,6 +184,35 @@ export interface WaveformConfig {
   ringSize: number;     // 0.5–1.5, overall ring cluster scale
   ringX: number;        // 0–1, ring cluster center (fraction of frame)
   ringY: number;        // 0–1
+}
+
+/** Short videos welded onto the front and back of the finished lesson.
+ *
+ *  Paths on disk, not files copied into the project — the same convention the
+ *  music bed and the puppets use. Two or three seconds each, sound optional. */
+export interface Cards {
+  introPath?: string | null;
+  outroPath?: string | null;
+}
+
+/** A logo sitting over the video.
+ *
+ *  Four corners or a centred watermark. Width is a fraction of the FRAME's
+ *  width, like everything else placed here, so a logo sized on the preview is
+ *  the same size in a 1080p render. */
+export interface LogoConfig {
+  filePath?: string | null;
+  position: "top-left" | "top-right" | "bottom-left" | "bottom-right" | "bottom-center" | "watermark";
+  /** 0.02–0.5 of frame width. */
+  size: number;
+  opacity: number;
+  /** Distance from the frame edge, as a fraction of frame width. Ignored by
+   *  the centred watermark. */
+  margin: number;
+}
+
+export function defaultLogo(): LogoConfig {
+  return { filePath: null, position: "bottom-right", size: 0.12, opacity: 0.85, margin: 0.04 };
 }
 
 export interface SubtitleConfig {
@@ -180,6 +229,20 @@ export interface SubtitleConfig {
   strokeWidth: number;
   /** Glow strength on the active word, 0 = off. */
   activeGlow: number;
+  /** HOW the spoken word is marked, not how brightly.
+   *
+   *  Glow alone was the only option and it is the weakest of these: it is the
+   *  letter's own colour spread outwards, so over bright or busy footage it has
+   *  nothing to push against and the word only looks slightly blurred. The
+   *  others all work by CONTRAST at the letter's edge, which survives any
+   *  background. `activeGlow` still sets the strength of the ones that glow.
+   *
+   *  - `glow`      the original: colour plus a halo
+   *  - `stroke`    a hard black edge and one offset shadow
+   *  - `halo`      the glow, several times over, on a black bed
+   *  - `box`       a solid block behind the spoken word
+   *  - `lift`      the word grows and rises — reads with the sound off */
+  activeEmphasis?: "glow" | "stroke" | "halo" | "box" | "lift";
   /** Take the active word's colour and glow from whoever is speaking, instead
    *  of `activeColor`. Ties the caption to the speaker without a second set of
    *  controls to keep in sync — the same rule the waveform already follows. */
@@ -209,6 +272,18 @@ export interface SubtitleConfig {
 export interface SpeakerConfig {
   id: string;
   label: string;         // "Male Dog" / "Female"
+  /** The phrase this character's script blocks open with — "A grave man".
+   *  How a block finds its voice; see parseDramaboxScript. */
+  openingPhrase?: string;
+  /** File name of their DramaBox reference clip — "tsika.wav". */
+  voiceRef?: string;
+  /** Engine settings for this voice, and ONLY what has been changed from the
+   *  defaults. Storing the whole set would freeze today's defaults into every
+   *  project saved today. See src/lib/narration/dramaboxParams.ts. */
+  dramabox?: Partial<DramaboxParams>;
+  /** Whether the app may add expression this character's lines were written
+   *  without — a flat verb lifted, a laugh spelled so it is actually heard. */
+  expression?: ExpressionOptions;
   /** Absolute path on disk to the 3072x3072 viseme sheet — the source of truth,
    *  and what templates save. Deliberately NOT directly loadable by either
    *  renderer: the preview turns it into a blob URL over IPC, and the render
@@ -225,6 +300,10 @@ export interface SpeakerConfig {
    *  halfway through building a puppet should not lose the working sheet, and
    *  every project saved before puppets existed still opens with its face on. */
   puppetPath?: string;
+  /** A character drawn by code (characters/core) — the third kind of face.
+   *  When set it WINS over the puppet and the sheet. A small JSON card, so it
+   *  lives in the project itself and rides into the render with no files. */
+  character?: CharacterCard;
   /** The disc behind this speaker.
    *
    *  SUCCESSOR TO bgColor + bgOpacity, which described a flat colour and could
@@ -242,6 +321,17 @@ export interface SpeakerConfig {
   /** Outline colour — and, by construction, this speaker's waveform colour. */
   borderColor: string;
   outlineShape: OutlineShape;
+  /** Frame line thickness in pixels on a 1080-wide video (13 Oct 2026).
+   *  Unset = the old automatic thickness (1.5% of the face's size). */
+  frameWidth?: number;
+  /** How much their hands move by themselves, 0 (only when the script says)
+   *  to 1 (lively). Unset = 0.5. Puppets with arms only. */
+  gestures?: number;
+  /** Which way the puppet faces: camera, left, right, or auto (towards the
+   *  nearest other speaker). Needs a puppet made with the side view. */
+  facing?: "camera" | "left" | "right" | "auto";
+  /** Sitting, for full-body puppets made with the sitting view. */
+  sitting?: boolean;
   /** This speaker's own waveform. Animates only while they are speaking. */
   waveform: TrackWaveform;
   x: number;
@@ -253,12 +343,46 @@ export interface SpeakerConfig {
   // resolution-independent: preview and render each multiply by their own
   // width and agree by construction.
   size: number;
-  /** Which engine speaks this speaker's lines. Per-speaker, not global, so a
-   *  fast Piper voice and a cloned Chatterbox voice can share one script. */
-  ttsEngine?: "chatterbox" | "piper";
-  voiceId?: string;      // assigned Piper voice's onnxPath, if any (test-tier engine)
-  chatterboxVoiceMode?: "predefined" | "clone"; // production-tier engine voice assignment
-  chatterboxVoiceRef?: string; // predefined_voice_id or reference_audio_filename, depending on mode above
+  /** Which engine speaks this speaker's lines.
+   *
+   *  Two engines, not three. Chatterbox was tried, rejected and removed on
+   *  18 Aug 2026 — every extra engine multiplies what can break, and it was
+   *  doing nothing DramaBox or Piper does not do better.
+   *
+   *  `dramabox` generates on a rented GPU rather than here, so the app writes
+   *  its two files and the audio comes back as WAVs; `piper` runs locally. */
+  ttsEngine?: "dramabox" | "piper" | "elevenlabs" | "gemini" | "fish";
+  /** Gemini (the default since 11 Oct 2026): Live = unlimited free and checked
+   *  word by word; TTS = 10 a day free. See electron/tts/geminiEngine.ts. */
+  geminiMode?: "live" | "tts";
+  geminiModel?: string;
+  geminiVoice?: string;
+  /** Voice pitch in semitones, applied after the voice is made (−6…+6). */
+  pitch?: number;
+  /** Speaking speed, 1 = as made (0.8–1.25). */
+  speed?: number;
+  /** Pause between two of this speaker's own lines, ms. Unset = the project's. */
+  breathMs?: number;
+  voiceId?: string;      // assigned Piper voice's onnxPath, if any
+  /** The voice id from the ElevenLabs library or a clone. An id, not a name. */
+  elevenVoiceId?: string;
+  /** Which ElevenLabs model speaks this character.
+   *
+   *  `eleven_v3` is the default and the one that acts: it reads bracketed
+   *  tags, and `elevenTags.ts` builds those from the same stage directions
+   *  DramaBox uses, so one script feeds either engine. `eleven_multilingual_v2`
+   *  ignores tags — it reads them out — and is kept for its continuous
+   *  stability and its speed control. */
+  elevenModel?: "eleven_v3" | "eleven_multilingual_v2";
+  /** Per-character voice settings. `speed` and `style` are v2 ONLY — v3
+   *  rejects them, and takes its pace from a tag. `stability` on v3 is three
+   *  positions (0 / 0.5 / 1) and is snapped to the nearest. */
+  eleven?: {
+    stability?: number;
+    similarityBoost?: number;
+    style?: number;
+    speed?: number;
+  };
 }
 
 /** Per-band spectrum for every analysis frame — the data that lets bars move
@@ -302,12 +426,28 @@ export interface NarrationSegment {
   endMs: number;
   /** When each word was ACTUALLY said, from forced alignment.
    *
-   *  Present only when the narration went through tools/dramabox-align.py.
+   *  Present only when the narration went through tools/timestamp-audio-for-puppets-and-subtitles.py.
    *  Everything that needs word timing — subtitles, the mouth, the highlight —
    *  estimates it from letter counts when this is absent, and an estimate
    *  drifts: by the end of a long line the subtitle runs a phrase ahead of the
    *  voice. This is the measurement that replaces the guess. */
   words?: { text: string; startMs: number; endMs: number }[];
+  /** What the line is FEELING, when the script said so — "curiosity",
+   *  "serious", "amazed".
+   *
+   *  The scripts carry one of these on almost every line, and until this field
+   *  existed the face could not see them: brows moved on punctuation alone, so
+   *  a hundred astonished lines and eight hundred fond ones were drawn exactly
+   *  the same. Kept as the script's own word rather than a code of ours, so a
+   *  new tag in a new lesson is a mapping to add and never a parse failure. */
+  mood?: string;
+  /** Every [tag] on the line, lower case, in order — gestures like [waves]
+   *  live here even when the first tag is a feeling (12 Oct 2026). */
+  tags?: string[];
+  /** A sound the voice makes before the first word — a laugh, a sigh, a gasp.
+   *  The mouth has to move through it, and the words do not start until it is
+   *  over, which is why 13 lines came back "starting late" when timed. */
+  openingSound?: string;
 }
 
 /** The last successfully generated narration. Held in the project store
@@ -379,6 +519,8 @@ export interface ProjectState {
    *  the avatars and subtitles carry their own surfaces. Both at once is
    *  allowed — over nine minutes of busy stock footage it may be needed. */
   backgroundBlur: number;
+  /** Colour effect on the footage — an id from src/lib/background/colorLook.ts. */
+  backgroundColorLook?: string;
   /** Crossfade between one background clip and the next, in ms. 0 = hard cut.
    *  Capped at half the shortest clip when it is applied. */
   backgroundCrossfadeMs: number;
@@ -386,6 +528,9 @@ export interface ProjectState {
    *  doesn't take turns the way speakers do. */
   musicWaveform: TrackWaveform;
   musicColor: string;
+  /** Intro and outro cards, joined on after the render. */
+  cards: Cards;
+  logo: LogoConfig;
   subtitles: SubtitleConfig;
   /** Silence inserted before a line by the same speaker — a breath. */
   pauseSameMs: number;

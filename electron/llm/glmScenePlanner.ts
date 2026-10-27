@@ -1,5 +1,7 @@
+import { geminiJson } from "./geminiText";
 import { request } from "../net/http";
 import * as keyStore from "../keyStore";
+import { nvidiaChatModels } from "./nvidiaModel";
 
 // ---------------------------------------------------------------------------
 // GLM-5.2 via NVIDIA NIM — script draft assistant. Rather than inventing a
@@ -10,7 +12,7 @@ import * as keyStore from "../keyStore";
 // stage. MIT-licensed model, OpenAI-compatible API.
 // ---------------------------------------------------------------------------
 
-const NVIDIA_MODEL = "z-ai/glm-5.2";
+// The model is looked up live — see nvidiaModel.ts for why it is not typed here.
 const NVIDIA_HOST = "integrate.api.nvidia.com";
 
 export interface DraftScriptOptions {
@@ -18,6 +20,9 @@ export interface DraftScriptOptions {
   speakerLabels: string[];
   languageName: string; // e.g. "Greek", "English" — spelled out for the prompt
   tone?: string;        // e.g. "playful", "informative" — optional
+  /** Who each speaker is ("A tiny woman"), so the draft gets genders and
+   *  roles right — it called Τσίκα «τον Τσίκα» without it (12 Oct 2026). */
+  characters?: string[];
 }
 
 function stripCodeFences(text: string): string {
@@ -34,10 +39,35 @@ function stripThinkBlocks(text: string): string {
   return text.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
 }
 
+/** Gemini first (fast, free tier, already set up for the voices); NVIDIA's
+ *  GLM only if Gemini cannot answer — it is slow (minutes) and was the old
+ *  default (changed 12 Oct 2026). */
 export async function draftScript(opts: DraftScriptOptions): Promise<string> {
+  if (opts.speakerLabels.length === 0) {
+    throw new Error("Add at least one speaker before writing a draft.");
+  }
+  try {
+    const reply = await geminiJson(
+      `You write short narration/dialogue scripts in ${opts.languageName} for animated explainer videos. ` +
+        `Use ONLY these speaker labels, spelled exactly: ${opts.speakerLabels.join(", ")}. ` +
+        (opts.characters?.length ? `Who they are: ${opts.characters.join("; ")}. Use the right grammatical gender for each. ` : "") +
+        `You may put acting cues in square brackets inside a line, e.g. [laughs], [whispers], [sighs] — they are performed, not read. ` +
+        `Write Greek capitals with their accents. ` +
+        `Answer only JSON: {"lines": ["Label: text", ...]}.`,
+      [`Topic: ${opts.topic}`, opts.tone ? `Tone: ${opts.tone}` : ""].filter(Boolean).join("\n")
+    );
+    const lines = (JSON.parse(reply) as { lines?: string[] }).lines ?? [];
+    if (lines.length) return lines.join("\n");
+  } catch (e) {
+    console.log(`[video-forge] Gemini draft failed (${e instanceof Error ? e.message : e}); trying NVIDIA.`);
+  }
+  return draftScriptNvidia(opts);
+}
+
+async function draftScriptNvidia(opts: DraftScriptOptions): Promise<string> {
   const apiKey = await keyStore.getKey("nvidia");
   if (!apiKey) {
-    throw new Error("No NVIDIA API key saved — add one in Backend Settings first.");
+    throw new Error("No NVIDIA API key saved — add one in Settings (the gear, top right) first.");
   }
   if (opts.speakerLabels.length === 0) {
     throw new Error("Add at least one speaker before generating a script draft.");
@@ -58,7 +88,7 @@ export async function draftScript(opts: DraftScriptOptions): Promise<string> {
   ].filter(Boolean).join("\n");
 
   const payload = JSON.stringify({
-    model: NVIDIA_MODEL,
+    model: (await nvidiaChatModels(apiKey))[0],
     messages: [
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt },

@@ -13,10 +13,13 @@
 // ---------------------------------------------------------------------------
 
 import { useState } from "react";
+import { ErrorLine } from "../ui/ErrorLine";
+import { plainError } from "../../lib/plainError";
 import { createPortal } from "react-dom";
 import { Empty } from "../ui/Empty";
 import { HudButton } from "../ui/HudButton";
 import { Slider } from "../ui/Slider";
+import { COLOR_LOOKS } from "../../lib/background/colorLook";
 import { useProjectStore } from "../../store/useProjectStore";
 
 type Hit = Awaited<ReturnType<typeof window.byok.media.searchVideos>>["hits"][number];
@@ -33,6 +36,11 @@ export function BackgroundPanel() {
   const backgroundDim = useProjectStore((s) => s.backgroundDim);
   const backgroundCrossfadeMs = useProjectStore((s) => s.backgroundCrossfadeMs);
   const setBackgroundStyle = useProjectStore((s) => s.setBackgroundStyle);
+  const backgroundBlur = useProjectStore((s) => s.backgroundBlur);
+  const backgroundColorLook = useProjectStore((s) => s.backgroundColorLook);
+  const speakers = useProjectStore((s) => s.speakers);
+  const updateSpeaker = useProjectStore((s) => s.updateSpeaker);
+  const setRender = useProjectStore((s) => s.setRender);
 
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -47,8 +55,30 @@ export function BackgroundPanel() {
   /** Which scene a manual pick will replace; null means "append as a new one". */
   const [targetScene, setTargetScene] = useState<number | null>(null);
 
-  const portrait = render.format === "9:16";
+  const portrait = render.height > render.width;
   const segments = narration?.segments ?? [];
+
+  /** An explainer video as the whole background, with the faces moved into the
+   *  spots it left empty (its .spots.json, written when it was rendered). */
+  async function useExplainer() {
+    const file = await window.byok.dialog.openFile([{ name: "Explainer video", extensions: ["mp4"] }]);
+    if (!file) return;
+    setError(null);
+    const spots = await window.byok.explainer.spotsFor(file);
+    const endMs = Math.max(1000, narration?.analysis?.durationMs ?? 600000);
+    setBackgrounds([{ startMs: 0, endMs, query: "explainer", reason: "Explainer video (made in Explainer)", filePath: file, hit: null } as Scene]);
+    setBackgroundStyle({ dim: 0, blur: 0 });
+    if (!spots) {
+      setError("Background set. No puppet-spot map was found next to that video, so the faces were not moved.");
+      return;
+    }
+    if (spots.width && spots.height) setRender({ format: spots.format as typeof render.format, width: spots.width, height: spots.height });
+    spots.slots.forEach((slot, i) => {
+      const sp = speakers[i];
+      if (sp) updateSpeaker(sp.id, { x: slot.x, y: slot.y, size: slot.size, ...(slot.outlineShape ? { outlineShape: slot.outlineShape as typeof sp.outlineShape } : {}) });
+    });
+    if (spots.slots.length !== speakers.length) setError(`The explainer has ${spots.slots.length} puppet spot(s) and this project has ${speakers.length} speaker(s). The first ${Math.min(spots.slots.length, speakers.length)} were placed; render the explainer again with the right number to match.`);
+  }
 
   async function chooseAutomatically() {
     if (segments.length === 0) {
@@ -81,7 +111,7 @@ export function BackgroundPanel() {
             withFiles.push({ ...sc, filePath } as Scene);
             continue;
           } catch (e) {
-            withFiles.push({ ...sc, note: `Download failed: ${e instanceof Error ? e.message : e}` });
+            withFiles.push({ ...sc, note: `Download failed: ${e instanceof Error ? e.message : e}. Swap this clip with the button on the right.` });
             continue;
           }
         }
@@ -89,7 +119,7 @@ export function BackgroundPanel() {
       }
       setBackgrounds(withFiles);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(plainError(e, "Press Choose automatically to try again."));
     } finally {
       setBusy(null);
     }
@@ -100,11 +130,11 @@ export function BackgroundPanel() {
     setBusy("Searching…");
     setError(null);
     try {
-      const res = await window.byok.media.searchVideos(query.trim());
+      const res = await window.byok.media.searchVideos(query.trim(), undefined, portrait ? "portrait" : "landscape");
       setHits(res.hits);
       setNotes(res.notes);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(plainError(e, "Check your internet, then search again."));
     } finally {
       setBusy(null);
     }
@@ -131,7 +161,7 @@ export function BackgroundPanel() {
       setBackgrounds(next);
       setSearchOpen(false);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(plainError(e, "Pick a different clip, or search again."));
     } finally {
       setBusy(null);
     }
@@ -140,8 +170,11 @@ export function BackgroundPanel() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
-        <HudButton onClick={chooseAutomatically} disabled={!!busy}>
+        <HudButton onClick={chooseAutomatically} disabled={!!busy} data-tip="Reads your narration and picks a stock video for each scene for you. You can swap any pick afterwards.">
           Choose automatically
+        </HudButton>
+        <HudButton onClick={useExplainer} disabled={!!busy} data-tip="Use an explainer you made (Explainer, top right) as the whole background. The puppets move into the spots it left empty for them.">
+          Use an explainer
         </HudButton>
         <HudButton
           onClick={() => {
@@ -149,12 +182,14 @@ export function BackgroundPanel() {
             setSearchOpen(true);
           }}
           disabled={!!busy}
+          data-tip="Type what you want to see, like dog running in park, and choose a video yourself."
         >
           Search by hand
         </HudButton>
         {backgrounds.length > 0 && (
           <button
             onClick={() => setBackgrounds([])}
+            data-tip="Removes all the background videos so you can start over."
             className="label-etched underline text-neutral-500 hover:text-red-400"
           >
             clear
@@ -162,10 +197,10 @@ export function BackgroundPanel() {
         )}
       </div>
 
-      {busy && <p className="label-etched text-accent-bright">{busy}</p>}
-      {error && <p className="text-sm text-red-400">{error}</p>}
+      {busy && <p className="label-etched text-accent-bright" data-tip="What the app is doing right now. Wait for it to finish.">{busy}</p>}
+      {error && <ErrorLine tip="The background step did not work. Read the message, fix the cause, and press the button again." text={error} />}
       {look && (
-        <p className="text-sm text-neutral-400">
+        <p className="text-sm text-neutral-400" data-tip="One look the picked clips share, so the whole video feels like one piece.">
           <span className="label-etched">Shared look</span> — {look}
         </p>
       )}
@@ -175,6 +210,7 @@ export function BackgroundPanel() {
           clip exactly as they do to a planned one. */}
       <div className="space-y-3 border-t border-accent/15 pt-3">
         <Slider
+          data-tip="Darkens the background video so the words and bars on top are easy to read. Higher = darker."
           label="Dim"
           value={backgroundDim}
           min={0}
@@ -183,8 +219,34 @@ export function BackgroundPanel() {
           format={(v) => `${Math.round(v * 100)}%`}
           onChange={(dim) => setBackgroundStyle({ dim })}
         />
+        <div data-tip="Softens the footage so faces and words stand out. 0 = sharp.">
+          <Slider
+            label="Blur"
+            value={backgroundBlur}
+            min={0}
+            max={0.03}
+            step={0.002}
+            format={(v) => (v === 0 ? "sharp" : `${Math.round((v / 0.03) * 100)}%`)}
+            onChange={(blur) => setBackgroundStyle({ blur })}
+          />
+        </div>
+        <div className="label-etched" data-tip="A colour mood for the footage. The preview shows it.">Colour</div>
+        <div className="forge-looks">
+          {COLOR_LOOKS.map((l) => (
+            <button
+              key={l.id}
+              className={`look ${((backgroundColorLook ?? "none") === l.id) ? "on" : ""}`}
+              onClick={() => setBackgroundStyle({ colorLook: l.id })}
+              data-tip={l.tip}
+            >
+              <i style={{ filter: l.css || undefined }} />
+              <span>{l.label}</span>
+            </button>
+          ))}
+        </div>
         <Slider
-          label="Crossfade"
+          data-tip="How long one background video melts into the next one. 0 = a sudden cut."
+          label="Blend between clips"
           value={backgroundCrossfadeMs}
           min={0}
           max={2000}
@@ -194,7 +256,7 @@ export function BackgroundPanel() {
         />
         <p className="text-sm text-neutral-500">
           Everything else draws over the background, so some dimming is what keeps the
-          waveform and the subtitles readable. A crossfade longer than half the shortest
+          sound bars and the subtitles readable. A blend longer than half the shortest
           scene is trimmed to fit.
         </p>
       </div>
@@ -209,7 +271,7 @@ export function BackgroundPanel() {
       <div className="space-y-2">
         {backgrounds.map((sc, i) => (
           <div key={i} className="flex gap-3 items-start">
-            <div className="w-24 h-14 shrink-0 bg-black/60 overflow-hidden cut-sm">
+            <div className="w-24 h-14 shrink-0 bg-black/60 overflow-hidden cut-sm" data-tip="A small picture of the clip chosen for this part of the video. Empty means none was found.">
               {sc.hit?.thumbUrl ? (
                 <img src={sc.hit.thumbUrl} alt="" className="w-full h-full object-cover" />
               ) : (
@@ -217,15 +279,15 @@ export function BackgroundPanel() {
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="label-etched truncate">{sc.query}</p>
+              <p className="label-etched truncate" data-tip="The words used to find this clip.">{sc.query}</p>
               <p className="text-sm text-neutral-500 truncate" title={sc.reason}>
                 {sc.reason}
               </p>
-              <p className="text-sm text-neutral-600">
+              <p className="text-sm text-neutral-600" data-tip="When this clip plays (in seconds), where it came from, and who made it.">
                 {(sc.startMs / 1000).toFixed(1)}s–{(sc.endMs / 1000).toFixed(1)}s
                 {sc.hit && ` · ${sc.hit.provider} · ${sc.hit.author}`}
               </p>
-              {sc.note && <p className="text-sm text-amber-400">{sc.note}</p>}
+              {sc.note && <p className="text-sm text-amber-400" data-tip="Something to know about this clip. Swap it with the button on the right if you do not like it.">{sc.note}</p>}
             </div>
             <button
               onClick={() => {
@@ -234,6 +296,7 @@ export function BackgroundPanel() {
                 setSearchOpen(true);
               }}
               className="label-etched underline hover:text-accent-bright shrink-0"
+              data-tip="Pick a different background video for this scene."
             >
               swap
             </button>
@@ -260,12 +323,12 @@ export function BackgroundPanel() {
               }`}
             >
               <div className="flex items-center gap-3 mb-1">
-                <h3 className="title-deco uppercase text-lg">Find a background</h3>
+                <h3 className="title-deco uppercase text-lg" data-tip="Search free stock videos and pick one by hand.">Find a background</h3>
                 <div className="flex-1" />
-                <HudButton onClick={() => setExpanded((v) => !v)}>
+                <HudButton onClick={() => setExpanded((v) => !v)} data-tip="Makes this search window bigger, or back to normal size.">
                   {expanded ? "Restore" : "Maximize"}
                 </HudButton>
-                <HudButton onClick={() => setSearchOpen(false)}>Close</HudButton>
+                <HudButton onClick={() => setSearchOpen(false)} data-tip="Closes the search without choosing anything.">Close</HudButton>
               </div>
               <p className="text-sm text-neutral-500 mb-3">
                 Searches Pixabay and Pexels together. English terms work best — both
@@ -285,22 +348,23 @@ export function BackgroundPanel() {
                           if (e.key === "Escape") setSearchOpen(false);
                         }}
                         placeholder="dog running in park"
+                        data-tip="Type what you want to see, in English, then press Enter to search."
                         className="input"
                       />
                     </div>
                   </div>
                 </div>
-                <HudButton onClick={runSearch} disabled={!!busy}>
+                <HudButton onClick={runSearch} disabled={!!busy} data-tip="Looks for stock videos that match your words.">
                   {busy ? "Searching…" : "Search"}
                 </HudButton>
               </div>
 
               {notes.map((n, i) => (
-                <p key={i} className="text-sm text-amber-400 mb-1">{n}</p>
+                <p key={i} className="text-sm text-amber-400 mb-1" data-tip="A heads-up from the search. It did not stop the search.">{n}</p>
               ))}
-              {error && <p className="text-sm text-red-400 mb-1">{error}</p>}
+              {error && <ErrorLine className="text-sm text-red-400 mb-1" tip="The search did not work. Check your internet and your Pixabay and Pexels keys in Settings, then search again." text={error} />}
               {!busy && hits.length === 0 && (
-                <p className="text-sm text-neutral-500">
+                <p data-tip="Nothing searched yet. Type a few words above and press Enter." className="text-sm text-neutral-500">
                   Type a search and press Enter.
                 </p>
               )}

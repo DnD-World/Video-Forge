@@ -7,6 +7,8 @@ interface Props {
   max: number;
   onChange: (v: number) => void;
   format?: (v: number) => string;
+  /** Hover help (shown by TipLayer). */
+  "data-tip"?: string;
 }
 
 // Rotary knob sweeps 270° (-135deg at min to +135deg at max) — the
@@ -16,7 +18,7 @@ interface Props {
 const SWEEP_DEG = 270;
 const START_DEG = -135;
 
-export function Knob({ label, value, min, max, onChange, format }: Props) {
+export function Knob({ label, value, min, max, onChange, format, "data-tip": dataTip }: Props) {
   const [dragging, setDragging] = useState(false);
   const dragStart = useRef<{ y: number; value: number } | null>(null);
 
@@ -44,7 +46,7 @@ export function Knob({ label, value, min, max, onChange, format }: Props) {
   };
 
   return (
-    <div className="flex flex-col items-center gap-2 select-none">
+    <div className="flex flex-col items-center gap-2 select-none" data-tip={dataTip}>
       <div
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}

@@ -139,6 +139,18 @@ export interface Puppet {
    * Omit the whole thing and the puppet leans as one piece, which is the right
    * answer for art where the head genuinely cannot be separated.
    */
+  /**
+   * Arm poses — "wave", "point", "shrug", "explain" — for waist-up puppets made
+   * by Image Forge's puppet maker (12 Oct 2026). Each is a layer cut from an
+   * edit of the base where only the arms changed, drawn over the BODY (below
+   * the neck), so a waving character can still nod. Asked for in the script
+   * with [waves], [points], [shrugs], [explains].
+   */
+  poses?: Record<string, PuppetLayer>;
+  /** true (Image Forge, 13 Oct 2026): each pose is a WHOLE BODY picture, head
+   *  left out, drawn INSTEAD of the resting body — so the resting arms are
+   *  gone while a hand waves. Without it a pose is drawn over the body. */
+  posesReplaceBody?: boolean;
   neck?: {
     /** The cut line, 0–1 down the base image. */
     y: number;
@@ -180,6 +192,21 @@ export interface Puppet {
 
   /** One entry per viseme index 0–8. */
   mouths: Record<string, PuppetLayer>;
+
+  /** Other views of the same character (Image Forge, 13 Oct 2026): "side" —
+   *  turned three-quarters to the viewer's left, for two characters talking
+   *  to each other; "sit" — sitting, for full-body puppets. Each replaces the
+   *  front's face fields whole. */
+  views?: Partial<Record<PuppetViewName, PuppetView>>;
+}
+
+export type PuppetViewName = "side" | "sit";
+export type PuppetView = Pick<Puppet, "base" | "head" | "sourceHeadWidth" | "zoom" | "eyes" | "brows" | "mouths" | "neck" | "poses" | "posesReplaceBody">;
+
+/** The puppet as seen from `view` — the front when it has no such view. */
+export function puppetInView(p: Puppet, view?: PuppetViewName): Puppet {
+  const v = view ? p.views?.[view] : undefined;
+  return v ? { ...p, ...v } : p;
 }
 
 /** Every file a puppet needs, for preloading and for copying into a render. */
@@ -197,5 +224,21 @@ export function puppetFiles(p: Puppet): string[] {
   });
   p.extras?.forEach(add);
   Object.values(p.mouths).forEach(add);
+  // The arm poses. Left out until 13 Oct 2026, so their pictures were never
+  // loaded and no puppet ever moved a hand on screen.
+  Object.values(p.poses ?? {}).forEach(add);
+  // The other views' pictures too (side, sit).
+  for (const v of Object.values(p.views ?? {})) {
+    if (!v) continue;
+    out.add(v.base);
+    Object.values(v.eyes.lids).forEach(add);
+    add(v.eyes.whites);
+    Object.values(v.brows).forEach((b) => {
+      add(b.left);
+      add(b.right);
+    });
+    Object.values(v.mouths).forEach(add);
+    Object.values(v.poses ?? {}).forEach(add);
+  }
   return [...out];
 }

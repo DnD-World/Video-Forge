@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Free Voices — Rank</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #071C26; --p900: #0B2837; --p800: #11374A; --p700: #1E465B; --p600: #276075;
+    --mint: #76FFC2; --mint-soft: #82D8B7; --navy: #344080;
+    --text: #E9FEF5; --muted: #9DB8C4;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    font-family: Sora, system-ui, sans-serif; color: var(--text);
+    background: radial-gradient(1200px 700px at 15% -10%, #1C4F65 0%, transparent 60%),
+                radial-gradient(900px 600px at 110% 20%, #344080 0%, transparent 55%), var(--ink);
+    overflow-x: hidden;
+  }
+  canvas#bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+  main { position: relative; z-index: 1; max-width: 920px; margin: 0 auto; padding: 56px 24px 80px; }
+  h1 { font-weight: 400; font-size: clamp(34px, 6vw, 60px); line-height: 1.05; margin: 0 0 12px; letter-spacing: -0.02em; }
+  h1 span { background: linear-gradient(90deg, var(--mint), #b6ffe0 40%, var(--mint-soft)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .lead { color: var(--muted); font-size: 17px; line-height: 1.6; max-width: 700px; margin: 0 0 8px; }
+  .line { font-size: 21px; margin: 16px 0 30px; padding: 16px 24px; border-radius: 40px; background: rgba(233,254,245,.06); border: 1px solid rgba(118,255,194,.18); display: inline-block; }
+  #list { display: flex; flex-direction: column; gap: 14px; }
+  .row {
+    position: relative; display: grid; grid-template-columns: 64px 1fr; gap: 0 18px; align-items: center;
+    border-radius: 34px; padding: 18px 22px 18px 14px;
+    background: linear-gradient(160deg, rgba(30,70,91,.78), rgba(11,40,55,.84));
+    border: 1px solid rgba(118,255,194,.14);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 20px 60px -30px rgba(0,0,0,.8), inset 0 1px 0 rgba(255,255,255,.06);
+    transition: border-color .3s, box-shadow .3s; user-select: none; touch-action: pan-y;
+    animation: rise .6s cubic-bezier(.2,.8,.2,1) both;
+  }
+  @keyframes rise { from { transform: translateY(20px); opacity: 0; } }
+  .row:hover { border-color: rgba(118,255,194,.4); }
+  .row.playing { border-color: var(--mint); box-shadow: 0 0 0 1px var(--mint), 0 24px 80px -20px rgba(118,255,194,.4); }
+  .row.dragging { z-index: 5; cursor: grabbing; border-color: var(--mint); box-shadow: 0 40px 90px -20px rgba(0,0,0,.9), 0 0 0 2px var(--mint); transition: none; scale: 1.02; }
+  .grip { grid-row: span 3; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 4px 0; }
+  .mv { width: 34px; height: 30px; border-radius: 10px; border: 1px solid var(--line, rgba(130,216,183,.16)); background: rgba(0,0,0,.35); color: var(--mint); cursor: pointer; font-size: 14px; display: grid; place-items: center; transition: all .2s; }
+  .mv:hover:not(:disabled) { border-color: var(--mint); box-shadow: 0 0 14px -4px rgba(118,255,194,.6); }
+  .mv:disabled { opacity: .25; cursor: default; }
+  .rank { font-size: 38px; font-weight: 300; line-height: 1; color: var(--mint); font-variant-numeric: tabular-nums; }
+  .dots { width: 18px; height: 26px; background: radial-gradient(circle, rgba(233,254,245,.45) 1.6px, transparent 2px) 0 0 / 9px 9px; opacity: .7; }
+  .grip:hover .dots { opacity: 1; }
+  .head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+  .head h3 { font-weight: 500; font-size: 20px; margin: 0 6px 0 0; }
+  .tag { font-size: 12px; font-weight: 500; padding: 4px 11px; border-radius: 50px; }
+  .free { background: rgba(118,255,194,.15); color: var(--mint); }
+  .local { background: rgba(130,216,183,.12); color: var(--mint-soft); }
+  .warn { background: rgba(255,190,120,.14); color: #ffcf9a; }
+  .note { color: var(--muted); font-size: 14px; line-height: 1.5; margin: 6px 0 12px; }
+  .bottom { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
+  .play {
+    flex: none; width: 50px; height: 50px; border-radius: 50%; border: 0; cursor: pointer;
+    background: var(--mint); color: var(--ink); display: grid; place-items: center;
+    transition: transform .2s; box-shadow: 0 8px 30px -8px rgba(118,255,194,.6);
+  }
+  .play:hover { transform: scale(1.08); }
+  .play svg { width: 18px; height: 18px; }
+  .wave { flex: 1 1 220px; height: 44px; display: flex; align-items: center; gap: 2px; cursor: pointer; min-width: 160px; }
+  .wave i { flex: 1; border-radius: 3px; background: rgba(157,184,196,.35); min-height: 3px; transition: background .15s; }
+  .wave i.done { background: linear-gradient(0deg, #276075, var(--mint)); }
+  .votes { display: flex; gap: 6px; }
+  .vote {
+    font: 500 13px Sora, sans-serif; padding: 10px 14px; border-radius: 50px; cursor: pointer;
+    background: rgba(17,55,74,.85); color: var(--text); border: 1px solid rgba(233,254,245,.12); transition: all .2s;
+  }
+  .vote:hover { border-color: var(--mint-soft); }
+  .vote.on.good { background: var(--mint); color: var(--ink); border-color: var(--mint); }
+  .vote.on.ok { background: #276075; border-color: var(--mint-soft); }
+  .vote.on.no { background: #4a2430; border-color: #ff8a9a; color: #ffd0d7; }
+  footer { margin-top: 34px; display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+  .cta { font: 500 18px Sora, sans-serif; padding: 15px 30px; border-radius: 50px; border: 0; cursor: pointer; background: var(--mint); color: var(--ink); box-shadow: 0 10px 40px -10px rgba(118,255,194,.6); }
+  .cta:active { transform: scale(.97); }
+  #out { color: var(--muted); font-size: 14px; white-space: pre-line; }
+  @media (max-width: 600px) {
+    main { padding: 36px 16px 60px; } .line { font-size: 17px; }
+    .row { grid-template-columns: 44px 1fr; padding: 16px 16px 16px 8px; } .rank { font-size: 28px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .row { animation: none; } }
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<main>
+  <h1>Rank the <span>free voices</span></h1>
+  <p class="lead">Same Greek line in every free voice that speaks Greek. Play each one, mark it, and use ▲ ▼ to put them in your order, best at the top. Then press "Copy my ranking" and paste it to Claude.</p>
+  <div class="line">«Η σκυλίτσα μου κυνηγάει πεταλούδες. Κάθε μία. Κάθε φορά.»</div>
+  <div id="list"></div>
+  <footer>
+    <button class="cta" id="copy">Copy my ranking</button>
+    <span id="out"></span>
+  </footer>
+</main>
+<script>
+const PEAKS = /*PEAKS*/{};
+const SAMPLES = [
+  { id: "gem38", file: "tts-samples/google-gemini-3.8-flash-tts.wav", name: "Gemini 3.8 Flash", tags: [["free","Free tier"],["free","Acts on cue"]], note: "Online, your Gemini key. Can act (laugh, whisper), 2 voices per call. Free-tier limits not published." },
+  { id: "gem38lite", file: "tts-samples/google-gemini-3.8-flash-lite-tts.wav", name: "Gemini 3.8 Flash-Lite", tags: [["free","Free tier"]], note: "Lighter, faster version of the above." },
+  { id: "gem31", file: "tts-samples/google-gemini-3.1-flash-tts-preview.wav", name: "Gemini 3.1 Flash", tags: [["free","Free tier"],["warn","Preview"]], note: "Same family as the voices of your 70 lessons." },
+  { id: "fish", file: "tts-samples/openrouter-fish-s2.1-pro-free.mp3", name: "Fish Audio S2.1", tags: [["free","Free"],["free","Emotion tags"]], note: "Online, through OpenRouter. Strong acting. Free limits unknown." },
+  { id: "edge", file: "tts-samples/edge-tts-el-GR-AthinaNeural.mp3", name: "Microsoft Athina", tags: [["free","Free"],["warn","Unofficial"]], note: "The Edge browser's read-aloud voice. Free but unofficial; Microsoft blocked a repeat request." },
+  { id: "piperjoy", file: "tts-samples/local-piper-joy.wav", name: "Piper — Joy", tags: [["local","On your laptop"],["free","Free"]], note: "Offline, no key, instant. No acting." },
+  { id: "piperrap", file: "tts-samples/local-piper-rapunzelina.wav", name: "Piper — Rapunzelina", tags: [["local","On your laptop"],["free","Free"]], note: "Second offline Greek voice." },
+  { id: "voxtral", file: "tts-samples/mistral-voxtral-mini-tts-en_paul-GREEK-TEXT.mp3", name: "Mistral Voxtral (English voice)", tags: [["warn","No Greek"],["warn","Paid"]], note: "Proof only: an English voice reading Greek, so you can hear why it's out." },
+];
+const STORE_ORDER = "vf-voice-order";
+const LABELS = { good: "Love it", ok: "OK", no: "No" };
+const store = { get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
+let votes = store.get("vf-voice-votes", {});
+let order = store.get(STORE_ORDER, SAMPLES.map(s => s.id)).filter(id => SAMPLES.some(s => s.id === id));
+SAMPLES.forEach(s => { if (!order.includes(s.id)) order.push(s.id); });
+
+const PLAY = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg>';
+const STOP = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4.5" height="14" rx="1"/><rect x="13.5" y="5" width="4.5" height="14" rx="1"/></svg>';
+const list = document.getElementById("list");
+let current = null;
+const rows = {};
+
+SAMPLES.forEach((s, i) => {
+  const row = document.createElement("div");
+  row.className = "row"; row.dataset.id = s.id; row.style.animationDelay = (i * 60) + "ms";
+  const peaks = PEAKS[s.id] || Array(56).fill(.3);
+  row.innerHTML = `
+    <div class="grip"><button class="mv up" title="Move up one place" aria-label="Move up">▲</button><div class="rank"></div><button class="mv down" title="Move down one place" aria-label="Move down">▼</button></div>
+    <div class="head"><h3>${s.name}</h3>${s.tags.map(([c,t]) => `<span class="tag ${c}">${t}</span>`).join("")}</div>
+    <div class="note">${s.note}</div>
+    <div class="bottom">
+      <button class="play" aria-label="Play ${s.name}">${PLAY}</button>
+      <div class="wave">${peaks.map(p => `<i style="height:${Math.max(6, p * 100)}%"></i>`).join("")}</div>
+      <div class="votes">${Object.entries(LABELS).map(([k,l]) => `<button class="vote ${k}" data-v="${k}">${l}</button>`).join("")}</div>
+    </div>`;
+  rows[s.id] = row;
+
+  // Plain <audio> on purpose: routing sound through an effects graph goes
+  // silent in browsers that keep that graph suspended.
+  const audio = new Audio(s.file); audio.preload = "auto";
+  const btn = row.querySelector(".play"), bars = [...row.querySelectorAll(".wave i")];
+  const paintProgress = () => { const f = audio.duration ? audio.currentTime / audio.duration : 0; bars.forEach((b, k) => b.classList.toggle("done", k / bars.length < f)); };
+  audio.ontimeupdate = paintProgress;
+  audio.onplay = () => { row.classList.add("playing"); btn.innerHTML = STOP; (function loop(){ if (!audio.paused) { paintProgress(); requestAnimationFrame(loop); } })(); };
+  audio.onpause = audio.onended = () => { row.classList.remove("playing"); btn.innerHTML = PLAY; if (audio.ended) { audio.currentTime = 0; } paintProgress(); };
+  const start = (at) => {
+    if (current && current !== audio) { current.pause(); current.currentTime = 0; }
+    current = audio; if (at != null && audio.duration) audio.currentTime = at * audio.duration;
+    audio.play().catch(e => { document.getElementById("out").textContent = "Your browser blocked playback: " + e.message; });
+  };
+  btn.onclick = () => audio.paused ? start() : (audio.pause(), audio.currentTime = 0);
+  row.querySelector(".wave").onclick = (e) => { const r = e.currentTarget.getBoundingClientRect(); start((e.clientX - r.left) / r.width); };
+
+  const vb = row.querySelectorAll(".vote");
+  const paint = () => vb.forEach(b => b.classList.toggle("on", votes[s.id] === b.dataset.v));
+  vb.forEach(b => b.onclick = () => { votes[s.id] = b.dataset.v; store.set("vf-voice-votes", votes); paint(); });
+  paint();
+});
+
+function render() {
+  order.forEach((id, i) => { list.appendChild(rows[id]); rows[id].querySelector(".rank").textContent = i + 1; });
+}
+render();
+
+// Drag to rank, with the other rows sliding out of the way (FLIP animation).
+function flip(mutate, skip = null) {
+  const before = new Map([...list.children].map(el => [el, el.getBoundingClientRect().top]));
+  mutate();
+  [...list.children].forEach(el => {
+    if (el === skip) return;
+    const dy = before.get(el) - el.getBoundingClientRect().top;
+    if (!dy) return;
+    el.animate([{ transform: `translateY(${dy}px)` }, { transform: "none" }], { duration: 260, easing: "cubic-bezier(.2,.8,.2,1)" });
+  });
+}
+// ▲ ▼ move a row one place, with the neighbours sliding (FLIP animation).
+// (Drag-to-rank was replaced 12 Oct 2026: Ak found it unreliable.)
+function move(row, dir) {
+  const rows = [...list.children], i = rows.indexOf(row), j = i + dir;
+  if (j < 0 || j >= rows.length) return;
+  flip(() => dir < 0 ? list.insertBefore(row, rows[j]) : list.insertBefore(row, rows[j].nextSibling));
+  order = [...list.children].map(el => el.dataset.id); store.set(STORE_ORDER, order);
+  paintRanks();
+}
+function paintRanks() {
+  const rows = [...list.children];
+  rows.forEach((el, i) => { el.querySelector(".rank").textContent = i + 1; el.querySelector(".up").disabled = i === 0; el.querySelector(".down").disabled = i === rows.length - 1; });
+}
+list.addEventListener("click", (e) => {
+  const b = e.target.closest(".mv"); if (!b) return;
+  move(b.closest(".row"), b.classList.contains("up") ? -1 : 1);
+});
+paintRanks();
+
+document.getElementById("copy").onclick = async () => {
+  const lines = order.map((id, i) => { const s = SAMPLES.find(x => x.id === id); return `${i + 1}. ${s.name} — ${LABELS[votes[id]] ?? "not marked"}`; }).join("\n");
+  try { await navigator.clipboard.writeText(lines); document.getElementById("out").textContent = "Copied — paste it to Claude."; }
+  catch { document.getElementById("out").textContent = lines; }
+};
+
+// Floating particles
+const bg = document.getElementById("bg"), b = bg.getContext("2d");
+let P = [];
+function size() { bg.width = innerWidth * devicePixelRatio; bg.height = innerHeight * devicePixelRatio;
+  P = Array.from({ length: Math.min(90, innerWidth / 14) }, () => ({ x: Math.random() * bg.width, y: Math.random() * bg.height, r: (Math.random() * 1.8 + .4) * devicePixelRatio, s: Math.random() * .3 + .08, a: Math.random() * .5 + .15 })); }
+size(); addEventListener("resize", size);
+const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+(function tick() {
+  b.clearRect(0, 0, bg.width, bg.height);
+  for (const p of P) { if (!still) { p.y -= p.s * devicePixelRatio; if (p.y < -5) p.y = bg.height + 5; }
+    b.beginPath(); b.arc(p.x, p.y, p.r, 0, 7); b.fillStyle = `rgba(118,255,194,${p.a})`; b.fill(); }
+  requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>

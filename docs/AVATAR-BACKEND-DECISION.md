@@ -27,7 +27,7 @@ subtitles, or backgrounds. Only the face.
 
 ## 2. What the app is, in enough detail to judge an option
 
-BYOK-Vid-Creator is a **Windows desktop app** (Electron + React + Remotion) that
+Video Forge is a **Windows desktop app** (Electron + React + Remotion) that
 turns a written script into a finished MP4. It is aimed at short social videos —
 a 60-second two-person dialogue is the reference case.
 
@@ -296,4 +296,4 @@ Not a survey. A recommendation, with:
 - `src/components/canvas/SpeakerAvatar.tsx` — where a face is drawn today; the
   seam any new backend would replace.
 - `remotion/VideoComposition.tsx` — how the frame is assembled.
-- `%APPDATA%/byok-vid-creator/renders/` — real Greek narration WAVs to test with.
+- `%APPDATA%/video-forge/renders/` — real Greek narration WAVs to test with.

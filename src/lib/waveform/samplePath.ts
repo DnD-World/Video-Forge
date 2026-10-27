@@ -1,3 +1,4 @@
+import { shapeRadius } from "./superellipse";
 import type { TrackWaveform } from "../../store/types";
 
 export interface PathPoint {
@@ -32,7 +33,11 @@ export function samplePath(
   edgeFlush = false,
   /** Explicit centre and radius for a closed ring, used by the "speaker"
    *  position so a halo can sit around a face instead of the frame. */
-  ring?: RingOverride
+  ring?: RingOverride,
+  /** Superellipse exponent of the speaker's frame (superellipse.ts): 2 is a
+   *  circle. Bars, wave, mirror and dots took their ring from here and it was
+   *  always a circle — round bars round a square frame (Ak, 12 Oct 2026). */
+  exponent = 2
 ): PathPoint[] {
   const pts: PathPoint[] = [];
   const margin = edgeFlush ? 0.01 : 0.08;
@@ -43,13 +48,19 @@ export function samplePath(
     const r = ring ? ring.r : Math.min(w, h) * (edgeFlush ? 0.48 : 0.34);
     for (let i = 0; i < count; i++) {
       const a = (i / count) * Math.PI * 2 - Math.PI / 2;
+      const k = shapeRadius(a, exponent);
       pts.push({
-        x: cx + Math.cos(a) * r,
-        y: cy + Math.sin(a) * r,
+        x: cx + Math.cos(a) * r * k,
+        y: cy + Math.sin(a) * r * k,
         nx: Math.cos(a),
         ny: Math.sin(a),
       });
     }
+    return pts;
+  }
+
+  if (position === "frame") {
+    for (let i = 0; i < count; i++) pts.push(frameEdgeAt(i / count, w, h, edgeFlush));
     return pts;
   }
 
@@ -71,4 +82,26 @@ export function samplePath(
     pts.push({ x, y, nx, ny: 0 });
   }
   return pts;
+}
+
+/**
+ * A point on the edge of the whole video, `t` = 0–1 once round (clockwise from
+ * the top-left), with its normal pointing INTO the picture — the "around the
+ * video" position: bars, bubbles and sparks come from the frame's edge and
+ * reach inward (Ak, 13 Oct 2026). Spaced by distance along the edge, so the
+ * long sides of a vertical video get more of them than the short ones.
+ */
+export function frameEdgeAt(t: number, w: number, h: number, edgeFlush = false): PathPoint {
+  const m = Math.min(w, h) * (edgeFlush ? 0.004 : 0.022);
+  const iw = w - 2 * m;
+  const ih = h - 2 * m;
+  const per = 2 * (iw + ih);
+  let d = (((t % 1) + 1) % 1) * per;
+  if (d < iw) return { x: m + d, y: m, nx: 0, ny: 1 };
+  d -= iw;
+  if (d < ih) return { x: w - m, y: m + d, nx: -1, ny: 0 };
+  d -= ih;
+  if (d < iw) return { x: w - m - d, y: h - m, nx: 0, ny: -1 };
+  d -= iw;
+  return { x: m, y: h - m - d, nx: 1, ny: 0 };
 }

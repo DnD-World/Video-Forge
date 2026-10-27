@@ -16,6 +16,28 @@ interface SettingsState {
   /** Hex string, e.g. "#e8a24a". Drives the --accent-*-rgb CSS variables
    *  applied in App.tsx, which every accent-* Tailwind class reads from. */
   accentColor: string;
+  /** Downloaded background clips: the most they may take, in GB, and
+   *  whether the app trims them by itself (electron/media/mediaCache.ts). */
+  mediaLimitGb: number;
+  /** LocalAI (or similar) on this computer — shared with Image Forge. */
+  localAiBase: string;
+  setLocalAiBase: (v: string) => void;
+  /** "Made with Video Forge" on every video (remotion/AiBadge.tsx). On by default. */
+  aiLabel: boolean;
+  setAiLabel: (v: boolean) => void;
+  /** Paid voices (ElevenLabs). The price is only used to turn characters into
+   *  money on the "this will cost" question — check it against your plan. */
+  elevenPricePer1000Usd: number;
+  setElevenPricePer1000Usd: (v: number) => void;
+  /** Whether a batch nobody is watching (Many videos) may buy paid voice at
+   *  all — off until you turn it on — and the most characters one sheet may buy. */
+  paidInBatch: boolean;
+  setPaidInBatch: (v: boolean) => void;
+  paidBatchMaxCredits: number;
+  setPaidBatchMaxCredits: (v: number) => void;
+  setMediaLimitGb: (gb: number) => void;
+  mediaAutoClean: boolean;
+  setMediaAutoClean: (v: boolean) => void;
   setAccentColor: (hex: string) => void;
   /** Gates the breathing glow / click flash / corner flare motion effects,
    *  independent of the OS-level prefers-reduced-motion (which always wins
@@ -33,10 +55,7 @@ const INITIAL_DEFAULTS: BackendDefaults = {
   // updating until its python was killed by hand.
   piperPythonPath: "./piper-venv/Scripts/python.exe",
   piperVoicesDir: "./piper-voices",
-  chatterboxInstallPath: "",
-  chatterboxPort: 8004,
-  chatterboxExaggeration: 0.5,
-  chatterboxCfgWeight: 0.5,
+  voiceRefsDir: "./voice-refs",
 };
 
 export const useSettingsStore = create<SettingsState>()(
@@ -46,7 +65,23 @@ export const useSettingsStore = create<SettingsState>()(
       setDefault: (k, v) =>
         set((s) => ({ defaults: { ...s.defaults, [k]: v } })),
 
-      accentColor: "#e8a24a",
+      accentColor: "#76FFC2", // Forge mint (stravelakis mint-400)
+      mediaLimitGb: 2,
+      localAiBase: "http://127.0.0.1:8080",
+      setLocalAiBase: (v) => set({ localAiBase: v }),
+      aiLabel: true,
+      setAiLabel: (v) => set({ aiLabel: v }),
+      // 0.30 is a starting guess for pay-as-you-go, not a quote: ElevenLabs'
+      // price per character depends on the plan, so the user sets their own.
+      elevenPricePer1000Usd: 0.3,
+      setElevenPricePer1000Usd: (v) => set({ elevenPricePer1000Usd: v > 0 ? v : 0.3 }),
+      paidInBatch: false,
+      setPaidInBatch: (v) => set({ paidInBatch: v }),
+      paidBatchMaxCredits: 50000,
+      setPaidBatchMaxCredits: (v) => set({ paidBatchMaxCredits: Math.max(0, Math.floor(v || 0)) }),
+      setMediaLimitGb: (gb) => set({ mediaLimitGb: gb }),
+      mediaAutoClean: true,
+      setMediaAutoClean: (v) => set({ mediaAutoClean: v }),
       setAccentColor: (hex) => set({ accentColor: hex }),
 
       motionEnabled: true,
@@ -54,7 +89,7 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: "byok-settings", // saved to localStorage, survives restarts
-      version: 1,
+      version: 3,
 
       // persist's default merge is SHALLOW, so the whole `defaults` object came
       // from localStorage and every value added or changed since that blob was
@@ -75,6 +110,15 @@ export const useSettingsStore = create<SettingsState>()(
       // v0 blobs carry stale bundled-Piper paths. Dropping them lets the current
       // defaults apply once; anything the user sets afterwards persists normally.
       migrate: (persisted, version) => {
+        // v2 = the Forge look. Every saved accent was one of the Deco Noir
+        // golds or blues; the new identity is mint, so it starts there once.
+        if (version < 2 && persisted && typeof persisted === "object") {
+          (persisted as { accentColor?: string }).accentColor = "#76FFC2";
+        }
+        // v3: no Appearance settings any more — mint and motion on, for everyone.
+        if (version < 3 && persisted && typeof persisted === "object") {
+          Object.assign(persisted as object, { accentColor: "#76FFC2", motionEnabled: true });
+        }
         if (version === 0 && persisted && typeof persisted === "object") {
           const state = persisted as { defaults?: Partial<BackendDefaults> };
           if (state.defaults) {

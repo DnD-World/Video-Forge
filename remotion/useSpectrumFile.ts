@@ -59,8 +59,8 @@ export function useSpectrumFile(
       if (!s) {
         // Loud, because the failure mode is a video that renders perfectly
         // well and just quietly looks like the version before the spectrum
-        // existed. renderVideo forwards anything tagged [byok] to the UI.
-        console.error(`[byok] spectrum failed to load from ${url} — falling back to the loudness envelope`);
+        // existed. renderVideo forwards anything tagged [video-forge] to the UI.
+        console.error(`[video-forge] spectrum failed to load from ${url} — falling back to the loudness envelope`);
       }
       setSpectrum(s);
       setSettled(true);

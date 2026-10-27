@@ -1,0 +1,17 @@
+import type { Spec, Resolved, CheckResult, Hole } from "../../explainer/types";
+import type { SfxCue } from "../../explainer/core/sfx.mjs";
+export const ROOT: string;
+export function checkSpec(spec: Spec, dir: string, o?: { fontCache?: string; step?: number; onProgress?: (f: number) => void }): Promise<CheckResult>;
+export function checkImported(htmlFile: string, dir: string, o?: { tint?: unknown }): Promise<CheckResult>;
+export function renderSpec(spec: Spec, out: string, o?: { fontCache?: string; audio?: string; crf?: number; onProgress?: (f: number) => void; signal?: AbortSignal; workDir?: string }): Promise<Resolved & { sfx: { planned: number; mixed: number; on: boolean; cues: SfxCue[]; creditsFile: string | null; libraryMissing: boolean } }>;
+export function sfxLibraryDir(): string;
+export function mixSfxTrack(cues: SfxCue[], o: { dir?: string; duration: number; out: string }): Promise<string | null>;
+export function renderImported(htmlFile: string, out: string, o?: { fps?: number; tint?: unknown; audio?: string; crf?: number; onProgress?: (f: number) => void; signal?: AbortSignal }): Promise<{ W: number; H: number; duration: number }>;
+export function stillPng(spec: Spec, t: number, out: string, o?: { fontCache?: string }): Promise<void>;
+export function extractClip(mp4: string, out: string, r: { from: number; to: number }): Promise<void>;
+export function makeGif(mp4: string, out: string, o?: { from?: number; to?: number; width?: number; fps?: number }): Promise<void>;
+export function gifFromSpec(spec: Spec, out: string, o?: { fontCache?: string; from?: number; to?: number; width?: number; fps?: number }): Promise<void>;
+export function thumbnails(spec: Spec, dir: string, o?: { fontCache?: string; prefix?: string }): Promise<string[]>;
+export function withSampleFaces(video: string, holes: Hole[], out: string): Promise<void>;
+export const GIF_LIMITS: { maxSeconds: number; maxWidth: number; fps: number };
+export { captionCues, chapters, toSrt, toVtt } from "../../explainer/core/exports.mjs";

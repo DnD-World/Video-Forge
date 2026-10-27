@@ -1,4 +1,4 @@
-# BYOK-Vid-Creator — Handoff 2
+# Video Forge — Handoff 2
 
 Written to preserve full context if this conversation ends or a new session
 picks up the work. Supersedes nothing in `handoff 1.md` — read that first for
@@ -200,7 +200,7 @@ exact multi-environment confusion that caused the Piper Flask/hermes-agent
 mixup), then in the server's own Web UI select "Chatterbox Multilingual"
 once from the engine dropdown so `config.yaml` saves that as the active
 model (`model.repo_id: chatterbox-multilingual`). After that one-time
-step, `BYOK-Vid-Creator` just needs the install folder path (Backend
+step, `Video Forge` just needs the install folder path (Backend
 Settings → Chatterbox Multilingual panel) and starts the server itself
 from then on.
 

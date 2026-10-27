@@ -19,7 +19,8 @@ import path from "node:path";
 import fsp from "node:fs/promises";
 import os from "node:os";
 import { bundle } from "@remotion/bundler";
-import { selectComposition, renderMedia, ensureBrowser } from "@remotion/renderer";
+import { selectComposition, renderMedia, ensureBrowser, makeCancelSignal } from "@remotion/renderer";
+import { renderHyperframes } from "./hyperframes/renderHyperframes";
 import {
   COMPOSITION_ID,
   type RenderBackground,
@@ -29,6 +30,11 @@ import {
 import type { Puppet } from "../../src/store/puppetTypes";
 import { puppetAssetPaths, validatePuppet } from "../../src/lib/puppets/puppetAssets";
 import { ensureFont } from "../net/fonts";
+import { joinCards } from "./joinCards";
+import { spawnTracked } from "../process/childTree";
+import { ffmpegBin } from "../process/ffmpegPath";
+import { buildCues } from "../../src/lib/subtitles/wordTiming";
+import { toSrt, toVtt } from "../../src/lib/subtitles/subtitleFiles";
 
 export interface RenderJob {
   musicWaveform: RenderProps["musicWaveform"];
@@ -71,6 +77,7 @@ export interface RenderJob {
   }[];
   backgroundDim?: number;
   backgroundBlur?: number;
+  backgroundBand?: { top: number; bottom: number } | null;
   glass?: RenderProps["glass"];
   backgroundCrossfadeMs?: number;
   subtitles: RenderProps["subtitles"];
@@ -78,11 +85,52 @@ export interface RenderJob {
   idleMotion?: number;
   narrationSegments?: RenderProps["narrationSegments"];
   narrationPauses?: number[];
+  /** "Made with Video Forge" on the picture, and in the file's own notes. */
+  aiLabel?: boolean;
+  /** Start of the file name ("el-9x16"), when one project makes several videos. */
+  fileStem?: string;
   /** x264 quality, 0–51: lower is better and bigger. Absent means 23, which is
    *  x264's own default and the usual "visually transparent" mark. Exposed so
    *  a batch can trade size against quality per row — a social cut and an LMS
    *  master do not want the same file. */
   crf?: number;
+  /** Colour effect on the footage (src/lib/background/colorLook.ts). */
+  backgroundColorLook?: string;
+  /** Which engine draws the frames. Default "hyperframes"; "remotion" for comparisons. */
+  engine?: "hyperframes" | "remotion";
+  /** A short card welded onto the front and the back after rendering.
+   *
+   *  JOINED AFTERWARDS, NOT PLACED INSIDE. A card in the composition would move
+   *  the narration, every subtitle cue and every viseme by its own length, and
+   *  a two-frame error there breaks lip-sync for the whole lesson. See
+   *  joinCards.ts. Any video ffmpeg can read; it is scaled and padded to the
+   *  frame and given a silent track if it has none. */
+  introPath?: string | null;
+  outroPath?: string | null;
+  /** Play the intro OVER the first N ms of the lesson instead of before it.
+   *
+   *  A course lesson opens with a couple of seconds of held silence carrying
+   *  the music's opening swell — room for exactly this. Welding the intro on
+   *  the front instead would put two seconds of intro in front of two seconds
+   *  of nothing, and the swell would play to an empty screen.
+   *
+   *  An overlay, never an insert: the lesson's own timeline does not move by a
+   *  frame, so lip-sync cannot drift — the whole reason cards are joined after
+   *  the render rather than placed inside it. */
+  introOverMs?: number;
+  topScrim?: RenderProps["topScrim"];
+  /** A looping banner clip for the bottom edge, copied into the public dir. */
+  bannerVideo?: { filePath: string; cropTop: number; cropBottom: number } | null;
+  /** A logo over the video. The file is copied into the render's public dir
+   *  like the faces and the audio, because the composition runs in a browser
+   *  and cannot read the disk. */
+  logo?: {
+    filePath?: string | null;
+    position: "top-left" | "top-right" | "bottom-left" | "bottom-right" | "bottom-center" | "watermark";
+    size: number;
+    opacity: number;
+    margin: number;
+  } | null;
 }
 
 export interface RenderContext {
@@ -93,6 +141,9 @@ export interface RenderContext {
    *  here because only main knows where userData is. */
   fontsDir: string;
   onProgress: (pct: number, note: string) => void;
+  /** Aborting stops the render: the processes it started are ended and the
+   *  half-made file is removed. */
+  signal?: AbortSignal;
 }
 
 const AUDIO_PUBLIC_NAME = "narration.wav";
@@ -138,11 +189,17 @@ export async function renderVideo(
   // headless browser, which is why the audio has to be copied in rather than
   // referenced by absolute path — a file:// src would be blocked as a
   // cross-origin request from the bundle's http:// origin.
-  const publicDir = await fsp.mkdtemp(path.join(os.tmpdir(), "byok-render-"));
+  const publicDir = await fsp.mkdtemp(path.join(os.tmpdir(), "video-forge-render-"));
   let audioFileName: string | null = null;
   const warnings: string[] = [];
+  /** The video being written, so a Stop can remove the half of it. */
+  let partialOutput: string | null = null;
+  const stopped = () => {
+    if (ctx.signal?.aborted) throw new Error("Stopped.");
+  };
 
   try {
+    stopped();
     if (job.audioFilePath) {
       await fsp.copyFile(job.audioFilePath, path.join(publicDir, AUDIO_PUBLIC_NAME));
       audioFileName = AUDIO_PUBLIC_NAME;
@@ -188,7 +245,7 @@ export async function renderVideo(
       } catch {
         // Silent video with music missing is wrong; a video with no music is
         // merely plainer. Carry on and say so.
-        warnings.push("[byok] The music file couldn't be read; rendering without it.");
+        warnings.push("[video-forge] The music file couldn't be read; rendering without it.");
       }
     }
 
@@ -241,7 +298,7 @@ export async function renderVideo(
               await fsp.copyFile(abs, path.join(publicDir, name));
               layerNameByPath.set(abs, name);
             } catch {
-              warnings.push(`[byok] ${label}: layer ${file} could not be read.`);
+              warnings.push(`[video-forge] ${label}: layer ${file} could not be read.`);
               continue;
             }
           }
@@ -286,10 +343,14 @@ export async function renderVideo(
         bgColor: sp.bgColor, borderColor: sp.borderColor,
         bgOpacity: sp.bgOpacity, borderOpacity: sp.borderOpacity,
         outlineShape: sp.outlineShape, waveform: sp.waveform,
+        // Both were missing here: the frame thickness and the gestures were
+        // seen in the preview and lost in the render (13 Oct 2026).
+        frameWidth: sp.frameWidth, gestures: sp.gestures, facing: sp.facing, sitting: sp.sitting,
         surface: sp.surface,
         sheetFileName,
         puppet: prepared?.puppet ?? null,
         puppetFiles: prepared?.files ?? {},
+        character: sp.character ?? null,
       });
     }
 
@@ -307,7 +368,7 @@ export async function renderVideo(
           sfxNameByPath.set(clip.filePath, name);
         } catch {
           warnings.push(
-            `[byok] The sound effect "${clip.label ?? clip.filePath}" couldn't be read; skipped.`
+            `[video-forge] The sound effect "${clip.label ?? clip.filePath}" couldn't be read; skipped.`
           );
           continue;
         }
@@ -335,7 +396,7 @@ export async function renderVideo(
           // One unreadable clip is one plain stretch of video, not a failed
           // render — same rule as a missing viseme sheet.
           warnings.push(
-            `[byok] Background clip for "${bg.query ?? "a scene"}" couldn't be read; ` +
+            `[video-forge] Background clip for "${bg.query ?? "a scene"}" couldn't be read; ` +
               `that stretch renders without one.`
           );
           continue;
@@ -370,7 +431,7 @@ export async function renderVideo(
         subtitleFont = { family: font.family, weight: font.weight, faces };
       } catch (e) {
         warnings.push(
-          `[byok] Couldn't prepare the subtitle font "${job.subtitles.fontFamily}" ` +
+          `[video-forge] Couldn't prepare the subtitle font "${job.subtitles.fontFamily}" ` +
             `(${e instanceof Error ? e.message : String(e)}); using the default typeface.`
         );
       }
@@ -390,13 +451,56 @@ export async function renderVideo(
     });
 
     onProgress(STAGE.bundle.from, "Building render bundle…");
-    const serveUrl = await bundle({
-      entryPoint,
-      publicDir,
-      onProgress: (percent) => {
-        onProgress(lerp(STAGE.bundle, percent / 100), "Building render bundle…");
-      },
-    });
+    // The logo travels the same road as every other asset, and it has to be
+    // copied in BEFORE bundle() runs — the bundler copies the public directory
+    // into what it serves, so anything written afterwards is never served. It
+    // was written afterwards first time and the render died with "Error loading
+    // image", which is at least loud; the same mistake with the spectrum failed
+    // silently and cost a day.
+    // The intro is copied in beside the logo, and for the same reason: the
+    // bundler serves the public dir as it stood when it ran.
+    let introOverlay: RenderProps["introOverlay"] = null;
+    if (job.introOverMs && job.introPath) {
+      try {
+        const ext = path.extname(job.introPath) || ".mp4";
+        const fileName = `intro${ext}`;
+        await fsp.copyFile(job.introPath, path.join(publicDir, fileName));
+        introOverlay = { fileName, durationMs: job.introOverMs };
+      } catch {
+        warnings.push(`[video-forge] the intro could not be read and was left off: ${job.introPath}`);
+      }
+    }
+
+    let bannerProps: RenderProps["bannerVideo"] = null;
+    if (job.bannerVideo?.filePath) {
+      try {
+        const ext = path.extname(job.bannerVideo.filePath) || ".mp4";
+        const fileName = `banner${ext}`;
+        await fsp.copyFile(job.bannerVideo.filePath, path.join(publicDir, fileName));
+        bannerProps = { fileName, cropTop: job.bannerVideo.cropTop, cropBottom: job.bannerVideo.cropBottom };
+      } catch {
+        warnings.push(`[video-forge] the banner could not be read and was left off: ${job.bannerVideo.filePath}`);
+      }
+    }
+
+    let logoProps: RenderProps["logo"] = null;
+    if (job.logo?.filePath) {
+      try {
+        const ext = path.extname(job.logo.filePath) || ".png";
+        const fileName = `logo${ext}`;
+        await fsp.copyFile(job.logo.filePath, path.join(publicDir, fileName));
+        logoProps = {
+          fileName,
+          position: job.logo.position,
+          size: job.logo.size,
+          opacity: job.logo.opacity,
+          margin: job.logo.margin,
+        };
+      } catch {
+        warnings.push(`[video-forge] the logo could not be read and was left off: ${job.logo.filePath}`);
+      }
+    }
+
 
     const inputProps: RenderProps = {
       musicWaveform: job.musicWaveform,
@@ -423,6 +527,12 @@ export async function renderVideo(
       backgrounds,
       backgroundDim: job.backgroundDim ?? 0,
       backgroundBlur: job.backgroundBlur ?? 0,
+      backgroundColorLook: job.backgroundColorLook ?? "none",
+      backgroundBand: job.backgroundBand ?? null,
+      logo: logoProps,
+      introOverlay,
+      bannerVideo: bannerProps,
+      topScrim: job.topScrim ?? null,
       glass: job.glass ?? null,
       backgroundCrossfadeMs: job.backgroundCrossfadeMs ?? 0,
       subtitles: job.subtitles,
@@ -431,81 +541,178 @@ export async function renderVideo(
       idleMotion: job.idleMotion ?? 0,
       narrationSegments: job.narrationSegments ?? [],
       narrationPauses: job.narrationPauses ?? [],
+      aiLabel: job.aiLabel ?? false,
     };
 
-    const composition = await selectComposition({
-      serveUrl,
-      id: COMPOSITION_ID,
-      inputProps,
-    });
+    // ASKED FOR, AND NEVER FORWARDED.
+    //
+    // This project's failure is not the crash. It is the render that reports
+    // success while quietly leaving something out, and it has happened four
+    // times: the spectrum 404, `backgroundBlur`, subtitle surfaces, and
+    // transitions. Every one was the same shape — a setting arrived on the job,
+    // nothing carried it into `inputProps`, and the composition drew a video
+    // that was subtly not the one that was asked for.
+    //
+    // A console message inside the composition cannot catch that class, because
+    // the composition never hears about the setting at all. So the check is
+    // here, where both sides are in scope: anything set on the job that is not
+    // in `inputProps` and is not consumed by this file is named out loud.
+    //
+    // Keeping this list current is the price. A new job field either reaches
+    // the composition or it is listed below as deliberately handled here —
+    // there is no third option that passes quietly.
+    const HANDLED_HERE = new Set([
+      "audioFilePath",      // copied in, forwarded as audioFileName
+      "musicFilePath",      // same
+      "speakers",           // sheets and puppets are copied in and rewritten
+      "sfx",                // copied in, rewritten to file names
+      "backgrounds",        // clips copied in, rewritten to file names
+      "subtitleFont",       // fetched and forwarded as files
+      "crf",                // encoder setting, never reaches the composition
+      "engine",             // chooses the renderer, never reaches the composition
+      "introPath",          // joined on after the render, or overlaid — see below
+      "introOverMs",        // forwarded as `introOverlay` in inputProps
+      "bannerVideo",        // copied in, forwarded as `bannerVideo`
+      "outroPath",
+      "logo",               // copied in and forwarded as `logo` in inputProps
+      "projectRoot",
+      "outputDir",
+      "outputName",
+      "fileStem",
+      "jobId",
+    ]);
+    for (const [key, value] of Object.entries(job)) {
+      if (value === undefined || value === null) continue;
+      if (key in inputProps) continue;
+      if (HANDLED_HERE.has(key)) continue;
+      warnings.push(
+        `[video-forge] the render was given "${key}" and nothing carried it into the ` +
+          `composition — it had NO EFFECT on this video.`
+      );
+    }
 
     await fsp.mkdir(outputDir, { recursive: true });
-    const outputPath = path.join(outputDir, `render-${Date.now()}.mp4`);
+    const stem = job.fileStem ? job.fileStem.replace(/[^\p{L}\p{N}_-]+/gu, "_").slice(0, 40) : "render";
+    const outputPath = path.join(outputDir, `${stem}-${Date.now()}.mp4`);
+    partialOutput = outputPath;
+    const frames = Math.max(1, Math.round(job.durationSec * job.fps));
 
-    onProgress(STAGE.render.from, "Rendering frames…");
-    await renderMedia({
-      composition,
-      serveUrl,
-      codec: "h264",
-      outputLocation: outputPath,
-      inputProps,
-      // MEASURED: the first nine-minute render came out at 668 MB — about
-      // 10 Mbit/s — because nothing here set a quality and Remotion's default
-      // is deliberately generous. That is not a decision anyone made, and no
-      // LMS wants a 668 MB lesson.
-      //
-      // CRF is a quality target, not a bitrate: the encoder spends bits where
-      // the picture needs them and saves them where it doesn't, which suits
-      // this material well since long stretches are a near-static frame with a
-      // moving mouth and a waveform. 23 is x264's own default and the usual
-      // "visually transparent" mark for delivery.
-      //
-      // `medium` rather than `veryfast` because rendering frames already
-      // dominates the clock at two thirds of the total — spending a little
-      // more time in the encoder to make the file substantially smaller is the
-      // right side of that trade.
-      crf: job.crf ?? 23,
-      x264Preset: "medium",
-      // Audio at a real bitrate rather than whatever falls out. Narration is
-      // the one thing a lesson cannot afford to sound cheap.
-      audioCodec: "aac",
-      audioBitrate: "192k",
-      // The composition can't talk back except through the browser console, and
-      // the one thing it needs to say — "I couldn't load the spectrum, this
-      // video is silently worse than it should be" — is invisible otherwise.
-      onBrowserLog: (log) => {
-        // Deduped, because these come from inside the composition and the
-        // composition runs once per frame across several workers. Without this
-        // one missing eyebrow is six hundred identical lines.
-        if (log.text.includes("[byok]") && !warnings.includes(log.text)) {
-          warnings.push(log.text);
-        }
-      },
-      onProgress: ({ progress }) => {
-        onProgress(lerp(STAGE.render, progress), "Rendering frames…");
-      },
-    });
+    // THE ENGINE. HyperFrames by default since 11 Oct 2026 (licence-free for
+    // everyone; docs/research/hyperframes-trial.md). Remotion stays selectable
+    // with `engine: "remotion"` for side-by-side checks until the switch has
+    // proven itself on real lessons — then it goes.
+    if ((job.engine ?? "hyperframes") === "hyperframes") {
+      onProgress(STAGE.bundle.from, "Preparing the HyperFrames render…");
+      await renderHyperframes({
+        dir: publicDir,
+        props: inputProps,
+        appRoot: projectRoot,
+        crf: job.crf ?? 23,
+        outputPath,
+        onProgress: (f, note) => onProgress(lerp({ from: STAGE.bundle.from, to: 99 }, f), note),
+        signal: ctx.signal,
+      });
+    } else {
+      const serveUrl = await bundle({
+        entryPoint,
+        publicDir,
+        onProgress: (percent) => {
+          onProgress(lerp(STAGE.bundle, percent / 100), "Building render bundle…");
+        },
+      });
 
-    // EVERY warning, not just the first.
-    //
-    // This line used to read `warnings[0]`, so a render that dropped four
-    // different things reported one of them and called the rest done. That is
-    // this project's actual failure mode — not crashing, but succeeding while
-    // quietly leaving something out — and it has happened with the spectrum,
-    // backgroundBlur, subtitle surfaces and transitions. A wrong video that
-    // reports success is the one thing that can reach a student.
+      const composition = await selectComposition({
+        serveUrl,
+        id: COMPOSITION_ID,
+        inputProps,
+      });
+      if (composition.durationInFrames !== frames) {
+        warnings.push(`[video-forge] frame count differs: Remotion ${composition.durationInFrames}, expected ${frames}`);
+      }
+
+      onProgress(STAGE.render.from, "Rendering frames…");
+      const { cancelSignal, cancel } = makeCancelSignal();
+      ctx.signal?.addEventListener("abort", () => cancel());
+      stopped();
+      await renderMedia({
+        cancelSignal,
+        composition,
+        serveUrl,
+        codec: "h264",
+        outputLocation: outputPath,
+        inputProps,
+        crf: job.crf ?? 23,
+        x264Preset: "medium",
+        audioCodec: "aac",
+        audioBitrate: "192k",
+        onBrowserLog: (log) => {
+          if (log.text.includes("[video-forge]") && !warnings.includes(log.text)) {
+            warnings.push(log.text);
+          }
+        },
+        onProgress: ({ progress }) => {
+          onProgress(lerp(STAGE.render, progress), "Rendering frames…");
+        },
+      });
+    }
+
+    stopped();
     for (const w of warnings) onProgress(99, w);
     onProgress(
       100,
       warnings.length ? `Done, with ${warnings.length} thing(s) left out — see above` : "Done"
     );
+    // The cards go on last, once the lesson is finished and timed.
+    const joined = await joinCards({
+      mainPath: outputPath,
+      // An overlaid intro is already in the picture; joining it again would
+      // show it twice.
+      introPath: job.introOverMs ? null : job.introPath,
+      outroPath: job.outroPath,
+      width: job.width,
+      height: job.height,
+      fps: job.fps,
+      crf: job.crf ?? 23,
+      tempDir: path.join(path.dirname(outputPath), `cards-${Date.now()}`),
+    });
+    warnings.push(...joined.warnings);
+    for (const w of joined.warnings) onProgress(99, w);
+
+    // THE LABEL IN THE FILE, too: a note any player or platform can read.
+    // Copied, not re-encoded — a second or two.
+    if (job.aiLabel) {
+      const tagged = joined.outputPath.replace(/\.mp4$/i, ".tagged.mp4");
+      const ok = await new Promise<boolean>((resolve) => {
+        const p = spawnTracked(ffmpegBin(), ["-y", "-i", joined.outputPath, "-map", "0", "-c", "copy", "-metadata", "comment=Made with Video Forge", "-metadata", "encoded_by=Video Forge", tagged], { windowsHide: true });
+        p.on("error", () => resolve(false));
+        p.on("close", (code) => resolve(code === 0));
+      });
+      if (ok) await fsp.rename(tagged, joined.outputPath).catch(() => {});
+      else await fsp.rm(tagged, { force: true }).catch(() => {});
+    }
+
+    // SUBTITLE FILES beside the video, same cues as the picture, shifted by
+    // any intro card joined in front (Ak, 13 Oct 2026).
+    if (job.narrationSegments?.length) {
+      try {
+        const cues = buildCues(job.narrationSegments, job.subtitles.maxChars, job.narrationPauses ?? []);
+        const stem = joined.outputPath.replace(/\.mp4$/i, "");
+        await fsp.writeFile(`${stem}.srt`, toSrt(cues, joined.introSec * 1000), "utf8");
+        await fsp.writeFile(`${stem}.vtt`, toVtt(cues, joined.introSec * 1000), "utf8");
+      } catch (e) {
+        warnings.push(`[video-forge] the subtitle files could not be written: ${(e as Error).message}`);
+      }
+    }
+
     return {
-      outputPath,
-      durationSec: job.durationSec,
-      frames: composition.durationInFrames,
+      outputPath: joined.outputPath,
+      durationSec: job.durationSec + joined.introSec + joined.outroSec,
+      frames,
       warnings,
     };
   } finally {
+    // A Stop leaves no half-made video behind.
+    if (ctx.signal?.aborted && partialOutput) await fsp.rm(partialOutput, { force: true }).catch(() => {});
     // Best-effort: a leftover temp dir must never fail an otherwise good render.
     await fsp.rm(publicDir, { recursive: true, force: true }).catch(() => {});
   }

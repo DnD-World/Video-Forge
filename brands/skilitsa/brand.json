@@ -1,0 +1,69 @@
+{
+  "name": "Skilitsa",
+  "puppetDir": "puppet",
+  "cast": [
+    {
+      "file": "kaiti.puppet.json",
+      "label": "Καίτη",
+      "note": "Human presenter",
+      "borderColor": "#e8a24a",
+      "x": 0.28,
+      "y": 0.42,
+      "openingPhrase": "A bright woman",
+      "voiceRef": "kaiti.wav",
+      "dramabox": {
+        "durationMultiplier": 0.85
+      },
+      "voice": {
+        "engine": "gemini",
+        "geminiModel": "gemini-2.5-flash-native-audio-latest",
+        "geminiVoice": "Leda"
+      }
+    },
+    {
+      "file": "serifis.puppet.json",
+      "label": "Σερίφης",
+      "note": "Schnauzer — bushy brows",
+      "borderColor": "#6fb3d9",
+      "x": 0.5,
+      "y": 0.7,
+      "openingPhrase": "A grave man",
+      "voiceRef": "serifis.wav",
+      "voice": {
+        "engine": "gemini",
+        "geminiModel": "gemini-2.5-flash-native-audio-latest",
+        "geminiVoice": "Charon",
+        "pitch": -2
+      }
+    },
+    {
+      "file": "tsika.puppet.json",
+      "label": "Τσίκα",
+      "note": "Chihuahua",
+      "borderColor": "#c98ad9",
+      "x": 0.72,
+      "y": 0.42,
+      "openingPhrase": "A tiny woman",
+      "voiceRef": "tsika.wav",
+      "voice": {
+        "engine": "gemini",
+        "geminiModel": "gemini-3.1-flash-live-preview",
+        "geminiVoice": "Laomedeia"
+      }
+    }
+  ],
+  "sample": {
+    "name": "Dogs & Butterflies",
+    "language": "el",
+    "script": "A bright woman speaks warmly, \"Η σκυλίτσα μου κυνηγάει πεταλούδες. Κάθε μία. Κάθε φορά.\" She laughs, \"Hahaha! Και ποτέ, μα ποτέ, δεν πιάνει καμία.\"\n\nA grave man speaks evenly, \"Δεν κυνηγάει πεταλούδες. Κυνηγάει κάτι που κινείται.\" He sharpens suddenly, \"ΑΥΤΟ ΕΙΝΑΙ ΤΟ ΕΝΣΤΙΚΤΟ. Δεν διαλέγει το θήραμα.\"\n\nA tiny woman speaks with delight, \"Εγώ κυνηγάω τα πάντα! Πεταλούδες, φύλλα, τη σκιά μου!\" She hums quietly, \"Mmmm-mmm, η σκιά μου είναι η καλύτερη.\"\n\nA bright woman speaks warmly, \"Οπότε δεν φταίει που δεν με ακούει όταν τρέχει;\"\n\nA grave man speaks heavily, \"Δεν σε ακούει επειδή το κυνήγι είναι πιο δυνατό από τη φωνή σου.\" He speaks with frustration, \"Πρέπει να γίνεις πιο ενδιαφέρουσα από την πεταλούδα. Και αυτό δεν γίνεται με φωνές.\"\n\n[SFX: clicker-training]\n\nA bright woman continues, \"Ξεκινάμε μέσα στο σπίτι, εκεί που δεν πετάει τίποτα.\" She pauses, \"Λες το όνομά της. Μόλις γυρίσει το κεφάλι, λες ναι, και δίνεις κάτι πολύ καλό.\"\n\nA tiny woman bursts into uncontrollable laughter, \"Hahaha! Τυρί! Πες ότι είναι τυρί!\"\n\nA bright woman speaks tenderly, \"Τυρί, ναι. Και μετά, σιγά σιγά, βγαίνεις έξω.\" She continues, \"Πρώτα στην αυλή. Μετά στο πάρκο. Και μόνο όταν αυτό δουλεύει, δοκιμάζεις με μια πεταλούδα στον ορίζοντα.\"\n\nA grave man speaks evenly, \"Μία αλλαγή τη φορά. Ποτέ δύο.\" He drops to a whisper, \"Και σταμάτα πριν βαρεθεί. Πάντα.\""
+  },
+  "addOutros": {
+    "outrosDir": "outros/cut",
+    "lessonsSrc": "C:/Users/strav/Documents/CLAUDE SPACE/lms/tts/out"
+  },
+  "forgeCharacters": {
+    "kaiti": "Kaiti, a young woman in her early twenties with long auburn hair in a high side ponytail over her right shoulder, a patterned headband in pink, lilac and pale yellow, small dog-shaped earrings, wearing a colour-blocked jacket in teal, mustard yellow and dusty pink",
+    "serifis": "Serifis, a cartoon schnauzer dog police officer standing upright like a person, wiry grey and charcoal fur, big bushy schnauzer beard and eyebrows, floppy ears, navy blue police uniform with a peaked cap and a chest badge",
+    "tsika": "Tsika, a cartoon chihuahua dog standing upright like a person, small and cute, warm fawn fur, very large upright pointed ears, short little muzzle, wearing a pink dress with a bow"
+  }
+}

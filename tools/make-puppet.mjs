@@ -1,7 +1,7 @@
 // ---------------------------------------------------------------------------
 // Turns a compact author spec into a runtime puppet definition.
 //
-//   node tools/make-puppet.mjs puppet/kaiti.spec.json puppet/kaiti.puppet.json
+//   node tools/make-puppet.mjs brands/skilitsa/puppet/kaiti.spec.json brands/skilitsa/puppet/kaiti.puppet.json
 //
 // The only thing it adds is each layer's own pixel dimensions, read from the
 // PNGs. Those live in the runtime file so the app never has to wait for an

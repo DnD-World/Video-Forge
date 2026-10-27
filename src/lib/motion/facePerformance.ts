@@ -177,6 +177,132 @@ export interface BrowSpan {
   set: string;
 }
 
+// ---------------------------------------------------------------------------
+// What the script SAYS the line feels
+// ---------------------------------------------------------------------------
+
+/**
+ * A feeling tag from the script → what the face does for that whole line.
+ *
+ * WHY THIS BEATS PUNCTUATION. Punctuation is all the face had, so a line could
+ * only ask a question or shout. The scripts have carried a feeling on nearly
+ * every line all along — `[curiosity]`, `[nervousness]`, `[amazed]` — and 3,600
+ * of those tags were being thrown away at the door.
+ *
+ * Punctuation still applies ON TOP: a mood span covers the line, a question
+ * mark inside it wins for its own moment, because it is the later span.
+ *
+ * `lid` and `rest` are for puppets that have those layers. Anything missing
+ * falls back — a face without a "raised" brow uses its resting one rather than
+ * drawing nothing.
+ */
+export interface MoodFace {
+  brow?: string;
+  /** The eyes' resting state while this feeling lasts. Blinks still happen. */
+  lid?: "wide" | "half";
+  /** Use the closed-smile mouth between words instead of the neutral one. */
+  smile?: boolean;
+  head?: HeadGestureKind;
+}
+
+const MOOD: Record<string, MoodFace> = {
+  // Warm, pleased, fond — the largest group by far, about 900 lines.
+  positive: { brow: "happy", smile: true },
+  enthusiasm: { brow: "happy", smile: true },
+  excitement: { brow: "happy", smile: true },
+  excited: { brow: "happy", smile: true },
+  amusement: { brow: "happy", smile: true, head: "bob" },
+  adoration: { brow: "happy", smile: true },
+  admiration: { brow: "happy", smile: true },
+  hope: { brow: "happy", smile: true },
+  proud: { brow: "happy", smile: true },
+  laughs: { brow: "happy", smile: true, head: "bob" },
+  giggles: { brow: "happy", smile: true, head: "bob" },
+  mischievously: { brow: "happy", smile: true },
+  // Teaching, insisting, disapproving. "firm" is the heavy brow drawing; a
+  // puppet without one falls back to its resting brows.
+  //
+  // "[serious]" IS NOT ANGRY. It is on 1,500 lines and in these scripts it
+  // means "calm, teaching tone". Drawn with the serious brows, the first render
+  // had all three of them glaring through a lesson about chewed slippers —
+  // Καίτη smiling with a scowl on top. The resting face is what calm looks
+  // like; the heavy brows are kept for the lines that really are firm.
+  serious: {},
+  seriousness: {},
+  determination: { brow: "firm" },
+  frustration: { brow: "firm", head: "shake" },
+  annoyance: { brow: "firm" },
+  negative: { brow: "firm", head: "shake" },
+  sarcastic: { brow: "confused" },
+  // Taken aback.
+  amazed: { brow: "raised", lid: "wide" },
+  surprise: { brow: "raised", lid: "wide" },
+  awe: { brow: "raised", lid: "wide" },
+  gasp: { brow: "raised", lid: "wide" },
+  // Uneasy.
+  nervousness: { brow: "worried" },
+  tension: { brow: "worried" },
+  panicked: { brow: "worried", lid: "wide" },
+  trembling: { brow: "worried" },
+  agitation: { brow: "worried" },
+  sadness: { brow: "worried", head: "droop" },
+  reluctantly: { brow: "worried", head: "droop" },
+  // Asking, wondering.
+  curiosity: { head: "tilt" },
+  curious: { head: "tilt" },
+  interest: { head: "tilt" },
+  confusion: { brow: "confused", head: "tilt" },
+  // Yes and no, asked for in the script (Ak, 12 Oct 2026): [nods], [shakes head].
+  nods: { head: "nod" },
+  nod: { head: "nod" },
+  agrees: { head: "nod" },
+  yes: { head: "nod" },
+  "shakes head": { head: "shake" },
+  shakes: { head: "shake" },
+  disagrees: { head: "shake" },
+  no: { brow: "firm", head: "shake" },
+  // Settled.
+  neutral: {},
+  tired: { lid: "half" },
+  sighs: { lid: "half" },
+};
+
+/** The face for a feeling, or nothing when the tag is not one we dress. */
+export function moodFace(mood: string | undefined): MoodFace | undefined {
+  return mood ? MOOD[mood] : undefined;
+}
+
+/** Spans of feeling per speaker — one per line that carries a tag.
+ *
+ *  Separate from the brow track because a feeling drives more than brows: the
+ *  eyes rest differently, the mouth rests differently, and the head moves. */
+export function buildSpeakerMoodTracks(
+  segments: NarrationSegment[]
+): Record<string, { startMs: number; endMs: number; mood: string }[]> {
+  const tracks: Record<string, { startMs: number; endMs: number; mood: string }[]> = {};
+  for (const seg of segments) {
+    if (!seg.mood) continue;
+    (tracks[seg.speakerId] ??= []).push({
+      startMs: seg.startMs,
+      endMs: seg.endMs,
+      mood: seg.mood,
+    });
+  }
+  return tracks;
+}
+
+/** The feeling in play for this speaker at this moment. */
+export function moodAt(
+  spans: { startMs: number; endMs: number; mood: string }[] | undefined,
+  timeMs: number
+): string | undefined {
+  let mood: string | undefined;
+  for (const s of spans ?? []) {
+    if (timeMs >= s.startMs && timeMs < s.endMs) mood = s.mood;
+  }
+  return mood;
+}
+
 /** Brows lead the voice slightly — they move as the phrase turns, not after
  *  it lands. A brow that rises on the question mark itself is always late. */
 const BROW_LEAD_MS = 220;
@@ -197,6 +323,19 @@ export function buildSpeakerBrowTracks(
   const tracks: Record<string, BrowSpan[]> = {};
 
   for (const seg of segments) {
+    // THE LINE'S OWN FEELING FIRST, under everything else. Pushed before the
+    // punctuation spans so that where they overlap the punctuation wins —
+    // `browAt` takes the last span covering the moment — which is what you
+    // want: a fond line that happens to ask a question raises its brows for
+    // the question and goes back to fond afterwards.
+    const face = moodFace(seg.mood);
+    if (face?.brow) {
+      (tracks[seg.speakerId] ??= []).push({
+        startMs: Math.max(0, seg.startMs - BROW_LEAD_MS),
+        endMs: seg.endMs + BROW_HOLD_MS,
+        set: face.brow,
+      });
+    }
     const cues = buildCues([seg], Number.MAX_SAFE_INTEGER);
     for (const cue of cues) {
       for (const w of cue.words) {
@@ -248,7 +387,7 @@ export interface HeadPose {
 
 export const HEAD_STILL: HeadPose = { rotateDeg: 0, dx: 0, dy: 0 };
 
-export type HeadGestureKind = "tilt" | "shake" | "droop" | "bob";
+export type HeadGestureKind = "tilt" | "shake" | "droop" | "bob" | "nod";
 
 export interface HeadSpan {
   startMs: number;
@@ -269,6 +408,10 @@ const HEAD_FOR: { test: RegExp; kind: HeadGestureKind }[] = [
   // `!` rule below would otherwise claim it. Both the Greek χα and the Latin
   // ha are matched, because a Greek script routinely carries both.
   { test: /^(χα|χά|χο|ha|he){2,}[!.…]*$/i, kind: "bob" },
+  // A spoken yes nods and a spoken no shakes — the word alone, not "nothing"
+  // or "Νοέμβριος".
+  { test: /^(ναι|ναί|yes|yeah|yep|μάλιστα|βεβαίως)[!.,…]*$/i, kind: "nod" },
+  { test: /^(όχι|οχι|no|nope)[!.,…]*$/i, kind: "shake" },
   { test: /(…|\.\.\.)$/, kind: "droop" },
   { test: /[;?]$/, kind: "tilt" },
   { test: /!$/, kind: "shake" },
@@ -279,12 +422,118 @@ const HEAD_FOR: { test: RegExp; kind: HeadGestureKind }[] = [
 const HEAD_LEAD_MS = 180;
 const HEAD_HOLD_MS = 520;
 
+/* ---------------- arm poses ---------------- */
+
+export interface PoseSpan {
+  startMs: number;
+  endMs: number;
+  pose: string;
+}
+
+/** Script tag → arm pose. The pose names are the ones Image Forge cuts. */
+const POSE_FOR: Record<string, string> = {
+  waves: "wave", wave: "wave", greets: "wave", "waves hello": "wave", "waves goodbye": "wave",
+  points: "point", point: "point", "points to the side": "point", shows: "point",
+  shrugs: "shrug", shrug: "shrug",
+  explains: "explain", explaining: "explain", gestures: "explain",
+};
+
+/** A line that opens with a greeting waves without being asked. */
+const GREETING = /^(γει[αά]|γεια σας|καλώς ήρθ|καλημέρα|καλησπέρα|hello|hi|hey|welcome|good (morning|evening)|bye|αντίο|τα λέμε)/i;
+
+const POSE_HOLD_MS = 1600;
+
+/** Words that point at something: the hand goes out to the side. */
+const POINTING = /^(this|that|these|those|here|there|look|see|αυτ[όόήά]|αυτ[έε]ς|εδ[ώω]|εκε[ίι]|κοίτα|κοιτάξτε|δε[ίι]τε|δες)$/i;
+const QUESTION = /[?;;]\s*$/;
+
+/**
+ * When each speaker's arms do something. A pose is held for about a second
+ * and a half, then the arms go back to rest — a hand left up for a whole
+ * paragraph reads as a frozen frame, not a wave.
+ *
+ * Tags ([waves], [points]…) and greetings always count. On top of that, unless
+ * a speaker's "how much they gesture" is 0 (13 Oct 2026 — Ak had never seen a
+ * puppet move its hands, because nothing asked them to):
+ *  · a question → shrug;
+ *  · "this / here / look / αυτό / εδώ / κοίτα" → point, on that word;
+ *  · a longer line with nothing else → explain, a third of the way in. How
+ *    many of those get one is what the amount sets (0.5: every other line).
+ * Never random: the same script always moves the same way, preview or render.
+ */
+export function buildSpeakerPoseTracks(segments: NarrationSegment[], amount: Record<string, number> = {}): Record<string, PoseSpan[]> {
+  const tracks: Record<string, PoseSpan[]> = {};
+  const lineNo: Record<string, number> = {};
+  const push = (id: string, startMs: number, endCap: number, pose: string) =>
+    (tracks[id] ??= []).push({ startMs: Math.max(0, startMs - 150), endMs: Math.min(endCap, startMs + POSE_HOLD_MS), pose });
+  for (const seg of segments) {
+    const n = (lineNo[seg.speakerId] = (lineNo[seg.speakerId] ?? -1) + 1);
+    const tags = seg.tags ?? (seg.mood ? [seg.mood] : []);
+    const asked = tags.map((t) => POSE_FOR[t]).find(Boolean) ?? (GREETING.test(seg.text.trim()) ? "wave" : undefined);
+    if (asked) {
+      push(seg.speakerId, seg.startMs, seg.endMs, asked);
+      continue;
+    }
+    const k = Math.max(0, Math.min(1, amount[seg.speakerId] ?? 0.5));
+    if (k === 0) continue;
+    // pointing words, on the word itself
+    let pointed = false;
+    for (const cue of buildCues([seg], Number.MAX_SAFE_INTEGER)) {
+      for (const w of cue.words) {
+        if (!pointed && POINTING.test(w.text.replace(/[^\p{L}]/gu, ""))) {
+          push(seg.speakerId, w.startMs, seg.endMs, "point");
+          pointed = true;
+        }
+      }
+    }
+    if (pointed) continue;
+    if (QUESTION.test(seg.text.trim())) {
+      push(seg.speakerId, seg.startMs + Math.min(600, (seg.endMs - seg.startMs) * 0.3), seg.endMs, "shrug");
+      continue;
+    }
+    // every line at 1, every other at 0.5, one in four at 0.25
+    const every = Math.max(1, Math.round(1 / k));
+    if (seg.endMs - seg.startMs >= 2200 && n % every === 0) {
+      push(seg.speakerId, seg.startMs + (seg.endMs - seg.startMs) / 3, seg.endMs, "explain");
+    }
+  }
+  return tracks;
+}
+
+/** The pose at a moment, or undefined for arms at rest. */
+export function poseAt(spans: PoseSpan[] | undefined, timeMs: number): string | undefined {
+  return spans?.find((s) => timeMs >= s.startMs && timeMs < s.endMs)?.pose;
+}
+
+/** Yes and no in the tags: [nods] and [shakes head] reach the head even when
+ *  a feeling came first on the line. */
+const HEAD_TAG: Record<string, HeadGestureKind> = { nods: "nod", nod: "nod", "shakes head": "shake", "shakes his head": "shake", "shakes her head": "shake" };
+
 export function buildSpeakerHeadTracks(
   segments: NarrationSegment[]
 ): Record<string, HeadSpan[]> {
   const tracks: Record<string, HeadSpan[]> = {};
 
   for (const seg of segments) {
+    // A gesture for the line's feeling, at the top of the line only. It runs
+    // for about a second and settles: a head that tilts for a whole paragraph
+    // is a head stuck sideways, not a curious one.
+    const face = moodFace(seg.mood);
+    const tagged = (seg.tags ?? []).map((t) => HEAD_TAG[t]).find(Boolean);
+    if (tagged && tagged !== face?.head) {
+      (tracks[seg.speakerId] ??= []).push({
+        startMs: Math.max(0, seg.startMs - HEAD_LEAD_MS),
+        endMs: Math.min(seg.endMs, seg.startMs + 1100),
+        kind: tagged,
+      });
+    }
+    if (face?.head) {
+      (tracks[seg.speakerId] ??= []).push({
+        startMs: Math.max(0, seg.startMs - HEAD_LEAD_MS),
+        endMs: Math.min(seg.endMs, seg.startMs + 1100),
+        kind: face.head,
+      });
+    }
     const cues = buildCues([seg], Number.MAX_SAFE_INTEGER);
     for (const cue of cues) {
       for (const w of cue.words) {
@@ -381,6 +630,12 @@ export function headPoseAt(
       const local = (timeMs - s.startMs) / 1000;
       rotateDeg += -3.5 * a + Math.sin(local * Math.PI * 2 * 3.2) * 2.2 * a;
       dy += -0.014 * a + Math.abs(Math.sin(local * Math.PI * 2 * 6.4)) * 0.02 * a;
+    } else if (s.kind === "nod") {
+      // Yes: the head dips twice and comes back up, the second dip smaller.
+      // Down and up only — a nod that also turns reads as a "maybe".
+      const local = (timeMs - s.startMs) / 1000;
+      dy += Math.max(0, Math.sin(local * Math.PI * 2 * 2.4)) * 0.03 * a * Math.exp(-local * 1.6);
+      rotateDeg += Math.max(0, Math.sin(local * Math.PI * 2 * 2.4)) * 1.2 * a * Math.exp(-local * 1.6);
     } else {
       // Droop: down and slightly forward, the trailing-off gesture.
       rotateDeg += 3 * a;

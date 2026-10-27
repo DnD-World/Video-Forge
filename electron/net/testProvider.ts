@@ -13,6 +13,7 @@
 
 import { request } from "./http";
 import * as keyStore from "../keyStore";
+import { PROVIDERS } from "../../tools/lib/explainerLlm.mjs";
 
 export interface ProviderTestResult {
   ok: boolean;
@@ -25,13 +26,13 @@ export interface ProviderTestResult {
 function interpret(status: number, body: string): ProviderTestResult {
   if (status >= 200 && status < 300) return { ok: true, message: "Key works." };
   if (status === 401 || status === 403) {
-    return { ok: false, message: "Key rejected (401/403) — wrong key, or it hasn't been activated yet." };
+    return { ok: false, message: "Key rejected (401/403) — wrong key, or it hasn't been activated yet. Paste it again, or make a new one on the service's website." };
   }
   if (status === 429) {
     return { ok: false, message: "Rate limited (429) — the key is probably valid, just try again shortly." };
   }
   const snippet = body.trim().slice(0, 160);
-  return { ok: false, message: `Provider returned ${status}${snippet ? ` — ${snippet}` : ""}` };
+  return { ok: false, message: `Provider returned ${status}${snippet ? ` — ${snippet}` : ""}. Try again in a minute; if it keeps happening, make a new key.` };
 }
 
 export interface TestOptions {
@@ -50,6 +51,43 @@ export async function testProvider(
 
   try {
     switch (providerId) {
+      case "elevenlabs": {
+        // The cheapest call that proves the key: who am I, and how much is left.
+        const res = await fetch("https://api.elevenlabs.io/v1/user/subscription", {
+          headers: { "xi-api-key": key },
+        });
+        if (!res.ok) {
+          return { ok: false, message: `ElevenLabs said ${res.status} ${res.statusText}. Paste the key again, or make a new one on the ElevenLabs website.` };
+        }
+        const b = (await res.json()) as {
+          tier?: string;
+          character_count?: number;
+          character_limit?: number;
+        };
+        const used = b.character_count ?? 0;
+        const cap = b.character_limit ?? 0;
+        const left = Math.max(0, cap - used);
+        // Said in lessons as well as credits, because credits mean nothing until
+        // they are turned into work. 5,250 not 4,640: lesson 101.1 measured
+        // 4,640 characters of Greek, and on v3 each span also carries its
+        // acting tag — "[sighs] " is billed like any other character, and it
+        // adds about an eighth.
+        const tier = (b.tier ?? "unknown").toLowerCase();
+        // 44.1kHz PCM IS PRO AND ABOVE. Said here, at the moment the key is
+        // tested, rather than discovered as a 401 in the middle of a lesson.
+        const rateNote =
+          tier.includes("pro") || tier.includes("scale") || tier.includes("business") || tier.includes("enterprise")
+            ? ""
+            : " 44.1kHz audio needs Pro — this account will get 24kHz, which is fine but not the same.";
+        return {
+          ok: true,
+          message:
+            `${b.tier ?? "unknown"} tier — ${left.toLocaleString()} of ` +
+            `${cap.toLocaleString()} credits left, about ${Math.floor(left / 5250)} lessons.` +
+            rateNote,
+        };
+      }
+
       case "nvidia": {
         const r = await request("https://integrate.api.nvidia.com/v1/models", {
           headers: { Authorization: `Bearer ${key}` },
@@ -78,6 +116,26 @@ export async function testProvider(
         const r = await request(
           `https://pixabay.com/api/?key=${encodeURIComponent(key)}&q=dog&per_page=3`
         );
+        return interpret(r.status, r.body);
+      }
+
+      case "gemini": {
+        // Listing models is free. A key can list yet be refused for
+        // generation ("project denied access"), so also ask one tiny question.
+        const r = await request(
+          "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent",
+          {
+            method: "POST",
+            headers: { "x-goog-api-key": key, "Content-Type": "application/json" },
+            body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: "Say ok" }] }] }),
+          }
+        );
+        return interpret(r.status, r.body);
+      }
+
+      case "openrouter": {
+        // Reading your own key's details is free and needs a valid key.
+        const r = await request("https://openrouter.ai/api/v1/key", { headers: { Authorization: `Bearer ${key}` } });
         return interpret(r.status, r.body);
       }
 
@@ -116,11 +174,22 @@ export async function testProvider(
         return interpret(r.status, r.body);
       }
 
+      // The four "chat" providers the explainer and character helpers can use.
+      // Listing models is free and needs a valid key.
+      case "groq":
+      case "cerebras":
+      case "openai":
+      case "mistral": {
+        const base = PROVIDERS[providerId].base;
+        const r = await request(`${base}/models`, { headers: { Authorization: `Bearer ${key}` } });
+        return interpret(r.status, r.body);
+      }
+
       default:
         return { ok: false, message: `No connectivity test is defined for "${providerId}" yet.` };
     }
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    return { ok: false, message: `Couldn't reach the provider — ${msg}` };
+    return { ok: false, message: `Couldn't reach the provider — ${msg}. Check your internet and press Test again.` };
   }
 }

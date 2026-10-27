@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { ErrorLine } from "../ui/ErrorLine";
+import { plainError } from "../../lib/plainError";
 import { useSettingsStore } from "../../store/useSettingsStore";
 import { useVoicesStore } from "../../store/useVoicesStore";
 import { Picker } from "../ui/Picker";
@@ -58,7 +60,7 @@ export default function TtsTestPanel() {
       setAudioUrl(URL.createObjectURL(blob));
       setDurationMs(ms);
     } catch (e: any) {
-      setSynthError(e?.message ?? String(e));
+      setSynthError(plainError(e, "Press Speak to try again."));
     } finally {
       setSynthesizing(false);
     }
@@ -66,11 +68,11 @@ export default function TtsTestPanel() {
 
   return (
     <div className="border border-accent/25 bg-metal-800/60 p-4 space-y-3">
-      <h3 className="label-lit text-sm">Local TTS Test (Piper)</h3>
+      <h3 data-tip="Try a free voice from your own computer. If you hear it speak, the voice works." className="label-lit text-sm">Try a free voice</h3>
       <p className="text-sm">
-        Proves the full pipeline — start a persistent Piper server, get
-        audio, play it — before wiring in XTTS-v2. First synthesis per voice
-        is slower (server warm-up); after that it's fast.
+        Type a sentence and hear a free voice from your own computer say it.
+        The first time a voice speaks it needs a moment to wake up; after that
+        it is quick.
       </p>
 
       <div className="space-y-2">
@@ -78,34 +80,38 @@ export default function TtsTestPanel() {
           type="text"
           placeholder="Python executable (e.g. python3, or a full path)…"
           value={piperPythonPath}
+          data-tip="Where Python is installed on your computer. The test voices need it to run."
           onChange={(e) => setDefault("piperPythonPath", e.target.value)}
           className="w-full bg-metal-900 border border-accent/25 px-3 py-2 text-base text-neutral-100 outline-none focus:border-accent"
         />
         <input
           type="text"
-          placeholder="Folder containing your .onnx voice models…"
+          placeholder="Folder with your voice files…"
           value={piperVoicesDir}
+          data-tip="The folder on your computer that holds your Piper voice files (files ending in .onnx)."
           onChange={(e) => setDefault("piperVoicesDir", e.target.value)}
           className="w-full bg-metal-900 border border-accent/25 px-3 py-2 text-base text-neutral-100 outline-none focus:border-accent"
         />
         <div className="flex items-center gap-3">
           <button
             onClick={runScan}
+            data-tip="Looks in that folder and lists the voices it finds."
             disabled={scanning}
             className="btn cut-sm px-4 py-2 text-sm font-display uppercase tracking-[0.1em] hover:text-accent-bright disabled:opacity-50"
           >
             {scanning ? "Scanning…" : "Scan for Voices"}
           </button>
           {voices.length > 0 && (
-            <span className="text-sm text-emerald-400">{voices.length} voice(s) found</span>
+            <span data-tip="How many voices were found in that folder." className="text-sm text-emerald-400">{voices.length} voice(s) found</span>
           )}
-          {scanError && <span className="text-sm text-red-400">{scanError}</span>}
-          {scanHint && <span className="text-sm">{scanHint}</span>}
+          {scanError && <span data-tip="The scan did not work. Check that the folder path is right, then press Scan again." className="text-sm text-red-400">{scanError}</span>}
+          {scanHint && <span data-tip="A hint about what to do next." className="text-sm">{scanHint}</span>}
         </div>
 
         {voices.length > 0 && (
           <Picker
             aria-label="Piper voice"
+            data-tip="Choose which of the voices found you want to hear."
             className="w-full"
             value={selectedVoice}
             options={voices.map((v) => ({ value: v.onnxPath, label: v.name }))}
@@ -117,23 +123,25 @@ export default function TtsTestPanel() {
       <div className="space-y-2 pt-2 border-t border-accent/15">
         <textarea
           value={testText}
+          data-tip="Type any sentence here, then press Speak to hear the voice say it."
           onChange={(e) => setTestText(e.target.value)}
           rows={2}
           className="w-full bg-metal-900 border border-accent/25 px-3 py-2 text-base text-neutral-100 outline-none focus:border-accent resize-none"
         />
         <button
           onClick={runSynthesize}
+          data-tip="Makes the chosen voice say your sentence and plays it so you can listen."
           disabled={synthesizing || !selectedVoice}
           className="btn cut-sm btn-primary px-4 py-2 text-sm font-display font-semibold uppercase tracking-[0.1em] text-accent-bright disabled:opacity-40"
         >
-          {synthesizing ? "Synthesizing…" : "Synthesize & Play"}
+          {synthesizing ? "Speaking…" : "Speak"}
         </button>
-        {synthError && <p className="text-sm text-red-400 whitespace-pre-wrap">{synthError}</p>}
+        {synthError && <ErrorLine tip="The voice could not speak. Check that a voice is picked and the paths are right, then press Speak again." className="text-sm text-red-400 whitespace-pre-wrap" text={synthError} />}
         {audioUrl && (
           <div className="space-y-1">
             <audio src={audioUrl} controls autoPlay className="w-full" />
             {durationMs !== null && (
-              <p className="text-sm text-neutral-500">Duration: {(durationMs / 1000).toFixed(2)}s</p>
+              <p data-tip="How long the spoken test was, in seconds." className="text-sm text-neutral-500">Duration: {(durationMs / 1000).toFixed(2)}s</p>
             )}
           </div>
         )}

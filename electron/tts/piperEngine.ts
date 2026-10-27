@@ -31,6 +31,14 @@ interface ServerHandle {
 const servers = new Map<string, ServerHandle>(); // keyed by onnxPath
 let nextPort = 5501;
 
+/** Set by the app window's side of main: refuses any program that is not a
+ *  Python interpreter the user could have chosen. Unset for headless job runs,
+ *  whose job file is the user's own. Throws to refuse. */
+let startGuard: ((pythonPath: string, onnxPath: string) => void) | null = null;
+export function setPiperStartGuard(fn: ((pythonPath: string, onnxPath: string) => void) | null): void {
+  startGuard = fn;
+}
+
 function pingServer(port: number): Promise<boolean> {
   return new Promise((resolve) => {
     const req = http.get({ host: "127.0.0.1", port, path: "/", timeout: 800 }, (res) => {
@@ -79,11 +87,18 @@ async function waitUntilReady(port: number, timeoutMs = 20000): Promise<void> {
 }
 
 async function getOrStartServer(pythonPath: string, onnxPath: string): Promise<ServerHandle> {
+  startGuard?.(pythonPath, onnxPath);
   const existing = servers.get(onnxPath);
   if (existing) return existing;
 
   const port = nextPort++;
-  const proc = spawnTracked(pythonPath, ["-m", "piper.http_server", "-m", onnxPath, "--port", String(port)], {
+  const proc = spawnTracked(pythonPath, [
+    "-m", "piper.http_server", "-m", onnxPath,
+    // Piper's own default is 0.0.0.0 — every network card, so anyone on the
+    // Wi-Fi could read the last line spoken. This app is the only client.
+    "--host", "127.0.0.1",
+    "--port", String(port),
+  ], {
     stdio: ["ignore", "pipe", "pipe"],
     // Piper reads local .onnx files and needs no network today, so this is
     // pre-emptive — but it also carries PYTHONUTF8, and a Greek console

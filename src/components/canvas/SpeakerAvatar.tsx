@@ -3,15 +3,15 @@ import { CSSProperties } from "react";
 // bundle too, which is built by Remotion's own webpack and does not know the
 // app's tsconfig path aliases. An alias here fails the render but not the
 // preview — the worst kind of asymmetry.
-import type { VisemeId } from "../../lib/visemes/visemeMap";
+import { fullShape, type MouthId } from "../../lib/visemes/visemeMap";
 import type { OutlineShape } from "../../store/types";
 
 interface Props {
   sheetUrl: string;          // 3072x3072 (3x3 of 1024)
-  viseme: VisemeId;          // 0-8
+  viseme: MouthId;           // 0-8, or a half shape (10-12), drawn as its full one
   /** The cell being faded out of, and how far through the fade we are (1 =
    *  done). Omit for a hard cut, which is what this did before. */
-  prevViseme?: VisemeId;
+  prevViseme?: MouthId;
   mix?: number;
   size: number;              // disk diameter in px
   bgOpacity: number;         // 0-1
@@ -47,7 +47,7 @@ export function SpeakerAvatar({
   const fill = outlineShape === "circle" || outlineShape === "none" ? 0.9 : 0.97;
   const head = size * fill;
 
-  const cell = (v: VisemeId): CSSProperties => ({
+  const cell = (v: number): CSSProperties => ({
     position: "absolute",
     inset: 0,
     backgroundImage: `url(${sheetUrl})`,
@@ -80,8 +80,9 @@ export function SpeakerAvatar({
           : "none",
     }}>
       <div style={{ position: "relative", width: head, height: head }}>
-        {sheetUrl && fading && <div style={cell(prevViseme!)} />}
-        {sheetUrl && <div style={{ ...cell(viseme), opacity: fading ? mix : 1 }} />}
+        {/* A classic sheet has 9 cells: a half shape is drawn as its full one. */}
+        {sheetUrl && fading && <div style={cell(fullShape(prevViseme!))} />}
+        {sheetUrl && <div style={{ ...cell(fullShape(viseme)), opacity: fading ? mix : 1 }} />}
       </div>
     </div>
   );

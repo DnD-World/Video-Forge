@@ -1,0 +1,30 @@
+{
+  "style": "stravelakis",
+  "scheme": "night",
+  "format": "16:9",
+  "fps": 30,
+  "scenes": [
+    { "kind": "title", "at": 0, "kicker": "Video Forge", "text": "How an explainer gets made" },
+    { "kind": "number", "at": 3.4, "value": 4, "suffix": " shapes", "label": "wide, tall, square and 4:5 — one list" },
+    { "kind": "steps", "at": 7.4, "title": "Four steps", "items": [
+      { "text": "Write the script", "at": 8.0 },
+      { "text": "Turn it into scenes", "at": 9.0 },
+      { "text": "Check every frame", "at": 10.0 },
+      { "text": "Render the video", "at": 11.0 }
+    ] },
+    { "kind": "points", "at": 13.6, "title": "What the checks look for", "items": [
+      "Text big enough for a phone",
+      "Nothing outside the frame",
+      "Puppet spots left empty"
+    ] },
+    { "kind": "bars", "at": 18.6, "title": "Frame height in pixels", "items": [
+      { "label": "Wide 16:9", "value": 1080 },
+      { "label": "Tall 9:16", "value": 1920 },
+      { "label": "Square 1:1", "value": 1080 },
+      { "label": "Feed 4:5", "value": 1350 }
+    ] },
+    { "kind": "compare", "at": 23.0, "title": "Before and after", "left": { "title": "Before", "items": ["One shape per video", "Layout by hand"] }, "right": { "title": "After", "items": ["Every shape at once", "Checked before render"] } },
+    { "kind": "takeaway", "at": 27.4, "kicker": "In short", "text": "Write it once, get it in every shape" }
+  ],
+  "duration": 31
+}

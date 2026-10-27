@@ -140,37 +140,79 @@ function cuesForSegment(
 }
 
 /** Words with times in, display-sized cues out. Shared so that measured and
- *  estimated timings cannot be grouped by two different rules. */
+ *  estimated timings cannot be grouped by two different rules.
+ *
+ *  READABLE PAGES (Ak, 26 Oct 2026: "serious subtitle issues" in lesson
+ *  101.1). Cutting purely at maxChars ended pages mid-sentence ("Δεν είναι
+ *  ενοχή. Είναι καθαρός" / "φόβος …") and on dangling little words ("…αλλού
+ *  το"). Now:
+ *   · a new sentence starts a new page;
+ *   · a sentence too long for one page is cut into EVEN pages, at a comma
+ *     when one is near the middle;
+ *   · a page never ends on a short word ("το", "να", "και", "the") — it moves
+ *     to the next page.
+ *  With no length limit (the mouth and face timing ask for one cue per line)
+ *  the line stays whole, exactly as before. */
 function groupIntoCues(
   seg: NarrationSegment,
   timed: TimedWord[],
   maxChars: number
 ): SubtitleCue[] {
-  const cues: SubtitleCue[] = [];
-  let group: TimedWord[] = [];
-  let groupChars = 0;
-  const flush = () => {
-    if (group.length === 0) return;
-    cues.push({
-      speakerId: seg.speakerId,
-      speakerLabel: seg.speakerLabel,
-      startMs: group[0].startMs,
-      endMs: group[group.length - 1].endMs,
-      words: group,
-    });
-    group = [];
-    groupChars = 0;
-  };
+  const cue = (group: TimedWord[]): SubtitleCue => ({
+    speakerId: seg.speakerId,
+    speakerLabel: seg.speakerLabel,
+    startMs: group[0].startMs,
+    endMs: group[group.length - 1].endMs,
+    words: group,
+  });
+  if (timed.length === 0) return [];
+  if (!Number.isFinite(maxChars) || maxChars >= Number.MAX_SAFE_INTEGER) return [cue(timed)];
 
-  for (const w of timed) {
-    const added = w.text.length + (group.length > 0 ? 1 : 0);
-    if (groupChars + added > maxChars && group.length > 0) flush();
-    group.push(w);
-    groupChars += added;
+  const out: SubtitleCue[] = [];
+  for (const sentence of splitSentences(timed)) {
+    for (const page of pagesOf(sentence, maxChars)) out.push(cue(page));
   }
-  flush();
+  return out;
+}
 
-  return cues;
+const SENTENCE_END = /[.!?…;·]["»”')\]]*$/;
+const COMMA = /[,:—–-]["»”')\]]*$/;
+/** Words too small to end a page on (articles, pronouns, little joining words). */
+const WEAK = /^(το|τα|τη|την|της|τον|του|των|τις|τους|ο|η|οι|ένα|μια|μία|να|θα|και|κι|σε|στο|στη|στην|στον|στα|στις|στους|με|για|από|ότι|πως|που|αν|ή|δεν|μη|μην|σου|μου|μας|σας|the|a|an|to|of|and|or|in|on|at|for|with|is|are|i|you|my|your|but|if|that)$/i;
+const len = (ws: TimedWord[]) => ws.reduce((n, w, i) => n + w.text.length + (i ? 1 : 0), 0);
+
+function splitSentences(words: TimedWord[]): TimedWord[][] {
+  const out: TimedWord[][] = [];
+  let cur: TimedWord[] = [];
+  for (const w of words) {
+    cur.push(w);
+    if (SENTENCE_END.test(w.text)) { out.push(cur); cur = []; }
+  }
+  if (cur.length) out.push(cur);
+  return out;
+}
+
+/** One sentence as pages of at most maxChars, as even as the words allow. */
+function pagesOf(words: TimedWord[], maxChars: number): TimedWord[][] {
+  if (len(words) <= maxChars || words.length < 2) return [words];
+  const n = Math.ceil(len(words) / maxChars);
+  const target = len(words) / n;
+  // Choose the cut after word i (1..length-1) that lands nearest an even share,
+  // preferring commas and refusing to end the first page on a weak word.
+  let best = -1, bestCost = Infinity;
+  for (let i = 1; i < words.length; i++) {
+    const head = words.slice(0, i), tail = words.slice(i);
+    if (len(head) > maxChars) break;
+    if (len(tail) > maxChars * (n - 1)) continue; // the rest must still fit the planned pages
+    const last = head[head.length - 1].text.replace(/[^\p{L}\p{N}]/gu, "");
+    let cost = Math.abs(len(head) - target);
+    if (COMMA.test(head[head.length - 1].text)) cost -= maxChars * 0.35;
+    if (WEAK.test(last)) cost += maxChars;
+    if (tail.length === 1) cost += maxChars * 0.5; // no one-word last page
+    if (cost < bestCost) { bestCost = cost; best = i; }
+  }
+  if (best < 1) best = 1;
+  return [words.slice(0, best), ...pagesOf(words.slice(best), maxChars)];
 }
 
 export function buildCues(
@@ -181,7 +223,18 @@ export function buildCues(
    *  them every timing here is an estimate from letter counts. */
   pauses: number[] = []
 ): SubtitleCue[] {
-  return segments.flatMap((seg) => cuesForSegment(seg, maxChars, pauses));
+  const cues = segments.flatMap((seg) => cuesForSegment(seg, maxChars, pauses));
+  // NO BLINKS. Between two pages of running speech the screen went empty for a
+  // moment (the space between one word's end and the next word's start). A
+  // page now stays up until the next one starts when the gap is short. Only for
+  // display pages — the per-line cues used for mouth timing keep exact ends.
+  if (Number.isFinite(maxChars) && maxChars < Number.MAX_SAFE_INTEGER) {
+    for (let i = 0; i + 1 < cues.length; i++) {
+      const gap = cues[i + 1].startMs - cues[i].endMs;
+      if (gap > 0 && gap < 700) cues[i] = { ...cues[i], endMs: cues[i + 1].startMs };
+    }
+  }
+  return cues;
 }
 
 /** The cue on screen at `timeMs`, or null between cues. */

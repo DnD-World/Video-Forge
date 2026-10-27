@@ -1,0 +1,282 @@
+[
+ {
+  "key": "dnd-dwarf_pixar_full_base",
+  "subject": "D&D",
+  "slug": "dnd-dwarf",
+  "style": "pixar",
+  "framing": "full",
+  "description": "a sturdy dwarf fighter with a short braided red beard, a round iron helmet, plain grey chainmail over a brown tunic, and a round wooden shield on his back",
+  "look": {
+   "key": {
+    "name": "magenta",
+    "hex": "#FF00FF"
+   },
+   "lips": true,
+   "animal": false,
+   "teeth": "the teeth are natural human teeth: even, small and white, in proportion to the face"
+  },
+  "refs": [],
+  "prompt": "A single character portrait: a sturdy dwarf fighter with a short braided red beard, a round iron helmet, plain grey chainmail over a brown tunic, and a round wooden shield on his back. Drawn as a STYLISED 3D ANIMATED CARTOON CHARACTER in the style of a Pixar or Illumination feature film — appealing exaggerated proportions, big expressive cartoon eyes, soft rounded forms, beautifully rendered but unmistakably a cartoon and NOT a photograph. FULL BODY from the top of the head to the feet, standing, facing the viewer, both arms relaxed at the sides, both feet on the ground, with empty space all around — above the head, beside the hands and below the feet. The head is in the top quarter of the picture. Mouth CLOSED and relaxed, calm friendly neutral expression. The mouth has clearly drawn LIPS, the same colour and thickness in every picture. Eyes relaxed and normally open, upper lids resting over the top of the irises, little white above or below; both eyes look at a distant point far beyond the camera so the two lines of sight are PARALLEL — not cross-eyed, not staring. Eyebrows level and calm, the same colour as the character's own hair or fur. Short neck sitting low on the shoulders. Centred on a completely flat, uniform, pure magenta background (#FF00FF), edge to edge, with no shadow, no floor and no props. No magenta anywhere on the character itself.",
+  "negative": "cross-eyed, converging eyes, wall-eyed, uneven pupils, wide staring eyes, bulging eyes, startled, open mouth, cropped head, cut-off ears, tight crop, text, watermark, extra characters, extra limbs, photorealistic photo, letters, words"
+ },
+ {
+  "key": "dnd-dwarf_paper_full_base",
+  "subject": "D&D",
+  "slug": "dnd-dwarf",
+  "style": "paper",
+  "framing": "full",
+  "description": "a sturdy dwarf fighter with a short braided red beard, a round iron helmet, plain grey chainmail over a brown tunic, and a round wooden shield on his back",
+  "look": {
+   "key": {
+    "name": "magenta",
+    "hex": "#FF00FF"
+   },
+   "lips": true,
+   "animal": false,
+   "teeth": "the teeth are natural human teeth: even, small and white, in proportion to the face"
+  },
+  "refs": [],
+  "prompt": "A single character portrait: a sturdy dwarf fighter with a short braided red beard, a round iron helmet, plain grey chainmail over a brown tunic, and a round wooden shield on his back. Drawn as a PAPER CUT-OUT CHARACTER built from layered coloured card, crisp cut edges, subtle paper texture and soft drop shadows between layers, like a craft stop-motion. FULL BODY from the top of the head to the feet, standing, facing the viewer, both arms relaxed at the sides, both feet on the ground, with empty space all around — above the head, beside the hands and below the feet. The head is in the top quarter of the picture. Mouth CLOSED and relaxed, calm friendly neutral expression. The mouth has clearly drawn LIPS, the same colour and thickness in every picture. Eyes relaxed and normally open, upper lids resting over the top of the irises, little white above or below; both eyes look at a distant point far beyond the camera so the two lines of sight are PARALLEL — not cross-eyed, not staring. Eyebrows level and calm, the same colour as the character's own hair or fur. Short neck sitting low on the shoulders. Centred on a completely flat, uniform, pure magenta background (#FF00FF), edge to edge, with no shadow, no floor and no props. No magenta anywhere on the character itself.",
+  "negative": "cross-eyed, converging eyes, wall-eyed, uneven pupils, wide staring eyes, bulging eyes, startled, open mouth, cropped head, cut-off ears, tight crop, text, watermark, extra characters, extra limbs, photorealistic photo, letters, words"
+ },
+ {
+  "key": "dog-lab-puppy_pixar_full_base",
+  "subject": "Dogs and puppies",
+  "slug": "dog-lab-puppy",
+  "style": "pixar",
+  "framing": "full",
+  "description": "a happy yellow Labrador puppy with floppy ears, standing upright like a person, wearing a small plain red bandana",
+  "look": {
+   "key": {
+    "name": "magenta",
+    "hex": "#FF00FF"
+   },
+   "lips": false,
+   "animal": true,
+   "teeth": "the teeth are a dog's: two long pointed canines and, between them, four small pointed teeth, shorter than the canines, all white"
+  },
+  "refs": [],
+  "prompt": "A single character portrait: a happy yellow Labrador puppy with floppy ears, standing upright like a person, wearing a small plain red bandana. Drawn as a STYLISED 3D ANIMATED CARTOON CHARACTER in the style of a Pixar or Illumination feature film — appealing exaggerated proportions, big expressive cartoon eyes, soft rounded forms, beautifully rendered but unmistakably a cartoon and NOT a photograph. The fur is smooth and mid-detailed: soft clumps with simple shapes and gentle shading, like a groomed plush toy, rather than thousands of fine strands. FULL BODY from the top of the head to the feet, standing, facing the viewer, both arms relaxed at the sides, both feet on the ground, with empty space all around — above the head, beside the hands and below the feet. The head is in the top quarter of the picture. Mouth CLOSED and relaxed, calm friendly neutral expression. The mouth is a plain opening cut straight into the face: its edge is the same colour as the skin or fur around it, with no outline, no rim and no colour change around it, the same in every picture. Eyes relaxed and normally open, upper lids resting over the top of the irises, little white above or below; both eyes look at a distant point far beyond the camera so the two lines of sight are PARALLEL — not cross-eyed, not staring. Eyebrows level and calm, the same colour as the character's own hair or fur. Short neck sitting low on the shoulders. Centred on a completely flat, uniform, pure magenta background (#FF00FF), edge to edge, with no shadow, no floor and no props. No magenta anywhere on the character itself.",
+  "negative": "cross-eyed, converging eyes, wall-eyed, uneven pupils, wide staring eyes, bulging eyes, startled, open mouth, cropped head, cut-off ears, tight crop, text, watermark, extra characters, extra limbs, photorealistic photo, letters, words"
+ },
+ {
+  "key": "dog-lab-puppy_flat_full_base",
+  "subject": "Dogs and puppies",
+  "slug": "dog-lab-puppy",
+  "style": "flat",
+  "framing": "full",
+  "description": "a happy yellow Labrador puppy with floppy ears, standing upright like a person, wearing a small plain red bandana",
+  "look": {
+   "key": {
+    "name": "magenta",
+    "hex": "#FF00FF"
+   },
+   "lips": false,
+   "animal": true,
+   "teeth": "the teeth are a dog's: two long pointed canines and, between them, four small pointed teeth, shorter than the canines, all white"
+  },
+  "refs": [],
+  "prompt": "A single character portrait: a happy yellow Labrador puppy with floppy ears, standing upright like a person, wearing a small plain red bandana. Drawn as a FLAT 2D CARTOON CHARACTER with clean bold outlines and flat colours, simple shapes, like a modern explainer-video illustration, no gradients and no texture. FULL BODY from the top of the head to the feet, standing, facing the viewer, both arms relaxed at the sides, both feet on the ground, with empty space all around — above the head, beside the hands and below the feet. The head is in the top quarter of the picture. Mouth CLOSED and relaxed, calm friendly neutral expression. The mouth is a plain opening cut straight into the face: its edge is the same colour as the skin or fur around it, with no outline, no rim and no colour change around it, the same in every picture. Eyes relaxed and normally open, upper lids resting over the top of the irises, little white above or below; both eyes look at a distant point far beyond the camera so the two lines of sight are PARALLEL — not cross-eyed, not staring. Eyebrows level and calm, the same colour as the character's own hair or fur. Short neck sitting low on the shoulders. Centred on a completely flat, uniform, pure magenta background (#FF00FF), edge to edge, with no shadow, no floor and no props. No magenta anywhere on the character itself.",
+  "negative": "cross-eyed, converging eyes, wall-eyed, uneven pupils, wide staring eyes, bulging eyes, startled, open mouth, cropped head, cut-off ears, tight crop, text, watermark, extra characters, extra limbs, photorealistic photo, letters, words"
+ },
+ {
+  "key": "nm-wise-friend_flat_full_base",
+  "subject": "Narcissism and manipulation defence",
+  "slug": "nm-wise-friend",
+  "style": "flat",
+  "framing": "full",
+  "description": "the wise friend, a calm middle-aged woman with short grey hair, kind brown eyes, a plain teal jacket over a white top and dark trousers",
+  "look": {
+   "key": {
+    "name": "magenta",
+    "hex": "#FF00FF"
+   },
+   "lips": true,
+   "animal": false,
+   "teeth": "the teeth are natural human teeth: even, small and white, in proportion to the face"
+  },
+  "refs": [],
+  "prompt": "A single character portrait: the wise friend, a calm middle-aged woman with short grey hair, kind brown eyes, a plain teal jacket over a white top and dark trousers. Drawn as a FLAT 2D CARTOON CHARACTER with clean bold outlines and flat colours, simple shapes, like a modern explainer-video illustration, no gradients and no texture. Clean-shaven, with smooth, clear, even skin. FULL BODY from the top of the head to the feet, standing, facing the viewer, both arms relaxed at the sides, both feet on the ground, with empty space all around — above the head, beside the hands and below the feet. The head is in the top quarter of the picture. Mouth CLOSED and relaxed, calm friendly neutral expression. The mouth has clearly drawn LIPS, the same colour and thickness in every picture. Eyes relaxed and normally open, upper lids resting over the top of the irises, little white above or below; both eyes look at a distant point far beyond the camera so the two lines of sight are PARALLEL — not cross-eyed, not staring. Eyebrows level and calm, the same colour as the character's own hair or fur. Short neck sitting low on the shoulders. Centred on a completely flat, uniform, pure magenta background (#FF00FF), edge to edge, with no shadow, no floor and no props. No magenta anywhere on the character itself.",
+  "negative": "cross-eyed, converging eyes, wall-eyed, uneven pupils, wide staring eyes, bulging eyes, startled, open mouth, cropped head, cut-off ears, tight crop, text, watermark, extra characters, extra limbs, photorealistic photo, letters, words"
+ },
+ {
+  "key": "nm-wise-friend_paper_full_base",
+  "subject": "Narcissism and manipulation defence",
+  "slug": "nm-wise-friend",
+  "style": "paper",
+  "framing": "full",
+  "description": "the wise friend, a calm middle-aged woman with short grey hair, kind brown eyes, a plain teal jacket over a white top and dark trousers",
+  "look": {
+   "key": {
+    "name": "magenta",
+    "hex": "#FF00FF"
+   },
+   "lips": true,
+   "animal": false,
+   "teeth": "the teeth are natural human teeth: even, small and white, in proportion to the face"
+  },
+  "refs": [],
+  "prompt": "A single character portrait: the wise friend, a calm middle-aged woman with short grey hair, kind brown eyes, a plain teal jacket over a white top and dark trousers. Drawn as a PAPER CUT-OUT CHARACTER built from layered coloured card, crisp cut edges, subtle paper texture and soft drop shadows between layers, like a craft stop-motion. Clean-shaven, with smooth, clear, even skin. FULL BODY from the top of the head to the feet, standing, facing the viewer, both arms relaxed at the sides, both feet on the ground, with empty space all around — above the head, beside the hands and below the feet. The head is in the top quarter of the picture. Mouth CLOSED and relaxed, calm friendly neutral expression. The mouth has clearly drawn LIPS, the same colour and thickness in every picture. Eyes relaxed and normally open, upper lids resting over the top of the irises, little white above or below; both eyes look at a distant point far beyond the camera so the two lines of sight are PARALLEL — not cross-eyed, not staring. Eyebrows level and calm, the same colour as the character's own hair or fur. Short neck sitting low on the shoulders. Centred on a completely flat, uniform, pure magenta background (#FF00FF), edge to edge, with no shadow, no floor and no props. No magenta anywhere on the character itself.",
+  "negative": "cross-eyed, converging eyes, wall-eyed, uneven pupils, wide staring eyes, bulging eyes, startled, open mouth, cropped head, cut-off ears, tight crop, text, watermark, extra characters, extra limbs, photorealistic photo, letters, words"
+ },
+ {
+  "key": "lc-coach_pixar_full_base",
+  "subject": "Life coaching and soft skills",
+  "slug": "lc-coach",
+  "style": "pixar",
+  "framing": "full",
+  "description": "a friendly life coach, a young man with short black hair, warm brown skin, a plain mustard-yellow sweater and dark blue trousers",
+  "look": {
+   "key": {
+    "name": "magenta",
+    "hex": "#FF00FF"
+   },
+   "lips": true,
+   "animal": false,
+   "teeth": "the teeth are natural human teeth: even, small and white, in proportion to the face"
+  },
+  "refs": [],
+  "prompt": "A single character portrait: a friendly life coach, a young man with short black hair, warm brown skin, a plain mustard-yellow sweater and dark blue trousers. Drawn as a STYLISED 3D ANIMATED CARTOON CHARACTER in the style of a Pixar or Illumination feature film — appealing exaggerated proportions, big expressive cartoon eyes, soft rounded forms, beautifully rendered but unmistakably a cartoon and NOT a photograph. Clean-shaven, with smooth, clear, even skin. FULL BODY from the top of the head to the feet, standing, facing the viewer, both arms relaxed at the sides, both feet on the ground, with empty space all around — above the head, beside the hands and below the feet. The head is in the top quarter of the picture. Mouth CLOSED and relaxed, calm friendly neutral expression. The mouth has clearly drawn LIPS, the same colour and thickness in every picture. Eyes relaxed and normally open, upper lids resting over the top of the irises, little white above or below; both eyes look at a distant point far beyond the camera so the two lines of sight are PARALLEL — not cross-eyed, not staring. Eyebrows level and calm, the same colour as the character's own hair or fur. Short neck sitting low on the shoulders. Centred on a completely flat, uniform, pure magenta background (#FF00FF), edge to edge, with no shadow, no floor and no props. No magenta anywhere on the character itself.",
+  "negative": "cross-eyed, converging eyes, wall-eyed, uneven pupils, wide staring eyes, bulging eyes, startled, open mouth, cropped head, cut-off ears, tight crop, text, watermark, extra characters, extra limbs, photorealistic photo, letters, words"
+ },
+ {
+  "key": "lc-coach_flat_full_base",
+  "subject": "Life coaching and soft skills",
+  "slug": "lc-coach",
+  "style": "flat",
+  "framing": "full",
+  "description": "a friendly life coach, a young man with short black hair, warm brown skin, a plain mustard-yellow sweater and dark blue trousers",
+  "look": {
+   "key": {
+    "name": "magenta",
+    "hex": "#FF00FF"
+   },
+   "lips": true,
+   "animal": false,
+   "teeth": "the teeth are natural human teeth: even, small and white, in proportion to the face"
+  },
+  "refs": [],
+  "prompt": "A single character portrait: a friendly life coach, a young man with short black hair, warm brown skin, a plain mustard-yellow sweater and dark blue trousers. Drawn as a FLAT 2D CARTOON CHARACTER with clean bold outlines and flat colours, simple shapes, like a modern explainer-video illustration, no gradients and no texture. Clean-shaven, with smooth, clear, even skin. FULL BODY from the top of the head to the feet, standing, facing the viewer, both arms relaxed at the sides, both feet on the ground, with empty space all around — above the head, beside the hands and below the feet. The head is in the top quarter of the picture. Mouth CLOSED and relaxed, calm friendly neutral expression. The mouth has clearly drawn LIPS, the same colour and thickness in every picture. Eyes relaxed and normally open, upper lids resting over the top of the irises, little white above or below; both eyes look at a distant point far beyond the camera so the two lines of sight are PARALLEL — not cross-eyed, not staring. Eyebrows level and calm, the same colour as the character's own hair or fur. Short neck sitting low on the shoulders. Centred on a completely flat, uniform, pure magenta background (#FF00FF), edge to edge, with no shadow, no floor and no props. No magenta anywhere on the character itself.",
+  "negative": "cross-eyed, converging eyes, wall-eyed, uneven pupils, wide staring eyes, bulging eyes, startled, open mouth, cropped head, cut-off ears, tight crop, text, watermark, extra characters, extra limbs, photorealistic photo, letters, words"
+ },
+ {
+  "key": "season-santa_clay_full_base",
+  "subject": "Seasonal",
+  "slug": "season-santa",
+  "style": "clay",
+  "framing": "full",
+  "description": "a jolly Santa Claus with a white beard, rosy cheeks, a red suit with white trim, a black belt and black boots",
+  "look": {
+   "key": {
+    "name": "magenta",
+    "hex": "#FF00FF"
+   },
+   "lips": true,
+   "animal": false,
+   "teeth": "the teeth are natural human teeth: even, small and white, in proportion to the face"
+  },
+  "refs": [],
+  "prompt": "A single character portrait: a jolly Santa Claus with a white beard, rosy cheeks, a red suit with white trim, a black belt and black boots. Drawn as a CLAYMATION CHARACTER made of smooth plasticine, like an Aardman stop-motion film — visible soft thumbprint texture, rounded chunky shapes, studio lighting. FULL BODY from the top of the head to the feet, standing, facing the viewer, both arms relaxed at the sides, both feet on the ground, with empty space all around — above the head, beside the hands and below the feet. The head is in the top quarter of the picture. Mouth CLOSED and relaxed, calm friendly neutral expression. The mouth has clearly drawn LIPS, the same colour and thickness in every picture. Eyes relaxed and normally open, upper lids resting over the top of the irises, little white above or below; both eyes look at a distant point far beyond the camera so the two lines of sight are PARALLEL — not cross-eyed, not staring. Eyebrows level and calm, the same colour as the character's own hair or fur. Short neck sitting low on the shoulders. Centred on a completely flat, uniform, pure magenta background (#FF00FF), edge to edge, with no shadow, no floor and no props. No magenta anywhere on the character itself.",
+  "negative": "cross-eyed, converging eyes, wall-eyed, uneven pupils, wide staring eyes, bulging eyes, startled, open mouth, cropped head, cut-off ears, tight crop, text, watermark, extra characters, extra limbs, photorealistic photo, letters, words"
+ },
+ {
+  "key": "season-santa_pixar_full_base",
+  "subject": "Seasonal",
+  "slug": "season-santa",
+  "style": "pixar",
+  "framing": "full",
+  "description": "a jolly Santa Claus with a white beard, rosy cheeks, a red suit with white trim, a black belt and black boots",
+  "look": {
+   "key": {
+    "name": "magenta",
+    "hex": "#FF00FF"
+   },
+   "lips": true,
+   "animal": false,
+   "teeth": "the teeth are natural human teeth: even, small and white, in proportion to the face"
+  },
+  "refs": [],
+  "prompt": "A single character portrait: a jolly Santa Claus with a white beard, rosy cheeks, a red suit with white trim, a black belt and black boots. Drawn as a STYLISED 3D ANIMATED CARTOON CHARACTER in the style of a Pixar or Illumination feature film — appealing exaggerated proportions, big expressive cartoon eyes, soft rounded forms, beautifully rendered but unmistakably a cartoon and NOT a photograph. FULL BODY from the top of the head to the feet, standing, facing the viewer, both arms relaxed at the sides, both feet on the ground, with empty space all around — above the head, beside the hands and below the feet. The head is in the top quarter of the picture. Mouth CLOSED and relaxed, calm friendly neutral expression. The mouth has clearly drawn LIPS, the same colour and thickness in every picture. Eyes relaxed and normally open, upper lids resting over the top of the irises, little white above or below; both eyes look at a distant point far beyond the camera so the two lines of sight are PARALLEL — not cross-eyed, not staring. Eyebrows level and calm, the same colour as the character's own hair or fur. Short neck sitting low on the shoulders. Centred on a completely flat, uniform, pure magenta background (#FF00FF), edge to edge, with no shadow, no floor and no props. No magenta anywhere on the character itself.",
+  "negative": "cross-eyed, converging eyes, wall-eyed, uneven pupils, wide staring eyes, bulging eyes, startled, open mouth, cropped head, cut-off ears, tight crop, text, watermark, extra characters, extra limbs, photorealistic photo, letters, words"
+ },
+ {
+  "key": "ai-helper-robot_flat_full_base",
+  "subject": "ELI5 AI and automation",
+  "slug": "ai-helper-robot",
+  "style": "flat",
+  "framing": "full",
+  "description": "a friendly helper robot with a round white head, a simple dark face screen with two round glowing eyes, a light blue body, two arms and two legs",
+  "look": {
+   "key": {
+    "name": "magenta",
+    "hex": "#FF00FF"
+   },
+   "lips": false,
+   "animal": true,
+   "teeth": "teeth only if the original face already has them, drawn the same way"
+  },
+  "refs": [],
+  "prompt": "A single character portrait: a friendly helper robot with a round white head, a simple dark face screen with two round glowing eyes, a light blue body, two arms and two legs. Drawn as a FLAT 2D CARTOON CHARACTER with clean bold outlines and flat colours, simple shapes, like a modern explainer-video illustration, no gradients and no texture. FULL BODY from the top of the head to the feet, standing, facing the viewer, both arms relaxed at the sides, both feet on the ground, with empty space all around — above the head, beside the hands and below the feet. The head is in the top quarter of the picture. Mouth CLOSED and relaxed, calm friendly neutral expression. The mouth is a plain opening cut straight into the face: its edge is the same colour as the skin or fur around it, with no outline, no rim and no colour change around it, the same in every picture. Eyes relaxed and normally open, upper lids resting over the top of the irises, little white above or below; both eyes look at a distant point far beyond the camera so the two lines of sight are PARALLEL — not cross-eyed, not staring. Eyebrows level and calm, the same colour as the character's own hair or fur. Short neck sitting low on the shoulders. Centred on a completely flat, uniform, pure magenta background (#FF00FF), edge to edge, with no shadow, no floor and no props. No magenta anywhere on the character itself.",
+  "negative": "cross-eyed, converging eyes, wall-eyed, uneven pupils, wide staring eyes, bulging eyes, startled, open mouth, cropped head, cut-off ears, tight crop, text, watermark, extra characters, extra limbs, photorealistic photo, letters, words"
+ },
+ {
+  "key": "ai-helper-robot_clay_full_base",
+  "subject": "ELI5 AI and automation",
+  "slug": "ai-helper-robot",
+  "style": "clay",
+  "framing": "full",
+  "description": "a friendly helper robot with a round white head, a simple dark face screen with two round glowing eyes, a light blue body, two arms and two legs",
+  "look": {
+   "key": {
+    "name": "magenta",
+    "hex": "#FF00FF"
+   },
+   "lips": false,
+   "animal": true,
+   "teeth": "teeth only if the original face already has them, drawn the same way"
+  },
+  "refs": [],
+  "prompt": "A single character portrait: a friendly helper robot with a round white head, a simple dark face screen with two round glowing eyes, a light blue body, two arms and two legs. Drawn as a CLAYMATION CHARACTER made of smooth plasticine, like an Aardman stop-motion film — visible soft thumbprint texture, rounded chunky shapes, studio lighting. The fur is smooth and mid-detailed: soft clumps with simple shapes and gentle shading, like a groomed plush toy, rather than thousands of fine strands. FULL BODY from the top of the head to the feet, standing, facing the viewer, both arms relaxed at the sides, both feet on the ground, with empty space all around — above the head, beside the hands and below the feet. The head is in the top quarter of the picture. Mouth CLOSED and relaxed, calm friendly neutral expression. The mouth is a plain opening cut straight into the face: its edge is the same colour as the skin or fur around it, with no outline, no rim and no colour change around it, the same in every picture. Eyes relaxed and normally open, upper lids resting over the top of the irises, little white above or below; both eyes look at a distant point far beyond the camera so the two lines of sight are PARALLEL — not cross-eyed, not staring. Eyebrows level and calm, the same colour as the character's own hair or fur. Short neck sitting low on the shoulders. Centred on a completely flat, uniform, pure magenta background (#FF00FF), edge to edge, with no shadow, no floor and no props. No magenta anywhere on the character itself.",
+  "negative": "cross-eyed, converging eyes, wall-eyed, uneven pupils, wide staring eyes, bulging eyes, startled, open mouth, cropped head, cut-off ears, tight crop, text, watermark, extra characters, extra limbs, photorealistic photo, letters, words"
+ },
+ {
+  "key": "trope-mentor_anime_full_base",
+  "subject": "Pop-culture ethics and tropes",
+  "slug": "trope-mentor",
+  "style": "anime",
+  "framing": "full",
+  "description": "the Mentor, an old wise woman with long white hair in a bun, a plain dark green robe, and a wooden walking staff",
+  "look": {
+   "key": {
+    "name": "magenta",
+    "hex": "#FF00FF"
+   },
+   "lips": false,
+   "animal": false,
+   "teeth": "the teeth are natural human teeth: even, small and white, in proportion to the face"
+  },
+  "refs": [],
+  "prompt": "A single character portrait: the Mentor, an old wise woman with long white hair in a bun, a plain dark green robe, and a wooden walking staff. Drawn as an ANIME-STYLE CHARACTER, clean cel shading, crisp line art, large expressive eyes, like a modern TV anime. Clean-shaven, with smooth, clear, even skin. FULL BODY from the top of the head to the feet, standing, facing the viewer, both arms relaxed at the sides, both feet on the ground, with empty space all around — above the head, beside the hands and below the feet. The head is in the top quarter of the picture. Mouth CLOSED and relaxed, calm friendly neutral expression. The mouth is a plain opening cut straight into the face: its edge is the same colour as the skin or fur around it, with no outline, no rim and no colour change around it, the same in every picture. Eyes relaxed and normally open, upper lids resting over the top of the irises, little white above or below; both eyes look at a distant point far beyond the camera so the two lines of sight are PARALLEL — not cross-eyed, not staring. Eyebrows level and calm, the same colour as the character's own hair or fur. Short neck sitting low on the shoulders. Centred on a completely flat, uniform, pure magenta background (#FF00FF), edge to edge, with no shadow, no floor and no props. No magenta anywhere on the character itself.",
+  "negative": "cross-eyed, converging eyes, wall-eyed, uneven pupils, wide staring eyes, bulging eyes, startled, open mouth, cropped head, cut-off ears, tight crop, text, watermark, extra characters, extra limbs, photorealistic photo, letters, words"
+ },
+ {
+  "key": "trope-mentor_paper_full_base",
+  "subject": "Pop-culture ethics and tropes",
+  "slug": "trope-mentor",
+  "style": "paper",
+  "framing": "full",
+  "description": "the Mentor, an old wise woman with long white hair in a bun, a plain dark green robe, and a wooden walking staff",
+  "look": {
+   "key": {
+    "name": "magenta",
+    "hex": "#FF00FF"
+   },
+   "lips": true,
+   "animal": false,
+   "teeth": "the teeth are natural human teeth: even, small and white, in proportion to the face"
+  },
+  "refs": [],
+  "prompt": "A single character portrait: the Mentor, an old wise woman with long white hair in a bun, a plain dark green robe, and a wooden walking staff. Drawn as a PAPER CUT-OUT CHARACTER built from layered coloured card, crisp cut edges, subtle paper texture and soft drop shadows between layers, like a craft stop-motion. Clean-shaven, with smooth, clear, even skin. FULL BODY from the top of the head to the feet, standing, facing the viewer, both arms relaxed at the sides, both feet on the ground, with empty space all around — above the head, beside the hands and below the feet. The head is in the top quarter of the picture. Mouth CLOSED and relaxed, calm friendly neutral expression. The mouth has clearly drawn LIPS, the same colour and thickness in every picture. Eyes relaxed and normally open, upper lids resting over the top of the irises, little white above or below; both eyes look at a distant point far beyond the camera so the two lines of sight are PARALLEL — not cross-eyed, not staring. Eyebrows level and calm, the same colour as the character's own hair or fur. Short neck sitting low on the shoulders. Centred on a completely flat, uniform, pure magenta background (#FF00FF), edge to edge, with no shadow, no floor and no props. No magenta anywhere on the character itself.",
+  "negative": "cross-eyed, converging eyes, wall-eyed, uneven pupils, wide staring eyes, bulging eyes, startled, open mouth, cropped head, cut-off ears, tight crop, text, watermark, extra characters, extra limbs, photorealistic photo, letters, words"
+ }
+]

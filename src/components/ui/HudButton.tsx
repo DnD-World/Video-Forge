@@ -16,7 +16,7 @@ import { useClickFlash } from "../../lib/motion/useClickFlash";
  * washed the legends out.
  */
 export function HudButton({
-  children, active, onClick, disabled, title, tone,
+  children, active, onClick, disabled, title, tone, "data-tip": dataTip,
 }: {
   children: ReactNode;
   /** Lit — the selected item in a group. */
@@ -28,6 +28,8 @@ export function HudButton({
   title?: string;
   /** The lamp colour. Structure stays brass whatever this is. */
   tone?: "good" | "crit";
+  /** Hover help (shown by TipLayer). */
+  "data-tip"?: string;
 }) {
   const { ref, fire } = useClickFlash<HTMLButtonElement>();
 
@@ -36,6 +38,7 @@ export function HudButton({
       ref={ref}
       disabled={disabled}
       title={title}
+      data-tip={dataTip}
       aria-pressed={active}
       onClick={() => {
         if (disabled) return;

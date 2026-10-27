@@ -25,10 +25,42 @@
 
 import { request } from "../net/http";
 import * as keyStore from "../keyStore";
+import { nvidiaChatModels, nvidiaModelWorked } from "./nvidiaModel";
+import { geminiJson } from "./geminiText";
 import { searchVideos, type MediaHit } from "../net/mediaSearch";
 
 const NVIDIA_URL = "https://integrate.api.nvidia.com/v1/chat/completions";
-const NVIDIA_MODEL = "z-ai/glm-5.2";
+
+/** How long one planning call may take before the model is written off.
+ *
+ *  Was five minutes, chosen when the model was named in the source and there
+ *  was nothing else to try. Now the app walks up to 57 candidates, and most of
+ *  this key's models answer 404 instantly while a bad one simply never
+ *  replies — at five minutes each that is a render that dies after a coffee
+ *  break with nothing to show. A model that has not begun answering a
+ *  twenty-scene batch within ninety seconds is not going to. */
+const PLAN_REQUEST_TIMEOUT_MS = 90000;
+
+/** Bump this whenever the planning prompt below changes.
+ *
+ *  Plans are cached per lesson, and the cache key has to include the RULES the
+ *  plan was made under — otherwise editing the prompt changes nothing for every
+ *  lesson already planned, which is a silent failure that looks like the model
+ *  ignoring instructions. See the plan cache in electron/batch/runJob.ts.
+ *
+ *  2 — 16 Sep 2026: a dog must be on camera.
+ *  3 — 16 Sep 2026: query comes from the line's own main point, plus a dog.
+ *      "Bright/sunny/lively" was dropped — Ak: the word bright is not proper
+ *      here; the script decides the picture.
+ *  4 — 16 Sep 2026: 4-8 words naming the line's own object or action; vertical
+ *      frame said out loud; planned by Gemini, NVIDIA only as fallback. */
+export const PLAN_RULES_VERSION = 4;
+
+/** Words that mean a dog is in the picture: the animal, and the breeds that
+ *  show up most in these libraries. Whole words, so "hotdog" does not count. */
+const DOG_WORDS =
+  /\b(dogs?|pupp(y|ies)|pups?|canine|doggy|chihuahua|terrier|retriever|labrador|poodle|schnauzer|spaniel|shepherd|beagle|bulldog|husky|corgi|dachshund|pug|collie|boxer|rottweiler|doberman|shiba|maltese|greyhound)\b/;
+// The model is looked up live — see nvidiaModel.ts for why it is not typed here.
 
 export interface PlannedScene {
   startMs: number;
@@ -79,22 +111,77 @@ async function postJson(apiKey: string, payload: string): Promise<string> {
   const MAX_WAIT_MS = 120000;
   let waitMs = 15000;
 
+  // A MODEL THAT IS LISTED MAY STILL 404. Walk the candidates until one
+  // answers, then stay on it — see nvidiaModel.ts. Without this the whole
+  // render died at 14% on a model NVIDIA itself had advertised.
+  const models = await nvidiaChatModels(apiKey);
+  let modelIndex = 0;
+
   for (let attempt = 1; ; attempt++) {
-    const res = await request("https://integrate.api.nvidia.com/v1/chat/completions", {
+    const body = JSON.parse(payload);
+    body.model = models[modelIndex];
+    // A TIMEOUT IS NOT AN HTTP STATUS, and that is why the walk used to die
+    // here: `request` REJECTS on a stalled connection, so the 404/500 handling
+    // below never saw it and one unresponsive model killed the whole render
+    // (16 Sep 2026, five minutes in, eleven working candidates still untried).
+    let res;
+    try {
+      res = await request("https://integrate.api.nvidia.com/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
-      body: payload,
+      body: JSON.stringify(body),
       // GLM-5.2 was measured at 274s on a real key for a single script draft.
       // Two minutes was never enough headroom for a reasoning model; batching
       // keeps each call small, and this stops a slow-but-working call from
       // reading as a network failure.
-      timeoutMs: 300000,
-    });
+      timeoutMs: PLAN_REQUEST_TIMEOUT_MS,
+      });
+    } catch (e) {
+      const why = e instanceof Error ? e.message : String(e);
+      if (modelIndex < models.length - 1) {
+        console.log(
+          `[video-forge] ${models[modelIndex]} did not answer (${why}) — ` +
+            `trying ${models[modelIndex + 1]} (${models.length - modelIndex - 1} left)`
+        );
+        modelIndex++;
+        continue;
+      }
+      throw new Error(
+        `None of the ${models.length} NVIDIA models this key lists would answer. ` +
+          `The last one: ${why}.`
+      );
+    }
 
-    if (res.status === 200) return res.body;
+    if (res.status === 200) {
+      nvidiaModelWorked(models[modelIndex]);
+      return res.body;
+    }
+
+    // NOT USABLE RIGHT NOW — cross it off and try the next one.
+    //
+    // 404 is "this account has no such function"; 400 is a model that rejects
+    // the request shape; 5xx is NVIDIA's own "inference connection error",
+    // which it returns for models that are listed, permitted, and still not
+    // serving. Stopping on the 5xx wasted the whole walk on 16 Sep 2026: seven
+    // models were correctly skipped and the eighth killed the render.
+    const unusable = res.status === 404 || res.status === 400 || res.status >= 500;
+    if (unusable && modelIndex < models.length - 1) {
+      console.log(
+        `[video-forge] NVIDIA cannot serve ${models[modelIndex]} (HTTP ${res.status}) — ` +
+          `trying ${models[modelIndex + 1]} (${models.length - modelIndex - 1} left)`
+      );
+      modelIndex++;
+      continue;
+    }
+    if (unusable) {
+      throw new Error(
+        `None of the ${models.length} NVIDIA models this key lists would answer. ` +
+          `The last said HTTP ${res.status}. Footage cannot be planned until one does.`
+      );
+    }
 
     if (res.status === 429 && attempt < MAX_ATTEMPTS) {
       await new Promise((r) => setTimeout(r, waitMs));
@@ -116,13 +203,69 @@ async function postJson(apiKey: string, payload: string): Promise<string> {
  *  ```json fence, or both, and asking it not to does not reliably stop it.
  *  Scanning for the outermost braces is far more robust than trusting the
  *  model to obey a formatting instruction. */
+/** One planning question: Gemini first, NVIDIA only if Gemini cannot answer.
+ *
+ *  Returns the model's reply text; extractJson does the rest. Both paths end
+ *  in the same place so the planner above does not care who answered. */
+async function askPlanner(nvidiaKey: string | null, system: string, user: string): Promise<string> {
+  try {
+    return await geminiJson(system, user);
+  } catch (e) {
+    const why = e instanceof Error ? e.message : String(e);
+    if (!nvidiaKey) {
+      throw new Error(`${why} There is no NVIDIA key saved to fall back on.`);
+    }
+    console.log(`[video-forge] ${why} — falling back to NVIDIA.`);
+    const body = await postJson(
+      nvidiaKey,
+      JSON.stringify({
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: user },
+        ],
+        temperature: 0.4, // classification, not creativity
+        max_tokens: 8192,
+      })
+    );
+    const parsed = JSON.parse(body) as { choices?: { message?: { content?: string } }[] };
+    return parsed.choices?.[0]?.message?.content ?? "";
+  }
+}
+
 function extractJson(text: string): unknown {
-  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-  const candidate = fenced ? fenced[1] : text;
+  // A REASONING MODEL IS THE NORMAL CASE NOW, not the exception. The only
+  // model this account can actually call is
+  // `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning`, and it thinks out loud:
+  // the answer arrives wrapped in <think> blocks, prose, or a fence, often
+  // with a second stray brace after it. Taking everything between the FIRST
+  // "{" and the LAST "}" then fails to parse — "Expected ',' or ']' after
+  // array element", 16 Sep 2026, which killed a render at 14%.
+  //
+  // So: drop the thinking, drop the fence, then take the first BALANCED
+  // object rather than the widest span of braces.
+  const withoutThinking = text.replace(/<think>[\s\S]*?<\/think>/gi, " ");
+  const fenced = withoutThinking.match(/```(?:json)?\s*([\s\S]*?)```/);
+  const candidate = fenced ? fenced[1] : withoutThinking;
+
   const start = candidate.indexOf("{");
-  const end = candidate.lastIndexOf("}");
-  if (start === -1 || end <= start) throw new Error("The model didn't return JSON.");
-  return JSON.parse(candidate.slice(start, end + 1));
+  if (start === -1) throw new Error("The model didn't return JSON.");
+
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  for (let i = start; i < candidate.length; i++) {
+    const c = candidate[i];
+    if (escaped) { escaped = false; continue; }
+    if (c === "\\") { escaped = true; continue; }
+    if (c === '"') { inString = !inString; continue; }
+    if (inString) continue;
+    if (c === "{") depth++;
+    else if (c === "}") {
+      depth--;
+      if (depth === 0) return JSON.parse(candidate.slice(start, i + 1));
+    }
+  }
+  throw new Error("The model's JSON was cut off before it finished.");
 }
 
 /**
@@ -155,8 +298,9 @@ export async function planBackgrounds(opts: {
    *  plan, and a caller with no way to say so looks hung. */
   onBatch?: (done: number, total: number) => void;
 }): Promise<BackgroundPlan> {
+  // Gemini plans; NVIDIA is only asked when Gemini cannot answer. So a missing
+  // NVIDIA key is not an error by itself any more — see askPlanner below.
   const apiKey = await keyStore.getKey("nvidia");
-  if (!apiKey) throw new Error("No NVIDIA API key saved — add one in Backend Settings first.");
   if (opts.segments.length === 0) throw new Error("Generate narration first — there is no script to read.");
 
   // Group consecutive lines into scenes of at least minSceneMs. A cut per line
@@ -221,6 +365,8 @@ export async function planBackgrounds(opts: {
     if (!first) await new Promise((r) => setTimeout(r, 3000));
     const systemPrompt = [
       "You choose stock-video search queries for a narrated video.",
+      "Answer with the JSON object ONLY — no explanation, no thinking out loud,",
+      "no markdown fence. The first character you write must be {.",
       "Return ONLY a JSON object of the form:",
       first
         ? `{"look":"...","scenes":[{"index":0,"query":"...","reason":"..."}]}`
@@ -232,13 +378,26 @@ export async function planBackgrounds(opts: {
             "the whole video — lighting, palette, setting. Every scene in the video",
             "will inherit it, including scenes you are not being shown, so keep it",
             "general enough to suit a whole lesson on this subject.",
+            "Keep the look plain and consistent. Do not prescribe a mood.",
           ].join("\n")
         : `The look has already been chosen for this video: "${look}". Every query you return must suit it. Do not return a look field.`,
       "",
-      "`query` MUST be in ENGLISH regardless of the script's language, 2-5 words,",
+      "`query` MUST be in ENGLISH regardless of the script's language, 4-8 words,",
       "and must describe something a stock footage library plausibly contains.",
       "Prefer concrete filmable subjects over abstractions: 'dog eating from bowl'",
       "not 'canine nutrition awareness'. Never name a brand or a person.",
+      "",
+      // THE DOG HAS TO BE IN THE PICTURE. The first lesson came back with an
+      // empty sofa, a dim kitchen table and a blurred wall: each one a fair
+      // illustration of its line, and not one of them about a dog. This is a
+      // dog-training course, and the footage is carrying the avatars.
+      "EVERY query MUST have a dog or puppy on camera — a room, an object or a",
+      "person alone is never acceptable: not 'chewed slipper on floor' but 'dog",
+      "chewing slipper'; not 'front door hallway' but 'dog waiting at front door'.",
+      "Take the query from THE MAIN POINT OF THE LINE you are given: name the",
+      "line's own object or action, and put the dog in it. A line about a chewed",
+      "slipper is 'dog lying beside chewed slipper', not 'dog close up'.",
+      "The video is VERTICAL (phone-shaped); prefer subjects that fill a tall frame.",
       "",
       "`reason` is one short sentence, in English, saying why it fits that scene.",
       "Return exactly one entry per scene index given, in order, and use the",
@@ -253,21 +412,7 @@ export async function planBackgrounds(opts: {
       ...batch.map((s) => `${s.index}: ${s.text}`),
     ].filter(Boolean).join("\n");
 
-    const body = await postJson(
-      apiKey,
-      JSON.stringify({
-        model: NVIDIA_MODEL,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        temperature: 0.4, // lower than the script writer: this is classification, not creativity
-        max_tokens: 8192,
-      })
-    );
-
-    const parsed = JSON.parse(body) as { choices?: { message?: { content?: string } }[] };
-    const content = parsed.choices?.[0]?.message?.content ?? "";
+    const content = await askPlanner(apiKey, systemPrompt, userPrompt);
     const obj = extractJson(content) as {
       look?: string;
       scenes?: { index: number; query: string; reason?: string }[];
@@ -337,16 +482,25 @@ export async function pickBackgrounds(
     // model, so it is applied uniformly and can be changed without another
     // round trip.
     const query = plan.look ? `${scene.query} ${plan.look}` : scene.query;
-    const { hits, notes } = await searchVideos(query, { perProvider: 12 });
+    const { hits, notes } = await searchVideos(query, {
+      perProvider: 12,
+      orientation: opts.portrait ? "portrait" : "landscape",
+    });
 
     const needMs = scene.endMs - scene.startMs;
     const scored = hits
       .filter((h) => !used.has(h.id))
       .map((h) => {
         let score = 0;
-        if (h.durationSec * 1000 >= needMs) score += 100;
+        // ORIENTATION FIRST, LENGTH SECOND. It used to be the other way round —
+        // 100 for long enough, 50 for the right shape — so a long landscape clip
+        // beat a portrait one every time, and a 9:16 lesson filled up with
+        // sideways footage cropped to its middle. A clip that is the wrong
+        // shape loses most of its picture; a clip that is too short merely
+        // loops, which nobody notices behind a talking head.
         const isPortrait = h.height > h.width;
-        if (isPortrait === opts.portrait) score += 50;
+        if (isPortrait === opts.portrait) score += 200;
+        if (h.durationSec * 1000 >= needMs) score += 100;
         // Mild preference for longer clips among those that already fit, so a
         // scene that grows slightly doesn't immediately need re-picking.
         score += Math.min(20, h.durationSec);
@@ -354,7 +508,20 @@ export async function pickBackgrounds(
       })
       .sort((a, b) => b.score - a.score);
 
-    const best = scored[0]?.h ?? null;
+    // THE RIGHT SHAPE OR NOTHING — unless there is nothing. Pexels is asked for
+    // portrait at the source, but Pixabay's video API cannot filter, so a
+    // landscape clip could still out-score a vertical one and fill a 9:16 frame
+    // with a sideways picture cropped to its middle.
+    const rightShape = scored.filter((x) => (x.h.height > x.h.width) === opts.portrait);
+    // A DOG IN THE CLIP, by the library's own description of it. The query
+    // always asks for one, but a stock search matches loosely: "dog owner
+    // coming home" returns a hand and a mug. Right shape with a dog first,
+    // then right shape, then anything — so a scene is never left empty.
+    const withDog = rightShape.filter((x) => DOG_WORDS.test(x.h.tags));
+    const best = (withDog[0] ?? rightShape[0] ?? scored[0])?.h ?? null;
+    if (best && !DOG_WORDS.test(best.tags)) {
+      console.log(`[video-forge] no clip described with a dog for "${scene.query}" — using the closest match`);
+    }
     if (best) used.add(best.id);
     out.push({
       ...scene,

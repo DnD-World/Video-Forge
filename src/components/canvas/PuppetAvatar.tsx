@@ -17,9 +17,10 @@
 // ---------------------------------------------------------------------------
 
 import type { CSSProperties } from "react";
-import type { Puppet, PuppetLayer } from "../../store/puppetTypes";
+import { puppetInView, type Puppet, type PuppetLayer, type PuppetViewName } from "../../store/puppetTypes";
 import type { OutlineShape } from "../../store/types";
 import { BROW_REST, HEAD_STILL, type HeadPose } from "../../lib/motion/facePerformance";
+import { fullShape } from "../../lib/visemes/visemeMap";
 
 /** Layers already complained about, so one missing mouth is one message and not
  *  one per frame per worker. Module scope on purpose: it must outlive the
@@ -30,15 +31,32 @@ const reportedMissing = new Set<string>();
 function reportMissingLayer(file: string) {
   if (reportedMissing.has(file)) return;
   reportedMissing.add(file);
-  // "[byok]" is the prefix the renderer greps for. Without it this is invisible
+  // "[video-forge]" is the prefix the renderer greps for. Without it this is invisible
   // outside a devtools window nobody has open during a render.
-  console.error(`[byok] puppet layer has no image and was not drawn: ${file}`);
+  console.error(`[video-forge] puppet layer has no image and was not drawn: ${file}`);
 }
 
 interface Props {
   puppet: Puppet;
   /** file path -> loadable URL (blob: in the preview, staticFile() in a render). */
   urls: Record<string, string>;
+  /** Whether `urls` is FINISHED, or still filling in.
+   *
+   *  IN THE PREVIEW THESE ARRIVE LATE, ON PURPOSE. The JSON settles first so
+   *  the layout is right, then twenty-odd PNGs are read off disk one at a time
+   *  and turned into blob URLs — see useFileUrls. For those few hundred
+   *  milliseconds every layer has no URL, which is indistinguishable from a
+   *  layer whose file is gone unless someone says which it is.
+   *
+   *  Nobody said, so the first paint of every character reported its entire
+   *  face as missing, permanently — the reporter dedupes and never retracts.
+   *  Sixty-four console errors about files that were all present and loaded a
+   *  moment later, which is worse than useless: it is the one channel that is
+   *  supposed to mean something is really wrong.
+   *
+   *  A render passes `staticFile()` URLs that exist from the first frame, so it
+   *  leaves this undefined and every report there is real. */
+  urlsReady?: boolean;
   /** Viseme index 0–8. */
   viseme: number;
   /** The mouth being faded out of, and how far through the fade we are
@@ -60,6 +78,12 @@ interface Props {
   /** Rotation and offset of the head group. One transform carries every
    *  feature, which is the whole point of anchoring them to the head. */
   head?: HeadPose;
+  /** Arm pose name ("wave", "point"…), drawn when the puppet has it. */
+  pose?: string;
+  /** Which view to draw (puppet.views): "side" for dialogue, "sit" sitting. */
+  view?: PuppetViewName;
+  /** Flip left↔right — the side view facing the other way. */
+  mirror?: boolean;
   /** Disk diameter in px. */
   size: number;
   bgOpacity: number;
@@ -67,6 +91,10 @@ interface Props {
   bgColor?: string;
   borderColor?: string;
   outlineShape?: OutlineShape;
+  /** Frame line thickness in px on a 1080-wide video, with the face's size as
+   *  a fraction of the video's width, so it can be scaled. */
+  frameWidth?: number;
+  sizeFraction?: number;
 }
 
 const SHAPE_RADIUS: Record<OutlineShape, string> = {
@@ -85,15 +113,26 @@ function filterFor(l: PuppetLayer): string | undefined {
 }
 
 export function PuppetAvatar({
-  puppet, urls, viseme, prevViseme, mix = 1,
+  puppet: wholePuppet, view, mirror = false, urls, urlsReady, viseme, prevViseme, mix = 1,
   lidLeft = "open", lidRight = "open",
   lidLeftTo, lidRightTo, lidMix = 1,
   // Defaulted, not optional-and-absent, for the reason in `browSet` below.
-  browLeft = BROW_REST, browRight = BROW_REST, head: pose = HEAD_STILL, size,
+  browLeft = BROW_REST, browRight = BROW_REST, head: pose = HEAD_STILL, pose: armPose, size,
   bgOpacity, borderOpacity,
   bgColor = "#1a1a1a", borderColor = "#d98a3d",
   outlineShape = "circle",
+  frameWidth,
+  sizeFraction,
 }: Props) {
+  // The view asked for, swapped in whole; the front when the puppet has none.
+  const puppet = puppetInView(wholePuppet, view);
+  // Pixels on a 1080-wide video, scaled to whatever this is drawn at: the
+  // face's size is a fraction of the video's width, so the video's width here
+  // is size / sizeFraction.
+  const frameLinePx =
+    frameWidth !== undefined && sizeFraction
+      ? `${Math.max(0, (frameWidth * size) / (sizeFraction * 1080)).toFixed(2)}px`
+      : `${Math.max(1, size * 0.015)}px`;
   const fill = outlineShape === "circle" || outlineShape === "none" ? 0.9 : 0.97;
 
   // `zoom` is opt-in and defaults to no change.
@@ -189,9 +228,12 @@ export function PuppetAvatar({
   const draw = (l: PuppetLayer | undefined, key: string, opacity?: number) => {
     if (!l) return null;
     if (!urls[l.file]) {
+      // Still arriving is not the same as gone. Draw nothing either way; only
+      // say something once there is nothing left to wait for.
+      if (urlsReady === false) return null;
       // SAY SO. A layer with no image used to return null, so a missing mouth
       // was a face with no mouth and a render that reported success. The
-      // renderer collects "[byok]" lines out of the browser console and prints
+      // renderer collects "[video-forge]" lines out of the browser console and prints
       // them at the end; see onBrowserLog in electron/render/renderVideo.ts.
       reportMissingLayer(l.file);
       return null;
@@ -222,10 +264,12 @@ export function PuppetAvatar({
   };
   const browL = browSet(browLeft)?.left;
   const browR = browSet(browRight)?.right;
-  const mouth = puppet.mouths[String(viseme)] ?? puppet.mouths["0"];
+  // A half shape (10-12) the puppet was not made with falls back to its full one.
+  const mouthFor = (v: number) => puppet.mouths[String(v)] ?? puppet.mouths[String(fullShape(v))] ?? puppet.mouths["0"];
+  const mouth = mouthFor(viseme);
   const prevMouth =
     prevViseme !== undefined && prevViseme !== viseme
-      ? puppet.mouths[String(prevViseme)] ?? puppet.mouths["0"]
+      ? mouthFor(prevViseme)
       : undefined;
   // OFF BY DEFAULT — see visemeFadeMs in store/defaults.ts. Fading between two
   // mouth drawings does not produce an in-between mouth, it produces both at
@@ -247,7 +291,11 @@ export function PuppetAvatar({
   // A horizontal cut at the neck. The head's copy keeps everything above the
   // line plus an overlap band; the body's keeps everything below the line.
   // They share that band, and since the head draws on top it hides the join.
+  const armLayer = armPose ? puppet.poses?.[armPose] : undefined;
   const neck = puppet.neck;
+  // A whole-body pose replaces the resting body (needs the neck to keep the
+  // base's own head on top); otherwise it is drawn over the body as before.
+  const bodySwap = !!(armLayer && puppet.posesReplaceBody && neck && urls[armLayer.file]);
   const cutPct = neck ? neck.y * 100 : 0;
   const overlapPct = neck ? neck.overlap * 100 : 0;
   const featherPct = neck ? (neck.feather ?? 0.008) * 100 : 0;
@@ -264,10 +312,11 @@ export function PuppetAvatar({
   return (
     <div style={{
       width: size, height: size,
+      transform: mirror ? "scaleX(-1)" : undefined,
       borderRadius: SHAPE_RADIUS[outlineShape],
       display: "grid", placeItems: "center",
       background: hexA(bgColor, bgOpacity),
-      border: outlineShape === "none" ? "none" : `${Math.max(1, size * 0.015)}px solid ${hexA(borderColor, borderOpacity)}`,
+      border: outlineShape === "none" ? "none" : `${frameLinePx} solid ${hexA(borderColor, borderOpacity)}`,
       boxShadow:
         outlineShape !== "none" && borderOpacity > 0
           ? `0 0 ${size * 0.06}px ${hexA(borderColor, borderOpacity * 0.6)}`
@@ -278,7 +327,7 @@ export function PuppetAvatar({
           base is masked so the head's ellipse is punched OUT of it, leaving a
           hole the rotating head covers. Without a neck this element isn't
           rendered at all and the whole character leans as one piece. */}
-      {neck && (
+      {neck && !bodySwap && (
         <div style={{
           position: "absolute", width: head, height: head,
           backgroundImage: `url(${urls[puppet.base] ?? ""})`,
@@ -286,6 +335,23 @@ export function PuppetAvatar({
           maskImage: bodyMask,
           WebkitMaskImage: bodyMask,
         }} />
+      )}
+
+      {/* THE POSE AS A BODY: the whole picture, unmasked — a waving hand may
+          rise above the neck line — with an empty hole where the head goes;
+          the head group below draws the base's head into it. */}
+      {bodySwap && armLayer && (
+        <div style={{
+          position: "absolute", width: head, height: head,
+          backgroundImage: `url(${urls[armLayer.file]})`,
+          backgroundSize: "100% 100%",
+        }} />
+      )}
+
+      {/* THE ARMS, in the body's space: below the neck, so they stay with the
+          shoulders while the head nods and shakes. */}
+      {neck && armLayer && !bodySwap && (
+        <div style={{ position: "absolute", width: head, height: head }}>{draw(armLayer, "arms")}</div>
       )}
 
       {/* The head group. The tilt, shake and bob live on THIS element — every
@@ -314,6 +380,8 @@ export function PuppetAvatar({
           WebkitMaskImage: neck ? headMask : undefined,
         }} />
         {puppet.base_layers?.map((l, i) => draw(l, `bl${i}`))}
+        {/* No neck: the whole character moves as one, arms included. */}
+        {!neck && armLayer && draw(armLayer, "arms")}
         {/* Whites first, then pupils, then a lid per eye on top — so the eye
             white stays visible behind a closed or half-closed lid. */}
         {/* EVERY CELL, KEPT IN THE DOM AND INVISIBLE.

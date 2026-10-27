@@ -31,7 +31,7 @@ git clone https://github.com/devnen/Chatterbox-TTS-Server.git
    This must be done once so it saves to `config.yaml` as the active engine —
    the app reads whatever that file says.
 
-5. In BYOK-Vid-Creator → **Backend Settings**, set **Chatterbox install path**
+5. In Video Forge → **Backend Settings**, set **Chatterbox install path**
    to the cloned folder (the one containing `server.py`). Leave the port at
    `8004` unless you changed it.
 

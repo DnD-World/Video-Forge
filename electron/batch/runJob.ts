@@ -20,24 +20,36 @@
 // point every row at it.
 // ---------------------------------------------------------------------------
 
+import type { CharacterCard } from "../../characters/core/index.mjs";
 import fsp from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
 import { parseDramaboxScript } from "../../src/lib/narration/parseDramaboxScript";
+import { parseScript } from "../../src/lib/narration/parseScript";
+import type { DramaboxParams } from "../../src/lib/narration/dramaboxParams";
+import type { ExpressionOptions } from "../../src/lib/narration/expression";
 import { checkScript } from "../tts/checkScript";
+import { analyzeNarration } from "../audio/analyzeNarration";
+import { listMusic, pickMusic, BACKGROUND_VOLUME } from "../audio/musicLibrary";
 import { defaultProject } from "../../src/store/defaults";
 import { defaultTrackWaveform } from "../../src/lib/waveform/buildTracks";
 import { builtinPresets } from "../../src/store/builtinPresets";
 import { buildNarration, type NarrationInput } from "../tts/buildNarration";
 import { buildDramaboxNarration } from "../tts/buildDramaboxNarration";
-import { planBackgrounds, pickBackgrounds } from "../llm/backgroundPlanner";
+import { buildLessonNarration } from "../tts/buildLessonNarration";
+import { planBackgrounds, pickBackgrounds, PLAN_RULES_VERSION } from "../llm/backgroundPlanner";
 import { downloadTo } from "../net/mediaSearch";
+import type { PaidPolicy } from "../tts/paidVoice";
+import { haveFile } from "../net/partFile";
 import { renderVideo, type RenderJob, type RenderContext } from "../render/renderVideo";
 import type { ProjectPreset } from "../../src/store/templatesTypes";
 import {
   WAVEFORM_STYLES,
   type OutlineShape,
   type SpeakerConfig,
+  type SubtitleConfig,
+  type LogoConfig,
+  defaultLogo,
   type TrackWaveform,
 } from "../../src/store/types";
 
@@ -64,18 +76,81 @@ export interface JobSpeaker {
    *  are given — the same precedence the preview and the render already use. */
   sheetPath?: string;
   puppetPath?: string;
-  engine: "piper" | "chatterbox";
+  /** A drawn character (characters/core); wins over both. */
+  character?: CharacterCard;
+  engine: "piper" | "dramabox" | "elevenlabs" | "gemini" | "fish";
+  /** Gemini: `live` (default — unlimited free, checked word by word) or `tts`
+   *  (10 a day free). Model and voice default to Ak's picks (docs/V2-NEEDS.md). */
+  geminiMode?: "live" | "tts";
+  geminiModel?: string;
+  geminiVoice?: string;
+  /** Voice pitch in semitones (−6…+6), applied after synthesis. */
+  pitch?: number;
+  speed?: number;
+  breathMs?: number;
+  /** ElevenLabs voice id, and this character's settings. */
+  elevenVoiceId?: string;
+  /** `eleven_v3` (default — acts, reads the script's directions as tags) or
+   *  `eleven_multilingual_v2`. */
+  elevenModel?: "eleven_v3" | "eleven_multilingual_v2";
+  eleven?: { stability?: number; similarityBoost?: number; style?: number; speed?: number };
   piperPythonPath?: string;
   piperOnnxPath?: string;
-  chatterboxVoiceMode?: "predefined" | "clone";
-  chatterboxVoiceRef?: string;
+  /** File name of this character's DramaBox reference clip — "tsika.wav".
+   *  Read by tools/make-blocks.mjs; the clip itself lives in voice-refs/. */
+  voiceRef?: string;
+  /** Engine settings for THIS character. Everything omitted falls back to
+   *  DRAMABOX_DEFAULTS. A `[VOICE: …]` line in the script overrides these for
+   *  one block.
+   *
+   *  These exist because a cast is not one voice: Τσίκα wants more
+   *  expressiveness and less time per word than Σερίφης, and until this field
+   *  existed there was nowhere to say so. */
+  dramabox?: Partial<DramaboxParams>;
+  /** Whether the app may add expression this character's lines were written
+   *  without. Off unless asked for, and every change it makes is reported. */
+  expression?: ExpressionOptions;
   /** Outline and waveform colour — they are the same value by construction. */
   borderColor?: string;
 }
 
 export interface BatchJob {
-  /** A "Label: text" script. See docs/WRITING-SCRIPTS.md. */
-  scriptPath: string;
+  /** "Made with Video Forge" (remotion/AiBadge.tsx). On unless false. */
+  aiLabel?: boolean;
+  /** A job run has nobody at the window to ask, so paid voices (ElevenLabs) are
+   *  refused unless this is true. `maxPaidCredits` caps the characters bought
+   *  (0 or missing: no cap). Lines already bought on an earlier run are free. */
+  allowPaidVoices?: boolean;
+  maxPaidCredits?: number;
+  /** A "Label: text" script. See docs/WRITING-SCRIPTS.md.
+   *
+   *  Not needed when `lessonDir` is given: a finished lesson carries its own
+   *  cue sheet, which says everything the script would have. */
+  scriptPath?: string;
+  /** A finished lesson folder — `lms/tts/out/101.1`.
+   *
+   *  The narration, the music, the turn timings, the word timings and the sound
+   *  cues all come from the folder as it stands. Nothing is re-synthesised and
+   *  no sample is touched: this audio has been listened to and approved, and
+   *  every word time was measured against these exact samples.
+   *
+   *  Each cast member needs an `aliases` entry matching the lesson's own
+   *  character names — `["kaiti"]` for Καίτη — since that is what the cue
+   *  sheet calls them. */
+  lessonDir?: string;
+  /** A folder of looping banner clips for the bottom edge. One is used per
+   *  video, taken IN TURN: lessons are put in order by name and the Nth lesson
+   *  gets banner N, wrapping round — so neighbouring lessons never share one
+   *  and re-rendering a lesson always gives it the same banner back. */
+  bannerDir?: string;
+  /** Folders of intro and outro clips, taken in turn exactly like bannerDir.
+   *  A single `introPath` / `outroPath` still wins when given. */
+  introDir?: string;
+  outroDir?: string;
+  /** What to call the finished video — "101.1". Without it every video in a
+   *  batch comes out as render-<timestamp>.mp4, and sixty-nine of those in one
+   *  folder is a morning of opening files to find out which is which. */
+  outputName?: string;
   /** A preset exported from the Presets panel. Everything visible comes from
    *  here; anything it omits falls back to the app's defaults, exactly as it
    *  does when a preset is applied by hand. */
@@ -101,16 +176,39 @@ export interface BatchJob {
    *  over the flat background, which is faster and needs no API keys — the
    *  right choice when you are testing timing rather than looks. */
   backgrounds?: "auto" | "none";
+  /** A music bed. A path to one file, or "auto" to take one from the library
+   *  in `music/` — which is what a batch wants, since it gives every lesson a
+   *  bed without naming one 72 times. "none" or absent is silence. */
   musicPath?: string;
+  music?: "auto" | "none";
+  /** 0–1. Absent means the background level, which is deliberately low. */
+  musicVolume?: number;
   language?: string;
   /** Overrides the preset. Present because orientation is the one thing a
    *  batch is likely to vary per row — the same lesson, wide for the LMS and
    *  tall for social. */
-  format?: "9:16" | "16:9";
+  format?: "9:16" | "16:9" | "1:1" | "4:5";
   /** x264 quality, 0–51: lower is better and bigger. Defaults to 23. Raise it
    *  for social cuts, where the platform re-encodes everything anyway and the
    *  only thing a large file buys is upload time. */
   crf?: number;
+  /** Render only the first N seconds.
+   *
+   *  For judging a look. Settling the waveform and subtitle treatment for a
+   *  series means rendering the same opening a dozen times, and a seven-minute
+   *  lesson each time is half an hour of card for twenty seconds of answer.
+   *  Nothing else changes — same audio, same timings, same everything — the
+   *  video simply stops early. */
+  previewSec?: number;
+  /** Crossfade between mouth shapes, in ms. Lessons default to 130.
+   *
+   *  Started at 70 — already softer than the hard swap, and Ak asked to lean
+   *  into it further (16 Sep 2026). At 30fps 130ms is about four frames of
+   *  blend, which is most of a short viseme: the mouth reads as moving between
+   *  shapes rather than cutting between drawings. The old warning about a
+   *  half-and-half mouth does not apply — PuppetAvatar draws the arriving
+   *  mouth opaque and fades the leaving one off it. */
+  visemeFadeMs?: number;
   /** Override the preset's scrim and blur over the footage.
    *
    *  Here because judging any new effect needs the picture behind it left
@@ -118,6 +216,8 @@ export interface BatchJob {
    *  shows a blurred video either way, and says nothing about the glass. */
   backgroundDim?: number;
   backgroundBlur?: number;
+  /** Colour effect: none, sepia, bw, warm, cool, vivid, faded. */
+  backgroundColorLook?: string;
   /** Background clips per minute of finished video. 3.5 by default, clamped
    *  2-6. The first long render cut every 8 seconds, which is a music video,
    *  not a lesson. */
@@ -138,14 +238,12 @@ export interface BatchJob {
    *  uses a square frame, and "it uses the same call the boil does" is an
    *  argument, not a check. */
   outlineShape?: OutlineShape;
-  /** A folder of block WAVs already generated on the GPU box — 000.wav, 001.wav
-   *  and so on, one per block in script order.
-   *
-   *  Present because DramaBox does not run on this machine: it needs 24GB and
-   *  the laptop has 8. Narration is made on a rented L4 by
-   *  tools/dramabox-render-blocks.py and the audio comes back as files. */
+  /** A folder of block WAVs made outside the app — 000.wav, 001.wav and so
+   *  on, one per block in script order. The name is historical: it began with
+   *  DramaBox on a rented GPU (scripts now in tools/archive/google-cloud/);
+   *  the 70 course lessons used it for narration made by lms/tts. */
   dramaboxWavDir?: string;
-  /** words.json from tools/dramabox-align.py — when each word was actually
+  /** words.json from tools/timestamp-audio-for-puppets-and-subtitles.py — when each word was actually
    *  said. Without it every word time is estimated from letter counts. */
   dramaboxWordsPath?: string;
   /** Subtitle typeface, by Google Fonts name — "Comfortaa".
@@ -159,6 +257,20 @@ export interface BatchJob {
   dumpNarrationMeta?: string;
   subtitleFont?: string;
   subtitleFontWeight?: number;
+  /** How the spoken word is marked — see SubtitleConfig.activeEmphasis.
+   *  Here for the same reason waveformStyle is: comparing two looks must not
+   *  mean editing a preset in source between renders. */
+  subtitleEmphasis?: SubtitleConfig["activeEmphasis"];
+  /** Two- or three-second cards welded on after the render. Any video ffmpeg
+   *  can read; scaled to fit the frame. A card with no sound is fine. */
+  introPath?: string;
+  outroPath?: string;
+  /** A logo over every frame. Just a path uses the defaults — bottom right,
+   *  12% of the frame's width. */
+  logoPath?: string;
+  logoPosition?: LogoConfig["position"];
+  logoSize?: number;
+  logoOpacity?: number;
 }
 
 export interface JobResult {
@@ -174,6 +286,8 @@ export interface JobResult {
 const FORMATS = {
   "9:16": { width: 1080, height: 1920 },
   "16:9": { width: 1920, height: 1080 },
+  "1:1": { width: 1080, height: 1080 },
+  "4:5": { width: 1080, height: 1350 },
 } as const;
 
 async function readJson<T>(file: string): Promise<T> {
@@ -200,9 +314,52 @@ async function resolvePreset(job: BatchJob): Promise<ProjectPreset> {
   return preset;
 }
 
+/** The Nth clip of a folder for the Nth lesson, wrapping round. Shared by the
+ *  banner, the intro and the outro so all three rotate the same way. */
+async function clipInTurn(dir: string | undefined, job: BatchJob): Promise<string | null> {
+  if (!dir) return null;
+  const clips = (await fsp.readdir(dir).catch(() => [] as string[]))
+    .filter((f) => /\.(mp4|mov|webm)$/i.test(f))
+    .sort();
+  if (clips.length === 0) return null;
+  // Position of this lesson among its siblings, in name order. Not a hash: a
+  // hash can give two neighbours the same banner, and rotation cannot.
+  let n = 0;
+  if (job.lessonDir) {
+    const parent = path.dirname(job.lessonDir);
+    const lessons = (await fsp.readdir(parent, { withFileTypes: true }).catch(() => []))
+      .filter((d) => d.isDirectory())
+      .map((d) => d.name)
+      .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+    n = Math.max(0, lessons.indexOf(path.basename(job.lessonDir)));
+  }
+  return path.join(dir, clips[n % clips.length]);
+}
+
+/** The banner for this video, by rotation through job.bannerDir. */
+async function pickBanner(job: BatchJob): Promise<RenderJob["bannerVideo"]> {
+  const filePath = await clipInTurn(job.bannerDir, job);
+  if (!filePath) return null;
+  return {
+    filePath,
+    // MEASURED, not halved. Edge detail was measured on every frame of all four
+    // banners (16 Sep 2026): the brand and the puppy sit LOW, with 31.7-39.2%
+    // empty grey above and only 10.0-20.8% below. A 25/25 cut clipped the
+    // puppy's paws on the tightest one and left dead grey on top of all four.
+    // 29/9 keeps every frame of every banner, with a hair of room.
+    cropTop: 0.29,
+    cropBottom: 0.09,
+  };
+}
+
 export async function runBatchJob(
   job: BatchJob,
-  ctx: RenderContext & { mediaDir: string }
+  ctx: RenderContext & {
+    mediaDir: string;
+    /** Who may spend on paid voices. Many videos shares one across the whole
+     *  sheet so its cap is for the batch; a `--job` run builds its own. */
+    paid?: PaidPolicy;
+  }
 ): Promise<JobResult> {
   const { onProgress } = ctx;
   const preset: ProjectPreset = await resolvePreset(job);
@@ -230,6 +387,7 @@ export async function runBatchJob(
       label: c.label,
       sheetPath: c.sheetPath ?? fromPreset?.sheetPath,
       puppetPath: c.puppetPath ?? fromPreset?.puppetPath,
+      character: c.character ?? fromPreset?.character,
       borderColor: c.borderColor ?? fromPreset?.borderColor ?? "#ff9a3c",
       surface: s?.surface ?? fromPreset?.surface,
       bgColor: fromPreset?.bgColor ?? "#000000",
@@ -245,8 +403,6 @@ export async function runBatchJob(
       size: s?.size ?? fromPreset?.size ?? 0.34,
       ttsEngine: c.engine,
       voiceId: c.piperOnnxPath,
-      chatterboxVoiceMode: c.chatterboxVoiceMode,
-      chatterboxVoiceRef: c.chatterboxVoiceRef,
     } as SpeakerConfig;
   });
 
@@ -289,22 +445,67 @@ export async function runBatchJob(
     );
   }
 
+  // ---- a finished lesson, if this is one --------------------------------
+  // Read before anything else it would make redundant: with a lesson in hand
+  // there is no script to parse, no voice to synthesise and no timing to
+  // estimate. Everything below branches on it.
+  const lesson = job.lessonDir
+    ? await buildLessonNarration(
+        job.lessonDir,
+        Object.fromEntries(
+          job.cast.flatMap((c, i) =>
+            [c.label, ...(c.aliases ?? [])].map((n) => [n.toLowerCase(), speakers[i].id])
+          )
+        ),
+        Object.fromEntries(speakers.map((s) => [s.id, s.label])),
+        speakers.map((s) => s.id)
+      )
+    : null;
+  if (lesson) {
+    onProgress(
+      3,
+      `Lesson ${path.basename(job.lessonDir!)}: ${lesson.narration.segments.length} lines, ` +
+        `${lesson.sfx.length} sound cue(s), ${Math.round(lesson.totalMs / 1000)}s` +
+        (lesson.musicPath ? ", music bed found" : ", no music bed — run tts/add-music.mjs --bed-only")
+    );
+  }
+
   // ---- script -----------------------------------------------------------
-  const scriptText = await fsp.readFile(job.scriptPath, "utf8");
+  if (!lesson && !job.scriptPath) {
+    throw new Error("A job needs either scriptPath or lessonDir.");
+  }
+  const scriptText = lesson ? "" : await fsp.readFile(job.scriptPath!, "utf8");
   const castPhrases = job.cast.map(
     (c, i) => c.openingPhrase ?? `Speaker ${i + 1}`
   );
-  const { segments, unmatchedLines, cues, blocks } = parseDramaboxScript(
-    scriptText,
-    speakers.map((s, i) => ({
-      id: s.id,
-      label: s.label,
-      openingPhrase: castPhrases[i],
-    }))
-  );
-  if (segments.length === 0) {
+  const prose: ReturnType<typeof parseDramaboxScript> = lesson
+    ? { segments: [], unmatchedLines: [], cues: [], blocks: [], badVoiceLines: [] }
+    : parseDramaboxScript(
+        scriptText,
+        speakers.map((s, i) => ({
+          id: s.id,
+          label: s.label,
+          openingPhrase: castPhrases[i],
+        }))
+      );
+  // TWO SCRIPT FORMATS. The prose one ("A bright woman speaks warmly, "…"")
+  // was DramaBox's, and DramaBox is retired; the "Name: line" one is what the
+  // Narration tab writes. A script in the second format matched nothing above
+  // and the job died with "No line matched a cast member" (11 Oct 2026), so
+  // it is tried when the first finds nothing.
+  const labelled =
+    !lesson && prose.segments.length === 0
+      ? parseScript(
+          scriptText,
+          speakers.map((s, i) => ({ id: s.id, label: s.label, aliases: job.cast[i].aliases }))
+        )
+      : null;
+  const { segments, unmatchedLines, cues, blocks } = labelled
+    ? { ...labelled, blocks: [] as typeof prose.blocks }
+    : prose;
+  if (!lesson && segments.length === 0) {
     throw new Error(
-      `No line in ${path.basename(job.scriptPath)} matched a cast member. ` +
+      `No line in ${path.basename(job.scriptPath!)} matched a cast member. ` +
         `Cast labels: ${speakers.map((s) => s.label).join(", ")}`
     );
   }
@@ -313,17 +514,20 @@ export async function runBatchJob(
   // double quote silently swallows the rest of a line, a direction naming its
   // own subject produces a broken sentence. None of it throws on its own, and
   // all of it survives into a render that reports success.
-  const problems = checkScript(scriptText, castPhrases);
+  // The prose-format checks; a "Name: line" script has none of those traps.
+  const problems = lesson || labelled ? [] : checkScript(scriptText, castPhrases);
   if (problems.length) {
     const detail = problems
       .map((p) => `  line ${p.line}: ${p.problem}\n            ${p.fix}\n            > ${p.text}`)
       .join("\n");
     throw new Error(
-      `${problems.length} problem(s) in ${path.basename(job.scriptPath)}:\n${detail}`
+      `${problems.length} problem(s) in ${path.basename(job.scriptPath!)}:\n${detail}`
     );
   }
 
-  onProgress(2, `${segments.length} lines, ${speakers.length} speakers, script checks out`);
+  if (!lesson) {
+    onProgress(2, `${segments.length} lines, ${speakers.length} speakers, script checks out`);
+  }
 
   // ---- narration --------------------------------------------------------
   const language = job.language ?? defaultProject.language;
@@ -335,19 +539,74 @@ export async function runBatchJob(
       speakerLabel: seg.speakerLabel,
       text: seg.text,
       language,
-      engine: c.engine,
+      engine:
+        c.engine === "elevenlabs"
+          ? ("elevenlabs" as const)
+          : c.engine === "gemini"
+          ? ("gemini" as const)
+          : c.engine === "fish"
+          ? ("fish" as const)
+          : ("piper" as const),
+      pitch: c.pitch ?? 0,
+      speed: c.speed ?? 1,
+      breathMs: c.breathMs,
+      gemini:
+        c.engine === "gemini"
+          ? {
+              mode: c.geminiMode ?? "live",
+              model: c.geminiModel ?? "gemini-2.5-flash-native-audio-latest",
+              voice: c.geminiVoice ?? "Kore",
+              persona: c.openingPhrase,
+            }
+          : undefined,
+      // The words outside the quotes. On v3 they become the audio tag; every
+      // other engine here ignores them.
+      direction: seg.direction,
       piperPythonPath: c.piperPythonPath,
       piperOnnxPath: c.piperOnnxPath,
-      voiceMode: c.chatterboxVoiceMode,
-      predefinedVoiceId:
-        c.chatterboxVoiceMode === "predefined" ? c.chatterboxVoiceRef : undefined,
-      referenceAudioFilename:
-        c.chatterboxVoiceMode === "clone" ? c.chatterboxVoiceRef : undefined,
+      elevenVoiceId: c.elevenVoiceId,
+      elevenModel: c.elevenModel,
+      eleven: c.eleven,
     } as NarrationInput;
   });
 
-  onProgress(4, `Synthesising ${segments.length} lines…`);
-  const narration = job.dramaboxWavDir
+  // ---- music bed -------------------------------------------------------
+  // Chosen from the lesson's own script path, so re-rendering it tomorrow
+  // gives it the same loop and the course does not drift halfway through.
+  let musicFile: string | null = job.musicPath ?? null;
+  let musicAnalysis: RenderJob["musicAnalysis"] = null;
+  // A LESSON'S MUSIC IS ALREADY WRITTEN, and already ducked: the bed sits at
+  // -23 dB under the teaching, comes up for the intro and the outro, and ends
+  // on a sting timed to the last frame. So it plays at full level with the
+  // app's own ducking switched off — anything else would duck it twice.
+  if (!musicFile && lesson?.musicPath) {
+    musicFile = lesson.musicPath;
+    onProgress(3, "Music: the lesson's own bed, played as mixed");
+  }
+  if (!musicFile && job.music === "auto") {
+    const tracks = await listMusic(path.join(ctx.projectRoot, "music"));
+    const chosen = pickMusic(tracks, job.scriptPath ?? job.lessonDir ?? "");
+    if (chosen) {
+      musicFile = chosen.filePath;
+      onProgress(3, `Music: ${chosen.name}`);
+    } else {
+      onProgress(3, "Music: asked for auto, and music/ has no .wav files — silent");
+    }
+  }
+  if (musicFile) {
+    try {
+      musicAnalysis = analyzeNarration(await fsp.readFile(musicFile), [], []);
+    } catch (e) {
+      // Said out loud: an unanalysed bed plays once and then stops, which is
+      // four silent minutes nobody notices until the end of the lesson.
+      onProgress(3, `Music could not be analysed and will not repeat: ${String(e)}`);
+    }
+  }
+
+  if (!lesson) onProgress(4, `Synthesising ${segments.length} lines…`);
+  const narration = lesson
+    ? lesson.narration
+    : job.dramaboxWavDir
     ? await buildDramaboxNarration(
         blocks,
         segments,
@@ -363,7 +622,12 @@ export async function runBatchJob(
     narrationInput,
     speakers.map((s) => s.id),
     { sameMs: defaultProject.pauseSameMs, turnMs: defaultProject.pauseTurnMs },
-    ctx.outputDir
+    ctx.outputDir,
+    {
+      // Nobody is watching a job: paid voices only if the job (or the batch
+      // settings) said so, and never past the cap.
+      paid: ctx.paid ?? { mode: "unattended", allowUnattended: job.allowPaidVoices === true, maxChars: job.maxPaidCredits, spent: { chars: 0 } },
+    }
   );
 
   if (job.dumpNarrationMeta) {
@@ -378,7 +642,14 @@ export async function runBatchJob(
   }
 
   const endMs = Math.max(...narration.segments.map((s) => s.endMs));
-  const durationSec = Math.max(1, Math.ceil(endMs / 1000));
+  // A LESSON RUNS TO ITS OWN END, not to its last word. The tail pad carries
+  // the music coming back up and the sting that lands on the final frame;
+  // stopping at the last word would cut all of it.
+  const fullSec = Math.max(1, Math.ceil((lesson?.totalMs ?? endMs) / 1000));
+  const durationSec = job.previewSec ? Math.min(fullSec, job.previewSec) : fullSec;
+  if (job.previewSec && durationSec < fullSec) {
+    onProgress(12, `Preview: first ${durationSec}s of ${fullSec}s`);
+  }
   onProgress(12, `Narration ${Math.floor(durationSec / 60)}m${durationSec % 60}s`);
 
   // ---- sound effects ----------------------------------------------------
@@ -397,11 +668,45 @@ export async function runBatchJob(
   // is three words in a script, and a render that skipped it quietly would mean
   // finding the missing doorbell by watching ten minutes of video. Generating
   // the sound is a GPU run and deliberately not started from here.
-  const sfxDir = path.join(path.dirname(job.scriptPath), "..", "sfx", "library");
-  const wantedPath = path.join(path.dirname(job.scriptPath), "..", "sfx", "wanted.csv");
+  // A lesson keeps its sounds beside itself — lms/sfx — and calls them by
+  // whatever the script said, which is not always the library's name: a script
+  // asking for "collar-clinking" wants "collar-shake". aliases.json is that
+  // mapping, written when the cue names were normalised, and reading it here is
+  // what stops 30-odd spellings from each needing their own file.
+  const sfxRoot = lesson
+    ? path.resolve(job.lessonDir!, "..", "..", "..", "sfx")
+    : path.join(path.dirname(job.scriptPath!), "..", "sfx");
+  const sfxDir = path.join(sfxRoot, "library");
+  const wantedPath = path.join(sfxRoot, "wanted.csv");
+  const aliases: Record<string, string> = await fsp
+    .readFile(path.join(sfxRoot, "aliases.json"), "utf8")
+    .then((t) => JSON.parse(t))
+    .catch(() => ({}));
+  // Cues to pass over instead of stopping for. See sfx/ignore.txt for why a
+  // sound ends up on that list; the default is still to stop.
+  const ignored = new Set(
+    (await fsp.readFile(path.join(sfxRoot, "ignore.txt"), "utf8").catch(() => ""))
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter((l) => l && !l.startsWith("#"))
+  );
   const sfxClips: NonNullable<RenderJob["sfx"]> = [];
   const missing: string[] = [];
-  for (const cue of cues) {
+  // A lesson's cues carry a time, because the audio already exists. A script's
+  // carry a line number, because when a script is written nobody knows how long
+  // a line will take to say.
+  const soundCues = lesson
+    ? lesson.sfx.map((c) => ({ name: aliases[c.name] ?? c.name, atMs: c.atMs }))
+    : cues.map((cue) => ({
+        name: aliases[cue.name] ?? cue.name,
+        atMs:
+          cue.beforeSegment < narration.segments.length
+            ? narration.segments[cue.beforeSegment].startMs
+            : endMs,
+      }));
+  let skipped = 0;
+  for (const cue of soundCues) {
+    if (ignored.has(cue.name)) { skipped++; continue; }
     const filePath = path.join(sfxDir, `${cue.name}.wav`);
     try {
       await fsp.access(filePath);
@@ -409,13 +714,7 @@ export async function runBatchJob(
       if (!missing.includes(cue.name)) missing.push(cue.name);
       continue;
     }
-    // At the start of the line it precedes, or at the very end when it is the
-    // last thing in the script.
-    const at =
-      cue.beforeSegment < narration.segments.length
-        ? narration.segments[cue.beforeSegment].startMs
-        : endMs;
-    sfxClips.push({ filePath, atMs: at, volume: 0.8, label: cue.name });
+    sfxClips.push({ filePath, atMs: cue.atMs, volume: 0.8, label: cue.name });
   }
   if (missing.length) {
     const existing = await fsp.readFile(wantedPath, "utf8").catch(() => "name,prompt,seconds,notes\n");
@@ -434,6 +733,7 @@ export async function runBatchJob(
     );
   }
   if (sfxClips.length) onProgress(12, `${sfxClips.length} sound effect(s) placed`);
+  if (skipped) onProgress(12, `${skipped} cue(s) passed over — listed in sfx/ignore.txt`);
 
   // ---- backgrounds ------------------------------------------------------
   const format = job.format ?? preset.render?.format ?? defaultProject.render.format;
@@ -455,6 +755,14 @@ export async function runBatchJob(
     // Keyed on what the plan is actually derived from: the words, when they
     // are said, the topic, the language and the orientation. Not the look or
     // the cast.
+    //
+    // AND THE RULES THE MODEL WAS GIVEN. Bump PLAN_RULES_VERSION in
+    // backgroundPlanner.ts whenever that prompt changes, or old plans are
+    // reused and the change appears to have done nothing. That is exactly what
+    // happened on 16 Sep 2026: the prompt was rewritten to demand a dog on
+    // camera in bright daylight, planning took 12 seconds instead of 7 minutes
+    // because every scene came from the cache, and the footage came back as
+    // dim and dogless as before.
     const planKey = crypto
       .createHash("sha256")
       .update(
@@ -463,6 +771,7 @@ export async function runBatchJob(
           job.topic ?? "",
           language,
           portrait,
+          PLAN_RULES_VERSION,
         ])
       )
       .digest("hex")
@@ -501,11 +810,8 @@ export async function runBatchJob(
       if (!scene.hit) continue;
       const ext = (scene.hit.url.split("?")[0].match(/\.(mp4|mov|webm)$/i)?.[1] ?? "mp4").toLowerCase();
       const dest = path.join(ctx.mediaDir, `${scene.hit.provider}-${scene.hit.id}.${ext}`);
-      try {
-        await fsp.access(dest);
-      } catch {
-        await downloadTo(scene.hit.url, dest);
-      }
+      // Whole files only: a download that failed leaves nothing under this name.
+      if (!haveFile(dest)) await downloadTo(scene.hit.url, dest);
       picked.push({
         startMs: scene.startMs,
         endMs: scene.endMs,
@@ -533,6 +839,10 @@ export async function runBatchJob(
       bgOpacity: sp.bgOpacity,
       borderOpacity: sp.borderOpacity,
       outlineShape: sp.outlineShape,
+      frameWidth: sp.frameWidth,
+      gestures: sp.gestures,
+      facing: sp.facing,
+      sitting: sp.sitting,
       waveform: sp.waveform,
       // Without this the glass never reaches the composition. The list above
       // is hand-written rather than a spread, which is deliberate — the render
@@ -542,6 +852,7 @@ export async function runBatchJob(
       surface: sp.surface,
       sheetPath: sp.sheetPath,
       puppetPath: sp.puppetPath,
+      character: sp.character,
     })),
     musicColor: preset.musicColor ?? defaultProject.musicColor,
     width,
@@ -550,14 +861,23 @@ export async function runBatchJob(
     durationSec,
     audioFilePath: narration.filePath,
     analysis: narration.analysis,
-    musicFilePath: job.musicPath ?? null,
-    musicAnalysis: null,
-    musicVolume: defaultProject.musicVolume,
-    musicDuck: defaultProject.musicDuck,
+    musicFilePath: musicFile,
+    // ANALYSED, OR IT PLAYS ONCE AND STOPS. The composition repeats a bed by
+    // counting frames against the track's own length, and without an analysis
+    // it has no length to count against — so it plays the file from the top
+    // and leaves silence for the rest of the lesson. These loops are twelve to
+    // eighty-five seconds against lessons of five minutes, so that is not an
+    // edge case, it is every single row.
+    musicAnalysis: musicAnalysis,
+    // A lesson's bed carries its own levels; anything else gets the app's.
+    musicVolume: job.musicVolume ?? (lesson?.musicPath ? 1 : BACKGROUND_VOLUME),
+    musicDuck: lesson?.musicPath ? 0 : defaultProject.musicDuck,
     sfx: sfxClips,
     backgrounds,
     backgroundDim: job.backgroundDim ?? preset.backgroundDim ?? defaultProject.backgroundDim,
     backgroundBlur: job.backgroundBlur ?? preset.backgroundBlur ?? defaultProject.backgroundBlur,
+    backgroundColorLook: job.backgroundColorLook,
+    backgroundBand: preset.backgroundBand ?? null,
     backgroundCrossfadeMs: preset.backgroundCrossfadeMs ?? defaultProject.backgroundCrossfadeMs,
     // MERGED, not chosen between. A preset is partial by contract — its own
     // doc comment says every field is optional on read so that older, hand-
@@ -570,14 +890,37 @@ export async function runBatchJob(
       ...preset.subtitles,
       ...(job.subtitleFont ? { fontFamily: job.subtitleFont } : {}),
       ...(job.subtitleFontWeight ? { fontWeight: job.subtitleFontWeight } : {}),
+      ...(job.subtitleEmphasis ? { activeEmphasis: job.subtitleEmphasis } : {}),
     },
     musicWaveform: { ...defaultProject.musicWaveform, ...preset.musicWaveform },
-    visemeFadeMs: defaultProject.visemeFadeMs,
+    visemeFadeMs: job.visemeFadeMs ?? (lesson ? 130 : defaultProject.visemeFadeMs),
     idleMotion: defaultProject.idleMotion,
     narrationSegments: narration.segments,
     narrationPauses: narration.pauses ?? [],
     crf: job.crf,
+    introPath: job.introPath ?? (await clipInTurn(job.introDir, job)) ?? undefined,
+    // A LESSON'S INTRO PLAYS OVER ITS OPENING SILENCE. Every lesson starts with
+    // a held pad — two seconds of no speech carrying the music's swell — which
+    // is exactly what the intro clips were cut to fit. Welding one in front
+    // instead would show the intro, then two more seconds of an empty frame.
+    introOverMs: lesson?.headMs ? lesson.headMs : undefined,
+    topScrim: preset.topScrim ?? null,
+    bannerVideo: await pickBanner(job),
+    // The outro is WELDED ON AFTER the lesson rather than laid over its tail:
+    // the clips run 5.5-11s against a 3s tail, and Ak's call (16 Sep 2026) was
+    // to let it play on past the end rather than cut it short.
+    outroPath: job.outroPath ?? (await clipInTurn(job.outroDir, job)) ?? undefined,
+    logo: job.logoPath
+      ? {
+          ...defaultLogo(),
+          filePath: job.logoPath,
+          ...(job.logoPosition ? { position: job.logoPosition } : {}),
+          ...(job.logoSize !== undefined ? { size: job.logoSize } : {}),
+          ...(job.logoOpacity !== undefined ? { opacity: job.logoOpacity } : {}),
+        }
+      : null,
     glass: job.glass ?? null,
+    aiLabel: job.aiLabel ?? true,
   } as RenderJob;
 
   const result = await renderVideo(renderJob, ctx);

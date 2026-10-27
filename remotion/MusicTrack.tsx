@@ -60,7 +60,7 @@ export function MusicTrack({
         volume={(f) => gainAt(f)}
         onError={(err) => {
           // eslint-disable-next-line no-console
-          console.log(`[byok] Music track ${fileName} failed: ${err.message}`);
+          console.log(`[video-forge] Music track ${fileName} failed: ${err.message}`);
         }}
       />
     );

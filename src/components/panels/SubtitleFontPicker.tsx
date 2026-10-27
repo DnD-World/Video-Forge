@@ -80,7 +80,7 @@ export function SubtitleFontPicker() {
     } catch (e) {
       setNote(
         `Couldn't fetch ${family}: ${e instanceof Error ? e.message : String(e)}. ` +
-          "It needs the internet once; after that it's cached."
+          "It needs the internet once; after that it is saved on this computer."
       );
     } finally {
       setBusy(false);
@@ -89,13 +89,14 @@ export function SubtitleFontPicker() {
 
   return (
     <div className="space-y-2">
-      <div className="label-etched">Typeface</div>
+      <div data-tip="The letter style used for the subtitles." className="label-etched">Typeface</div>
       {/* Deco Noir's own picker. A native <select> cannot do the one thing
           this control exists to do — show the name of a typeface IN that
           typeface — and its popup is drawn by the OS, so it ignored the theme
           entirely and came out light-on-light. */}
       <Picker
         aria-label="Subtitle typeface"
+        data-tip="Choose the style of letters used for the subtitles. Each name is shown in its own letters."
         className="w-full"
         disabled={busy}
         value={subtitles.fontFamily ?? ""}
@@ -137,6 +138,7 @@ export function SubtitleFontPicker() {
             <button
               key={w}
               disabled={busy}
+              data-tip={`Letter thickness ${w}. Small numbers are thin, big numbers are bold.`}
               onClick={() => void choose(current.family, w)}
               className={`px-2 py-1 text-sm border ${
                 w === weight
@@ -150,11 +152,11 @@ export function SubtitleFontPicker() {
         </div>
       )}
 
-      {busy && <p className="text-sm text-accent-bright">Fetching the font…</p>}
-      {note && <p className="text-sm text-amber-400">{note}</p>}
+      {busy && <p data-tip="The font is being downloaded. It takes a moment." className="text-sm text-accent-bright">Fetching the font…</p>}
+      {note && <p data-tip="Something about the font. If it could not be loaded, check your internet and pick the font again." className="text-sm text-amber-400">{note}</p>}
       {!busy && !note && subtitles.fontFamily && (
         <p className="text-sm text-neutral-500">
-          Downloaded once and cached — later renders and offline runs use the local copy.
+          Downloaded once and kept on this computer — later renders and offline runs use the local copy.
         </p>
       )}
     </div>

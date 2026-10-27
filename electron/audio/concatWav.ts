@@ -72,24 +72,50 @@ function buildWavHeader(
  *   video. A returned segment's start time is after its own gap, so subtitles
  *   and visemes stay tied to the audio rather than to the pause in front of it.
  */
+/** Any 16-bit PCM WAV → mono 16-bit at `rate`, by linear interpolation.
+ *  Speech only needs to sound right, not survive a mastering engineer. */
+function toMono16(buf: Buffer, info: WavInfo, rate: number): Buffer {
+  if (info.bitsPerSample !== 16) {
+    throw new Error(`Can't mix a ${info.bitsPerSample}-bit voice with the others — only 16-bit audio is supported.`);
+  }
+  const ch = info.numChannels;
+  const frames = Math.floor(info.dataSize / (2 * ch));
+  const at = (f: number) => {
+    let sum = 0;
+    for (let c = 0; c < ch; c++) sum += buf.readInt16LE(info.dataStart + (f * ch + c) * 2);
+    return sum / ch;
+  };
+  const outFrames = Math.floor((frames * rate) / info.sampleRate);
+  const step = info.sampleRate / rate;
+  const pcm = Buffer.alloc(outFrames * 2);
+  for (let i = 0; i < outFrames; i++) {
+    const x = i * step, a = Math.floor(x), f = x - a;
+    const s0 = at(a), s1 = a + 1 < frames ? at(a + 1) : s0;
+    pcm.writeInt16LE(Math.max(-32768, Math.min(32767, Math.round(s0 + (s1 - s0) * f))), i * 2);
+  }
+  return Buffer.concat([buildWavHeader(pcm.length, 1, rate, 16), pcm]);
+}
+
 export function concatWavBuffers(buffers: Buffer[], gapsMs: number[] = []): ConcatResult {
   if (buffers.length === 0) {
     throw new Error("No audio segments to concatenate.");
   }
 
-  const infos = buffers.map(readWavInfo);
-  const { numChannels, sampleRate, bitsPerSample } = infos[0];
-  for (const info of infos) {
-    if (
-      info.numChannels !== numChannels ||
-      info.sampleRate !== sampleRate ||
-      info.bitsPerSample !== bitsPerSample
-    ) {
-      throw new Error(
-        "Audio segments have mismatched format (sample rate/channels/bit depth) — can't concatenate directly."
-      );
-    }
+  let infos = buffers.map(readWavInfo);
+  // A cast can mix engines — Piper speaks at 22.05 kHz, Gemini at 24 kHz — and
+  // raw samples at two rates cannot simply be laid end to end. When the
+  // formats differ, everything is brought to 24 kHz mono 16-bit first.
+  const mixed = infos.some(
+    (i) =>
+      i.numChannels !== infos[0].numChannels ||
+      i.sampleRate !== infos[0].sampleRate ||
+      i.bitsPerSample !== infos[0].bitsPerSample
+  );
+  if (mixed) {
+    buffers = buffers.map((b, k) => toMono16(b, infos[k], 24000));
+    infos = buffers.map(readWavInfo);
   }
+  const { numChannels, sampleRate, bitsPerSample } = infos[0];
 
   const bytesPerSecond = sampleRate * numChannels * (bitsPerSample / 8);
   const segments: { startMs: number; endMs: number }[] = [];

@@ -1,0 +1,137 @@
+{
+  "speakerCount": 3,
+  "description": "Skilitsa lessons 1xx (how she thinks — foundations): subtitles top, footage in the middle, the three of them along the bottom. Waveform: mirror.",
+  "slots": [
+    {
+      "x": 0.2,
+      "y": 0.7,
+      "size": 0.25,
+      "outlineShape": "circle",
+      "surface": {
+        "style": "none",
+        "blur": 0.008,
+        "color": "#000000",
+        "opacity": 0.35,
+        "borderOpacity": 0.25,
+        "radius": 0.25
+      },
+      "waveform": {
+        "enabled": true,
+        "style": "mirror",
+        "position": "speaker",
+        "scale": 1.05,
+        "density": 64,
+        "thickness": 1,
+        "dotSize": 1,
+        "edgeFlush": false,
+        "smoothing": 0.2,
+        "ringInnerRadius": 0.2,
+        "ringSize": 1,
+        "ringX": 0.5,
+        "ringY": 0.5,
+        "lane": 0,
+        "sparkle": 0
+      }
+    },
+    {
+      "x": 0.5,
+      "y": 0.7,
+      "size": 0.25,
+      "outlineShape": "circle",
+      "surface": {
+        "style": "none",
+        "blur": 0.008,
+        "color": "#000000",
+        "opacity": 0.35,
+        "borderOpacity": 0.25,
+        "radius": 0.25
+      },
+      "waveform": {
+        "enabled": true,
+        "style": "mirror",
+        "position": "speaker",
+        "scale": 1.05,
+        "density": 64,
+        "thickness": 1,
+        "dotSize": 1,
+        "edgeFlush": false,
+        "smoothing": 0.2,
+        "ringInnerRadius": 0.2,
+        "ringSize": 1,
+        "ringX": 0.5,
+        "ringY": 0.5,
+        "lane": 0,
+        "sparkle": 0
+      }
+    },
+    {
+      "x": 0.8,
+      "y": 0.7,
+      "size": 0.25,
+      "outlineShape": "circle",
+      "surface": {
+        "style": "none",
+        "blur": 0.008,
+        "color": "#000000",
+        "opacity": 0.35,
+        "borderOpacity": 0.25,
+        "radius": 0.25
+      },
+      "waveform": {
+        "enabled": true,
+        "style": "mirror",
+        "position": "speaker",
+        "scale": 1.05,
+        "density": 64,
+        "thickness": 1,
+        "dotSize": 1,
+        "edgeFlush": false,
+        "smoothing": 0.2,
+        "ringInnerRadius": 0.2,
+        "ringSize": 1,
+        "ringX": 0.5,
+        "ringY": 0.5,
+        "lane": 0,
+        "sparkle": 0
+      }
+    }
+  ],
+  "subtitles": {
+    "enabled": true,
+    "position": "top",
+    "fontSize": 0.072,
+    "color": "#ffffff",
+    "activeColor": "#ff9a3c",
+    "activeFromSpeaker": true,
+    "strokeColor": "#000000",
+    "strokeWidth": 0.22,
+    "activeGlow": 0.25,
+    "activeEmphasis": "lift",
+    "uppercase": false,
+    "maxChars": 32,
+    "fontFamily": "Comfortaa",
+    "fontWeight": 700,
+    "surface": {
+      "style": "none",
+      "blur": 0.01,
+      "color": "#000000",
+      "opacity": 0.35,
+      "borderOpacity": 0.2,
+      "radius": 0.25
+    },
+    "transition": {
+      "style": "pop",
+      "durationMs": 220,
+      "overshoot": 1.05,
+      "blur": 0.4
+    }
+  },
+  "backgroundDim": 0,
+  "backgroundBlur": 0,
+  "backgroundCrossfadeMs": 500,
+  "backgroundBand": null,
+  "topScrim": {
+    "height": 0.26,
+    "opacity": 0.55
+  }
+}
