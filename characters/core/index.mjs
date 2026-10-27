@@ -10,3 +10,10 @@ export { applyScene } from "./fx.mjs";
 export { characterState, poseBlendAt, facingView, autoPerformance } from "./perform.mjs";
 export { cardPrompt, suggestPrompt, readCardAnswer, readSuggestions, cardSchemaText } from "./ai.mjs";
 export { setCanvasFactory } from "./paint.mjs";
+export { MOVE_VERSION, CHANNELS, REST, HAND_SHAPES, KINDS, STYLES, STYLE_IDS, normalizeMove, playMove, movesAt, moveProgress, moveLengthMs, readMoveTag, buildShelf } from "./moves.mjs";
+export { PROPS, PROP_IDS, PROP_NAMES, drawProp } from "./props.mjs";
+export { drawHand } from "./hands.mjs";
+import { buildShelf as build } from "./moves.mjs";
+import { SHELF_DATA } from "../moves/shelf.mjs";
+/** The starter shelf, checked once (problems are caught by the tests, never at run time). */
+export const SHELF = build(SHELF_DATA).shelf;

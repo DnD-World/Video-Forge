@@ -23,6 +23,8 @@ import { ITEMS, itemById } from "./wardrobe.mjs";
 import { EXPRESSION_REST, EXPRESSION_SMILE, browShape, lidAmount, mouthShape } from "./face.mjs";
 import { applyLayer } from "./fx.mjs";
 import { RecordingCtx } from "./record.mjs";
+import { drawHand, palmPx } from "./hands.mjs";
+import { drawProp, drawSeat, PROPS } from "./props.mjs";
 
 // ---- hair ----------------------------------------------------------------------------------
 // Each style: back (behind the head) and/or front (on top), head-centred px.
@@ -199,6 +201,8 @@ export function drawCharacter(ctx, card, { look: look0 = card.look, S, x = 0, y 
   ctx.save();
   ctx.translate(x, y);
   if (mirror) ctx.scale(-1, 1);
+  // a move's whole-body shift: a step aside, or off the floor in a jump
+  ctx.translate((sk.root?.[0] ?? 0) * S, (sk.root?.[1] ?? 0) * S);
 
   // limb colours: rubber-hose limbs are one bendy tube in the colour that covers them
   const longTop = wear.find((w) => ["top", "outer", "full"].includes(w.slot) && ["shirt", "hoodie", "hoodie_up", "sweater", "blazer"].includes(w.id));
@@ -218,19 +222,29 @@ export function drawCharacter(ctx, card, { look: look0 = card.look, S, x = 0, y 
     } else pen.poly(p, false);
     G.line(color, w, { role: role === "leg" || role === "arm" ? (color === card.skin ? "skin" : "cloth") : "cloth" });
   };
-  const hand = (arm) => {
+  const relaxedHand = (arm) => {
     const [hx, hy] = [arm.ha[0] * S, arm.ha[1] * S];
     if (look.gloves) { pen.circle(hx, hy, 0.028 * S); G.fill("#ffffff", { role: "eye", noShade: true }); return; }
     if (look.limb === "line") { pen.circle(hx, hy, 0.012 * S); G.fill(card.skin, { role: "skin", noShade: true }); return; }
     pen.circle(hx, hy, sk.limbW * 0.62 * S); G.fill(card.skin, { role: "skin", noShade: true });
   };
+  // hand shapes and props come from a move (moves.mjs); without one: the round hand
+  const which = (arm) => (arm.front ? "F" : "B");
   const drawArm = (arm) => {
     limb([arm.sh, arm.el, arm.ha], look.limb === "line" ? ink : armColor, sk.limbW, "arm");
     if (look.limb !== "hose") phase("arm", arm);
-    hand(arm);
+    const held = (state.props ?? []).filter((p) => PROPS[p.id] && PROPS[p.id].hold !== "seat" && p.hand === which(arm));
+    const palm = palmPx(G);
+    // an open hand under what rests on it; a fist in front of the handle it holds
+    const under = held.filter((p) => PROPS[p.id].hold === "under"), fist = held.filter((p) => PROPS[p.id].hold !== "under");
+    if (under.length && !fist.length) drawHand(G, arm, "open", { relaxed: relaxedHand });
+    for (const p of [...under, ...fist]) drawProp(G, arm, p.id, { ...p, palm });
+    if (fist.length) drawHand(G, arm, "fist", { relaxed: relaxedHand });
+    else if (!held.length) drawHand(G, arm, state.hands?.[which(arm)], { relaxed: relaxedHand });
   };
 
-  // ---- behind everything
+  // ---- behind everything: a seat a move brought along, then the back of the clothes
+  for (const p of state.props ?? []) if (PROPS[p.id]?.hold === "seat") drawSeat(G, sk, p.id, p);
   phase("back");
   drawArm(sk.arms[0]);
 
@@ -298,12 +312,12 @@ export function drawCharacter(ctx, card, { look: look0 = card.look, S, x = 0, y 
 
   // measurements in canvas px (head rotation ignored: it is a few degrees)
   const flip = mirror ? -1 : 1;
-  const hx = x + flip * sk.head[0] * S, hy = y + sk.head[1] * S;
+  const hx = x + flip * (sk.head[0] + (sk.root?.[0] ?? 0)) * S, hy = y + (sk.head[1] + (sk.root?.[1] ?? 0)) * S;
   return {
     head: { x: hx, y: hy, r: sk.R * S },
     mouth: { x: hx + flip * face.mouth.x * S, y: hy + face.mouth.y * S, w: face.mouth.w * S, h: face.mouth.h * S },
     eyes: face.eyes.map((e) => ({ x: hx + flip * e.x * S, y: hy + e.y * S, r: e.r * S, visible: e.visible })),
-    hands: sk.arms.map((a) => ({ x: x + flip * a.ha[0] * S, y: y + a.ha[1] * S })),
+    hands: sk.arms.map((a) => ({ x: x + flip * (a.ha[0] + (sk.root?.[0] ?? 0)) * S, y: y + (a.ha[1] + (sk.root?.[1] ?? 0)) * S })),
     ink,
   };
 }
@@ -453,7 +467,7 @@ function drawFace(G, state) {
   const rest = EXPRESSION_REST[card.expression] ?? 0;
   const mfrom = state.mouth?.from ?? rest, mto = state.mouth?.to ?? rest;
   const m = mouthShape(mfrom === 0 ? rest : mfrom, mto === 0 ? rest : mto, state.mouth?.mix ?? 1);
-  const smile = m.smile + (EXPRESSION_SMILE[card.expression] ?? 0);
+  const smile = m.smile + (EXPRESSION_SMILE[card.expression] ?? 0) + (state.smile ?? 0);
   const ms = look.mouthScale ?? 1;
   const w = m.w * R * F.mouth.w * S * ms, h = m.h * R * S * ms;
   const mouthStyle = look.mouth ?? card.mouth ?? "plain";

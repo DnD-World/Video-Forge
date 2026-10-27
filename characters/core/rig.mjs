@@ -45,10 +45,22 @@ const armAngles = (pose, which, t, talk) => {
 /**
  * Solve the skeleton.
  * state: { t, view, pose, poseK, head: {rotateDeg, dx, dy}, talk (0–1),
- *          walk: {phase, amount} | null, sitting, sway (0–1) }
+ *          walk: {phase, amount} | null, sitting (bool or 0–1), sway (0–1),
+ *          joints: a move's joint state (moves.mjs) with its weight w }
+ *
+ * joints (27 Oct 2026, the motion library): whatever a move keys wins over
+ * the talking pose by w — arms and legs as angles, the whole body shifted
+ * (root: y < 0 lifts it off the floor, y > 0 drops the hips with the feet
+ * kept on the floor), a lean, a head tilt and drop, and how far it sits.
+ * With no joints everything below is exactly as before.
  */
 export function solveRig(card, look, state = {}) {
-  const { t = 0, view = 0, pose = "rest", poseK = 1, head = null, talk = 0, walk = null, sitting = false } = state;
+  const { t = 0, pose = "rest", poseK = 1, head = null, talk = 0, walk = null } = state;
+  const J = state.joints ?? null, W = J ? clamp(J.w ?? 1) : 0;
+  const jv = (name, i, base) => (J?.[name] && W > 0 ? lerp(base, J[name][i], W) : base);
+  const view = jv("view", 0, state.view ?? 0);
+  const sitK = clamp(jv("sit", 0, state.sitting === true ? 1 : Number(state.sitting) || 0));
+  const sitting = sitK > 0.5;
   const sway = (state.sway ?? card.sway ?? 0.5) * Math.sin(t * 1.6 + (card.seed ?? 0)) * 0.006;
   const P = look.p, h = card.height ?? 1;
   const build = BUILD[card.build] ?? 1;
@@ -61,11 +73,18 @@ export function solveRig(card, look, state = {}) {
   // walking: a bob and a lean; sitting: hips drop to stool height
   const wAmt = walk?.amount ?? 0, ph = walk?.phase ?? 0;
   const bob = -Math.abs(Math.sin(ph)) * 0.012 * wAmt;
-  const sitDrop = sitting ? -P.hy * h - 0.27 : 0; // hips from hy down to 0.27 above the floor
-  const lean = (card.posture === "hunch" ? 0.03 : card.posture === "slouch" ? 0.012 : 0) + sway;
+  const sitDrop = (-P.hy * h - 0.27) * smooth(sitK); // hips from hy down to 0.27 above the floor
+  // a move's lean (radians, forwards) shows fully in profile, a little turned, hardly from the front
+  const leanRad = jv("lean", 0, 0);
+  const torsoLen = (P.hy - P.sy) * h;
+  const moveLean = Math.sin(leanRad) * torsoLen * Math.max(side, turn * 0.6);
+  const lean = (card.posture === "hunch" ? 0.03 : card.posture === "slouch" ? 0.012 : 0) + sway + moveLean;
+  // the whole body: lifted (a jump) or the hips dropped (a crouch)
+  const rootX = jv("root", 0, 0), rootY = jv("root", 1, 0);
+  const crouch = Math.max(0, rootY), lift = Math.min(0, rootY);
 
-  const hy = P.hy * h + sitDrop + bob;
-  const sy = P.sy * h + sitDrop + bob + (card.posture === "hunch" ? 0.02 : 0);
+  const hy = P.hy * h + sitDrop + bob + crouch;
+  const sy = P.sy * h + sitDrop + bob + crouch + (card.posture === "hunch" ? 0.02 : 0) + (1 - Math.cos(leanRad)) * torsoLen;
   const sx = P.sw * build * (1 + muscle * 0.25) * wf, hx = P.hw * build * wf;
   const shoulderLean = lean;
 
@@ -76,7 +95,12 @@ export function solveRig(card, look, state = {}) {
   const talkBob = (which) => (pose === "rest" || !pose) && talk > 0 && which === "f" ? [0.05 * talk, 0.12 * talk * (0.5 + 0.5 * Math.sin(t * 4.3))] : [0, 0];
   const arm = (which) => {
     const rest = armAngles("rest", which, t, talk), want = armAngles(pose || "rest", which, t, talk), tb = talkBob(which);
-    const a1 = lerp(rest[0], want[0], k) + tb[0], a2 = lerp(rest[1], want[1], k) + tb[1];
+    const key = which === "f" ? "armF" : "armB";
+    const a1 = jv(key, 0, lerp(rest[0], want[0], k) + tb[0]);
+    let a2 = jv(key, 1, lerp(rest[1], want[1], k) + tb[1]);
+    // a move folds a forearm across the body with a negative angle (a cup to the
+    // mouth, a box held in front); side on, "across the body" is forwards
+    if (J?.[key] && W > 0 && a2 < 0) a2 = lerp(a2, -a2, smooth(clamp((v - 1.2) / 0.6)));
     const front = which === "f";
     // which way "away from the body" points on screen: in profile both arms
     // swing forwards (+x); otherwise the front arm swings right, the back left
@@ -97,31 +121,42 @@ export function solveRig(card, look, state = {}) {
     const s = front ? 1 : -1;
     const hipX = side > 0.5 ? (front ? 0.004 : -0.004) : s * hx * 0.55;
     const hip = [hipX + sway * 0.5, hy];
-    if (sitting) { // thighs forward, shins down to the floor
+    const seated = () => { // thighs forward, shins down to the floor
       const fwd = side > 0.5 ? 1 : 0.25;
       const knee = [hip[0] + upper * 0.95 * fwd + (side > 0.5 ? 0 : s * 0.01), hy + 0.02];
-      const foot = [knee[0] + 0.01, 0];
-      return { which, front, hip, knee, foot };
-    }
-    const swing = Math.sin(ph + (front ? 0 : Math.PI)) * 0.42 * wAmt;
-    const bend = Math.max(0, Math.sin(ph + (front ? 0 : Math.PI) + 0.9)) * 0.7 * wAmt;
+      return { which, front, hip, knee, foot: [knee[0] + 0.01, 0] };
+    };
+    if (sitK >= 1) return seated();
+    const key = front ? "legF" : "legB";
+    const swing = jv(key, 0, Math.sin(ph + (front ? 0 : Math.PI)) * 0.42 * wAmt);
+    const bend = Math.max(0, jv(key, 1, Math.max(0, Math.sin(ph + (front ? 0 : Math.PI) + 0.9)) * 0.7 * wAmt));
     // standing legs spread a little in the front view, none in profile
     const spread = side > 0.5 ? 0 : s * 0.06 * (1 - turn * 0.5);
-    const th = spread + (side > 0.5 ? swing : swing * 0.25);
-    const knee = [hip[0] + Math.sin(th) * upper, hip[1] + Math.cos(th) * upper];
+    // seen from the front a forward swing is foreshortened (a move's kick turned a little shows more)
+    const fore = J?.[key] && W > 0 ? lerp(0.25, 1, turn * 0.6) : 0.25;
+    const th = spread + (side > 0.5 ? swing : swing * fore);
+    // from the standing hip (crouching keeps the feet where they were)
+    const hip0 = [hip[0], hip[1] - crouch];
+    let knee = [hip0[0] + Math.sin(th) * upper, hip0[1] + Math.cos(th) * upper];
     const sh2 = th - bend;
     const foot = [knee[0] + Math.sin(sh2) * lower, Math.min(0, knee[1] + Math.cos(sh2) * lower)];
-    return { which, front, hip, knee, foot };
+    if (crouch > 0) knee = kneeFor(hip, foot, upper, lower, side > 0.5 ? 1 : s * 0.35);
+    const stand = { which, front, hip, knee, foot };
+    if (sitK <= 0) return stand;
+    const sit = seated(), k = smooth(sitK); // part-way down: between the two
+    const mixP = (a, b) => [lerp(a[0], b[0], k), lerp(a[1], b[1], k)];
+    return { which, front, hip, knee: mixP(stand.knee, sit.knee), foot: mixP(stand.foot, sit.foot) };
   };
   const legs = [leg("b"), leg("f")];
 
   // ---- head
   const [fx, fy] = HEAD[card.headShape] ?? HEAD.round;
-  const rot = ((head?.rotateDeg ?? 0) * Math.PI) / 180;
+  const rot = (((head?.rotateDeg ?? 0) + jv("head", 0, 0)) * Math.PI) / 180;
+  const headDrop = jv("head", 1, 0);
   const neck = [shoulderLean + (card.posture === "hunch" ? 0.02 : 0), sy - 0.03 * h];
   const hc = [
     neck[0] + side * headR * 0.1 + (head?.dx ?? 0) * headR * 2,
-    sy - headR * fy * 1.05 - 0.025 * h + (head?.dy ?? 0) * headR * 2 + (card.posture === "hunch" ? 0.015 : 0),
+    sy - headR * fy * 1.05 - 0.025 * h + ((head?.dy ?? 0) + headDrop) * headR * 2 + (card.posture === "hunch" ? 0.015 : 0),
   ];
   const R = headR;
   const faceDX = R * (0.08 + 0.22 * turn + 0.32 * side);
@@ -150,8 +185,20 @@ export function solveRig(card, look, state = {}) {
   return {
     h, v, turn, side, R, rx: R * fx * lerp(1, 0.94, turn), ry: R * fy, rot,
     head: hc, neck, sy, hy, sx, hx, waistY, torso, arms, legs, face, sitting,
+    // drawn shifted by this (figure units): a step to the side, or off the floor
+    root: [rootX, lift],
     limbW: look.limbW * (1 + muscle * 0.8), legW: (look.legW ?? look.limbW) * (1 + muscle * 0.4),
   };
+}
+
+/** Two-bone leg: the knee for a hip and a foot, bending towards dir (+1 forwards). */
+function kneeFor(hip, foot, upper, lower, dir) {
+  const dx = foot[0] - hip[0], dy = foot[1] - hip[1];
+  const d = Math.min(upper + lower - 1e-6, Math.max(1e-6, Math.hypot(dx, dy)));
+  const a = Math.acos(clamp((upper * upper + d * d - lower * lower) / (2 * upper * d), -1, 1));
+  const base = Math.atan2(dx, dy); // 0 = straight down
+  const th = base + (dir >= 0 ? a : -a) * Math.min(1, Math.abs(dir) * 3);
+  return [hip[0] + Math.sin(th) * upper, hip[1] + Math.cos(th) * upper];
 }
 
 /**
