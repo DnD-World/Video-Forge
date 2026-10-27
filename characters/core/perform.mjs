@@ -77,6 +77,7 @@ export function characterState(sig) {
     gaze: 0.4,
     walk: sig.walk ?? null,
     sitting: !!sig.sitting,
+    breath: sig.breath ?? 0,
   };
 }
 

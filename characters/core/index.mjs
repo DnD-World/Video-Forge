@@ -13,6 +13,8 @@ export { setCanvasFactory } from "./paint.mjs";
 export { MOVE_VERSION, CHANNELS, REST, HAND_SHAPES, KINDS, STYLES, STYLE_IDS, normalizeMove, playMove, movesAt, moveProgress, moveLengthMs, readMoveTag, buildShelf } from "./moves.mjs";
 export { PROPS, PROP_IDS, PROP_NAMES, drawProp } from "./props.mjs";
 export { drawHand } from "./hands.mjs";
+export { performAt } from "./motion.mjs";
+export { poseArms } from "./rig.mjs";
 import { buildShelf as build } from "./moves.mjs";
 import { SHELF_DATA } from "../moves/shelf.mjs";
 /** The starter shelf, checked once (problems are caught by the tests, never at run time). */

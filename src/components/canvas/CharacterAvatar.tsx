@@ -13,7 +13,7 @@
 // ---------------------------------------------------------------------------
 
 import { useLayoutEffect, useRef } from "react";
-import { characterState, drawFigure, frameFor, lookById, type CharacterCard, type HeadPose, type MoveState, type PoseSpan } from "../../../characters/core/index.mjs";
+import { SHELF, characterState, drawFigure, frameFor, lookById, performAt, type CharacterCard, type HeadPose, type MoveSpan, type MoveState, type PoseSpan } from "../../../characters/core/index.mjs";
 import type { OutlineShape } from "../../store/types";
 
 interface Props {
@@ -38,6 +38,9 @@ interface Props {
   active?: boolean;
   /** A move from the motion library playing now (moveTracks.ts), or null. */
   move?: MoveState | null;
+  /** All of this speaker's moves (moveTracks.ts): the motion layer springs
+   *  between them and the talking poses (characters/core/motion.mjs). */
+  moveSpans?: MoveSpan[];
   bgOpacity: number;
   borderOpacity: number;
   bgColor?: string;
@@ -51,7 +54,7 @@ const SHAPE_RADIUS: Record<OutlineShape, string> = { circle: "50%", rounded: "18
 
 export function CharacterAvatar({
   card, size, timeMs, viseme, prevViseme, mix = 1, lidFrom, lidTo, lidMix, browLeft, browRight, head,
-  poseSpans, view = 0, mirror: mirror0 = false, active = false, move = null,
+  poseSpans, view = 0, mirror: mirror0 = false, active = false, move = null, moveSpans,
   bgOpacity, borderOpacity, bgColor = "#1a1a1a", borderColor = "#d98a3d", outlineShape = "none",
   frameWidth, sizeFraction,
 }: Props) {
@@ -70,11 +73,18 @@ export function CharacterAvatar({
     ctx.clearRect(0, 0, px, px);
     const look = lookById(card.look);
     const { S, x, y } = frameFor(card, look, card.framing, { x: 0, y: 0, w: px, h: px });
+    // THE MOTION LAYER: springs, overlap, anticipation, weight and breath
+    // between every pose and move — the same pose for the same frame in the
+    // preview and in every render worker
+    const perf = performAt({ poseSpans, moveSpans, shelf: SHELF }, timeMs, { view, talk: active ? 1 : 0, energy: card.energy ?? 0.5, seed: card.seed ?? 0 });
     const state = characterState({
-      timeMs, viseme, prevViseme, mix, lidFrom, lidTo, lidMix, browLeft, browRight, head, poseSpans, view, active, move,
+      timeMs, viseme, prevViseme, mix, lidFrom, lidTo, lidMix, browLeft, browRight, head, poseSpans, view, active,
+      move: { joints: perf.joints, hands: perf.hands ?? { F: "relaxed", B: "relaxed" }, props: perf.props, face: perf.faceCue, facing: perf.facing, travel: perf.travel },
+      breath: perf.breath,
     });
     // walking across the picture faces the way they walk
-    const mirror = move?.facing ? move.facing === "left" : mirror0;
+    const facing = perf.facing ?? move?.facing;
+    const mirror = facing ? facing === "left" : mirror0;
     if (!layer.current && typeof document !== "undefined") layer.current = document.createElement("canvas");
     drawFigure(ctx, card, { look, S, x, y, mirror, state, layerSize: { w: px, h: px }, layerCanvas: layer.current ?? undefined });
   });

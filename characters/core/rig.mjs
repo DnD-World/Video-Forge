@@ -43,6 +43,22 @@ const armAngles = (pose, which, t, talk) => {
 };
 
 /**
+ * The arm angles a talking pose asks for, without solving the skeleton: the
+ * same numbers solveRig would use with no move playing. The motion layer
+ * (motion.mjs) takes these as targets and springs towards them.
+ */
+export function poseArms(pose = "rest", poseK = 1, t = 0, talk = 0) {
+  const k = smooth(clamp(poseK));
+  const out = {};
+  for (const which of ["f", "b"]) {
+    const rest = armAngles("rest", which, t, talk), want = armAngles(pose || "rest", which, t, talk);
+    const tb = (pose === "rest" || !pose) && talk > 0 && which === "f" ? [0.05 * talk, 0.12 * talk * (0.5 + 0.5 * Math.sin(t * 4.3))] : [0, 0];
+    out[which === "f" ? "armF" : "armB"] = [lerp(rest[0], want[0], k) + tb[0], lerp(rest[1], want[1], k) + tb[1]];
+  }
+  return out;
+}
+
+/**
  * Solve the skeleton.
  * state: { t, view, pose, poseK, head: {rotateDeg, dx, dy}, talk (0–1),
  *          walk: {phase, amount} | null, sitting (bool or 0–1), sway (0–1),
@@ -84,7 +100,8 @@ export function solveRig(card, look, state = {}) {
   const crouch = Math.max(0, rootY), lift = Math.min(0, rootY);
 
   const hy = P.hy * h + sitDrop + bob + crouch;
-  const sy = P.sy * h + sitDrop + bob + crouch + (card.posture === "hunch" ? 0.02 : 0) + (1 - Math.cos(leanRad)) * torsoLen;
+  const breath = (state.breath ?? 0) * 0.0035; // the chest rises a little on each breath
+  const sy = P.sy * h + sitDrop + bob + crouch + (card.posture === "hunch" ? 0.02 : 0) + (1 - Math.cos(leanRad)) * torsoLen - breath;
   const sx = P.sw * build * (1 + muscle * 0.25) * wf, hx = P.hw * build * wf;
   const shoulderLean = lean;
 
@@ -107,7 +124,9 @@ export function solveRig(card, look, state = {}) {
     const dir = side > 0.5 ? 1 : front ? 1 : -1;
     const xs = side > 0.5 ? 1 : front ? 1 : lerp(1, 0.8, turn);
     const shX = side > 0.5 ? (front ? 0.004 : -0.004) : (front ? sx * 0.95 : -sx * 0.95 * lerp(1, 0.85, turn));
-    const sh = [shX + shoulderLean, sy + 0.02];
+    // an arm raised high lifts its shoulder: the body takes part, not just the arm
+    const lift = Math.max(0, Math.min(1, (a1 - 1.25) / 1.4)) * 0.014 * h;
+    const sh = [shX + shoulderLean, sy + 0.02 - lift];
     const el = [sh[0] + dir * Math.sin(a1) * ua * xs, sh[1] + Math.cos(a1) * ua];
     const ha = [el[0] + dir * Math.sin(a1 + a2) * fa * xs, el[1] + Math.cos(a1 + a2) * fa];
     return { which, front, sh, el, ha, dir };
@@ -139,8 +158,15 @@ export function solveRig(card, look, state = {}) {
     const hip0 = [hip[0], hip[1] - crouch];
     let knee = [hip0[0] + Math.sin(th) * upper, hip0[1] + Math.cos(th) * upper];
     const sh2 = th - bend;
-    const foot = [knee[0] + Math.sin(sh2) * lower, Math.min(0, knee[1] + Math.cos(sh2) * lower)];
-    if (crouch > 0) knee = kneeFor(hip, foot, upper, lower, side > 0.5 ? 1 : s * 0.35);
+    let foot = [knee[0] + Math.sin(sh2) * lower, Math.min(0, knee[1] + Math.cos(sh2) * lower)];
+    // a walk that plants its feet (moves.mjs) places the foot itself, relative
+    // to the hip, and the knee is solved from it: the planted foot does not slide
+    const fk = front ? "footF" : "footB";
+    if (J?.[fk] && W > 0) {
+      const want = [hip0[0] + J[fk][0] * (side > 0.5 ? 1 : 0.3), Math.min(0, J[fk][1])];
+      foot = [lerp(foot[0], want[0], W), lerp(foot[1], want[1], W)];
+      knee = kneeFor(hip, foot, upper, lower, side > 0.5 ? 1 : s * 0.35);
+    } else if (crouch > 0) knee = kneeFor(hip, foot, upper, lower, side > 0.5 ? 1 : s * 0.35);
     const stand = { which, front, hip, knee, foot };
     if (sitK <= 0) return stand;
     const sit = seated(), k = smooth(sitK); // part-way down: between the two

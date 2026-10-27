@@ -34,6 +34,8 @@ export const CHANNELS = {
   legF: { n: 2, help: "front leg: [thigh forwards, knee bend]" },
   legB: { n: 2, help: "back leg: [thigh forwards, knee bend]" },
   root: { n: 2, help: "whole body shift: [x, y] in body heights (y < 0 is up)" },
+  footF: { n: 2, help: "front foot placed by a walk: [forwards of the hip, height], body heights" },
+  footB: { n: 2, help: "back foot placed by a walk: [forwards of the hip, height], body heights" },
   lean: { n: 1, help: "upper body lean forwards, radians" },
   head: { n: 2, help: "head: [tilt in degrees, drop as a fraction of the head]" },
   sit: { n: 1, help: "0 standing … 1 sitting" },
@@ -43,7 +45,7 @@ export const CHANNELS = {
 const CHANNEL_KEYS = Object.keys(CHANNELS);
 
 /** The rest pose every move starts from and returns to (matches rig.mjs POSES.rest). */
-export const REST = { armF: [0.12, 0.1], armB: [0.12, 0.1], legF: [0, 0], legB: [0, 0], root: [0, 0], lean: [0], head: [0, 0], sit: [0], view: [0], open: [0] };
+export const REST = { armF: [0.12, 0.1], armB: [0.12, 0.1], legF: [0, 0], legB: [0, 0], footF: [0, 0], footB: [0, 0], root: [0, 0], lean: [0], head: [0, 0], sit: [0], view: [0], open: [0] };
 
 export const HAND_SHAPES = ["relaxed", "open", "fist", "point", "thumbsUp", "ok", "peace", "grip", "wave"];
 export const KINDS = ["gesture", "pose", "travel", "stance", "pair", "idle"];
@@ -229,13 +231,25 @@ const wobble = (seed, ch, t, amp) => amp * (Math.sin(t * (1.3 + hash(seed, ch) *
  * The walk cycle at time ts (seconds into the walk): legs, an arm swing
  * opposite to the legs, a bob and a crouch. Style multiplies it.
  */
-function gaitAt(g, ts, fade, st) {
+function gaitAt(g, ts, fade, st, phase = null) {
   const sg = st.gait ?? {};
   // style tempo already speeds the whole move (and so the steps); cadence is the move's own
   const cadence = g.cadence * (g.run ? 1.6 : 1);
   const stride = g.stride * (sg.stride ?? 1) * (g.run ? 1.35 : 1) * fade;
   const knee = g.knee * (sg.knee ?? 1);
-  const ph = Math.PI * cadence * ts; // one step per half cycle
+  // one step per half cycle; from the distance walked when it is known, so a
+  // planted foot stays put while the body passes over it
+  const ph = phase ?? Math.PI * cadence * ts;
+  // with a known step (the walk follows the ground covered) each foot is
+  // PLACED: on the ground it moves back exactly as fast as the body moves on,
+  // so it stays put; in the air it swings forward in a low arc
+  const placed = (off) => {
+    const f = (((ph + off) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+    const step = g.step;
+    if (f < Math.PI) return [step / 2 - step * (f / Math.PI), 0];
+    const q = (f - Math.PI) / Math.PI, e = q * q * (3 - 2 * q);
+    return [-step / 2 + step * e, -Math.sin(q * Math.PI) * 0.045 * stride * knee];
+  };
   const legs = (off) => {
     const s = Math.sin(ph + off);
     const th = s * 0.42 * stride;
@@ -247,8 +261,9 @@ function gaitAt(g, ts, fade, st) {
   const bounce = g.bounce * (sg.bounce ?? 1);
   const bob = -Math.abs(Math.sin(ph)) * 0.012 * stride * bounce - (g.skip ? Math.abs(Math.sin(ph)) * 0.03 * fade : 0);
   const crouch = (g.crouch + (sg.crouch ?? 0)) * fade;
+  const feet = phase !== null && g.step ? { footF: placed(0), footB: placed(Math.PI) } : { legF: legs(0), legB: legs(Math.PI) };
   return {
-    legF: legs(0), legB: legs(Math.PI),
+    ...feet,
     // the front arm swings with the BACK leg, as people walk
     armF: arm(Math.PI), armB: arm(0),
     root: [0, bob + crouch], lean: [g.run ? 0.14 * fade : 0],
@@ -303,7 +318,17 @@ export function playMove(move, ms, opts = {}) {
     const g = (u - move.gait.t0) / span;
     const fade = Math.min(1, g / 0.12, (1 - g) / 0.12);
     const wt = (u - move.gait.t0) * (move.lengthMs / 1000); // seconds walked, in the move's own time
-    const gj = gaitAt(move.gait, wt, smooth(clamp(fade)), st);
+    // feet planted (27 Oct 2026): with the path's length in body heights, the
+    // steps follow the distance actually covered instead of the clock
+    let phase = null;
+    if (move.path && opts.travelBodies > 0) {
+      const { t0, t1 } = move.path;
+      const covered = smooth(clamp((u - t0) / Math.max(1e-3, t1 - t0))) * opts.travelBodies;
+      const sg = st.gait ?? {};
+      const step = 0.34 * move.gait.stride * (sg.stride ?? 1) * (move.gait.run ? 1.35 : 1); // one step, body heights
+      phase = (Math.PI * covered) / Math.max(0.05, step);
+    }
+    const gj = gaitAt(phase !== null ? { ...move.gait, step: 0.34 * move.gait.stride * ((st.gait ?? {}).stride ?? 1) * (move.gait.run ? 1.35 : 1) } : move.gait, wt, smooth(clamp(fade)), st, phase);
     for (const [k, v] of Object.entries(gj)) {
       if (move.tracks[k]) continue;
       joints[k] = k === "root" && joints.root ? [joints.root[0] + v[0], joints.root[1] + v[1]] : v;
@@ -322,7 +347,8 @@ export function playMove(move, ms, opts = {}) {
   if (opts.mirror) {
     [joints.armF, joints.armB] = [joints.armB, joints.armF];
     [joints.legF, joints.legB] = [joints.legB, joints.legF];
-    for (const k of ["armF", "armB", "legF", "legB"]) if (!joints[k]) delete joints[k];
+    [joints.footF, joints.footB] = [joints.footB, joints.footF];
+    for (const k of ["armF", "armB", "legF", "legB", "footF", "footB"]) if (!joints[k]) delete joints[k];
   }
   const hands = {
     F: stepAt(move.hands[opts.mirror ? "B" : "F"], u, "relaxed"),
@@ -366,7 +392,7 @@ export function movesAt(spans, shelf, timeMs, opts = {}) {
     }
     if (timeMs < s.startMs - MOVE_EASE_MS || timeMs >= s.endMs + MOVE_EASE_MS) continue;
     const ms = Math.max(0, timeMs - s.startMs);
-    const r = playMove(move, Math.min(ms, s.endMs - s.startMs), { ...opts, style: s.style ?? opts.style, seed: s.seed ?? opts.seed, spanMs: s.endMs - s.startMs });
+    const r = playMove(move, Math.min(ms, s.endMs - s.startMs), { ...opts, style: s.style ?? opts.style, seed: s.seed ?? opts.seed, spanMs: s.endMs - s.startMs, travelBodies: s.dist });
     const kin = clamp((timeMs - (s.startMs - MOVE_EASE_MS)) / MOVE_EASE_MS);
     const kout = clamp((s.endMs + MOVE_EASE_MS - timeMs) / MOVE_EASE_MS);
     // travel and stances must not ease back out: a walk-in ends where it arrives

@@ -42,8 +42,30 @@ export function buildSpeakerMoveTracks(segments: NarrationSegment[], cast: CastM
       }
     }
   }
-  for (const id of Object.keys(tracks)) tracks[id].sort((a, b) => a.startMs - b.startMs);
+  for (const id of Object.keys(tracks)) {
+    tracks[id].sort((a, b) => a.startMs - b.startMs);
+    // how far each walk goes, in body heights, so the steps match the ground covered
+    const me = cast.find((c) => c.id === id);
+    if (!me) continue;
+    for (const s of tracks[id]) {
+      const path = SHELF[s.move]?.path;
+      if (!path) continue;
+      const a = endX(path.from, me, cast, s.target), b = endX(path.to, me, cast, s.target);
+      s.dist = Math.abs(b - a) / Math.max(0.05, me.size * 0.92);
+    }
+  }
   return tracks;
+}
+
+/** Where a path end is, as a shift from home in frame widths (see stagePlacement). */
+function endX(end: string, me: CastMember, cast: CastMember[], target?: string | null): number {
+  if (end === "left") return -(me.x + me.size * 0.6);
+  if (end === "right") return 1 - me.x + me.size * 0.6;
+  if (end === "partner") {
+    const p = cast.find((c) => c.id === target);
+    return p ? p.x - me.x - Math.sign(p.x - me.x) * (me.size + p.size) * 0.32 : 0;
+  }
+  return 0;
 }
 
 /** The move state for a speaker at a moment (null when no move is on). */

@@ -53,14 +53,14 @@ export interface CharacterState {
   lid: { from: string; to: string; mix: number };
   brows: { left: string; right: string };
   gaze?: number; walk?: { phase: number; amount: number } | null; sitting?: boolean | number;
-  joints?: Joints | null; hands?: { F: string; B: string } | null; props?: HeldProp[]; smile?: number;
+  joints?: Joints | null; hands?: { F: string; B: string } | null; props?: HeldProp[]; smile?: number; breath?: number;
 }
 
 export interface Signals {
   timeMs: number; viseme: number; prevViseme?: number; mix?: number;
   lidFrom?: string; lidTo?: string; lidMix?: number;
   browLeft?: string; browRight?: string; head?: HeadPose; poseSpans?: PoseSpan[]; pose?: string;
-  view?: number; active?: boolean; sitting?: boolean; move?: MoveState | null;
+  view?: number; active?: boolean; sitting?: boolean; move?: MoveState | null; breath?: number;
 }
 
 export interface DrawInfo {
@@ -131,7 +131,7 @@ export interface Move {
 export type PathEnd = "here" | "left" | "right" | "partner";
 export interface Joints { w?: number; armF?: number[]; armB?: number[]; legF?: number[]; legB?: number[]; root?: number[]; lean?: number[]; head?: number[]; sit?: number[]; view?: number[]; open?: number[] }
 export interface HeldProp { id: string; hand: "F" | "B"; open: number }
-export interface MoveSpan { startMs: number; endMs: number; move: string; style?: string; prop?: string; target?: string; seed?: number }
+export interface MoveSpan { startMs: number; endMs: number; move: string; style?: string; prop?: string; target?: string; seed?: number; /** a walk's length in body heights */ dist?: number }
 export interface MoveState {
   joints: Joints; hands: { F: string; B: string }; face: { brows?: string; lids?: string; smile?: number } | null;
   props: HeldProp[]; travel: { from: PathEnd; to: PathEnd; p: number } | null; facing: "left" | "right" | null;
@@ -148,7 +148,7 @@ export const STYLE_IDS: string[];
 export const SHELF: Record<string, Move>;
 export function normalizeMove(input: unknown): { move: Move; problems: string[] };
 export function buildShelf(list: unknown[]): { shelf: Record<string, Move>; problems: string[] };
-export function playMove(move: Move, ms: number, opts?: { style?: string; energy?: number; size?: number; tempo?: number; seed?: number; mirror?: boolean; spanMs?: number }): MoveState & { u: number; stance: string | null };
+export function playMove(move: Move, ms: number, opts?: { style?: string; energy?: number; size?: number; tempo?: number; seed?: number; mirror?: boolean; spanMs?: number; travelBodies?: number }): MoveState & { u: number; stance: string | null };
 export function movesAt(spans: MoveSpan[] | undefined, shelf: Record<string, Move>, timeMs: number, opts?: { energy?: number; seed?: number; style?: string; mirror?: boolean }): MoveState | null;
 export function moveProgress(move: Move, spanMs: number, ms: number, tempo?: number): { u: number; wall: number };
 export function moveLengthMs(move: Move, o?: { style?: string; tempo?: number }): number;
@@ -158,6 +158,13 @@ export const PROP_IDS: string[];
 export const PROP_NAMES: Record<string, string[]>;
 export function drawProp(G: unknown, arm: unknown, prop: string, o?: { open?: number; colors?: string[]; palm?: number }): void;
 export function drawHand(G: unknown, arm: unknown, shape: string, o: { relaxed: (arm: unknown) => void }): void;
+export interface Performance {
+  joints: Joints; hands: { F: string; B: string } | null; props: HeldProp[]; smile: number;
+  faceCue: { brows?: string; lids?: string; smile?: number } | null; breath: number;
+  facing: "left" | "right" | null; travel: { from: PathEnd; to: PathEnd; p: number } | null; move: string | null;
+}
+export function performAt(src: { poseSpans?: PoseSpan[]; moveSpans?: MoveSpan[]; shelf: Record<string, Move> }, timeMs: number, o?: { view?: number; talk?: number; energy?: number; seed?: number; sitting?: boolean }): Performance;
+export function poseArms(pose?: string, poseK?: number, t?: number, talk?: number): { armF: number[]; armB: number[] };
 
 // ---- one character, two forms (profile.mjs, presets/drawn.mjs) --------------------------------
 export interface Shared { form: "puppet" | "drawn"; description: string; personality: string; subjects: string[] }

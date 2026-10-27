@@ -391,6 +391,7 @@ export function VideoComposition({
                 {...facingView(sp.facing, sp, speakers.filter((o) => o.id !== sp.id), { dialogue: lookById(sp.character.look).profile ? 2 : 1 })}
                 active={activeSpeakerId === sp.id}
                 move={move}
+                moveSpans={moveTracks[sp.id]}
                 bgOpacity={sp.bgOpacity}
                 borderOpacity={sp.borderOpacity}
                 bgColor={sp.bgColor}

@@ -1,0 +1,4069 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Movement, before and after</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b1726;--card:#12233a;--ink:#e8f1f2;--muted:#9fb3c8;--mint:#5be3b5;--line:#22344a}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(1200px 600px at 50% -10%,#16314f,var(--bg));color:var(--ink);font:16px/1.55 Sora,system-ui,sans-serif;min-height:100vh}
+main{max-width:1240px;margin:0 auto;padding:28px 16px 60px}
+h1{font-size:30px;margin:0 0 6px}h1 span{color:var(--mint)}
+.lead{color:var(--muted);max-width:860px;margin:0 0 16px}
+.bar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:0 0 14px;color:var(--muted)}
+select{font:inherit;background:#1c3555;color:var(--ink);border:1px solid #2b4b72;border-radius:999px;padding:4px 12px}
+.now{padding:6px 14px;border-radius:999px;background:#1c3555;color:var(--mint);font-weight:600}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:760px){.grid{grid-template-columns:1fr}}
+figure{margin:0;background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+canvas{display:block;width:100%;aspect-ratio:4/3;background:linear-gradient(#ffe6f2 0 84%,#f7c6dc 84%)}
+figcaption{padding:12px 16px}figcaption b{font-size:18px}figcaption span{color:var(--muted);font-size:14px;display:block}
+figure.after{border-color:var(--mint);box-shadow:0 0 0 1px var(--mint) inset}
+ul{color:var(--muted);font-size:14px;margin:18px 0 0;padding-left:20px}
+</style></head><body><main>
+<h1>Movement <span>— before and after</span></h1>
+<p class="lead">The same character, the same moves, at the same moment. Left: how drawn characters moved until today. Right: with weight, follow-through, a small wind-up before big moves, breathing, and feet that stay planted when walking. Change the character or the drawing style; slow it down to see the difference.</p>
+<div class="bar"><span class="now" id="now"></span>
+<label>Character <select id="who"></select></label>
+<label>Style <select id="look"></select></label>
+<label>Speed <select id="slow"><option value="1">normal</option><option value="0.5">half</option><option value="0.25">quarter</option></select></label></div>
+<div class="grid">
+<figure><canvas id="before"></canvas><figcaption><b>Before</b><span>joints glide to each pose on their own</span></figcaption></figure>
+<figure class="after"><canvas id="after"></canvas><figcaption><b>After</b><span>weight, overlap, anticipation, breathing, planted feet</span></figcaption></figure>
+</div>
+<ul><li>Watch the forearm and hand trail the upper arm in the wave.</li><li>Before the jump the body dips; after landing it settles.</li><li>Standing still, the weight drifts from leg to leg and the chest breathes.</li><li>Walking, a foot on the floor stays exactly where it was put.</li></ul>
+</main><script>"use strict";
+(() => {
+  // characters/core/looks.mjs
+  var LOOKS = [
+    {
+      id: "stick",
+      name: "2D stick cutout",
+      blurb: "Round heads, thin line limbs, flat clothes \u2014 the storytime-channel look.",
+      p: { headR: 0.145, sy: -0.66, hy: -0.4, sw: 0.085, hw: 0.07 },
+      outline: 6e-3,
+      limb: "line",
+      limbW: 9e-3
+    },
+    {
+      id: "geo",
+      name: "Geo-minimal",
+      blurb: "Rounded geometry, no outlines, soft two-tone shading.",
+      p: { headR: 0.16, sy: -0.6, hy: -0.36, sw: 0.12, hw: 0.11 },
+      outline: 0,
+      limb: "tube",
+      limbW: 0.055,
+      shade: 0.16,
+      eyes: "small"
+    },
+    {
+      id: "corp",
+      name: "Corporate flat",
+      blurb: "No outlines, tiny heads, long bold limbs, a few loud flat colours.",
+      p: { headR: 0.07, sy: -0.76, hy: -0.47, sw: 0.085, hw: 0.075 },
+      outline: 0,
+      limb: "tube",
+      limbW: 0.05,
+      legW: 0.075,
+      eyes: "small",
+      noNeck: true,
+      tone: "vivid",
+      mouthScale: 1.8
+    },
+    {
+      id: "sticker",
+      name: "MBE sticker",
+      blurb: "Thick dark outlines with a lighter inner line and a white sticker edge.",
+      p: { headR: 0.15, sy: -0.62, hy: -0.37, sw: 0.11, hw: 0.1 },
+      outline: 0.016,
+      inner: true,
+      limb: "tube",
+      limbW: 0.045,
+      eyes: "oval",
+      layer: "sticker",
+      ink: "#2a1840"
+    },
+    {
+      id: "pop",
+      name: "Pop-art comic",
+      blurb: "Bold black ink, halftone dots, primary colours.",
+      p: { headR: 0.125, sy: -0.68, hy: -0.41, sw: 0.095, hw: 0.08 },
+      outline: 0.011,
+      limb: "tube",
+      limbW: 0.036,
+      halftone: true,
+      tone: "primary"
+    },
+    {
+      id: "hose",
+      name: "1930s rubber hose (black & white)",
+      blurb: "Bendy limbs, pie-cut eyes, white gloves.",
+      p: { headR: 0.17, sy: -0.6, hy: -0.36, sw: 0.1, hw: 0.1 },
+      outline: 0.012,
+      limb: "hose",
+      limbW: 0.032,
+      eyes: "pie",
+      gloves: true,
+      bigShoes: true,
+      tone: "bw",
+      scene: { film: true }
+    },
+    {
+      id: "hose2",
+      name: "1930s rubber hose (early colour)",
+      blurb: "The same shapes in the reds, greens and creams of early two-colour film.",
+      p: { headR: 0.17, sy: -0.6, hy: -0.36, sw: 0.1, hw: 0.1 },
+      outline: 0.012,
+      limb: "hose",
+      limbW: 0.032,
+      eyes: "pie",
+      gloves: true,
+      bigShoes: true,
+      tone: "twostrip",
+      ink: "#2b1d16",
+      scene: { film: true, warm: true }
+    },
+    {
+      id: "sitcom",
+      name: "90s sitcom cartoon",
+      blurb: "Bold outlines, big googly eyes, overbite mouths.",
+      p: { headR: 0.135, sy: -0.66, hy: -0.4, sw: 0.09, hw: 0.08 },
+      outline: 9e-3,
+      limb: "tube",
+      limbW: 0.032,
+      eyes: "googly",
+      mouth: "overbite"
+    },
+    {
+      id: "vase",
+      name: "Greek vase (black-figure)",
+      blurb: "Black-glaze figures with scratched-in detail on terracotta.",
+      p: { headR: 0.13, sy: -0.66, hy: -0.4, sw: 0.09, hw: 0.075 },
+      outline: 45e-4,
+      limb: "tube",
+      limbW: 0.03,
+      eyes: "dot",
+      tone: "mono",
+      mono: "#17100b",
+      incise: true,
+      ink: "#d27a42",
+      profile: true
+    },
+    {
+      id: "shadow",
+      name: "Shadow puppet (1920s silhouette)",
+      blurb: "Jointed black silhouettes; eyes and mouth cut out.",
+      p: { headR: 0.13, sy: -0.66, hy: -0.4, sw: 0.09, hw: 0.075 },
+      outline: 0,
+      limb: "tube",
+      limbW: 0.03,
+      eyes: "dot",
+      tone: "mono",
+      mono: "#0b0806",
+      ink: "#ffcf8a",
+      rivets: "#2a1a10",
+      profile: true
+    },
+    {
+      id: "karag",
+      name: "Karagiozis (Greek shadow theatre)",
+      blurb: "Painted, see-through figures pinned at the joints, pressed against a lit screen.",
+      p: { headR: 0.15, sy: -0.64, hy: -0.39, sw: 0.09, hw: 0.08 },
+      outline: 8e-3,
+      limb: "tube",
+      limbW: 0.036,
+      eyes: "dot",
+      translucent: true,
+      ink: "#3a1f12",
+      layer: "lamp",
+      rivets: "#3a1f12",
+      tone: "vivid",
+      profile: true
+    },
+    {
+      id: "mid",
+      name: "1950s mid-century",
+      blurb: "Flat geometric shapes, colour printed slightly off the line.",
+      p: { headR: 0.13, sy: -0.68, hy: -0.42, sw: 0.08, hw: 0.065 },
+      outline: 45e-4,
+      limb: "line",
+      limbW: 6e-3,
+      eyes: "small",
+      offset: [0.012, 8e-3],
+      ink: "#2b2622"
+    },
+    {
+      id: "chalk",
+      name: "Chalkboard",
+      blurb: "Powdery chalk lines on a green board.",
+      p: { headR: 0.14, sy: -0.66, hy: -0.4, sw: 0.085, hw: 0.07 },
+      outline: 6e-3,
+      limb: "line",
+      limbW: 7e-3,
+      fill: "none",
+      ink: "#f4f1e8",
+      layer: "chalk"
+    },
+    {
+      id: "paper",
+      name: "Paper cut-out",
+      blurb: "Coloured paper with fibre texture and a soft shadow under every piece.",
+      p: { headR: 0.145, sy: -0.64, hy: -0.39, sw: 0.09, hw: 0.075 },
+      outline: 0,
+      limb: "tube",
+      limbW: 0.04,
+      layer: "paper",
+      boil: 0.7,
+      boilRate: 3
+    },
+    {
+      id: "riso",
+      name: "Risograph print",
+      blurb: "Bright spot inks, grain, layers printed slightly out of line.",
+      p: { headR: 0.14, sy: -0.66, hy: -0.4, sw: 0.09, hw: 0.075 },
+      outline: 6e-3,
+      limb: "tube",
+      limbW: 0.032,
+      tone: "spot",
+      spot: ["#ff48b0", "#0078bf", "#ffe800", "#f3efe4", "#1a1a1a"],
+      ink: "#0078bf",
+      layer: "riso",
+      scene: { grain: true }
+    },
+    {
+      id: "neon",
+      name: "Neon glow",
+      blurb: "Glowing outlines on a dark night city.",
+      p: { headR: 0.14, sy: -0.66, hy: -0.4, sw: 0.085, hw: 0.07 },
+      outline: 6e-3,
+      limb: "line",
+      limbW: 7e-3,
+      fill: "none",
+      inkFrom: "top",
+      layer: "glow"
+    },
+    {
+      id: "noir",
+      name: "Noir comic",
+      blurb: "Black and white with one spot colour, heavy shadows.",
+      p: { headR: 0.13, sy: -0.68, hy: -0.41, sw: 0.09, hw: 0.075 },
+      outline: 9e-3,
+      limb: "tube",
+      limbW: 0.034,
+      shade: 0.55,
+      ink: "#0d0d0d",
+      tone: "noir",
+      scene: { vignette: true, grain: true }
+    },
+    {
+      id: "glass",
+      name: "Stained glass",
+      blurb: "Thick lead lines, jewel colours, light glowing through.",
+      p: { headR: 0.15, sy: -0.64, hy: -0.39, sw: 0.1, hw: 0.085 },
+      outline: 0.016,
+      limb: "tube",
+      limbW: 0.04,
+      fill: "glass",
+      ink: "#1b1410",
+      tone: "vivid"
+    },
+    {
+      id: "notebook",
+      name: "Ballpoint notebook doodle",
+      blurb: "Blue ballpoint on lined paper, hatched shading, faces left clean.",
+      p: { headR: 0.145, sy: -0.66, hy: -0.4, sw: 0.085, hw: 0.07 },
+      outline: 5e-3,
+      limb: "line",
+      limbW: 6e-3,
+      fill: "hatch",
+      ink: "#2340b8",
+      boil: 0.9,
+      boilRate: 4
+    },
+    {
+      id: "blueprint",
+      name: "Blueprint",
+      blurb: "White technical lines on blue.",
+      p: { headR: 0.14, sy: -0.66, hy: -0.4, sw: 0.085, hw: 0.07 },
+      outline: 5e-3,
+      limb: "line",
+      limbW: 6e-3,
+      fill: "none",
+      ink: "#e8f4ff"
+    }
+  ];
+  var LOOK_IDS = LOOKS.map((l) => l.id);
+  var BY_ID = Object.fromEntries(LOOKS.map((l) => [l.id, l]));
+  var lookById = (id) => BY_ID[id] ?? BY_ID.stick;
+
+  // explainer/core/math.mjs
+  var clamp = (v, lo = 0, hi = 1) => v < lo ? lo : v > hi ? hi : v;
+  var lerp = (a, b, k) => a + (b - a) * k;
+  function hexToRgb(hex) {
+    const h = hex.replace("#", "");
+    const n = parseInt(h.length === 3 ? h.split("").map((c) => c + c).join("") : h, 16);
+    return [n >> 16 & 255, n >> 8 & 255, n & 255];
+  }
+  function mix(h1, h2, k) {
+    const a = hexToRgb(h1), b = hexToRgb(h2);
+    return "#" + a.map((v, i) => Math.round(lerp(v, b[i], k)).toString(16).padStart(2, "0")).join("");
+  }
+  function luminance(hex) {
+    const lin = (c) => {
+      const s = c / 255;
+      return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+    };
+    const [r, g, b] = hexToRgb(hex);
+    return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+  }
+
+  // characters/core/math.mjs
+  var hash = (a, b = 0) => {
+    let h = Math.imul(a | 0, 374761393) + Math.imul(b | 0, 668265263) | 0;
+    h = Math.imul(h ^ h >>> 13, 1274126177);
+    return ((h ^ h >>> 16) >>> 0) / 4294967296;
+  };
+  function toHex(c) {
+    const s = String(c).trim();
+    if (/^#[0-9a-f]{6}$/i.test(s)) return s.toLowerCase();
+    if (/^#[0-9a-f]{3}$/i.test(s)) return "#" + s.slice(1).split("").map((x) => x + x).join("").toLowerCase();
+    const m = s.match(/\d+(\.\d+)?/g);
+    if (m && m.length >= 3) return "#" + m.slice(0, 3).map((v) => Math.max(0, Math.min(255, Math.round(+v))).toString(16).padStart(2, "0")).join("");
+    return "#000000";
+  }
+  function shade(c, k) {
+    const h = toHex(c);
+    const n = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+    const f = (v) => Math.max(0, Math.min(255, Math.round(k < 0 ? v * (1 + k) : v + (255 - v) * k)));
+    return "#" + n.map((v) => f(v).toString(16).padStart(2, "0")).join("");
+  }
+  function nearest(c, list) {
+    const h = toHex(c), v = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+    let best = list[0], bd = Infinity;
+    for (const q of list) {
+      const w = [1, 3, 5].map((i) => parseInt(toHex(q).slice(i, i + 2), 16));
+      const d = (v[0] - w[0]) ** 2 * 0.3 + (v[1] - w[1]) ** 2 * 0.59 + (v[2] - w[2]) ** 2 * 0.11;
+      if (d < bd) {
+        bd = d;
+        best = q;
+      }
+    }
+    return best;
+  }
+  var smooth = (k) => k * k * (3 - 2 * k);
+
+  // characters/core/pen.mjs
+  var TAU = Math.PI * 2;
+  function spline(pts, per = 10) {
+    const out = [];
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[Math.max(0, i - 1)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(pts.length - 1, i + 2)];
+      for (let k = 0; k < per; k++) out.push(cr(p0, p1, p2, p3, k / per));
+    }
+    out.push(pts[pts.length - 1]);
+    return out;
+  }
+  function cr(p0, p1, p2, p3, u) {
+    const u2 = u * u, u3 = u2 * u;
+    return [0, 1].map((d) => 0.5 * (2 * p1[d] + (-p0[d] + p2[d]) * u + (2 * p0[d] - 5 * p1[d] + 4 * p2[d] - p3[d]) * u2 + (-p0[d] + 3 * p1[d] - 3 * p2[d] + p3[d]) * u3));
+  }
+  function loop(pts, per = 8) {
+    const n = pts.length, out = [];
+    for (let i = 0; i < n; i++) {
+      const p0 = pts[(i - 1 + n) % n], p1 = pts[i], p2 = pts[(i + 1) % n], p3 = pts[(i + 2) % n];
+      for (let k = 0; k < per; k++) out.push(cr(p0, p1, p2, p3, k / per));
+    }
+    return out;
+  }
+  function rounded(pts, rad) {
+    const n = pts.length, out = [];
+    for (let i = 0; i < n; i++) {
+      const a = pts[(i - 1 + n) % n], b = pts[i], c = pts[(i + 1) % n];
+      const la = Math.hypot(a[0] - b[0], a[1] - b[1]) || 1, lc = Math.hypot(c[0] - b[0], c[1] - b[1]) || 1;
+      const r = Math.min(rad, la / 2.2, lc / 2.2);
+      const p = [b[0] + (a[0] - b[0]) * r / la, b[1] + (a[1] - b[1]) * r / la];
+      const q = [b[0] + (c[0] - b[0]) * r / lc, b[1] + (c[1] - b[1]) * r / lc];
+      for (let k = 0; k <= 6; k++) {
+        const u = k / 6;
+        out.push([(1 - u) * (1 - u) * p[0] + 2 * (1 - u) * u * b[0] + u * u * q[0], (1 - u) * (1 - u) * p[1] + 2 * (1 - u) * u * b[1] + u * u * q[1]]);
+      }
+    }
+    return out;
+  }
+  function ellipsePts(cx, cy, rx, ry, rot = 0, a0 = 0, a1 = TAU, k = 32) {
+    const pts = [], c = Math.cos(rot), s = Math.sin(rot);
+    for (let i = 0; i <= k; i++) {
+      const a = a0 + (a1 - a0) * i / k, x = Math.cos(a) * rx, y = Math.sin(a) * ry;
+      pts.push([cx + x * c - y * s, cy + x * s + y * c]);
+    }
+    return pts;
+  }
+  function makePen(ctx, { t: t2 = 0, boil = 0, rate = 8 } = {}) {
+    const step = boil ? Math.floor(t2 * rate) : 0;
+    let n = 0;
+    const jit = boil ? ([x, y]) => [x + (hash(step, n++) - 0.5) * boil * 2, y + (hash(step + 999, n++) - 0.5) * boil * 2] : (p) => p;
+    const pen = {
+      ctx,
+      last: null,
+      /** Start a fresh path from points (closed by default). */
+      poly(pts, closed = true) {
+        const q = pts.map(jit);
+        pen.last = { q, closed };
+        pen.trace(q, closed);
+        return pen;
+      },
+      /** Rebuild a path from already-wobbled points, optionally moved. */
+      trace(q, closed, dx = 0, dy = 0) {
+        ctx.beginPath();
+        q.forEach(([a, b], i) => i ? ctx.lineTo(a + dx, b + dy) : ctx.moveTo(a + dx, b + dy));
+        if (closed) ctx.closePath();
+        return pen;
+      },
+      ellipse(cx, cy, rx, ry, rot = 0, a0 = 0, a1 = TAU) {
+        return pen.poly(ellipsePts(cx, cy, rx, ry, rot, a0, a1), a1 - a0 >= TAU - 1e-6);
+      },
+      circle(cx, cy, r) {
+        return pen.ellipse(cx, cy, r, r);
+      },
+      /** Open smooth curve through the points. */
+      curve(pts) {
+        return pen.poly(spline(pts), false);
+      },
+      /** Closed smooth shape through the points. */
+      blob(pts) {
+        return pen.poly(loop(pts), true);
+      },
+      /** Polygon with rounded corners. */
+      rpoly(pts, rad) {
+        return pen.poly(rounded(pts, rad), true);
+      },
+      /** Bounds of the last path (after wobble), for gradients. */
+      bounds() {
+        if (!pen.last) return null;
+        const xs = pen.last.q.map((p) => p[0]), ys = pen.last.q.map((p) => p[1]);
+        return { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) };
+      }
+    };
+    return pen;
+  }
+
+  // characters/core/paint.mjs
+  var makeCanvas = (w, h) => {
+    if (typeof OffscreenCanvas !== "undefined") return new OffscreenCanvas(w, h);
+    const c = document.createElement("canvas");
+    c.width = w;
+    c.height = h;
+    return c;
+  };
+  var newCanvas = (w, h) => makeCanvas(w, h);
+  var patterns = /* @__PURE__ */ new Map();
+  function pattern(ctx, key, size, draw) {
+    let p = patterns.get(key);
+    if (!p) {
+      const c = makeCanvas(size, size);
+      draw(c.getContext("2d"), size);
+      p = ctx.createPattern(c, "repeat");
+      patterns.set(key, p);
+    }
+    return p;
+  }
+  var hatchPattern = (ctx, ink) => pattern(ctx, "hatch" + ink, 9, (g) => {
+    g.strokeStyle = ink;
+    g.globalAlpha = 0.55;
+    g.lineWidth = 1.1;
+    g.beginPath();
+    g.moveTo(-1, 10);
+    g.lineTo(10, -1);
+    g.stroke();
+  });
+  var dotPattern = (ctx, a) => pattern(ctx, "dots" + a, 8, (g) => {
+    g.fillStyle = `rgba(0,0,0,${a})`;
+    g.beginPath();
+    g.arc(4, 4, 1.7, 0, TAU);
+    g.fill();
+  });
+  var holePattern = (ctx) => pattern(ctx, "holes", 11, (g) => {
+    g.fillStyle = "rgba(255,244,210,0.95)";
+    g.beginPath();
+    g.arc(5.5, 5.5, 1.2, 0, TAU);
+    g.fill();
+  });
+  var grainPattern = (ctx) => pattern(ctx, "grain", 160, (g, n) => {
+    const d = g.createImageData(n, n);
+    for (let i = 0; i < d.data.length; i += 4) {
+      const v = hash(i, 77) * 255;
+      d.data[i] = d.data[i + 1] = d.data[i + 2] = v;
+      d.data[i + 3] = hash(i, 78) > 0.55 ? 255 : 0;
+    }
+    g.putImageData(d, 0, 0);
+  });
+  var grey = (c) => luminance(toHex(c));
+  var levels = (c, list) => list[Math.min(list.length - 1, Math.floor(grey(c) ** 0.6 * list.length))];
+  function vivid(c) {
+    const [r, g, b] = hexToRgb(toHex(c)), m = (r + g + b) / 3;
+    return "#" + [r, g, b].map((v) => Math.max(0, Math.min(255, Math.round(m + (v - m) * 1.3))).toString(16).padStart(2, "0")).join("");
+  }
+  var TWO_STRIP = ["#a8322b", "#2f4a3a", "#3f6b4f", "#5a3622", "#f1e3c4", "#2b1d16", "#c9a46e"];
+  var PRIMARY = ["#e2231a", "#1f5fd1", "#ffd400", "#1b1b1b", "#ffffff", "#1e9e4a"];
+  function toneColor(look, c, role = "cloth") {
+    if (!c) return c;
+    switch (look.tone) {
+      case "mono":
+        return look.mono;
+      case "bw":
+        if (role === "skin" || role === "eye") return "#f4ecdc";
+        return levels(c, ["#1a1a1a", "#3a3a3a", "#6b6b6b", "#d9d4c8"]);
+      case "twostrip":
+        if (role === "skin") return "#f1d7b0";
+        if (role === "eye") return "#f1e3c4";
+        return nearest(c, TWO_STRIP);
+      case "noir": {
+        if (role === "skin" || role === "eye") return "#e8e2d6";
+        const [r, g, b] = hexToRgb(toHex(c));
+        if (r > g + 60 && r > b + 60) return "#d7261e";
+        return levels(c, ["#0d0d0d", "#202020", "#3a3a3a", "#8a8a8a", "#f2f2f2"]);
+      }
+      case "primary":
+        if (role === "skin") return mix(toHex(c), "#ffd2b0", 0.5);
+        if (role === "eye") return "#ffffff";
+        return nearest(c, PRIMARY);
+      case "spot":
+        return role === "eye" ? "#f3efe4" : nearest(c, look.spot);
+      case "vivid":
+        return role === "skin" || role === "eye" ? c : vivid(c);
+      default:
+        return c;
+    }
+  }
+  function inkFor(look, card) {
+    if (look.inkFrom === "top") {
+      const pick = (slot) => card.wear?.find((w) => w.slot === slot)?.colors?.[0];
+      const top = pick("outer") ?? pick("full") ?? pick("top") ?? "#3ef0ff";
+      return shade(vivid(top), 0.35);
+    }
+    return look.ink ?? "#141414";
+  }
+  function paint(G, fill0, { role = "cloth", feature = false, outline, noShade = false, dotAlpha = 0.28 } = {}) {
+    const { ctx, pen, look, S } = G;
+    const ink = G.ink;
+    const ow = outline ?? look.outline ?? 0;
+    let fill = feature ? fill0 : toneColor(look, fill0, role);
+    if (!feature && look.fill === "none") fill = null;
+    if (fill) {
+      if (look.fill === "hatch" && !feature) {
+        ctx.fillStyle = role === "skin" || role === "eye" ? look.paper ?? "#fbfaf3" : hatchPattern(ctx, ink);
+        ctx.fill();
+      } else if (look.offset && !feature && pen.last) {
+        pen.trace(pen.last.q, pen.last.closed, look.offset[0] * S, look.offset[1] * S);
+        ctx.fillStyle = fill;
+        ctx.fill();
+        pen.trace(pen.last.q, pen.last.closed);
+      } else if (look.translucent && !feature) {
+        ctx.save();
+        ctx.globalAlpha = 0.82;
+        ctx.fillStyle = fill;
+        ctx.fill();
+        ctx.globalAlpha = 0.55;
+        ctx.fillStyle = holePattern(ctx);
+        ctx.fill();
+        ctx.restore();
+      } else {
+        ctx.fillStyle = fill;
+        ctx.fill();
+      }
+      if (look.fill === "glass" && !feature) {
+        const b = pen.bounds();
+        if (b) {
+          const w = b.x1 - b.x0, h = b.y1 - b.y0;
+          const g = ctx.createRadialGradient(b.x0 + w * 0.35, b.y0 + h * 0.3, 1, b.x0 + w / 2, b.y0 + h / 2, Math.max(w, h) * 0.7);
+          g.addColorStop(0, "rgba(255,255,255,0.45)");
+          g.addColorStop(1, "rgba(255,255,255,0)");
+          ctx.fillStyle = g;
+          ctx.fill();
+        }
+      }
+      const shading = !noShade && !feature && (look.shade || look.halftone || look.inner);
+      if (shading) {
+        ctx.save();
+        ctx.clip();
+        const b = pen.bounds();
+        const cx = b ? (b.x0 + b.x1) / 2 : 0;
+        if (look.inner) {
+          ctx.strokeStyle = shade(fill, 0.45);
+          ctx.lineWidth = ow * S * 2.6;
+          ctx.stroke();
+        }
+        if (look.shade && role !== "skin") {
+          ctx.fillStyle = `rgba(20,10,40,${look.shade})`;
+          ctx.fillRect(cx, -1e5, 2e5, 2e5);
+        }
+        if (look.halftone) {
+          ctx.fillStyle = dotPattern(ctx, role === "skin" ? 0.07 : dotAlpha);
+          ctx.fillRect(cx, -1e5, 2e5, 2e5);
+        }
+        ctx.restore();
+      }
+    }
+    if (ow > 0) {
+      ctx.strokeStyle = ink;
+      ctx.lineWidth = ow * S;
+      ctx.lineJoin = "round";
+      ctx.lineCap = "round";
+      ctx.stroke();
+    }
+  }
+  function strokeLine(G, color, width, { role = "cloth", outline } = {}) {
+    const { ctx, look, S } = G;
+    const ow = outline ?? look.outline ?? 0;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    const c = look.fill === "none" ? G.ink : toneColor(look, color, role);
+    if (ow > 0 && look.fill !== "none") {
+      ctx.strokeStyle = G.ink;
+      ctx.lineWidth = (width + ow * 2) * S;
+      ctx.stroke();
+    }
+    if (look.fill === "none") {
+      ctx.strokeStyle = G.ink;
+      ctx.lineWidth = Math.max(ow, width * 0.5) * S;
+      ctx.stroke();
+      return;
+    }
+    ctx.strokeStyle = look.fill === "hatch" ? G.ink : c;
+    ctx.lineWidth = width * S;
+    ctx.stroke();
+  }
+
+  // characters/core/rig.mjs
+  var POSES = {
+    rest: { f: [0.12, 0.1], b: [0.12, 0.1] },
+    explain: { f: (t2) => [0.45 + 0.12 * Math.sin(t2 * 3.1), 1.35 + 0.4 * (0.5 + 0.5 * Math.sin(t2 * 2.4))], b: [0.3, 0.8] },
+    wave: { f: (t2) => [2.5, 0.45 + 0.45 * Math.sin(t2 * 9)], b: [0.12, 0.1] },
+    point: { f: [1.5, 0.05], b: [0.12, 0.1] },
+    shrug: { f: [0.55, 1.75], b: [0.55, 1.75] },
+    hips: { f: [0.75, -1.75], b: [0.75, -1.75] },
+    crossed: { f: [0.15, -2.45], b: [0.1, -2.3] },
+    think: { f: [0.22, -2.65], b: [0.12, 0.1] },
+    phone: { f: [0.3, 2.75], b: [0.12, 0.1] }
+  };
+  var POSE_NAMES = Object.keys(POSES);
+  var BUILD = { thin: 0.82, average: 1, round: 1.3 };
+  var HEAD = { round: [1, 1], oval: [0.88, 1.08], egg: [0.92, 1.05], square: [0.98, 0.98] };
+  var armAngles = (pose, which, t2, talk) => {
+    const p = POSES[pose] ?? POSES.rest;
+    const v = p[which];
+    return typeof v === "function" ? v(t2, talk) : v;
+  };
+  function poseArms(pose = "rest", poseK = 1, t2 = 0, talk = 0) {
+    const k = smooth(clamp(poseK));
+    const out = {};
+    for (const which of ["f", "b"]) {
+      const rest = armAngles("rest", which, t2, talk), want = armAngles(pose || "rest", which, t2, talk);
+      const tb = (pose === "rest" || !pose) && talk > 0 && which === "f" ? [0.05 * talk, 0.12 * talk * (0.5 + 0.5 * Math.sin(t2 * 4.3))] : [0, 0];
+      out[which === "f" ? "armF" : "armB"] = [lerp(rest[0], want[0], k) + tb[0], lerp(rest[1], want[1], k) + tb[1]];
+    }
+    return out;
+  }
+  function solveRig(card, look, state = {}) {
+    const { t: t2 = 0, pose = "rest", poseK = 1, head = null, talk = 0, walk = null } = state;
+    const J = state.joints ?? null, W2 = J ? clamp(J.w ?? 1) : 0;
+    const jv = (name, i, base) => J?.[name] && W2 > 0 ? lerp(base, J[name][i], W2) : base;
+    const view = jv("view", 0, state.view ?? 0);
+    const sitK = clamp(jv("sit", 0, state.sitting === true ? 1 : Number(state.sitting) || 0));
+    const sitting = sitK > 0.5;
+    const sway = (state.sway ?? card.sway ?? 0.5) * Math.sin(t2 * 1.6 + (card.seed ?? 0)) * 6e-3;
+    const P = look.p, h = card.height ?? 1;
+    const build = BUILD[card.build] ?? 1;
+    const muscle = card.muscle ?? 0;
+    const v = clamp(view, 0, 2);
+    const turn = Math.min(v, 1), side = Math.max(0, v - 1);
+    const wf = lerp(1, 0.72, turn) * lerp(1, 0.62, side);
+    const headR = P.headR * (card.headSize ?? 1);
+    const wAmt = walk?.amount ?? 0, ph = walk?.phase ?? 0;
+    const bob = -Math.abs(Math.sin(ph)) * 0.012 * wAmt;
+    const sitDrop = (-P.hy * h - 0.27) * smooth(sitK);
+    const leanRad = jv("lean", 0, 0);
+    const torsoLen = (P.hy - P.sy) * h;
+    const moveLean = Math.sin(leanRad) * torsoLen * Math.max(side, turn * 0.6);
+    const lean = (card.posture === "hunch" ? 0.03 : card.posture === "slouch" ? 0.012 : 0) + sway + moveLean;
+    const rootX = jv("root", 0, 0), rootY = jv("root", 1, 0);
+    const crouch = Math.max(0, rootY), lift = Math.min(0, rootY);
+    const hy = P.hy * h + sitDrop + bob + crouch;
+    const breath = (state.breath ?? 0) * 35e-4;
+    const sy = P.sy * h + sitDrop + bob + crouch + (card.posture === "hunch" ? 0.02 : 0) + (1 - Math.cos(leanRad)) * torsoLen - breath;
+    const sx = P.sw * build * (1 + muscle * 0.25) * wf, hx = P.hw * build * wf;
+    const shoulderLean = lean;
+    const reach = (P.hy - P.sy) * h * (card.armLength ?? 1);
+    const ua = reach * 0.62, fa = reach * 0.6;
+    const k = smooth(clamp(poseK));
+    const talkBob = (which) => (pose === "rest" || !pose) && talk > 0 && which === "f" ? [0.05 * talk, 0.12 * talk * (0.5 + 0.5 * Math.sin(t2 * 4.3))] : [0, 0];
+    const arm = (which) => {
+      const rest = armAngles("rest", which, t2, talk), want = armAngles(pose || "rest", which, t2, talk), tb = talkBob(which);
+      const key = which === "f" ? "armF" : "armB";
+      const a1 = jv(key, 0, lerp(rest[0], want[0], k) + tb[0]);
+      let a2 = jv(key, 1, lerp(rest[1], want[1], k) + tb[1]);
+      if (J?.[key] && W2 > 0 && a2 < 0) a2 = lerp(a2, -a2, smooth(clamp((v - 1.2) / 0.6)));
+      const front = which === "f";
+      const dir = side > 0.5 ? 1 : front ? 1 : -1;
+      const xs = side > 0.5 ? 1 : front ? 1 : lerp(1, 0.8, turn);
+      const shX = side > 0.5 ? front ? 4e-3 : -4e-3 : front ? sx * 0.95 : -sx * 0.95 * lerp(1, 0.85, turn);
+      const lift2 = Math.max(0, Math.min(1, (a1 - 1.25) / 1.4)) * 0.014 * h;
+      const sh = [shX + shoulderLean, sy + 0.02 - lift2];
+      const el = [sh[0] + dir * Math.sin(a1) * ua * xs, sh[1] + Math.cos(a1) * ua];
+      const ha = [el[0] + dir * Math.sin(a1 + a2) * fa * xs, el[1] + Math.cos(a1 + a2) * fa];
+      return { which, front, sh, el, ha, dir };
+    };
+    const arms = [arm("b"), arm("f")];
+    const legLen = -P.hy * h, upper = legLen * 0.5, lower = legLen * 0.5;
+    const leg = (which) => {
+      const front = which === "f";
+      const s = front ? 1 : -1;
+      const hipX = side > 0.5 ? front ? 4e-3 : -4e-3 : s * hx * 0.55;
+      const hip = [hipX + sway * 0.5, hy];
+      const seated = () => {
+        const fwd = side > 0.5 ? 1 : 0.25;
+        const knee2 = [hip[0] + upper * 0.95 * fwd + (side > 0.5 ? 0 : s * 0.01), hy + 0.02];
+        return { which, front, hip, knee: knee2, foot: [knee2[0] + 0.01, 0] };
+      };
+      if (sitK >= 1) return seated();
+      const key = front ? "legF" : "legB";
+      const swing = jv(key, 0, Math.sin(ph + (front ? 0 : Math.PI)) * 0.42 * wAmt);
+      const bend = Math.max(0, jv(key, 1, Math.max(0, Math.sin(ph + (front ? 0 : Math.PI) + 0.9)) * 0.7 * wAmt));
+      const spread = side > 0.5 ? 0 : s * 0.06 * (1 - turn * 0.5);
+      const fore = J?.[key] && W2 > 0 ? lerp(0.25, 1, turn * 0.6) : 0.25;
+      const th = spread + (side > 0.5 ? swing : swing * fore);
+      const hip0 = [hip[0], hip[1] - crouch];
+      let knee = [hip0[0] + Math.sin(th) * upper, hip0[1] + Math.cos(th) * upper];
+      const sh2 = th - bend;
+      let foot = [knee[0] + Math.sin(sh2) * lower, Math.min(0, knee[1] + Math.cos(sh2) * lower)];
+      const fk = front ? "footF" : "footB";
+      if (J?.[fk] && W2 > 0) {
+        const want = [hip0[0] + J[fk][0] * (side > 0.5 ? 1 : 0.3), Math.min(0, J[fk][1])];
+        foot = [lerp(foot[0], want[0], W2), lerp(foot[1], want[1], W2)];
+        knee = kneeFor(hip, foot, upper, lower, side > 0.5 ? 1 : s * 0.35);
+      } else if (crouch > 0) knee = kneeFor(hip, foot, upper, lower, side > 0.5 ? 1 : s * 0.35);
+      const stand = { which, front, hip, knee, foot };
+      if (sitK <= 0) return stand;
+      const sit = seated(), k2 = smooth(sitK);
+      const mixP = (a, b) => [lerp(a[0], b[0], k2), lerp(a[1], b[1], k2)];
+      return { which, front, hip, knee: mixP(stand.knee, sit.knee), foot: mixP(stand.foot, sit.foot) };
+    };
+    const legs = [leg("b"), leg("f")];
+    const [fx, fy] = HEAD[card.headShape] ?? HEAD.round;
+    const rot = ((head?.rotateDeg ?? 0) + jv("head", 0, 0)) * Math.PI / 180;
+    const headDrop = jv("head", 1, 0);
+    const neck = [shoulderLean + (card.posture === "hunch" ? 0.02 : 0), sy - 0.03 * h];
+    const hc = [
+      neck[0] + side * headR * 0.1 + (head?.dx ?? 0) * headR * 2,
+      sy - headR * fy * 1.05 - 0.025 * h + ((head?.dy ?? 0) + headDrop) * headR * 2 + (card.posture === "hunch" ? 0.015 : 0)
+    ];
+    const R = headR;
+    const faceDX = R * (0.08 + 0.22 * turn + 0.32 * side);
+    const ex = R * 0.33 * (card.eyeSpacing ?? 1);
+    const eyes = [
+      { x: faceDX - ex * lerp(1, 0.62, turn) * (1 - side), y: -R * 0.02, scaleX: lerp(1, 0.75, turn), visible: side < 0.55, far: true },
+      { x: faceDX + ex * (1 - side * 0.55), y: -R * 0.02, scaleX: 1, visible: true, far: false }
+    ];
+    const face = {
+      eyes,
+      mouth: { x: faceDX + R * 0.05 * side, y: R * 0.45, w: 1 - side * 0.45 },
+      nose: { x: faceDX + R * (0.02 + 0.35 * side), y: R * 0.18 },
+      ears: [
+        // the far ear stays in view as the head turns (in profile it is the one ear we see)
+        { x: -R * 0.98 * lerp(1, 0.8, turn) + R * 0.75 * side, y: R * 0.05, visible: true, far: true },
+        { x: R * 0.98, y: R * 0.05, visible: turn < 0.5, far: false }
+      ],
+      faceDX
+    };
+    const waistY = sy + (hy - sy) * 0.75;
+    const torso = [[-sx + shoulderLean, sy], [sx + shoulderLean, sy], [hx * 1.05 + sway, hy], [-hx * 1.05 + sway, hy]];
+    return {
+      h,
+      v,
+      turn,
+      side,
+      R,
+      rx: R * fx * lerp(1, 0.94, turn),
+      ry: R * fy,
+      rot,
+      head: hc,
+      neck,
+      sy,
+      hy,
+      sx,
+      hx,
+      waistY,
+      torso,
+      arms,
+      legs,
+      face,
+      sitting,
+      // drawn shifted by this (figure units): a step to the side, or off the floor
+      root: [rootX, lift],
+      limbW: look.limbW * (1 + muscle * 0.8),
+      legW: (look.legW ?? look.limbW) * (1 + muscle * 0.4)
+    };
+  }
+  function kneeFor(hip, foot, upper, lower, dir) {
+    const dx = foot[0] - hip[0], dy = foot[1] - hip[1];
+    const d = Math.min(upper + lower - 1e-6, Math.max(1e-6, Math.hypot(dx, dy)));
+    const a = Math.acos(clamp((upper * upper + d * d - lower * lower) / (2 * upper * d), -1, 1));
+    const base = Math.atan2(dx, dy);
+    const th = base + (dir >= 0 ? a : -a) * Math.min(1, Math.abs(dir) * 3);
+    return [hip[0] + Math.sin(th) * upper, hip[1] + Math.cos(th) * upper];
+  }
+  function anchors(sk) {
+    const { R, rx, ry } = sk;
+    return {
+      head: {
+        top: [0, -ry],
+        crown: [0, -ry * 0.55],
+        brow: [sk.face.faceDX, -R * 0.32],
+        eyes: [sk.face.faceDX, -R * 0.02],
+        nose: [sk.face.nose.x, sk.face.nose.y],
+        mouth: [sk.face.mouth.x, sk.face.mouth.y],
+        chin: [sk.face.faceDX * 0.6, ry],
+        earFar: [sk.face.ears[0].x, sk.face.ears[0].y],
+        earNear: [sk.face.ears[1].x, sk.face.ears[1].y],
+        rx,
+        ry
+      },
+      neck: sk.neck,
+      collar: [sk.neck[0], sk.sy],
+      chest: [sk.neck[0], sk.sy + (sk.hy - sk.sy) * 0.3],
+      waist: [0, sk.waistY],
+      hips: [0, sk.hy],
+      hands: sk.arms.map((a) => a.ha),
+      elbows: sk.arms.map((a) => a.el),
+      shoulders: sk.arms.map((a) => a.sh),
+      knees: sk.legs.map((l) => l.knee),
+      feet: sk.legs.map((l) => l.foot)
+    };
+  }
+  function figureExtent(card, look) {
+    const sk = solveRig(card, look, {});
+    const top = sk.head[1] - sk.ry * 1.25;
+    return { top, bottom: 0, shoulders: sk.sy, hips: sk.hy, headCentre: sk.head[1], R: sk.R };
+  }
+
+  // characters/core/wardrobe.mjs
+  var MULTI = /* @__PURE__ */ new Set(["hair"]);
+  var PATTERNS = ["none", "stripes", "checks", "dots", "corduroy"];
+  var ankle = (p, r) => [p[0], p[1] - r];
+  var lerpP = (a, b, k) => a.map((p, i) => [p[0] + (b[i][0] - p[0]) * k, p[1] + (b[i][1] - p[1]) * k]);
+  var smoothK = (k) => k * k * (3 - 2 * k);
+  function shoe(G, foot, s, o, colors) {
+    const { S, sk, look, pen } = G;
+    const big = look.bigShoes ? 1.9 : 1;
+    const k = smoothK(Math.min(1, Math.max(0, Math.max(sk.side, sk.turn * 0.65))));
+    const lw = Math.max(0.026, sk.legW);
+    const L = lw * 2.7 * big * (o.len ?? 1), H = lw * 1.05 * big * (o.high ?? 1), W2 = lw * 1.85 * big * (o.wide ?? 1);
+    const front = [[-W2 / 2, 0], [-W2 / 2, -H * 0.45], [-W2 * 0.38, -H * 0.86], [-W2 * 0.13, -H], [W2 * 0.13, -H], [W2 * 0.38, -H * 0.86], [W2 / 2, -H * 0.45], [W2 / 2, 0]];
+    const hb = lw * 0.62 * big;
+    const side = [[-hb, 0], [-hb * 1.1, -H * 0.78], [-hb * 0.45, -H * 1.12], [hb * 0.45, -H * 1.12], [L * 0.45, -H * 0.72], [L * 0.74, -H * 0.56], [L * 0.94, -H * 0.3], [L * 0.97, 0]];
+    const splay = s * 4e-3 * (1 - k);
+    const ox = foot[0] + splay, oy = foot[1];
+    const at = (pts) => pts.map(([x, y]) => [(ox + x) * S, (oy + y) * S]);
+    const shape = lerpP(front, side, k);
+    if (o.shaft) {
+      const sw = W2 * 0.78 * (1 - k) + lw * 1.35 * big * k, sx = -hb * 0.2 * k;
+      pen.rpoly(at([[sx - sw / 2, -H * 0.6], [sx + sw / 2, -H * 0.6], [sx + sw / 2, -H - o.shaft], [sx - sw / 2, -H - o.shaft]]), sw * 0.25 * S);
+      G.fill(colors[0], { noShade: true });
+    }
+    pen.blob(at(shape));
+    G.fill(o.upper ?? colors[0], o.upper === G.card.skin ? { role: "skin", noShade: true } : { noShade: true });
+    const xs = shape.map((p) => p[0]), x0 = Math.min(...xs), x1 = Math.max(...xs), th = o.sole * big;
+    pen.rpoly(at([[x0 - 2e-3, -th], [x1 + 2e-3, -th], [x1 + 2e-3, 2e-3], [x0 - 2e-3, 2e-3]]), th * 0.45 * S);
+    G.fill(o.soleColor ?? shade(colors[0], -0.45), { noShade: true });
+    o.detail?.(G, at, { W: W2, H, L, k, big }, colors);
+  }
+  var barefoot = (G, foot, s) => shoe(G, foot, s, { high: 0.62, wide: 0.9, sole: 1e-4, soleColor: G.card.skin, upper: G.card.skin }, [G.card.skin]);
+  var laces = (G, at, { W: W2, H, L, k }, c) => {
+    for (let i = 0; i < 3; i++) {
+      const fx = (i - 1) * W2 * 0.16, fy = -H * (0.92 - i * 0.04);
+      const sx = L * (0.28 + i * 0.1), sy = -H * (0.86 - i * 0.07);
+      const x = fx + (sx - fx) * k, y = fy + (sy - fy) * k;
+      G.pen.poly(at([[x - 6e-3, y + 2e-3], [x + 6e-3, y - 2e-3]]), false);
+      G.line(c, 3e-3, { feature: true });
+    }
+  };
+  var vNotch = (sk, depth = 0.45, open = 0.42) => {
+    const vb = sk.sy + (sk.hy - sk.sy) * depth;
+    return { vb, open: sk.sx * open };
+  };
+  function torsoShape(sk, bottomY = sk.hy, flare = 1.05, notch = null) {
+    const lean = sk.neck[0];
+    const sway = sk.torso[2][0] - sk.hx * 1.05;
+    const k = (bottomY - sk.sy) / (sk.hy - sk.sy);
+    const bx = sk.sx + (sk.hx * flare - sk.sx) * k;
+    const pts = [[-sk.sx + lean, sk.sy]];
+    if (notch) pts.push([lean - notch.open, sk.sy], [lean, notch.vb], [lean + notch.open, sk.sy]);
+    pts.push([sk.sx + lean, sk.sy], [bx + sway, bottomY], [-bx + sway, bottomY]);
+    return pts;
+  }
+  function along(a, b, c, k) {
+    if (k <= 1) return [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k];
+    const j = k - 1;
+    return [b[0] + (c[0] - b[0]) * j, b[1] + (c[1] - b[1]) * j];
+  }
+  function armPath(arm, upTo) {
+    const pts = [arm.sh];
+    if (upTo > 1) pts.push(arm.el, along(arm.sh, arm.el, arm.ha, upTo));
+    else pts.push(along(arm.sh, arm.el, arm.ha, upTo));
+    return pts;
+  }
+  function legPath(leg, upTo) {
+    const pts = [leg.hip];
+    if (upTo > 1) pts.push(leg.knee, along(leg.hip, leg.knee, leg.foot, upTo));
+    else pts.push(along(leg.hip, leg.knee, leg.foot, upTo));
+    return pts;
+  }
+  var sleeve = (len) => (G, c, arm) => {
+    if (G.look.limb === "line") return;
+    G.pen.poly(G.U(armPath(arm, len)), false);
+    G.line(c[0], G.sk.limbW * 1.28);
+  };
+  var trouserLegs = (len) => (G, c) => {
+    for (const leg of G.sk.legs) {
+      const w = G.sk.legW * (G.look.limb === "line" ? 2.8 : 1.3);
+      const pts = legPath(leg, len);
+      if (len > 1.5) pts[pts.length - 1] = ankle(pts[pts.length - 1], w / 2);
+      G.pen.poly(G.U(pts), false);
+      G.line(c[0], w);
+    }
+  };
+  var crew = (G, c) => {
+    const { sk } = G, w = sk.sx * 0.38;
+    G.pen.ellipse(sk.neck[0] * G.S, sk.sy * G.S, w * G.S, w * 0.45 * G.S, 0, 0, Math.PI);
+    G.ctx.strokeStyle = shade(G.tone(c[0]), -0.35);
+    G.ctx.lineWidth = Math.max(1, G.S * 4e-3);
+    G.ctx.stroke();
+  };
+  var buttons = (G, n, fromK = 0.5) => {
+    const { sk } = G;
+    for (let i = 0; i < n; i++) {
+      const y = sk.sy + (sk.hy - sk.sy) * (fromK + i * (0.9 - fromK) / Math.max(1, n));
+      G.pen.circle((sk.neck[0] + 4e-3) * G.S, y * G.S, G.S * 45e-4);
+      G.fill(G.ink, { feature: true, outline: 0 });
+    }
+  };
+  var ITEMS = [
+    // tops
+    {
+      id: "tshirt",
+      label: "T-shirt",
+      slot: "top",
+      colors: ["#3a6fb0"],
+      patterns: true,
+      torso: (G, c) => {
+        G.pen.rpoly(G.U(torsoShape(G.sk)), 0.02 * G.S);
+        G.fill(c[0], { pattern: c.pattern });
+        crew(G, c);
+      },
+      arm: sleeve(0.55)
+    },
+    {
+      id: "polo",
+      label: "Polo shirt",
+      slot: "top",
+      colors: ["#2f8f6a"],
+      patterns: true,
+      torso: (G, c) => {
+        const { sk } = G;
+        G.pen.rpoly(G.U(torsoShape(sk)), 0.02 * G.S);
+        G.fill(c[0], { pattern: c.pattern });
+        for (const s of [-1, 1]) {
+          G.pen.poly(G.U([[sk.neck[0], sk.sy], [sk.neck[0] + s * sk.sx * 0.45, sk.sy - 5e-3], [sk.neck[0] + s * sk.sx * 0.3, sk.sy + 0.04]]));
+          G.fill(shade(c[0], 0.15), { noShade: true });
+        }
+        buttons(G, 2, 0.1);
+      },
+      arm: sleeve(0.55)
+    },
+    {
+      id: "shirt",
+      label: "Dress shirt",
+      slot: "top",
+      colors: ["#ffffff"],
+      patterns: true,
+      torso: (G, c) => {
+        const { sk } = G;
+        G.pen.rpoly(G.U(torsoShape(sk)), 0.02 * G.S);
+        G.fill(c[0], { pattern: c.pattern });
+        for (const s of [-1, 1]) {
+          G.pen.poly(G.U([[sk.neck[0], sk.sy + 0.01], [sk.neck[0] + s * sk.sx * 0.4, sk.sy - 8e-3], [sk.neck[0] + s * sk.sx * 0.22, sk.sy + 0.035]]));
+          G.fill(c[0], { noShade: true });
+        }
+      },
+      arm: sleeve(1.95)
+    },
+    {
+      id: "tank",
+      label: "Tank top",
+      slot: "top",
+      colors: ["#e8e4da"],
+      patterns: true,
+      torso: (G, c) => {
+        const { sk } = G, l = sk.neck[0];
+        G.pen.rpoly(G.U([[-sk.sx * 0.55 + l, sk.sy], [-sk.sx * 0.25 + l, sk.sy], [l, sk.sy + 0.05], [sk.sx * 0.25 + l, sk.sy], [sk.sx * 0.55 + l, sk.sy], [sk.sx * 0.95 + l, sk.sy + 0.07], [sk.hx * 1.05, sk.hy], [-sk.hx * 1.05, sk.hy], [-sk.sx * 0.95 + l, sk.sy + 0.07]]), 0.012 * G.S);
+        G.fill(c[0], { pattern: c.pattern });
+      }
+    },
+    {
+      id: "hoodie",
+      label: "Hoodie (hood down)",
+      slot: "top",
+      colors: ["#7a5cc0"],
+      patterns: false,
+      back: (G, c) => {
+        const { sk } = G;
+        G.pen.ellipse(sk.neck[0] * G.S, (sk.sy - 0.01) * G.S, sk.sx * 0.75 * G.S, 0.04 * G.S);
+        G.fill(shade(c[0], -0.12));
+      },
+      torso: (G, c) => {
+        const { sk } = G;
+        G.pen.rpoly(G.U(torsoShape(sk, sk.hy + 0.01)), 0.025 * G.S);
+        G.fill(c[0]);
+        G.pen.rpoly(G.U([[-sk.sx * 0.55, sk.hy - 0.07], [sk.sx * 0.55, sk.hy - 0.07], [sk.sx * 0.65, sk.hy - 5e-3], [-sk.sx * 0.65, sk.hy - 5e-3]]), 0.01 * G.S);
+        G.fill(shade(c[0], -0.08), { noShade: true });
+        for (const s of [-0.18, 0.18]) {
+          G.pen.poly(G.U([[sk.neck[0] + s * sk.sx, sk.sy + 0.01], [sk.neck[0] + s * sk.sx * 1.2, sk.sy + 0.09]]), false);
+          G.line("#f2f2f2", 4e-3, { feature: true });
+        }
+      },
+      arm: sleeve(1.95)
+    },
+    {
+      id: "hoodie_up",
+      label: "Hoodie (hood up)",
+      slot: "top",
+      colors: ["#7a5cc0"],
+      patterns: false,
+      hairBack: (G, c) => {
+        const { sk } = G;
+        G.pen.ellipse(0, -sk.ry * 0.05 * G.S, sk.rx * 1.28 * G.S, sk.ry * 1.25 * G.S);
+        G.fill(shade(c[0], -0.12));
+      },
+      head: (G, c) => {
+        const { sk } = G;
+        G.pen.ellipse(0, -sk.ry * 0.12 * G.S, sk.rx * 1.22 * G.S, sk.ry * 1.18 * G.S, 0, Math.PI * 0.95, Math.PI * 2.05);
+        G.line(c[0], 0.03);
+      },
+      torso: (G, c) => {
+        const { sk } = G;
+        G.pen.rpoly(G.U(torsoShape(sk, sk.hy + 0.01)), 0.025 * G.S);
+        G.fill(c[0]);
+      },
+      arm: sleeve(1.95)
+    },
+    {
+      id: "sweater",
+      label: "Pullover",
+      slot: "top",
+      colors: ["#b5462f"],
+      patterns: true,
+      torso: (G, c) => {
+        const { sk } = G;
+        G.pen.rpoly(G.U(torsoShape(sk, sk.hy + 0.01)), 0.025 * G.S);
+        G.fill(c[0], { pattern: c.pattern });
+        G.pen.poly(G.U([[-sk.hx * 1.05, sk.hy - 0.025], [sk.hx * 1.05, sk.hy - 0.025]]), false);
+        G.line(shade(c[0], -0.3), 3e-3, { feature: true });
+        crew(G, c);
+      },
+      arm: sleeve(1.9)
+    },
+    // outer layers
+    {
+      id: "vest",
+      label: "Waistcoat",
+      slot: "outer",
+      colors: ["#3a6fb0"],
+      patterns: true,
+      torso: (G, c) => {
+        const { sk } = G;
+        G.pen.rpoly(G.U(torsoShape(sk, sk.hy, 1.05, vNotch(sk))), 0.015 * G.S);
+        G.fill(c[0], { pattern: c.pattern });
+        buttons(G, 3, 0.55);
+      }
+    },
+    {
+      id: "blazer",
+      label: "Suit jacket",
+      slot: "outer",
+      colors: ["#2d3446"],
+      patterns: true,
+      torso: (G, c) => {
+        const { sk } = G, n = vNotch(sk, 0.55, 0.48);
+        G.pen.rpoly(G.U(torsoShape(sk, sk.hy + 0.02, 1.1, n)), 0.015 * G.S);
+        G.fill(c[0], { pattern: c.pattern });
+        for (const s of [-1, 1]) {
+          G.pen.poly(G.U([[sk.neck[0] + s * n.open, sk.sy], [sk.neck[0] + s * n.open * 0.55, sk.sy + 0.06], [sk.neck[0] + s * 4e-3, n.vb]]), false);
+          G.line(shade(c[0], -0.35), 3e-3, { feature: true });
+        }
+        buttons(G, 2, 0.7);
+      },
+      arm: sleeve(1.95)
+    },
+    // neck
+    {
+      id: "tie",
+      label: "Tie",
+      slot: "neck",
+      colors: ["#1d2433"],
+      patterns: true,
+      neck: (G, c) => {
+        const { sk } = G, l = sk.neck[0], vb = vNotch(sk).vb;
+        G.pen.poly(G.U([[l - 8e-3, sk.sy + 0.012], [l + 8e-3, sk.sy + 0.012], [l + 0.013, vb - 0.01], [l, vb + 0.012], [l - 0.013, vb - 0.01]]));
+        G.fill(c[0], { noShade: true, outline: (G.look.outline ?? 0) * 0.6, pattern: c.pattern });
+      }
+    },
+    {
+      id: "bowtie",
+      label: "Bow tie",
+      slot: "neck",
+      colors: ["#c0392b"],
+      patterns: true,
+      neck: (G, c) => {
+        const { sk } = G, l = sk.neck[0], y = sk.sy + 0.012;
+        for (const s of [-1, 1]) {
+          G.pen.poly(G.U([[l, y], [l + s * 0.03, y - 0.014], [l + s * 0.03, y + 0.014]]));
+          G.fill(c[0], { noShade: true });
+        }
+        G.pen.circle(l * G.S, y * G.S, 6e-3 * G.S);
+        G.fill(shade(c[0], -0.2), { noShade: true });
+      }
+    },
+    {
+      id: "scarf",
+      label: "Scarf",
+      slot: "neck",
+      colors: ["#d4a537"],
+      patterns: true,
+      neck: (G, c) => {
+        const { sk } = G, l = sk.neck[0];
+        G.pen.rpoly(G.U([[l - sk.sx * 0.6, sk.sy - 0.02], [l + sk.sx * 0.6, sk.sy - 0.02], [l + sk.sx * 0.55, sk.sy + 0.025], [l - sk.sx * 0.55, sk.sy + 0.025]]), 0.012 * G.S);
+        G.fill(c[0], { pattern: c.pattern });
+        G.pen.rpoly(G.U([[l + 0.01, sk.sy], [l + 0.035, sk.sy], [l + 0.04, sk.sy + 0.14], [l + 0.015, sk.sy + 0.14]]), 8e-3 * G.S);
+        G.fill(c[0], { pattern: c.pattern });
+      }
+    },
+    // bottoms
+    { id: "trousers", label: "Trousers", slot: "bottom", colors: ["#2d3446"], patterns: true, legs: (G, c) => trouserLegs(1.92)(G, c) },
+    { id: "jeans", label: "Jeans", slot: "bottom", colors: ["#3b5b8a"], patterns: false, legs: (G, c) => trouserLegs(1.92)(G, c) },
+    { id: "shorts", label: "Shorts", slot: "bottom", colors: ["#c9a46e"], patterns: true, legs: (G, c) => trouserLegs(0.75)(G, c) },
+    {
+      id: "skirt",
+      label: "Skirt",
+      slot: "bottom",
+      colors: ["#8cc6f0"],
+      patterns: true,
+      torso: (G, c) => {
+        const { sk } = G, w = sk.hx;
+        G.pen.rpoly(G.U([[-w * 1.1, sk.hy - 0.04], [w * 1.1, sk.hy - 0.04], [w * 1.6, sk.hy * 0.62], [-w * 1.6, sk.hy * 0.62]]), 0.02 * G.S);
+        G.fill(c[0], { pattern: c.pattern });
+      }
+    },
+    // full-length
+    {
+      id: "dress",
+      label: "Dress",
+      slot: "full",
+      colors: ["#d35a7a"],
+      patterns: true,
+      torso: (G, c) => {
+        const { sk } = G, w = sk.hx;
+        G.pen.rpoly(G.U([...torsoShape(sk, sk.hy - 0.02, 1).slice(0, 2), [w * 1.7, sk.hy * 0.55], [-w * 1.7, sk.hy * 0.55]]), 0.02 * G.S);
+        G.fill(c[0], { pattern: c.pattern });
+        crew(G, c);
+      },
+      arm: sleeve(0.45)
+    },
+    {
+      id: "chiton",
+      label: "Chiton (ancient Greek tunic)",
+      slot: "full",
+      colors: ["#efe6d2", "#a8322b"],
+      patterns: false,
+      torso: (G, c) => {
+        const { sk } = G, w = sk.hx, l = sk.neck[0];
+        const shape = [[-sk.sx * 1.05 + l, sk.sy - 5e-3], [sk.sx * 1.05 + l, sk.sy - 5e-3], [w * 1.25, sk.hy * 0.4], [w * 1.45, -0.05], [-w * 1.45, -0.05], [-w * 1.25, sk.hy * 0.4]];
+        G.pen.rpoly(G.U(shape), 0.015 * G.S);
+        G.fill(c[0]);
+        for (let i = -2; i <= 2; i++) {
+          G.pen.curve(G.U([[i * w * 0.32, sk.waistY], [i * w * 0.42, sk.hy * 0.6], [i * w * 0.5, -0.06]]));
+          G.line(shade(G.tone(c[0]), -0.3), 25e-4, { feature: !G.look.incise, ink: true });
+        }
+        G.pen.poly(G.U([[-w * 1.1, sk.waistY], [w * 1.1, sk.waistY]]), false);
+        G.line(c[1] ?? "#a8322b", 7e-3);
+        G.pen.poly(G.U([[-w * 1.42, -0.06], [w * 1.42, -0.06]]), false);
+        G.line(c[1] ?? "#a8322b", 6e-3);
+      },
+      arm: sleeve(0.4)
+    },
+    {
+      id: "himation",
+      label: "Himation / toga (draped cloak)",
+      slot: "outer",
+      colors: ["#a8322b"],
+      patterns: false,
+      torso: (G, c) => {
+        const { sk } = G, l = sk.neck[0], w = sk.hx;
+        G.pen.blob(G.U([[-sk.sx * 1.1 + l, sk.sy - 0.01], [-sk.sx * 0.2 + l, sk.sy + 0.02], [sk.sx * 0.9, sk.waistY - 0.05], [w * 1.3, sk.hy * 0.5], [w * 0.5, sk.hy * 0.25], [-w * 1.1, sk.hy * 0.7], [-sk.sx * 1.2 + l, sk.sy + 0.12]]));
+        G.fill(c[0]);
+        for (let i = 0; i < 3; i++) {
+          G.pen.curve(G.U([[-sk.sx * (0.7 - i * 0.3) + l, sk.sy + 0.02 + i * 0.01], [sk.sx * (0.2 + i * 0.2), sk.waistY - 0.02 + i * 0.03], [w * (0.9 + i * 0.15), sk.hy * (0.55 - i * 0.05)]]));
+          G.line(shade(G.tone(c[0]), -0.35), 25e-4, { feature: !G.look.incise, ink: true });
+        }
+      }
+    },
+    // feet (shoe() above: front, side and everything between)
+    {
+      id: "sneakers",
+      label: "Sneakers",
+      slot: "feet",
+      colors: ["#f2f2f2", "#d7261e"],
+      feet: (G, c, foot, s) => shoe(G, foot, s, {
+        high: 1.12,
+        wide: 1.06,
+        sole: 0.011,
+        soleColor: "#ffffff",
+        detail: (G2, at, d, c2) => {
+          laces(G2, at, d, shade(c2[0], -0.35));
+          if (d.k > 0.25) {
+            G2.pen.curve(at([[d.L * 0.15, -d.H * 0.3], [d.L * 0.45, -d.H * 0.55], [d.L * 0.72, -d.H * 0.42]]));
+            G2.line(c2[1] ?? "#d7261e", 6e-3, { feature: true });
+          } else {
+            G2.pen.poly(at([[-d.W * 0.42, -d.H * 0.25], [d.W * 0.42, -d.H * 0.25]]), false);
+            G2.line(c2[1] ?? "#d7261e", 4e-3, { feature: true });
+          }
+        }
+      }, c)
+    },
+    {
+      id: "shoes",
+      label: "Shoes",
+      slot: "feet",
+      colors: ["#16181d"],
+      feet: (G, c, foot, s) => shoe(G, foot, s, {
+        high: 0.86,
+        len: 1.05,
+        sole: 5e-3,
+        soleColor: shade(c[0], -0.3),
+        detail: (G2, at, d) => {
+          G2.pen.ellipse(...at([[d.k * d.L * 0.62, -d.H * 0.62]])[0], (9e-3 + 6e-3 * d.k) * G2.S, 35e-4 * G2.S);
+          G2.ctx.fillStyle = "rgba(255,255,255,0.35)";
+          G2.ctx.fill();
+        }
+      }, c)
+    },
+    {
+      id: "boots",
+      label: "Boots",
+      slot: "feet",
+      colors: ["#5a3622"],
+      feet: (G, c, foot, s) => shoe(G, foot, s, { high: 1.05, wide: 1.08, sole: 9e-3, shaft: 0.05, soleColor: "#2b1d12", detail: laces }, [c[0], c[0]])
+    },
+    {
+      id: "sandals",
+      label: "Sandals",
+      slot: "feet",
+      colors: ["#7a4a24"],
+      feet: (G, c, foot, s) => shoe(G, foot, s, {
+        high: 0.75,
+        sole: 6e-3,
+        soleColor: c[0],
+        upper: G.card.skin,
+        detail: (G2, at, d, cc) => {
+          for (const t2 of [0.35, 0.65]) {
+            const fy = -d.H * (0.45 + t2 * 0.4), sxx = d.L * t2;
+            const a = [[-d.W * 0.48 * (1 - d.k) + (sxx - 0.012) * d.k, fy * (1 - d.k) + -d.H * 0.7 * d.k], [d.W * 0.48 * (1 - d.k) + (sxx + 0.012) * d.k, fy * (1 - d.k) + -d.H * 0.35 * d.k]];
+            G2.pen.poly(at(a), false);
+            G2.line(c[0], 5e-3, { feature: true });
+          }
+        }
+      }, c)
+    },
+    // head
+    {
+      id: "cap",
+      label: "Cap",
+      slot: "head",
+      colors: ["#d7261e"],
+      head: (G, c) => {
+        const { sk } = G, S = G.S;
+        G.pen.ellipse(0, -sk.ry * 0.38 * S, sk.rx * 1.02 * S, sk.ry * 0.72 * S, 0, Math.PI, Math.PI * 2);
+        G.fill(c[0]);
+        G.pen.rpoly([[sk.rx * 0.2 * S, -sk.ry * 0.42 * S], [sk.rx * 1.45 * S, -sk.ry * 0.36 * S], [sk.rx * 1.35 * S, -sk.ry * 0.28 * S], [sk.rx * 0.2 * S, -sk.ry * 0.3 * S]], 0.01 * S);
+        G.fill(shade(c[0], -0.15), { noShade: true });
+      }
+    },
+    {
+      id: "beanie",
+      label: "Beanie",
+      slot: "head",
+      colors: ["#2f8f8a"],
+      head: (G, c) => {
+        const { sk } = G, S = G.S;
+        G.pen.ellipse(0, -sk.ry * 0.4 * S, sk.rx * 1.04 * S, sk.ry * 0.78 * S, 0, Math.PI, Math.PI * 2);
+        G.fill(c[0]);
+        G.pen.rpoly([[-sk.rx * 1.06 * S, -sk.ry * 0.5 * S], [sk.rx * 1.06 * S, -sk.ry * 0.5 * S], [sk.rx * 1.06 * S, -sk.ry * 0.32 * S], [-sk.rx * 1.06 * S, -sk.ry * 0.32 * S]], 0.012 * S);
+        G.fill(shade(c[0], -0.12));
+      }
+    },
+    {
+      id: "tophat",
+      label: "Top hat",
+      slot: "head",
+      colors: ["#1a1a1a", "#a8322b"],
+      head: (G, c) => {
+        const { sk } = G, S = G.S;
+        G.pen.rpoly([[-sk.rx * 0.7 * S, -sk.ry * 2.05 * S], [sk.rx * 0.7 * S, -sk.ry * 2.05 * S], [sk.rx * 0.75 * S, -sk.ry * 0.62 * S], [-sk.rx * 0.75 * S, -sk.ry * 0.62 * S]], 0.012 * S);
+        G.fill(c[0]);
+        G.pen.poly([[-sk.rx * 0.75 * S, -sk.ry * 0.85 * S], [sk.rx * 0.75 * S, -sk.ry * 0.85 * S], [sk.rx * 0.75 * S, -sk.ry * 0.72 * S], [-sk.rx * 0.75 * S, -sk.ry * 0.72 * S]]);
+        G.fill(c[1] ?? "#a8322b", { noShade: true });
+        G.pen.ellipse(0, -sk.ry * 0.62 * S, sk.rx * 1.15 * S, sk.ry * 0.1 * S);
+        G.fill(c[0]);
+      }
+    },
+    {
+      id: "fez",
+      label: "Fez",
+      slot: "head",
+      colors: ["#a3202a", "#1a1a1a"],
+      head: (G, c) => {
+        const { sk } = G, S = G.S;
+        G.pen.rpoly([[-sk.rx * 0.55 * S, -sk.ry * 1.45 * S], [sk.rx * 0.55 * S, -sk.ry * 1.45 * S], [sk.rx * 0.72 * S, -sk.ry * 0.6 * S], [-sk.rx * 0.72 * S, -sk.ry * 0.6 * S]], 0.01 * S);
+        G.fill(c[0]);
+        G.pen.curve([[0, -sk.ry * 1.45 * S], [-sk.rx * 0.5 * S, -sk.ry * 1.3 * S], [-sk.rx * 0.65 * S, -sk.ry * 0.9 * S]]);
+        G.line(c[1] ?? "#1a1a1a", 6e-3, { feature: true });
+      }
+    },
+    {
+      id: "wreath",
+      label: "Laurel wreath",
+      slot: "head",
+      colors: ["#4f7a3a"],
+      head: (G, c) => {
+        const { sk } = G, S = G.S;
+        for (let i = 0; i < 9; i++) {
+          const a = Math.PI * (1.05 + i * 0.11);
+          const x = Math.cos(a) * sk.rx * 1.02, y = Math.sin(a) * sk.ry * 0.95 - sk.ry * 0.05;
+          G.pen.ellipse(x * S, y * S, sk.rx * 0.16 * S, sk.rx * 0.07 * S, a + Math.PI / 2 + 0.6);
+          G.fill(c[0], { noShade: true });
+        }
+      }
+    },
+    {
+      id: "helmet",
+      label: "Ancient Greek helmet",
+      slot: "head",
+      colors: ["#b8873a", "#a8322b"],
+      head: (G, c) => {
+        const { sk } = G, S = G.S;
+        G.pen.ellipse(0, -sk.ry * 0.25 * S, sk.rx * 1.08 * S, sk.ry * 0.95 * S, 0, Math.PI * 0.95, Math.PI * 2.05);
+        G.fill(c[0]);
+        G.pen.blob([[-sk.rx * 0.9 * S, -sk.ry * 1.1 * S], [-sk.rx * 0.2 * S, -sk.ry * 1.75 * S], [sk.rx * 0.7 * S, -sk.ry * 1.55 * S], [sk.rx * 0.2 * S, -sk.ry * 1.05 * S]]);
+        G.fill(c[1] ?? "#a8322b");
+      }
+    },
+    {
+      id: "headband",
+      label: "Headband",
+      slot: "hair",
+      colors: ["#e86a50"],
+      head: (G, c) => {
+        const { sk } = G, S = G.S;
+        G.pen.ellipse(0, -sk.ry * 0.05 * S, sk.rx * 1.02 * S, sk.ry * 0.62 * S, 0, Math.PI * 1.08, Math.PI * 1.92);
+        G.line(c[0], 0.012);
+      }
+    },
+    {
+      id: "bow",
+      label: "Hair bow",
+      slot: "hair",
+      colors: ["#4a8fe0"],
+      head: (G, c) => {
+        const { sk } = G, S = G.S, x = -sk.rx * 0.72, y = -sk.ry * 0.8;
+        for (const s of [-1, 1]) {
+          G.pen.ellipse((x + s * sk.rx * 0.17) * S, y * S, sk.rx * 0.17 * S, sk.ry * 0.11 * S, s * 0.5);
+          G.fill(c[0], { noShade: true });
+        }
+        G.pen.circle(x * S, y * S, sk.rx * 0.07 * S);
+        G.fill(shade(c[0], -0.2), { noShade: true });
+      }
+    },
+    // face
+    {
+      id: "glasses",
+      label: "Glasses",
+      slot: "eyes",
+      colors: ["#1a1a1a"],
+      face: (G, c) => {
+        const { sk } = G, S = G.S;
+        const [e0, e1] = sk.face.eyes;
+        const r = sk.R * 0.2;
+        for (const e of [e0, e1]) if (e.visible) {
+          G.pen.ellipse(e.x * S, e.y * S, r * e.scaleX * S, r * S);
+          G.line(c[0], 4e-3, { feature: true });
+        }
+        if (e0.visible) {
+          G.pen.poly([[(e0.x + r * e0.scaleX) * S, e0.y * S], [(e1.x - r) * S, e1.y * S]], false);
+          G.line(c[0], 3e-3, { feature: true });
+        }
+      }
+    },
+    {
+      id: "sunglasses",
+      label: "Sunglasses",
+      slot: "eyes",
+      colors: ["#141414"],
+      face: (G, c) => {
+        const { sk } = G, S = G.S;
+        const [e0, e1] = sk.face.eyes;
+        const r = sk.R * 0.22;
+        for (const e of [e0, e1]) if (e.visible) {
+          G.pen.rpoly([[(e.x - r * e.scaleX) * S, (e.y - r * 0.7) * S], [(e.x + r * e.scaleX) * S, (e.y - r * 0.7) * S], [(e.x + r * 0.85 * e.scaleX) * S, (e.y + r * 0.75) * S], [(e.x - r * 0.85 * e.scaleX) * S, (e.y + r * 0.75) * S]], r * 0.4 * S);
+          G.fill(c[0], { feature: true });
+        }
+        if (e0.visible) {
+          G.pen.poly([[(e0.x + r * e0.scaleX) * S, (e0.y - r * 0.4) * S], [(e1.x - r) * S, (e1.y - r * 0.4) * S]], false);
+          G.line(c[0], 4e-3, { feature: true });
+        }
+      }
+    },
+    {
+      id: "earrings",
+      label: "Earrings",
+      slot: "ears",
+      colors: ["#e0b040"],
+      face: (G, c) => {
+        const { sk } = G, S = G.S;
+        for (const e of sk.face.ears) if (e.visible) {
+          G.pen.circle(e.x * S, (e.y + sk.R * 0.24) * S, sk.R * 0.06 * S);
+          G.fill(c[0], { feature: true });
+        }
+      }
+    }
+  ];
+  var BY_ID2 = Object.fromEntries(ITEMS.map((i) => [i.id, i]));
+  var itemById = (id) => BY_ID2[id];
+  function normalizeWear(list) {
+    const problems = [];
+    const out = [];
+    for (const raw of Array.isArray(list) ? list : []) {
+      const id = typeof raw === "string" ? raw : raw?.id;
+      const item = BY_ID2[id];
+      if (!item) {
+        problems.push(`"${id}" is not in the wardrobe`);
+        continue;
+      }
+      const colors = item.colors.map((d, i) => /^#[0-9a-f]{6}$/i.test(raw?.colors?.[i] ?? "") ? raw.colors[i].toLowerCase() : d);
+      const pattern2 = PATTERNS.includes(raw?.pattern) && item.patterns ? raw.pattern : "none";
+      if (raw?.pattern && raw.pattern !== "none" && pattern2 === "none") problems.push(`${item.label} can't have the pattern "${raw.pattern}"`);
+      if (!MULTI.has(item.slot)) {
+        const clashes = (w) => w.slot === item.slot || item.slot === "full" && (w.slot === "top" || w.slot === "bottom") || (item.slot === "top" || item.slot === "bottom") && w.slot === "full";
+        for (let k = out.length - 1; k >= 0; k--) if (clashes(out[k])) {
+          problems.push(`${item.label} replaces ${BY_ID2[out[k].id].label}`);
+          out.splice(k, 1);
+        }
+      }
+      out.push({ id, slot: item.slot, colors, pattern: pattern2 });
+    }
+    return { wear: out, problems };
+  }
+
+  // characters/core/face.mjs
+  var MOUTHS = {
+    0: { w: 0.42, h: 0, round: 0, teeth: 0, tuck: 0, tongue: 0, smile: 0, press: 0 },
+    1: { w: 0.5, h: 0.4, round: 0.15, teeth: 0.35, tuck: 0, tongue: 0.25, smile: 0, press: 0 },
+    2: { w: 0.62, h: 0.15, round: 0, teeth: 1, tuck: 0, tongue: 0, smile: 0.25, press: 0 },
+    3: { w: 0.34, h: 0.36, round: 1, teeth: 0, tuck: 0, tongue: 0.15, smile: 0, press: 0 },
+    4: { w: 0.2, h: 0.2, round: 1, teeth: 0, tuck: 0, tongue: 0, smile: 0, press: 0 },
+    5: { w: 0.4, h: 0, round: 0, teeth: 0, tuck: 0, tongue: 0, smile: 0, press: 1 },
+    6: { w: 0.44, h: 0.06, round: 0, teeth: 0.9, tuck: 1, tongue: 0, smile: 0, press: 0 },
+    7: { w: 0.44, h: 0.17, round: 0.2, teeth: 0.6, tuck: 0, tongue: 1, smile: 0, press: 0 },
+    8: { w: 0.4, h: 0.13, round: 0.45, teeth: 1, tuck: 0, tongue: 0, smile: 0, press: 0 },
+    9: { w: 0.5, h: 0, round: 0, teeth: 0, tuck: 0, tongue: 0, smile: 1, press: 0 },
+    10: { w: 0.46, h: 0.2, round: 0.15, teeth: 0.2, tuck: 0, tongue: 0.1, smile: 0, press: 0 },
+    11: { w: 0.28, h: 0.24, round: 1, teeth: 0, tuck: 0, tongue: 0, smile: 0, press: 0 },
+    12: { w: 0.55, h: 0.08, round: 0, teeth: 0.7, tuck: 0, tongue: 0, smile: 0.15, press: 0 }
+  };
+  var blend = (a, b, k) => Object.fromEntries(Object.keys(a).map((key) => [key, lerp(a[key], b[key], k)]));
+  function mouthShape(from, to, k = 1) {
+    const a = MOUTHS[from] ?? MOUTHS[0], b = MOUTHS[to] ?? MOUTHS[0];
+    return blend(a, b, clamp(k));
+  }
+  var LIDS = { open: 0, half: 0.55, closed: 1, wide: -0.3 };
+  var lidAmount = (from = "open", to = from, k = 1) => lerp(LIDS[from] ?? 0, LIDS[to] ?? 0, clamp(k));
+  var BROWS = {
+    serious: { lift: 0, tilt: 0, arch: 0.15 },
+    happy: { lift: 0.08, tilt: -0.1, arch: 0.6 },
+    raised: { lift: 0.16, tilt: 0, arch: 0.35 },
+    worried: { lift: 0.07, tilt: -0.4, arch: 0.1 },
+    confused: { lift: 0.13, tilt: 0.15, arch: 0.2 },
+    // one side; the other is "serious"
+    angry: { lift: -0.05, tilt: 0.45, arch: 0 }
+  };
+  var browShape = (name) => BROWS[name] ?? BROWS.serious;
+  var EXPRESSION_REST = { neutral: 0, smile: 9, serious: 0, grumpy: 0 };
+  var EXPRESSION_SMILE = { neutral: 0, smile: 0.25, serious: -0.05, grumpy: -0.45 };
+
+  // characters/core/fx.mjs
+  var edgeCanvas = null;
+  function applyLayer(look, dst, L, lc, { w, h, S, ink = "#3ef0ff" }) {
+    switch (look.layer) {
+      case "sticker": {
+        if (!edgeCanvas || edgeCanvas.width !== w || edgeCanvas.height !== h) edgeCanvas = newCanvas(w, h);
+        const ec = edgeCanvas.getContext("2d");
+        ec.setTransform(1, 0, 0, 1, 0, 0);
+        ec.globalCompositeOperation = "source-over";
+        ec.clearRect(0, 0, w, h);
+        const k = Math.max(3, S * 0.022);
+        for (let a = 0; a < TAU; a += TAU / 16) ec.drawImage(L, Math.cos(a) * k, Math.sin(a) * k);
+        ec.globalCompositeOperation = "source-in";
+        ec.fillStyle = "#ffffff";
+        ec.fillRect(0, 0, w, h);
+        ec.globalCompositeOperation = "source-over";
+        dst.save();
+        dst.shadowColor = "rgba(122,42,90,0.33)";
+        dst.shadowBlur = S * 0.04;
+        dst.shadowOffsetY = S * 0.015;
+        dst.drawImage(edgeCanvas, 0, 0);
+        dst.restore();
+        dst.drawImage(L, 0, 0);
+        return;
+      }
+      case "chalk":
+        lc.save();
+        lc.globalCompositeOperation = "destination-out";
+        lc.globalAlpha = 0.45;
+        lc.fillStyle = grainPattern(lc);
+        lc.fillRect(0, 0, w, h);
+        lc.restore();
+        dst.drawImage(L, 0, 0);
+        return;
+      case "paper":
+        lc.save();
+        lc.globalCompositeOperation = "source-atop";
+        lc.globalAlpha = 0.08;
+        lc.fillStyle = grainPattern(lc);
+        lc.fillRect(0, 0, w, h);
+        lc.restore();
+        dst.save();
+        dst.shadowColor = "rgba(40,30,20,0.35)";
+        dst.shadowBlur = S * 0.02;
+        dst.shadowOffsetX = S * 8e-3;
+        dst.shadowOffsetY = S * 0.012;
+        dst.drawImage(L, 0, 0);
+        dst.restore();
+        return;
+      case "riso":
+        dst.save();
+        dst.globalCompositeOperation = "multiply";
+        dst.globalAlpha = 0.55;
+        dst.drawImage(L, S * 9e-3, S * 5e-3);
+        dst.globalAlpha = 1;
+        dst.drawImage(L, 0, 0);
+        dst.restore();
+        return;
+      case "glow":
+        dst.save();
+        dst.shadowColor = ink;
+        dst.shadowBlur = S * 0.035;
+        dst.drawImage(L, 0, 0);
+        dst.drawImage(L, 0, 0);
+        dst.restore();
+        return;
+      case "lamp":
+        dst.save();
+        dst.shadowColor = "rgba(255,170,60,0.55)";
+        dst.shadowBlur = S * 0.03;
+        dst.drawImage(L, 0, 0);
+        dst.restore();
+        return;
+      default:
+        dst.drawImage(L, 0, 0);
+    }
+  }
+
+  // characters/core/record.mjs
+  var mul = (m, n) => [m[0] * n[0] + m[2] * n[1], m[1] * n[0] + m[3] * n[1], m[0] * n[2] + m[2] * n[3], m[1] * n[2] + m[3] * n[3], m[0] * n[4] + m[2] * n[5] + m[4], m[1] * n[4] + m[3] * n[5] + m[5]];
+  var RecordingCtx = class {
+    constructor(w = 400, h = 400) {
+      this.canvas = { width: w, height: h };
+      this.m = [1, 0, 0, 1, 0, 0];
+      this.stack = [];
+      this.path = [];
+      this.log = [];
+      this.box = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
+      this.bad = 0;
+      for (const k of ["fillStyle", "strokeStyle", "lineWidth", "lineCap", "lineJoin", "globalAlpha", "globalCompositeOperation", "shadowColor", "shadowBlur", "shadowOffsetX", "shadowOffsetY", "filter", "font", "textAlign", "textBaseline", "imageSmoothingEnabled"]) this[k] = void 0;
+    }
+    _pt(x, y) {
+      if (!Number.isFinite(x) || !Number.isFinite(y)) this.bad++;
+      const m = this.m;
+      return [m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]];
+    }
+    _rec(name, args) {
+      this.log.push(name + "(" + args.map((a) => typeof a === "number" ? a.toFixed(2) : typeof a === "string" ? a : "\xB7").join(",") + ")");
+    }
+    save() {
+      this.stack.push(this.m);
+      this._rec("save", []);
+    }
+    restore() {
+      this.m = this.stack.pop() ?? [1, 0, 0, 1, 0, 0];
+      this._rec("restore", []);
+    }
+    translate(x, y) {
+      this.m = mul(this.m, [1, 0, 0, 1, x, y]);
+    }
+    scale(x, y) {
+      this.m = mul(this.m, [x, 0, 0, y, 0, 0]);
+    }
+    rotate(a) {
+      const c = Math.cos(a), s = Math.sin(a);
+      this.m = mul(this.m, [c, s, -s, c, 0, 0]);
+    }
+    setTransform(a, b, c, d, e, f) {
+      this.m = [a, b, c, d, e, f];
+    }
+    beginPath() {
+      this.path = [];
+    }
+    moveTo(x, y) {
+      this.path.push(this._pt(x, y));
+    }
+    lineTo(x, y) {
+      this.path.push(this._pt(x, y));
+    }
+    closePath() {
+    }
+    arc(x, y, r) {
+      this.path.push(this._pt(x - r, y - r), this._pt(x + r, y + r));
+    }
+    ellipse(x, y, rx, ry) {
+      this.path.push(this._pt(x - rx, y - ry), this._pt(x + rx, y + ry));
+    }
+    rect(x, y, w, h) {
+      this.path.push(this._pt(x, y), this._pt(x + w, y + h));
+    }
+    quadraticCurveTo(a, b, x, y) {
+      this.path.push(this._pt(x, y));
+    }
+    bezierCurveTo(a, b, c, d, x, y) {
+      this.path.push(this._pt(x, y));
+    }
+    _mark(extra = 0) {
+      for (const [x, y] of this.path) {
+        this.box.x0 = Math.min(this.box.x0, x - extra);
+        this.box.y0 = Math.min(this.box.y0, y - extra);
+        this.box.x1 = Math.max(this.box.x1, x + extra);
+        this.box.y1 = Math.max(this.box.y1, y + extra);
+      }
+    }
+    fill() {
+      if (this.globalCompositeOperation !== "destination-out") this._mark();
+      this._rec("fill", [this.path.length, String(this.fillStyle)]);
+    }
+    stroke() {
+      this._mark((this.lineWidth ?? 1) / 2);
+      this._rec("stroke", [this.path.length, String(this.strokeStyle), this.lineWidth ?? 1]);
+    }
+    clip() {
+    }
+    fillRect(x, y, w, h) {
+      this._rec("fillRect", [x, y, w, h]);
+    }
+    strokeRect() {
+    }
+    clearRect() {
+    }
+    drawImage() {
+      this._rec("drawImage", []);
+    }
+    fillText() {
+    }
+    measureText(s) {
+      return { width: String(s).length * 6 };
+    }
+    createPattern() {
+      return { pattern: true, toString: () => "pattern" };
+    }
+    createLinearGradient() {
+      return { addColorStop() {
+      }, toString: () => "gradient" };
+    }
+    createRadialGradient() {
+      return { addColorStop() {
+      }, toString: () => "gradient" };
+    }
+    createImageData(w, h) {
+      return { width: w, height: h, data: new Uint8ClampedArray(w * h * 4) };
+    }
+    getImageData(x, y, w, h) {
+      return this.createImageData(w, h);
+    }
+    putImageData() {
+    }
+  };
+
+  // characters/core/hands.mjs
+  var FINGERS = {
+    open: [[-0.55, 1.5], [-0.18, 1.7], [0.18, 1.65], [0.52, 1.4], [1.35, 1.15]],
+    wave: [[-0.6, 1.5], [-0.2, 1.75], [0.2, 1.7], [0.6, 1.45], [1.45, 1.15]],
+    point: [[0, 1.9]],
+    peace: [[-0.22, 1.75], [0.22, 1.75]],
+    thumbsUp: [[0, 1.45, true]],
+    ok: [[0.35, 1.6], [0.7, 1.5], [1.05, 1.35]],
+    fist: [],
+    grip: []
+  };
+  function palmPx({ look, S, sk }) {
+    return look.gloves ? 0.03 * S : look.limb === "line" ? 0.016 * S : sk.limbW * 0.95 * S;
+  }
+  function drawHand(G, arm, shape, { relaxed }) {
+    const { pen, S, sk, look, card, ctx, ink } = G;
+    if (!shape || shape === "relaxed" || !FINGERS[shape]) return relaxed(arm);
+    const [hx, hy] = [arm.ha[0] * S, arm.ha[1] * S];
+    const ang = Math.atan2(arm.ha[1] - arm.el[1], arm.ha[0] - arm.el[0]);
+    const palm = palmPx(G);
+    const fw = look.limb === "line" ? Math.max(1.5, 7e-3 * S) : Math.max(2, palm * 0.62);
+    const skin = look.gloves ? "#ffffff" : card.skin;
+    const lineLook = look.limb === "line";
+    const finger = (a, len, worldUp) => {
+      const dir = worldUp ? -Math.PI / 2 : ang + a;
+      const from = [hx + Math.cos(dir) * palm * 0.5, hy + Math.sin(dir) * palm * 0.5];
+      const to = [hx + Math.cos(dir) * palm * len, hy + Math.sin(dir) * palm * len];
+      pen.poly([from, to], false);
+      if (lineLook) {
+        ctx.strokeStyle = ink;
+        ctx.lineCap = "round";
+        ctx.lineWidth = fw;
+        ctx.stroke();
+        return;
+      }
+      G.line(skin, fw / S, { role: "skin" });
+    };
+    for (const [a, len, up] of FINGERS[shape]) finger(a, len, up);
+    if (shape === "grip") {
+      pen.ellipse(hx, hy, palm * 1.05, palm * 1.05, ang, 0.9, Math.PI * 2 - 0.9);
+      if (lineLook) {
+        ctx.strokeStyle = ink;
+        ctx.lineWidth = fw;
+        ctx.stroke();
+        return;
+      }
+      G.line(skin, fw / S, { role: "skin" });
+      return;
+    }
+    pen.circle(hx, hy, palm * (shape === "fist" ? 1.08 : 1));
+    if (lineLook) {
+      ctx.fillStyle = ink;
+      ctx.fill();
+    } else G.fill(skin, { role: look.gloves ? "eye" : "skin", noShade: true });
+    if (shape === "ok") {
+      pen.circle(hx + Math.cos(ang - 0.5) * palm * 1.25, hy + Math.sin(ang - 0.5) * palm * 1.25, palm * 0.55);
+      ctx.strokeStyle = lineLook ? ink : skin;
+      ctx.lineWidth = fw * 0.8;
+      ctx.stroke();
+    }
+  }
+
+  // characters/core/props.mjs
+  var PROPS = {
+    cup: { label: "Cup", names: ["cup", "mug", "coffee", "tea", "\u03BA\u03BF\u03CD\u03C0\u03B1", "\u03C6\u03BB\u03B9\u03C4\u03B6\u03AC\u03BD\u03B9", "\u03BA\u03B1\u03C6\u03AD"], size: 0.1, hold: "fist", upright: true, colors: ["#e0574f", "#5a3420"] },
+    phone: { label: "Phone", names: ["phone", "mobile", "\u03C4\u03B7\u03BB\u03AD\u03C6\u03C9\u03BD\u03BF", "\u03BA\u03B9\u03BD\u03B7\u03C4\u03CC"], size: 0.06, hold: "under", upright: true, colors: ["#20242c", "#7fd3ff"] },
+    book: { label: "Book", names: ["book", "notebook", "\u03B2\u03B9\u03B2\u03BB\u03AF\u03BF", "\u03C4\u03B5\u03C4\u03C1\u03AC\u03B4\u03B9\u03BF"], size: 0.07, hold: "under", upright: true, colors: ["#a8322b", "#f4efe2"] },
+    box: { label: "Box", names: ["box", "parcel", "package", "\u03BA\u03BF\u03C5\u03C4\u03AF", "\u03B4\u03AD\u03BC\u03B1"], size: 0.15, hold: "under", upright: true, colors: ["#c99a5b", "#8a6236"] },
+    gift: { label: "Gift", names: ["gift", "present", "\u03B4\u03CE\u03C1\u03BF"], size: 0.14, hold: "under", upright: true, colors: ["#d4405c", "#f2d24b"] },
+    ball: { label: "Ball", names: ["ball", "\u03BC\u03C0\u03AC\u03BB\u03B1"], size: 0.07, hold: "under", upright: true, colors: ["#f2f2f2", "#d4405c"] },
+    flowers: { label: "Flowers", names: ["flowers", "flower", "bouquet", "\u03BB\u03BF\u03C5\u03BB\u03BF\u03CD\u03B4\u03B9\u03B1", "\u03BB\u03BF\u03C5\u03BB\u03BF\u03CD\u03B4\u03B9"], size: 0.13, hold: "fist", upright: true, colors: ["#3f8f4a", "#e85d8a", "#f2c84b"] },
+    sword: { label: "Sword", names: ["sword", "blade", "\u03C3\u03C0\u03B1\u03B8\u03AF"], size: 0.34, hold: "fist", upright: false, colors: ["#c9d1d9", "#7a5230"] },
+    chair: { label: "Chair", names: ["chair", "stool", "seat", "\u03BA\u03B1\u03C1\u03AD\u03BA\u03BB\u03B1", "\u03C3\u03BA\u03B1\u03BC\u03C0\u03CC"], size: 0.27, hold: "seat", upright: true, colors: ["#8a5a36", "#6b4429"] },
+    leash: { label: "Lead", names: ["leash", "lead", "\u03BB\u03BF\u03C5\u03C1\u03AF"], size: 0.22, hold: "fist", upright: true, colors: ["#d4405c"] }
+  };
+  var PROP_IDS = Object.keys(PROPS);
+  var PROP_NAMES = Object.fromEntries(Object.entries(PROPS).map(([id, p]) => [id, p.names]));
+  function drawProp(G, arm, prop, { open = 0, colors, palm = 0 } = {}) {
+    const P = PROPS[prop];
+    if (!P) return;
+    const { pen, S, ctx } = G;
+    const c = colors ?? P.colors;
+    const [hx, hy] = [arm.ha[0] * S + (P.hold === "fist" && P.upright ? palm * 0.75 : 0), arm.ha[1] * S + (P.hold === "under" ? -palm * 0.35 : 0)];
+    const L = P.size * S;
+    const ang = P.upright ? 0 : Math.atan2(arm.ha[1] - arm.el[1], arm.ha[0] - arm.el[0]) - Math.PI / 2;
+    ctx.save();
+    ctx.translate(hx, hy);
+    ctx.rotate(ang);
+    const rect = (x0, y0, w, h, r = 0.08) => pen.rpoly([[x0, y0], [x0 + w, y0], [x0 + w, y0 + h], [x0, y0 + h]], Math.min(w, h) * r);
+    switch (prop) {
+      case "cup": {
+        rect(0, -L * 0.75, L * 0.6, L * 0.8, 0.18);
+        G.fill(c[0]);
+        pen.ellipse(L * 0.3, -L * 0.75, L * 0.3, L * 0.07);
+        G.fill(c[1], { noShade: true });
+        break;
+      }
+      case "phone":
+        rect(-L * 0.28, -L * 0.85, L * 0.56, L, 0.18);
+        G.fill(c[0], { noShade: true });
+        rect(-L * 0.22, -L * 0.78, L * 0.44, L * 0.82, 0.06);
+        G.fill(c[1], { noShade: true, feature: true });
+        break;
+      case "book": {
+        const o = Math.min(1, open);
+        if (o > 0.05) {
+          pen.poly([[0, 0], [-L * 0.75 * o - L * 0.05, -L * 0.1], [-L * 0.7 * o - L * 0.05, -L * 0.85], [0, -L * 0.8]]);
+          G.fill(c[1], { noShade: true });
+          pen.poly([[0, 0], [L * 0.75, -L * 0.1], [L * 0.7, -L * 0.85], [0, -L * 0.8]]);
+          G.fill(c[1], { noShade: true });
+        } else {
+          rect(-L * 0.35, -L * 0.9, L * 0.7, L, 0.06);
+          G.fill(c[0]);
+        }
+        break;
+      }
+      case "box":
+      case "gift": {
+        rect(-L * 0.5, -L * 0.85, L, L * 0.85, 0.04);
+        G.fill(c[0]);
+        if (prop === "gift") {
+          rect(-L * 0.07, -L * 0.85, L * 0.14, L * 0.85, 0);
+          G.fill(c[1], { noShade: true });
+        }
+        ctx.save();
+        ctx.translate(-L * 0.52, -L * 0.85);
+        ctx.rotate(-Math.min(1, open) * 1.9);
+        rect(0, -L * 0.14, L * 1.04, L * 0.16, 0.1);
+        G.fill(prop === "gift" ? c[0] : c[1]);
+        if (prop === "gift") {
+          pen.blob([[L * 0.52, -L * 0.14], [L * 0.32, -L * 0.42], [L * 0.5, -L * 0.2], [L * 0.72, -L * 0.42]]);
+          G.fill(c[1], { noShade: true });
+        }
+        ctx.restore();
+        break;
+      }
+      case "ball":
+        pen.circle(0, -L * 0.45, L * 0.5);
+        G.fill(c[0]);
+        pen.ellipse(0, -L * 0.45, L * 0.5, L * 0.16, 0.5);
+        G.line(c[1], 7e-3);
+        break;
+      case "flowers":
+        for (const [dx, dy, k] of [[-0.25, -0.9, 2], [0.05, -1, 1], [0.3, -0.85, 2], [-0.05, -0.75, 1]]) {
+          pen.poly([[0, 0], [dx * L * 0.6, dy * L * 0.6]], false);
+          G.line(c[0], 6e-3);
+          pen.circle(dx * L * 0.6, dy * L * 0.6, L * 0.13);
+          G.fill(c[k], { noShade: true });
+        }
+        break;
+      case "sword":
+        rect(-L * 0.035, -L, L * 0.07, L * 0.82, 0.3);
+        G.fill(c[0]);
+        rect(-L * 0.14, -L * 0.2, L * 0.28, L * 0.05, 0.3);
+        G.fill(c[1]);
+        rect(-L * 0.03, -L * 0.16, L * 0.06, L * 0.24, 0.3);
+        G.fill(c[1]);
+        break;
+      case "chair": {
+        const seatY = -L, w = L * 1.15;
+        rect(-w / 2, seatY - L * 0.08, w, L * 0.12, 0.2);
+        G.fill(c[0]);
+        for (const x of [-w / 2 + L * 0.06, w / 2 - L * 0.14]) {
+          rect(x, seatY + L * 0.02, L * 0.08, L * 0.98, 0.2);
+          G.fill(c[1]);
+        }
+        rect(-w / 2 - L * 0.02, seatY - L * 0.95, L * 0.1, L * 0.95, 0.2);
+        G.fill(c[1]);
+        break;
+      }
+      case "leash":
+        pen.curve([[0, 0], [L * 0.25, L * 0.5], [L * 0.6, L * 0.8]]);
+        G.line(c[0], 7e-3);
+        break;
+    }
+    ctx.restore();
+  }
+  function drawSeat(G, sk, prop, { colors } = {}) {
+    const P = PROPS[prop];
+    if (!P || P.hold !== "seat") return;
+    if (sk.side > 0.5 || sk.turn > 0.6) {
+      drawProp(G, { ha: [sk.legs[0].hip[0] * 0.5 - 0.03, 0], el: [0, 1] }, prop, { colors });
+      return;
+    }
+    const { pen, S } = G, c = colors ?? P.colors, L = P.size * S;
+    const half = Math.max(sk.hx * 1.9, 0.09) * S, seatY = -L, cx = 0;
+    const box = (x0, y0, w, h) => pen.rpoly([[x0, y0], [x0 + w, y0], [x0 + w, y0 + h], [x0, y0 + h]], Math.min(w, h) * 0.2);
+    for (const x of [cx - half - L * 0.06, cx + half - L * 0.06]) {
+      box(x, seatY - L * 1.05, L * 0.12, L * 1.05);
+      G.fill(c[1]);
+    }
+    box(cx - half - L * 0.06, seatY - L * 1.05, half * 2 + L * 0.12, L * 0.12);
+    G.fill(c[1]);
+    for (const x of [cx - half + L * 0.02, cx + half - L * 0.1]) {
+      box(x, seatY, L * 0.09, L);
+      G.fill(c[1]);
+    }
+    box(cx - half - L * 0.04, seatY - L * 0.06, half * 2 + L * 0.08, L * 0.16);
+    G.fill(c[0]);
+  }
+
+  // characters/core/draw.mjs
+  var cap = (sk, S, k = 1) => {
+    const { rx, ry } = sk, b = -sk.side * rx * 0.12;
+    return [[-rx * 1.03 + b, -ry * 0.05], [-rx * 0.99 + b, -ry * 0.6], [-rx * 0.5 + b, -ry * 1.05 * k], [rx * 0.3, -ry * 1.08 * k], [rx * 0.92, -ry * 0.68], [rx * 1.02, -ry * 0.22], [rx * 0.6, -ry * 0.52], [rx * 0.05, -ry * 0.6], [-rx * 0.6, -ry * 0.42]].map(([x, y]) => [x * S, y * S]);
+  };
+  var HAIR = {
+    bald: {},
+    tuft: { front: (G, sk, S, c) => {
+      G.pen.curve([[-sk.rx * 0.1 * S, -sk.ry * 0.95 * S], [0, -sk.ry * 1.35 * S], [sk.rx * 0.3 * S, -sk.ry * 1.3 * S], [sk.rx * 0.22 * S, -sk.ry * 1.12 * S]]);
+      G.line(c, 0.012);
+    } },
+    buzz: { front: (G, sk, S, c) => {
+      G.pen.ellipse(-sk.side * sk.rx * 0.1 * S, -sk.ry * 0.12 * S, sk.rx * 1.02 * S, sk.ry * 0.94 * S, 0, Math.PI * 1.06, Math.PI * 1.94);
+      G.fill(c, { role: "hair", noShade: true });
+    } },
+    short: { front: (G, sk, S, c) => {
+      G.pen.blob(cap(sk, S));
+      G.fill(c, { role: "hair", noShade: true });
+    } },
+    sidepart: { front: (G, sk, S, c) => {
+      const { rx, ry } = sk, b = -sk.side * rx * 0.12;
+      G.pen.blob([[-rx * 1.02 + b, -ry * 0.05], [-rx * 0.98 + b, -ry * 0.62], [-rx * 0.55 + b, -ry * 1.02], [rx * 0.2, -ry * 1.1], [rx * 0.85, -ry * 0.78], [rx * 1.02, -ry * 0.32], [rx * 0.55, -ry * 0.58], [-rx * 0.1, -ry * 0.62], [-rx * 0.7 + b, -ry * 0.45]].map(([x, y]) => [x * S, y * S]));
+      G.fill(c, { role: "hair", noShade: true });
+    } },
+    spiky: { front: (G, sk, S, c) => {
+      const { rx, ry } = sk, pts = [[-rx * 1.02, -ry * 0.1]];
+      for (let i = 0; i <= 8; i++) {
+        const a = Math.PI * (1.05 + i * 0.1125), r = i % 2 ? 1 : 1.38;
+        pts.push([Math.cos(a) * rx * r, Math.sin(a) * ry * r - ry * 0.05]);
+      }
+      pts.push([rx * 1.02, -ry * 0.15], [0, -ry * 0.55]);
+      G.pen.poly(pts.map(([x, y]) => [x * S, y * S]));
+      G.fill(c, { role: "hair", noShade: true });
+    } },
+    curly: { front: (G, sk, S, c) => {
+      G.pen.blob(cap(sk, S, 0.95));
+      G.fill(c, { role: "hair", noShade: true });
+      for (let i = 0; i < 9; i++) {
+        const a = Math.PI * (1.02 + i * 0.12);
+        G.pen.circle(Math.cos(a) * sk.rx * 0.98 * S, (Math.sin(a) * sk.ry * 0.98 - sk.ry * 0.05) * S, sk.R * 0.2 * S);
+        G.fill(c, { role: "hair", noShade: true });
+      }
+    } },
+    afro: {
+      back: (G, sk, S, c) => {
+        G.pen.circle(-sk.side * sk.rx * 0.2 * S, -sk.ry * 0.3 * S, sk.R * 1.5 * S);
+        G.fill(c, { role: "hair", noShade: true });
+      },
+      front: (G, sk, S, c) => {
+        G.pen.ellipse(0, -sk.ry * 0.45 * S, sk.rx * 1.05 * S, sk.ry * 0.62 * S, 0, Math.PI, TAU);
+        G.fill(c, { role: "hair", noShade: true });
+      }
+    },
+    bob: {
+      back: (G, sk, S, c) => {
+        const { rx, ry } = sk, b = -sk.side * rx * 0.25;
+        G.pen.rpoly([[(-rx * 1.18 + b) * S, -ry * 0.9 * S], [(rx * 1.18 + b * 0.3) * S, -ry * 0.9 * S], [rx * 1.2 * S, ry * 0.75 * S], [(-rx * 1.2 + b) * S, ry * 0.75 * S]], sk.R * 0.5 * S);
+        G.fill(c, { role: "hair", noShade: true });
+      },
+      front: (G, sk, S, c) => {
+        G.pen.blob(cap(sk, S));
+        G.fill(c, { role: "hair", noShade: true });
+      }
+    },
+    long: {
+      back: (G, sk, S, c) => {
+        const { rx, ry } = sk, b = -sk.side * rx * 0.35;
+        G.pen.blob([[(-rx * 1.15 + b) * S, -ry * 0.6 * S], [rx * 1.1 * S, -ry * 0.6 * S], [rx * 1.2 * S, ry * 1.2 * S], [rx * 0.6 * S, ry * 1.9 * S], [(-rx * 0.8 + b) * S, ry * 1.95 * S], [(-rx * 1.3 + b) * S, ry * 1.1 * S]]);
+        G.fill(c, { role: "hair", noShade: true });
+      },
+      front: (G, sk, S, c) => {
+        G.pen.blob(cap(sk, S));
+        G.fill(c, { role: "hair", noShade: true });
+      }
+    },
+    ponytail: {
+      back: (G, sk, S, c, t2) => {
+        const R = sk.R, swing = Math.sin(t2 * 3 + 1) * 0.12, b = -sk.side * sk.rx * 0.4;
+        const spine = [[-R * 0.7 + b, -R * 0.75], [-R * 1.25 + b, -R * 0.2 + swing * R], [-R * 1.2 + b, R * 0.7], [-R * 0.95 + b, R * 1.25 + swing * R * 0.5]];
+        tail(G, spine.map(([x, y]) => [x * S, y * S]), R * 0.27 * S, c);
+      },
+      front: (G, sk, S, c) => {
+        G.pen.blob(cap(sk, S));
+        G.fill(c, { role: "hair", noShade: true });
+      }
+    },
+    pigtails: {
+      back: (G, sk, S, c, t2) => {
+        const R = sk.R;
+        for (const s of [-1, 1]) {
+          if (sk.side > 0.6 && s > 0) continue;
+          const sw = Math.sin(t2 * 3 + s) * 0.08;
+          tail(G, [[s * R * 0.85, -R * 0.35], [s * R * 1.3, R * 0.1 + sw * R], [s * R * 1.3, R * 0.8]].map(([x, y]) => [x * S, y * S]), R * 0.2 * S, c);
+        }
+      },
+      front: (G, sk, S, c) => {
+        G.pen.blob(cap(sk, S));
+        G.fill(c, { role: "hair", noShade: true });
+      }
+    },
+    bun: {
+      back: (G, sk, S, c) => {
+        G.pen.circle(-sk.side * sk.rx * 0.55 * S, -sk.ry * 1.05 * S, sk.R * 0.42 * S);
+        G.fill(c, { role: "hair", noShade: true });
+      },
+      front: (G, sk, S, c) => {
+        G.pen.blob(cap(sk, S));
+        G.fill(c, { role: "hair", noShade: true });
+      }
+    },
+    braid: {
+      back: (G, sk, S, c, t2) => {
+        const R = sk.R, b = -sk.side * sk.rx * 0.6, sw = Math.sin(t2 * 2.5) * 0.06;
+        for (let i = 0; i < 6; i++) {
+          G.pen.ellipse((b - R * 0.1 + Math.sin(i * 1.7) * R * 0.05 + sw * R * i * 0.3) * S, (R * 0.3 + i * R * 0.28) * S, R * 0.17 * S, R * 0.2 * S);
+          G.fill(c, { role: "hair", noShade: true });
+        }
+      },
+      front: (G, sk, S, c) => {
+        G.pen.blob(cap(sk, S));
+        G.fill(c, { role: "hair", noShade: true });
+      }
+    },
+    mohawk: { front: (G, sk, S, c) => {
+      G.pen.blob([[-sk.rx * 0.6, -sk.ry * 0.75], [-sk.rx * 0.4, -sk.ry * 1.45], [sk.rx * 0.25, -sk.ry * 1.55], [sk.rx * 0.6, -sk.ry * 0.8], [0, -sk.ry * 0.88]].map(([x, y]) => [x * S, y * S]));
+      G.fill(c, { role: "hair", noShade: true });
+    } }
+  };
+  var HAIR_STYLES = Object.keys(HAIR);
+  function tail(G, spine0, width, c) {
+    const pts = [];
+    const sp = splineLike(spine0);
+    const L = [], Rr = [];
+    sp.forEach((q, i) => {
+      const a = sp[Math.max(0, i - 1)], b = sp[Math.min(sp.length - 1, i + 1)], dx = b[0] - a[0], dy = b[1] - a[1], n = Math.hypot(dx, dy) || 1;
+      const u = i / (sp.length - 1), w = width * Math.sin(Math.min(1, 0.25 + u) * Math.PI * 0.9) * (1 - u * 0.55);
+      L.push([q[0] - dy / n * w, q[1] + dx / n * w]);
+      Rr.push([q[0] + dy / n * w, q[1] - dx / n * w]);
+    });
+    G.pen.blob([...L.filter((_, i) => i % 3 === 0), ...Rr.reverse().filter((_, i) => i % 3 === 0)]);
+    G.fill(c, { role: "hair", noShade: true });
+    return pts;
+  }
+  function splineLike(pts) {
+    const out = [];
+    for (let i = 0; i < pts.length - 1; i++) for (let k = 0; k < 10; k++) {
+      const p0 = pts[Math.max(0, i - 1)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(pts.length - 1, i + 2)], u = k / 10, u2 = u * u, u3 = u2 * u;
+      out.push([0, 1].map((d) => 0.5 * (2 * p1[d] + (-p0[d] + p2[d]) * u + (2 * p0[d] - 5 * p1[d] + 4 * p2[d] - p3[d]) * u2 + (-p0[d] + 3 * p1[d] - 3 * p2[d] + p3[d]) * u3)));
+    }
+    out.push(pts[pts.length - 1]);
+    return out;
+  }
+  var extents = /* @__PURE__ */ new Map();
+  function measureFigure(card, look) {
+    const key = look.id + JSON.stringify(card);
+    let e = extents.get(key);
+    if (!e) {
+      const b = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
+      for (const pose of ["rest", "wave", "point", "shrug"]) for (const view of [0, 2]) {
+        const M = 600, rc = new RecordingCtx();
+        drawCharacter(rc, card, { look, S: M, state: { t: 0, pose, poseK: 1, view } });
+        b.x0 = Math.min(b.x0, rc.box.x0 / M);
+        b.y0 = Math.min(b.y0, rc.box.y0 / M);
+        b.x1 = Math.max(b.x1, rc.box.x1 / M);
+        b.y1 = Math.max(b.y1, rc.box.y1 / M);
+      }
+      const ext = figureExtent(card, look);
+      e = { ...ext, top: b.y0, half: Math.max(-b.x0, b.x1) };
+      if (extents.size > 200) extents.clear();
+      extents.set(key, e);
+    }
+    return e;
+  }
+  function frameFor(card, look0, framing = "full", box) {
+    const look = typeof look0 === "string" ? lookById(look0) : look0;
+    const ext = measureFigure(card, look);
+    const bottom = framing === "head" ? ext.shoulders + 0.1 : framing === "waist" ? ext.hips + 0.06 : 0.02;
+    const span = bottom - ext.top;
+    const fill = framing === "full" ? 0.92 : 0.94;
+    const S = Math.min(box.h * fill / span, framing === "full" ? box.w * 0.96 / (2 * ext.half) : Infinity);
+    const y = box.y + (box.h - span * S) / 2 - ext.top * S;
+    return { S, x: box.x + box.w / 2, y };
+  }
+  function drawCharacter(ctx, card, { look: look0 = card.look, S, x = 0, y = 0, mirror = false, state = {}, headless = false } = {}) {
+    const look = typeof look0 === "string" ? lookById(look0) : look0;
+    const t2 = state.t ?? 0;
+    const sk = solveRig(card, look, state);
+    const A = anchors(sk);
+    const boil = (card.boil ?? look.boil ?? 0) * (S / 300);
+    const pen = makePen(ctx, { t: t2, boil, rate: look.boilRate ?? 8 });
+    const ink = inkFor(look, card);
+    const wear = (card.wear ?? []).map((w) => ({ ...w, item: itemById(w.id) })).filter((w) => w.item);
+    const tone = (c, role) => toneColor(look, c, role);
+    const G = {
+      ctx,
+      pen,
+      look,
+      S,
+      ink,
+      sk,
+      A,
+      card,
+      t: t2,
+      tone,
+      U: (pts) => pts.map(([a, b]) => [a * S, b * S]),
+      fill: (color, o = {}) => {
+        paint(G, color, o);
+        if (o.pattern && o.pattern !== "none") overlayPattern(G, color, o.pattern);
+      },
+      line: (color, width, o = {}) => {
+        if (o.ink && (look.incise || look.fill === "none")) {
+          ctx.strokeStyle = ink;
+          ctx.lineWidth = Math.max(1, width * S);
+          ctx.lineCap = "round";
+          ctx.stroke();
+          return;
+        }
+        if (o.feature) {
+          ctx.strokeStyle = look.fill === "none" ? ink : color;
+          ctx.lineWidth = Math.max(1, width * S);
+          ctx.lineCap = "round";
+          ctx.stroke();
+          return;
+        }
+        strokeLine(G, color, width, { role: o.role ?? "cloth" });
+        if (look.inner && look.fill !== "none") {
+          ctx.strokeStyle = shade(tone(color), 0.4);
+          ctx.lineWidth = width * S * 0.28;
+          ctx.stroke();
+        }
+      }
+    };
+    const phase = (name, ...args) => {
+      for (const w of wear) w.item[name]?.(G, Object.assign([...w.colors], { pattern: w.pattern }), ...args);
+    };
+    const has = (slot) => wear.find((w) => w.slot === slot);
+    const covers = (slots) => wear.find((w) => slots.includes(w.slot));
+    ctx.save();
+    ctx.translate(x, y);
+    if (mirror) ctx.scale(-1, 1);
+    ctx.translate((sk.root?.[0] ?? 0) * S, (sk.root?.[1] ?? 0) * S);
+    const longTop = wear.find((w) => ["top", "outer", "full"].includes(w.slot) && ["shirt", "hoodie", "hoodie_up", "sweater", "blazer"].includes(w.id));
+    const legCover = wear.find((w) => ["trousers", "jeans"].includes(w.id));
+    const armColor = look.limb === "hose" && longTop ? longTop.colors[0] : card.skin;
+    const legColor = look.limb === "hose" && legCover ? legCover.colors[0] : card.skin;
+    const limb = (pts, color, w, role) => {
+      const p = G.U(pts);
+      if (look.limb === "line") {
+        pen.poly(p, false);
+        ctx.strokeStyle = ink;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.lineWidth = w * S;
+        ctx.stroke();
+        return;
+      }
+      if (look.limb === "hose") {
+        const a = p[0], b = p[2], mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2, dx = b[0] - a[0], dy = b[1] - a[1];
+        const k = role === "leg" ? 0.16 : 0.32;
+        const sgn = -(Math.sign(pts[0][0] - sk.neck[0]) || 1);
+        pen.curve([a, [mx - dy * k * sgn, my + dx * k * sgn], b]);
+      } else pen.poly(p, false);
+      G.line(color, w, { role: role === "leg" || role === "arm" ? color === card.skin ? "skin" : "cloth" : "cloth" });
+    };
+    const relaxedHand = (arm) => {
+      const [hx2, hy2] = [arm.ha[0] * S, arm.ha[1] * S];
+      if (look.gloves) {
+        pen.circle(hx2, hy2, 0.028 * S);
+        G.fill("#ffffff", { role: "eye", noShade: true });
+        return;
+      }
+      if (look.limb === "line") {
+        pen.circle(hx2, hy2, 0.012 * S);
+        G.fill(card.skin, { role: "skin", noShade: true });
+        return;
+      }
+      pen.circle(hx2, hy2, sk.limbW * 0.62 * S);
+      G.fill(card.skin, { role: "skin", noShade: true });
+    };
+    const which = (arm) => arm.front ? "F" : "B";
+    const drawArm = (arm) => {
+      limb([arm.sh, arm.el, arm.ha], look.limb === "line" ? ink : armColor, sk.limbW, "arm");
+      if (look.limb !== "hose") phase("arm", arm);
+      const held = (state.props ?? []).filter((p) => PROPS[p.id] && PROPS[p.id].hold !== "seat" && p.hand === which(arm));
+      const palm = palmPx(G);
+      const under = held.filter((p) => PROPS[p.id].hold === "under"), fist = held.filter((p) => PROPS[p.id].hold !== "under");
+      if (under.length && !fist.length) drawHand(G, arm, "open", { relaxed: relaxedHand });
+      for (const p of [...under, ...fist]) drawProp(G, arm, p.id, { ...p, palm });
+      if (fist.length) drawHand(G, arm, "fist", { relaxed: relaxedHand });
+      else if (!held.length) drawHand(G, arm, state.hands?.[which(arm)], { relaxed: relaxedHand });
+    };
+    const facingFront = sk.side < 0.5 && sk.turn < 0.5;
+    const crossing = (arm) => {
+      const half = Math.abs(arm.sh[0] - sk.neck[0]);
+      const reach = (arm.ha[0] - sk.neck[0]) * Math.sign(arm.sh[0] - sk.neck[0]);
+      return reach < half * 0.72 && arm.ha[1] > sk.head[1] - sk.R && arm.ha[1] < sk.hy + 0.03;
+    };
+    const inFront = facingFront ? sk.arms.filter(crossing) : [sk.arms[1]];
+    const behind = sk.arms.filter((a) => !inFront.includes(a));
+    for (const p of state.props ?? []) if (PROPS[p.id]?.hold === "seat") drawSeat(G, sk, p.id, p);
+    phase("back");
+    for (const arm of behind) drawArm(arm);
+    for (const leg of sk.legs) {
+      limb([leg.hip, leg.knee, ankle(leg.foot, sk.legW / 2)], look.limb === "line" ? ink : legColor, sk.legW, "leg");
+    }
+    if (look.limb !== "hose") phase("legs");
+    for (const leg of sk.legs) {
+      if (has("feet")) phase("feet", leg.foot, leg.front ? 1 : -1);
+      else barefoot(G, leg.foot, leg.front ? 1 : -1);
+    }
+    pen.rpoly(G.U(sk.torso), 0.025 * S);
+    G.fill(covers(["top", "full"]) ? null : card.skin, { role: "skin" });
+    phase("torso");
+    phase("outer");
+    if (!look.noNeck) {
+      const l = sk.neck[0], nw = sk.R * 0.16;
+      pen.poly(G.U([[l - nw, sk.sy - 0.03], [l + nw, sk.sy - 0.03], [l + nw, sk.sy + 4e-3], [l - nw, sk.sy + 4e-3]]));
+      G.fill(card.skin, { role: "skin", noShade: true, outline: 0 });
+    }
+    phase("neck");
+    let face = { mouth: { x: 0, y: 0, w: 0, h: 0 }, eyes: [] };
+    if (!headless) {
+      const hooded = wear.some((w) => w.id === "hoodie_up");
+      const hair = hooded ? {} : HAIR[card.hair] ?? HAIR.short;
+      const hairColor = card.hairColor ?? "#262a33";
+      ctx.save();
+      ctx.translate(sk.head[0] * S, sk.head[1] * S);
+      ctx.rotate(sk.rot);
+      phase("hairBack");
+      hair.back?.(G, sk, S, hairColor, t2);
+      const ears = sk.face.ears.filter((e) => e.visible && card.ears !== "none");
+      const earR = { small: 0.14, round: 0.18, big: 0.24 }[card.ears] ?? 0.14;
+      const drawEar = (e) => {
+        pen.ellipse(e.x * S, e.y * S, sk.R * earR * 0.8 * S, sk.R * earR * 1.15 * S);
+        G.fill(card.skin, { role: "skin", noShade: true });
+      };
+      ears.filter((e) => Math.abs(e.x) > sk.rx * 0.8).forEach(drawEar);
+      const headPts = () => {
+        if (card.headShape === "square") return pen.rpoly([[-sk.rx * S, -sk.ry * S], [sk.rx * S, -sk.ry * S], [sk.rx * S, sk.ry * S], [-sk.rx * S, sk.ry * S]], sk.R * 0.45 * S);
+        if (card.headShape === "egg") return pen.blob([[0, -sk.ry * S], [sk.rx * 0.9 * S, -sk.ry * 0.45 * S], [sk.rx * S, sk.ry * 0.35 * S], [0, sk.ry * S], [-sk.rx * S, sk.ry * 0.35 * S], [-sk.rx * 0.9 * S, -sk.ry * 0.45 * S]]);
+        return pen.ellipse(0, 0, sk.rx * S, sk.ry * S);
+      };
+      headPts();
+      G.fill(card.skin, { role: "skin" });
+      ears.filter((e) => Math.abs(e.x) <= sk.rx * 0.8).forEach(drawEar);
+      face = drawFace(G, state);
+      hair.front?.(G, sk, S, hairColor, t2);
+      if (card.highlight) highlight(G, sk, S, card.highlight);
+      phase("head");
+      phase("face");
+      ctx.restore();
+    }
+    for (const arm of inFront) drawArm(arm);
+    if (look.rivets) {
+      for (const q of [sk.arms[1].sh, sk.arms[1].el, sk.arms[0].el, sk.legs[0].hip, sk.legs[1].hip, sk.legs[0].knee, sk.legs[1].knee]) {
+        pen.circle(q[0] * S, q[1] * S, S * 6e-3);
+        ctx.fillStyle = look.rivets;
+        ctx.fill();
+        pen.circle(q[0] * S - S * 15e-4, q[1] * S - S * 15e-4, S * 2e-3);
+        ctx.fillStyle = "rgba(255,230,180,0.6)";
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+    const flip = mirror ? -1 : 1;
+    const hx = x + flip * (sk.head[0] + (sk.root?.[0] ?? 0)) * S, hy = y + (sk.head[1] + (sk.root?.[1] ?? 0)) * S;
+    return {
+      head: { x: hx, y: hy, r: sk.R * S },
+      mouth: { x: hx + flip * face.mouth.x * S, y: hy + face.mouth.y * S, w: face.mouth.w * S, h: face.mouth.h * S },
+      eyes: face.eyes.map((e) => ({ x: hx + flip * e.x * S, y: hy + e.y * S, r: e.r * S, visible: e.visible })),
+      hands: sk.arms.map((a) => ({ x: x + flip * (a.ha[0] + (sk.root?.[0] ?? 0)) * S, y: y + (a.ha[1] + (sk.root?.[1] ?? 0)) * S })),
+      ink
+    };
+  }
+  function overlayPattern(G, color, kind) {
+    const { ctx, pen, S } = G;
+    const b = pen.bounds();
+    if (!b) return;
+    const c = shade(G.tone(color), -0.28);
+    ctx.save();
+    ctx.clip();
+    ctx.strokeStyle = c;
+    ctx.fillStyle = c;
+    const step = S * (kind === "corduroy" ? 8e-3 : 0.022);
+    ctx.lineWidth = kind === "corduroy" ? Math.max(1, S * 25e-4) : S * 7e-3;
+    if (kind === "stripes" || kind === "corduroy" || kind === "checks") {
+      ctx.beginPath();
+      for (let xx = b.x0; xx <= b.x1; xx += step) {
+        ctx.moveTo(xx, b.y0);
+        ctx.lineTo(xx, b.y1);
+      }
+      if (kind === "checks") for (let yy = b.y0; yy <= b.y1; yy += step) {
+        ctx.moveTo(b.x0, yy);
+        ctx.lineTo(b.x1, yy);
+      }
+      ctx.globalAlpha = kind === "checks" ? 0.45 : 0.6;
+      ctx.stroke();
+    } else if (kind === "dots") {
+      ctx.beginPath();
+      for (let yy = b.y0; yy <= b.y1; yy += step) for (let xx = b.x0 + Math.round((yy - b.y0) / step) % 2 * step / 2; xx <= b.x1; xx += step) {
+        ctx.moveTo(xx + step * 0.18, yy);
+        ctx.arc(xx, yy, step * 0.18, 0, TAU);
+      }
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+  function highlight(G, sk, S, color) {
+    const { ctx, pen } = G;
+    for (let i = 0; i < 3; i++) {
+      pen.curve([[(-sk.rx * 0.5 + i * sk.rx * 0.25) * S, -sk.ry * 0.95 * S], [(-sk.rx * 0.25 + i * sk.rx * 0.28) * S, -sk.ry * 0.75 * S], [(-sk.rx * 0.05 + i * sk.rx * 0.3) * S, -sk.ry * 0.62 * S]]);
+      ctx.strokeStyle = G.tone(color, "hair");
+      ctx.lineWidth = Math.max(1, sk.R * 0.05 * S);
+      ctx.lineCap = "round";
+      ctx.stroke();
+    }
+  }
+  function drawFace(G, state) {
+    const { ctx, pen, look, S, sk, card, ink } = G;
+    const R = sk.R, F = sk.face;
+    const eyesStyle = look.eyes ?? card.eyes ?? "dot";
+    const lid0 = state.lid ? lidAmount(state.lid.from, state.lid.to, state.lid.mix) : 0;
+    const lid = eyesStyle === "sleepy" ? Math.max(lid0, 0.45) : lid0;
+    const gaze = (state.gaze ?? 0.4) * R * 0.04;
+    const mono = look.tone === "mono";
+    const featureInk = ink;
+    const eyesOut = [];
+    for (const e of F.eyes) {
+      const ex = e.x * S, ey = e.y * S, sx = e.scaleX;
+      const r0 = { dot: 0.085, small: 0.07, oval: 0.15, lash: 0.15, googly: 0.22, pie: 0.16, sleepy: 0.15 }[eyesStyle] ?? 0.085;
+      eyesOut.push({ x: e.x, y: e.y, r: R * r0, visible: e.visible });
+      if (!e.visible || eyesStyle === "none") continue;
+      if (lid > 0.85) {
+        pen.poly([[ex - R * 0.12 * sx * S, ey], [ex + R * 0.12 * sx * S, ey]], false);
+        ctx.strokeStyle = featureInk;
+        ctx.lineWidth = Math.max(1.5, R * 0.06 * S);
+        ctx.lineCap = "round";
+        ctx.stroke();
+        continue;
+      }
+      const open = 1 - Math.max(0, lid);
+      const wide = lid < 0 ? 1 - lid * 0.5 : 1;
+      if (eyesStyle === "dot" || eyesStyle === "small") {
+        pen.ellipse(ex + gaze * S, ey, R * r0 * sx * S * wide, R * r0 * S * Math.max(0.25, open) * wide);
+        G.fill(featureInk, { feature: true, outline: 0 });
+        continue;
+      }
+      const ry = (eyesStyle === "googly" ? R * 0.22 : eyesStyle === "pie" ? R * 0.32 : R * 0.21) * wide;
+      const rx = (eyesStyle === "googly" ? R * 0.22 : eyesStyle === "pie" ? R * 0.16 : R * 0.15) * sx * wide;
+      const ecy = eyesStyle === "googly" ? ey - R * 0.12 * S : eyesStyle === "pie" ? ey - R * 0.08 * S : ey;
+      pen.ellipse(ex, ecy, rx * S, ry * S);
+      G.fill("#ffffff", { role: "eye", noShade: true, outline: (look.outline ?? 0) * 0.6 });
+      ctx.save();
+      ctx.clip();
+      if (eyesStyle === "pie") {
+        pen.ellipse(ex + R * 0.03 * S, ecy + R * 0.06 * S, R * 0.1 * sx * S, R * 0.2 * S);
+        G.fill(mono ? featureInk : "#111111", { feature: true, outline: 0 });
+        ctx.fillStyle = toneColor(look, "#ffffff", "eye");
+        ctx.beginPath();
+        ctx.moveTo(ex + R * 0.03 * S, ecy + R * 0.06 * S);
+        ctx.lineTo(ex + R * 0.16 * S, ecy - R * 0.12 * S);
+        ctx.lineTo(ex + R * 0.16 * S, ecy + R * 0.02 * S);
+        ctx.closePath();
+        ctx.fill();
+      } else {
+        const pr = eyesStyle === "googly" ? R * 0.06 : R * 0.09;
+        pen.circle(ex + gaze * S * 2, ecy + R * 0.02 * S, pr * S);
+        G.fill(mono ? featureInk : "#1b1b2a", { feature: true, outline: 0 });
+        pen.circle(ex + gaze * S * 2 + pr * 0.35 * S, ecy - pr * 0.3 * S, pr * 0.33 * S);
+        G.fill("#ffffff", { feature: true, outline: 0 });
+      }
+      if (lid > 0.02) {
+        ctx.fillStyle = toneColor(look, card.skin, "skin");
+        ctx.fillRect(ex - rx * S * 1.2, ecy - ry * S * 1.2, rx * S * 2.4, ry * S * (0.2 + 2 * lid));
+        ctx.beginPath();
+        ctx.moveTo(ex - rx * S * 1.1, ecy - ry * S + ry * S * 2 * lid);
+        ctx.lineTo(ex + rx * S * 1.1, ecy - ry * S + ry * S * 2 * lid);
+        ctx.strokeStyle = featureInk;
+        ctx.lineWidth = Math.max(1.2, R * 0.04 * S);
+        ctx.stroke();
+      }
+      ctx.restore();
+      if (eyesStyle === "lash") {
+        pen.poly([[ex + rx * 0.9 * S, ecy - ry * 0.8 * S], [ex + rx * 1.5 * S, ecy - ry * 1.25 * S]], false);
+        ctx.strokeStyle = featureInk;
+        ctx.lineWidth = R * 0.05 * S;
+        ctx.stroke();
+      }
+    }
+    const browStyle = card.brows ?? "line";
+    if (browStyle !== "none" && eyesStyle !== "none") {
+      const names = [state.brows?.left ?? "serious", state.brows?.right ?? state.brows?.left ?? "serious"];
+      if (names[0] === "confused" && names[1] === "confused") names[0] = "serious";
+      const bc = mono || look.incise || look.fill === "none" ? featureInk : look.id === "hose" || look.id === "hose2" ? featureInk : toneColor(look, shade(card.hairColor ?? "#262a33", -0.2), "hair");
+      F.eyes.forEach((e, i) => {
+        if (!e.visible) return;
+        const b = browShape(names[i]);
+        const inward = i === 0 ? 1 : -1;
+        const ex = e.x * S, by = (e.y - R * 0.32 - b.lift * R) * S, half = R * 0.14 * e.scaleX * S;
+        const innerX = ex + inward * half, outerX = ex - inward * half;
+        const innerY = by + b.tilt * R * 0.25 * S, outerY = by - b.tilt * R * 0.1 * S;
+        const arch = (b.arch + (browStyle === "arched" ? 0.5 : 0)) * R * 0.08 * S;
+        pen.curve([[outerX, outerY], [(innerX + outerX) / 2, (innerY + outerY) / 2 - arch], [innerX, innerY]]);
+        ctx.strokeStyle = bc;
+        ctx.lineCap = "round";
+        ctx.lineWidth = Math.max(1.6, R * (browStyle === "thick" ? 0.11 : 0.065) * S);
+        ctx.stroke();
+      });
+    }
+    const nose = card.nose ?? "none";
+    const nx = F.nose.x * S, ny = F.nose.y * S;
+    if (sk.side > 0.55) {
+      const len = nose === "long" ? 0.4 : nose === "none" ? 0.13 : 0.22;
+      pen.blob([[sk.rx * 0.82 * S, -R * 0.08 * S], [(sk.rx + R * len) * S, R * 0.18 * S], [sk.rx * 0.86 * S, R * 0.27 * S]]);
+      G.fill(card.skin, { role: "skin", noShade: true });
+    } else if (nose === "dot") {
+      pen.circle(nx, ny, R * 0.045 * S);
+      G.fill(shade(toneColor(look, card.skin, "skin"), -0.25), { feature: true, outline: 0 });
+    } else if (nose === "line") {
+      pen.poly([[nx, ny - R * 0.12 * S], [nx + R * 0.05 * S, ny + R * 0.04 * S], [nx - R * 0.02 * S, ny + R * 0.05 * S]], false);
+      ctx.strokeStyle = featureInk;
+      ctx.lineWidth = Math.max(1.2, R * 0.035 * S);
+      ctx.stroke();
+    } else if (nose === "button" || nose === "long") {
+      pen.ellipse(nx, ny, R * (nose === "long" ? 0.1 : 0.09) * S, R * (nose === "long" ? 0.18 : 0.07) * S);
+      G.fill(card.skin, { role: "skin", noShade: true });
+    }
+    if (card.cheeks && !mono && look.fill !== "none") {
+      for (const e of F.eyes) if (e.visible) {
+        pen.ellipse((e.x + R * 0.02) * S, (e.y + R * 0.28) * S, R * 0.1 * e.scaleX * S, R * 0.06 * S);
+        ctx.fillStyle = "rgba(230,90,90,0.28)";
+        ctx.fill();
+      }
+    }
+    if (card.freckles && !mono) for (let i = 0; i < 10; i++) {
+      const e = F.eyes[i % 2];
+      if (!e.visible) continue;
+      pen.circle((e.x + (i % 5 - 2) * R * 0.05) * S, (e.y + R * (0.18 + i % 3 * 0.04)) * S, R * 0.012 * S);
+      ctx.fillStyle = featureInk;
+      ctx.globalAlpha = 0.5;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+    const hairC = card.hairColor ?? "#262a33";
+    const mx = F.mouth.x * S, my = F.mouth.y * S;
+    if (card.beard && card.beard !== "none") {
+      if (card.beard === "goatee") {
+        pen.blob([[mx - R * 0.17 * S, my + R * 0.12 * S], [mx + R * 0.17 * S, my + R * 0.12 * S], [mx + R * 0.13 * S, my + R * 0.42 * S], [mx, my + R * 0.6 * S], [mx - R * 0.13 * S, my + R * 0.42 * S]]);
+        G.fill(hairC, { role: "hair", noShade: true });
+      } else {
+        jawBeard(G, card.beard, hairC, mx, my);
+      }
+    }
+    const rest = EXPRESSION_REST[card.expression] ?? 0;
+    const mfrom = state.mouth?.from ?? rest, mto = state.mouth?.to ?? rest;
+    const m = mouthShape(mfrom === 0 ? rest : mfrom, mto === 0 ? rest : mto, state.mouth?.mix ?? 1);
+    const smile = m.smile + (EXPRESSION_SMILE[card.expression] ?? 0) + (state.smile ?? 0);
+    const ms = look.mouthScale ?? 1;
+    const w = m.w * R * F.mouth.w * S * ms, h = m.h * R * S * ms;
+    const mouthStyle = look.mouth ?? card.mouth ?? "plain";
+    const lipC = card.lips ? toneColor(look, card.lipColor ?? "#c2575c", "lip") : null;
+    const lineW = Math.max(1.6, R * 0.055 * S);
+    if (h < R * 0.03 * S) {
+      const press = m.press;
+      const arc = [];
+      const half = w / 2 * (1 + Math.min(0.35, Math.abs(smile) * 0.3));
+      const sag = Math.sign(smile) * Math.min(Math.abs(smile) * R * 0.16 * S, half * 0.55);
+      const cy = my - sag * 0.45;
+      for (let i = 0; i <= 16; i++) {
+        const u = i / 16 * 2 - 1;
+        arc.push([mx + u * half, cy + sag * Math.sqrt(Math.max(0, 1 - u * u * 0.92)) - sag * Math.sqrt(0.08)]);
+      }
+      pen.poly(arc, false);
+      if (lipC) {
+        ctx.strokeStyle = lipC;
+        ctx.lineWidth = lineW * (2.2 + press);
+        ctx.lineCap = "round";
+        ctx.stroke();
+      }
+      ctx.strokeStyle = featureInk;
+      ctx.lineWidth = lineW * (1 + press * 0.5);
+      ctx.lineCap = "round";
+      ctx.stroke();
+    } else {
+      const ex = lerp(3.2, 2, m.round), pts = [];
+      for (let i = 0; i < 28; i++) {
+        const a = i / 28 * TAU, c = Math.cos(a), s = Math.sin(a);
+        const px = Math.sign(c) * Math.abs(c) ** (2 / ex) * (w / 2);
+        const py = Math.sign(s) * Math.abs(s) ** (2 / ex) * (h / 2) * (s < 0 ? 0.7 : 1);
+        pts.push([mx + px, my + py - smile * R * 0.05 * S * c * c]);
+      }
+      pen.poly(pts);
+      const inside = look.fill === "none" ? null : mono ? featureInk : "#5b1f2a";
+      if (inside) {
+        ctx.fillStyle = inside;
+        ctx.fill();
+      }
+      ctx.save();
+      ctx.clip();
+      if (!mono && look.fill !== "none") {
+        if (m.teeth > 0.05) {
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(mx - w, my - h * 0.36, w * 2, h * 0.34 * m.teeth + R * 0.02 * S);
+        }
+        if (m.tongue > 0.05) {
+          ctx.fillStyle = "#e0707a";
+          pen.ellipse(mx, m.teeth > 0.5 && m.tongue > 0.5 ? my - h * 0.05 : my + h * 0.38, w * 0.32, h * 0.32 * m.tongue);
+          ctx.fill();
+        }
+      }
+      ctx.restore();
+      pen.trace(pts, true);
+      if (lipC) {
+        ctx.strokeStyle = lipC;
+        ctx.lineWidth = lineW * 1.8;
+        ctx.stroke();
+      }
+      ctx.strokeStyle = featureInk;
+      ctx.lineWidth = Math.max(1.2, lineW * 0.75);
+      ctx.lineJoin = "round";
+      ctx.stroke();
+      if (m.tuck > 0.3) {
+        pen.poly([[mx - w * 0.45, my + h * 0.25], [mx + w * 0.45, my + h * 0.25]], false);
+        ctx.strokeStyle = featureInk;
+        ctx.lineWidth = lineW * 0.8;
+        ctx.stroke();
+      }
+    }
+    if (mouthStyle === "overbite") {
+      pen.ellipse(mx, my - R * 0.06 * S, w * 0.75 + R * 0.06 * S, R * 0.1 * S, 0, Math.PI * 0.05, Math.PI * 0.95);
+      ctx.strokeStyle = featureInk;
+      ctx.lineWidth = Math.max(1.6, R * 0.05 * S);
+      ctx.stroke();
+    }
+    if (card.moustache && card.moustache !== "none") {
+      const k = { thin: 0.5, thick: 1, handlebar: 0.8 }[card.moustache] ?? 0.8;
+      const hb = card.moustache === "handlebar";
+      pen.blob([[mx - R * 0.32 * S, my - R * 0.06 * S], [mx - R * (hb ? 0.42 : 0.3) * S, my - R * (hb ? 0.2 : 0.02) * S], [mx, my - R * (0.12 + 0.08 * k) * S], [mx + R * (hb ? 0.42 : 0.3) * S, my - R * (hb ? 0.2 : 0.02) * S], [mx + R * 0.32 * S, my - R * 0.06 * S], [mx, my - R * 0.07 * S]]);
+      G.fill(hairC, { role: "hair", noShade: true });
+    }
+    return { eyes: eyesOut, mouth: { x: F.mouth.x, y: F.mouth.y, w: Math.max(m.w * R * F.mouth.w * ms, R * 0.2), h: Math.max(m.h * R * ms, R * 0.04) } };
+  }
+  function jawBeard(G, kind, hairC, mx, my) {
+    const { ctx, pen, S, sk, look } = G;
+    const R = sk.R, F = sk.face;
+    const rx = sk.rx * 1.04, ry = sk.ry * 1.04;
+    const len = { full: 0.32, short: 0.08, stubble: 0 }[kind] ?? 0.2;
+    const low = kind === "full" ? 0 : 0.06;
+    const farEar = F.ears[0], nearEar = F.ears[1];
+    const nearSide = nearEar.visible && sk.turn < 0.5;
+    const hw = R * 0.36 * F.mouth.w;
+    const angleAt = (x) => Math.acos(Math.max(-1, Math.min(1, x / rx)));
+    const aFar = angleAt(farEar.x);
+    const aNear = nearSide ? angleAt(nearEar.x) : angleAt(Math.min(rx * 0.9, mx / S + hw * 1.6));
+    const jaw = [];
+    for (let i = 0; i <= 24; i++) {
+      const t2 = aNear + (aFar - aNear) * (i / 24);
+      const down = Math.max(0, Math.sin(t2));
+      jaw.push([Math.cos(t2) * rx * S, Math.max(Math.sin(t2) * ry, 0) * (1 + len * down ** 4) * S]);
+    }
+    const earY = (e) => (e.y + R * 0.08) * S;
+    const strip = R * 0.15;
+    const inner = [];
+    if (nearSide) inner.push([nearEar.x * S, earY(nearEar)], [(nearEar.x - strip) * S, earY(nearEar)], [(nearEar.x - strip * 1.1) * S, R * (0.34 + low) * S]);
+    inner.push([mx + hw * S, my + R * (0.06 + low) * S], [mx, my + R * (0.2 + low * 0.5) * S], [mx - hw * S, my + R * (0.06 + low) * S]);
+    inner.push([(farEar.x + strip * 1.1) * S, R * (0.34 + low) * S], [(farEar.x + strip) * S, earY(farEar)], [farEar.x * S, earY(farEar)]);
+    const pts = [...jaw, ...spline(inner.reverse(), 5)];
+    pen.poly(pts);
+    if (kind === "stubble") {
+      ctx.save();
+      ctx.globalAlpha = 0.3;
+      ctx.fillStyle = toneColor(look, hairC, "hair");
+      ctx.fill();
+      ctx.restore();
+      return;
+    }
+    G.fill(hairC, { role: "hair", noShade: true });
+  }
+  function drawFigure(ctx, card, opts) {
+    const look = typeof (opts.look ?? card.look) === "string" ? lookById(opts.look ?? card.look) : opts.look;
+    if (!look.layer || !opts.layerSize) return drawCharacter(ctx, card, { ...opts, look });
+    const { w, h } = opts.layerSize;
+    const L = opts.layerCanvas ?? newCanvas(w, h);
+    if (L.width !== w || L.height !== h) {
+      L.width = w;
+      L.height = h;
+    }
+    const lc = L.getContext("2d");
+    lc.setTransform(1, 0, 0, 1, 0, 0);
+    lc.clearRect(0, 0, w, h);
+    const info = drawCharacter(lc, card, { ...opts, look });
+    applyLayer(look, ctx, L, lc, { w, h, S: opts.S, ink: info.ink });
+    return info;
+  }
+
+  // characters/core/card.mjs
+  var CARD_VERSION = 1;
+  var HEX = /^#[0-9a-f]{6}$/i;
+  var FIELDS = [
+    {
+      key: "name",
+      group: "About",
+      label: "Name",
+      kind: "text",
+      default: "New character",
+      max: 40,
+      help: "What you call them. Only shown in the app.",
+      examples: ["Dad", "Yiayia", "Captain"]
+    },
+    {
+      key: "look",
+      group: "Look",
+      label: "Look",
+      kind: "choice",
+      options: LOOK_IDS,
+      default: "stick",
+      help: "How they are drawn. The same character works in every look.",
+      examples: ["stick", "sticker", "sitcom", "hose"]
+    },
+    {
+      key: "framing",
+      group: "Look",
+      label: "Framing",
+      kind: "choice",
+      options: ["full", "waist", "head"],
+      default: "full",
+      help: "How much of them the video shows: the whole body, from the waist up, or head and shoulders.",
+      examples: ["full", "waist", "head"]
+    },
+    {
+      key: "boil",
+      group: "Look",
+      label: "Line wobble",
+      kind: "number",
+      min: 0,
+      max: 4,
+      step: 0.1,
+      default: 0,
+      help: '"Line boil": outlines wobble a little, like hand-drawn animation. 0 is still; 1 is gentle.',
+      examples: [0, 0.8, 1.6]
+    },
+    {
+      key: "height",
+      group: "Body",
+      label: "Height",
+      kind: "number",
+      min: 0.75,
+      max: 1.15,
+      step: 0.01,
+      default: 1,
+      help: "1 is average. A child is about 0.8.",
+      examples: [0.8, 1, 1.1]
+    },
+    {
+      key: "build",
+      group: "Body",
+      label: "Build",
+      kind: "choice",
+      options: ["thin", "average", "round"],
+      default: "average",
+      help: "How wide the body is.",
+      examples: ["thin", "average", "round"]
+    },
+    {
+      key: "muscle",
+      group: "Body",
+      label: "Muscles",
+      kind: "number",
+      min: 0,
+      max: 1,
+      step: 0.05,
+      default: 0,
+      help: "Broader shoulders and thicker arms.",
+      examples: [0, 0.5, 1]
+    },
+    {
+      key: "headSize",
+      group: "Body",
+      label: "Head size",
+      kind: "number",
+      min: 0.8,
+      max: 1.35,
+      step: 0.01,
+      default: 1,
+      help: "Bigger heads read as younger and friendlier, and make the mouth easier to see on a phone.",
+      examples: [0.9, 1, 1.25]
+    },
+    {
+      key: "posture",
+      group: "Body",
+      label: "Posture",
+      kind: "choice",
+      options: ["upright", "slouch", "hunch"],
+      default: "upright",
+      help: "How they stand.",
+      examples: ["upright", "slouch", "hunch"]
+    },
+    {
+      key: "armLength",
+      group: "Body",
+      label: "Arm length",
+      kind: "number",
+      min: 0.8,
+      max: 1.6,
+      step: 0.05,
+      default: 1,
+      help: "1 is normal. Shadow-theatre heroes often have one very long arm.",
+      examples: [1, 1.3, 1.6]
+    },
+    {
+      key: "skin",
+      group: "Body",
+      label: "Skin",
+      kind: "color",
+      default: "#f3d6bd",
+      help: "Skin colour.",
+      examples: ["#f6dcc6", "#f3d6bd", "#e0b48c", "#c68b5e", "#8d5a3b", "#5c3a24"]
+    },
+    {
+      key: "headShape",
+      group: "Head & face",
+      label: "Head shape",
+      kind: "choice",
+      options: ["round", "oval", "egg", "square"],
+      default: "round",
+      help: "The outline of the head.",
+      examples: ["round", "oval", "egg", "square"]
+    },
+    {
+      key: "eyes",
+      group: "Head & face",
+      label: "Eyes",
+      kind: "choice",
+      options: ["dot", "small", "oval", "lash", "googly", "sleepy", "none"],
+      default: "dot",
+      help: "Eye style. Some looks use their own (rubber hose has pie eyes, the sitcom look googly eyes).",
+      examples: ["dot", "oval", "googly", "sleepy"]
+    },
+    {
+      key: "eyeSpacing",
+      group: "Head & face",
+      label: "Eye spacing",
+      kind: "number",
+      min: 0.8,
+      max: 1.25,
+      step: 0.01,
+      default: 1,
+      help: "Wider apart looks friendlier; closer looks sharper.",
+      examples: [0.85, 1, 1.15]
+    },
+    {
+      key: "brows",
+      group: "Head & face",
+      label: "Eyebrows",
+      kind: "choice",
+      options: ["line", "thick", "arched", "none"],
+      default: "line",
+      help: "Eyebrow style. They move with the script's feelings either way.",
+      examples: ["line", "thick", "arched"]
+    },
+    {
+      key: "nose",
+      group: "Head & face",
+      label: "Nose",
+      kind: "choice",
+      options: ["none", "dot", "line", "button", "long"],
+      default: "none",
+      help: "Many cartoon styles have no nose from the front; in profile every nose shows.",
+      examples: ["none", "dot", "button", "long"]
+    },
+    {
+      key: "mouth",
+      group: "Head & face",
+      label: "Mouth",
+      kind: "choice",
+      options: ["plain", "overbite"],
+      default: "plain",
+      help: "Mouth style. It always moves with the narration.",
+      examples: ["plain", "overbite"]
+    },
+    {
+      key: "lips",
+      group: "Head & face",
+      label: "Coloured lips",
+      kind: "bool",
+      default: false,
+      help: "Only some characters have visible lips; most cartoon mouths are a plain line.",
+      examples: [false, true]
+    },
+    {
+      key: "lipColor",
+      group: "Head & face",
+      label: "Lip colour",
+      kind: "color",
+      default: "#c2575c",
+      help: "Used only when coloured lips are on.",
+      examples: ["#c2575c", "#a8423f", "#d9827a"]
+    },
+    {
+      key: "ears",
+      group: "Head & face",
+      label: "Ears",
+      kind: "choice",
+      options: ["none", "small", "round", "big"],
+      default: "small",
+      help: "Ear size. Hair or hats may cover them.",
+      examples: ["none", "small", "big"]
+    },
+    { key: "cheeks", group: "Head & face", label: "Rosy cheeks", kind: "bool", default: false, help: "A soft blush under the eyes.", examples: [false, true] },
+    { key: "freckles", group: "Head & face", label: "Freckles", kind: "bool", default: false, help: "A few freckles across the cheeks.", examples: [false, true] },
+    {
+      key: "beard",
+      group: "Head & face",
+      label: "Beard",
+      kind: "choice",
+      options: ["none", "stubble", "short", "full", "goatee"],
+      default: "none",
+      help: "In the hair colour. The mouth still shows through.",
+      examples: ["none", "stubble", "full", "goatee"]
+    },
+    {
+      key: "moustache",
+      group: "Head & face",
+      label: "Moustache",
+      kind: "choice",
+      options: ["none", "thin", "thick", "handlebar"],
+      default: "none",
+      help: "In the hair colour.",
+      examples: ["none", "thin", "thick", "handlebar"]
+    },
+    {
+      key: "hair",
+      group: "Hair",
+      label: "Hair style",
+      kind: "choice",
+      options: HAIR_STYLES,
+      default: "short",
+      help: "Hair style. Long styles and ponytails swing a little as they move.",
+      examples: ["short", "sidepart", "ponytail", "bun", "curly", "bald"]
+    },
+    {
+      key: "hairColor",
+      group: "Hair",
+      label: "Hair colour",
+      kind: "color",
+      default: "#262a33",
+      help: "Also used for eyebrows, beards and moustaches.",
+      examples: ["#262a33", "#5a3825", "#c9a46e", "#b0b0b0", "#a8322b"]
+    },
+    {
+      key: "highlight",
+      group: "Hair",
+      label: "Highlights",
+      kind: "color",
+      default: "",
+      optional: true,
+      help: "Lighter streaks on top. Leave empty for none.",
+      examples: ["", "#c9a46e", "#e8d5a8"]
+    },
+    {
+      key: "wear",
+      group: "Clothes",
+      label: "Clothes and accessories",
+      kind: "wear",
+      default: [{ id: "tshirt", colors: ["#3a6fb0"] }, { id: "trousers", colors: ["#2d3446"] }, { id: "shoes", colors: ["#16181d"] }],
+      help: "What they wear, one item per place (one top, one hat \u2026). Each item has its own colours and, for fabrics, a pattern.",
+      examples: [["shirt", "vest", "tie", "trousers", "shoes"], ["hoodie", "jeans", "sneakers"], ["chiton", "himation", "sandals", "wreath"]]
+    },
+    {
+      key: "expression",
+      group: "Personality",
+      label: "Resting face",
+      kind: "choice",
+      options: ["neutral", "smile", "serious", "grumpy"],
+      default: "neutral",
+      help: "The face between words. Feelings in the script still change it.",
+      examples: ["neutral", "smile", "grumpy"]
+    },
+    {
+      key: "blinkRate",
+      group: "Personality",
+      label: "Blinking",
+      kind: "number",
+      min: 0.3,
+      max: 2,
+      step: 0.05,
+      default: 1,
+      help: "1 is natural. Lower is calm, higher is nervous.",
+      examples: [0.6, 1, 1.6]
+    },
+    {
+      key: "energy",
+      group: "Personality",
+      label: "Gestures",
+      kind: "number",
+      min: 0,
+      max: 1,
+      step: 0.05,
+      default: 0.5,
+      help: "How much their hands move by themselves while they talk.",
+      examples: [0, 0.5, 1]
+    },
+    {
+      key: "sway",
+      group: "Personality",
+      label: "Idle sway",
+      kind: "number",
+      min: 0,
+      max: 1,
+      step: 0.05,
+      default: 0.5,
+      help: "A small breathing sway so nobody looks frozen.",
+      examples: [0, 0.5, 1]
+    }
+  ];
+  var BY_KEY = Object.fromEntries(FIELDS.map((f) => [f.key, f]));
+  function checkField(f, value) {
+    if (value === void 0 || value === null) return [structuredClone(f.default), null];
+    switch (f.kind) {
+      case "text": {
+        const s = String(value).trim().slice(0, f.max ?? 80);
+        return s ? [s, null] : [f.default, `${f.label} was empty`];
+      }
+      case "choice":
+        return f.options.includes(value) ? [value, null] : [f.default, `${f.label}: "${value}" isn't one of ${f.options.join(", ")}`];
+      case "number": {
+        const n = Number(value);
+        if (!Number.isFinite(n)) return [f.default, `${f.label}: "${value}" isn't a number`];
+        const c = Math.min(f.max, Math.max(f.min, n));
+        return [Math.round(c * 1e3) / 1e3, c !== n ? `${f.label}: ${n} is outside ${f.min}\u2013${f.max}, used ${c}` : null];
+      }
+      case "color":
+        if (f.optional && value === "") return ["", null];
+        return HEX.test(value) ? [String(value).toLowerCase(), null] : [f.default, `${f.label}: "${value}" isn't a colour like #3a6fb0`];
+      case "bool":
+        return typeof value === "boolean" ? [value, null] : [!!value && value !== "false", null];
+      case "wear": {
+        const { wear, problems } = normalizeWear(value);
+        return [wear, problems.length ? problems.join("; ") : null];
+      }
+      default:
+        return [value, null];
+    }
+  }
+  function normalizeCard(input) {
+    const src = input && typeof input === "object" ? input : {};
+    const card = { v: CARD_VERSION }, problems = [];
+    for (const f of FIELDS) {
+      const [v, p] = checkField(f, src[f.key]);
+      card[f.key] = v;
+      if (p) problems.push(p);
+    }
+    for (const k of Object.keys(src)) if (!BY_KEY[k] && k !== "v" && k !== "seed") problems.push(`"${k}" isn't a card field, ignored`);
+    card.seed = Number.isInteger(src.seed) ? src.seed : [...card.name].reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 9973, 7);
+    return { card, problems };
+  }
+  var WARDROBE = ITEMS.map((i) => ({ id: i.id, label: i.label, slot: i.slot, colors: i.colors.length, patterns: !!i.patterns }));
+
+  // characters/core/perform.mjs
+  var POSE_EASE_MS = 260;
+  function poseBlendAt(spans, timeMs) {
+    if (!spans?.length) return { pose: "rest", poseK: 0 };
+    for (const s of spans) {
+      if (timeMs >= s.startMs - POSE_EASE_MS && timeMs < s.endMs + POSE_EASE_MS) {
+        const kin = Math.min(1, (timeMs - (s.startMs - POSE_EASE_MS)) / POSE_EASE_MS);
+        const kout = Math.min(1, (s.endMs + POSE_EASE_MS - timeMs) / POSE_EASE_MS);
+        return { pose: s.pose, poseK: Math.max(0, Math.min(kin, kout)) };
+      }
+    }
+    return { pose: "rest", poseK: 0 };
+  }
+  function characterState(sig) {
+    const t2 = (sig.timeMs ?? 0) / 1e3;
+    const pb = sig.poseSpans ? poseBlendAt(sig.poseSpans, sig.timeMs ?? 0) : { pose: sig.pose ?? "rest", poseK: sig.pose ? 1 : 0 };
+    const mv = sig.move ?? null, mf = mv?.face ?? null;
+    return {
+      joints: mv?.joints ?? null,
+      hands: mv?.hands ?? null,
+      props: mv?.props ?? [],
+      smile: mf?.smile ?? 0,
+      t: t2,
+      view: sig.view ?? 0,
+      pose: pb.pose,
+      poseK: pb.poseK,
+      head: sig.head ?? null,
+      talk: sig.active ? 1 : 0,
+      mouth: { from: sig.prevViseme ?? sig.viseme ?? 0, to: sig.viseme ?? 0, mix: sig.mix ?? 1 },
+      // a move's eyes give way to blinks (closed beats wide), never the other way round
+      lid: mf?.lids && sig.lidTo !== "closed" && sig.lidFrom !== "closed" ? { from: mf.lids, to: mf.lids, mix: 1 } : { from: sig.lidFrom ?? "open", to: sig.lidTo ?? sig.lidFrom ?? "open", mix: sig.lidMix ?? 1 },
+      brows: mf?.brows ? { left: mf.brows, right: mf.brows } : { left: sig.browLeft ?? "serious", right: sig.browRight ?? sig.browLeft ?? "serious" },
+      gaze: 0.4,
+      walk: sig.walk ?? null,
+      sitting: !!sig.sitting,
+      breath: sig.breath ?? 0
+    };
+  }
+
+  // characters/core/moves.mjs
+  var MOVE_VERSION = 1;
+  var CHANNELS = {
+    armF: { n: 2, help: "front arm: [upper arm, forearm] angles" },
+    armB: { n: 2, help: "back arm: [upper arm, forearm] angles" },
+    legF: { n: 2, help: "front leg: [thigh forwards, knee bend]" },
+    legB: { n: 2, help: "back leg: [thigh forwards, knee bend]" },
+    root: { n: 2, help: "whole body shift: [x, y] in body heights (y < 0 is up)" },
+    footF: { n: 2, help: "front foot placed by a walk: [forwards of the hip, height], body heights" },
+    footB: { n: 2, help: "back foot placed by a walk: [forwards of the hip, height], body heights" },
+    lean: { n: 1, help: "upper body lean forwards, radians" },
+    head: { n: 2, help: "head: [tilt in degrees, drop as a fraction of the head]" },
+    sit: { n: 1, help: "0 standing \u2026 1 sitting" },
+    view: { n: 1, help: "0 facing the camera \u2026 2 side profile" },
+    open: { n: 1, help: "how open the prop in hand is (a box lid, a door): 0 \u2026 1" }
+  };
+  var CHANNEL_KEYS = Object.keys(CHANNELS);
+  var REST = { armF: [0.12, 0.1], armB: [0.12, 0.1], legF: [0, 0], legB: [0, 0], footF: [0, 0], footB: [0, 0], root: [0, 0], lean: [0], head: [0, 0], sit: [0], view: [0], open: [0] };
+  var HAND_SHAPES = ["relaxed", "open", "fist", "point", "thumbsUp", "ok", "peace", "grip", "wave"];
+  var KINDS2 = ["gesture", "pose", "travel", "stance", "pair", "idle"];
+  var EASES = ["inOut", "linear", "in", "out", "step", "back"];
+  var PATH_ENDS = ["here", "left", "right", "partner"];
+  var STYLES = {
+    neutral: { label: "Neutral", tempo: 1, size: 1, snap: 0.08, lean: 0, headTilt: 0, headDrop: 0, armsIn: 0, gait: {} },
+    graceful: { label: "Graceful", tempo: 0.85, size: 1.15, snap: 0.02, lean: -0.02, headTilt: 3, headDrop: -0.02, armsIn: 0, gait: { stride: 1.15, swing: 1.3, bounce: 0.4, knee: 1.2 } },
+    aggressive: { label: "Aggressive", tempo: 1.3, size: 1.2, snap: 0.22, lean: 0.12, headTilt: 0, headDrop: 0.06, armsIn: 0, gait: { stride: 1.2, swing: 1.1, bounce: 0.6 } },
+    tired: { label: "Tired", tempo: 0.7, size: 0.7, snap: 0, lean: 0.1, headTilt: -4, headDrop: 0.14, armsIn: 0.05, gait: { stride: 0.7, swing: 0.5, bounce: 0.3, knee: 0.6 } },
+    shy: { label: "Shy", tempo: 0.9, size: 0.65, snap: 0.02, lean: 0.04, headTilt: 6, headDrop: 0.1, armsIn: 0.12, gait: { stride: 0.65, swing: 0.4, bounce: 0.5 } },
+    proud: { label: "Proud", tempo: 0.95, size: 1.1, snap: 0.1, lean: -0.08, headTilt: -2, headDrop: -0.06, armsIn: 0, gait: { stride: 1.15, swing: 1.4, bounce: 0.8, knee: 1.1 } },
+    playful: { label: "Playful", tempo: 1.15, size: 1.1, snap: 0.25, lean: 0, headTilt: 5, headDrop: 0, armsIn: 0, gait: { stride: 1, swing: 1.3, bounce: 2.2, knee: 1.3 } },
+    sneaky: { label: "Sneaky", tempo: 0.8, size: 0.9, snap: 0.02, lean: 0.14, headTilt: 0, headDrop: 0.04, armsIn: 0, gait: { stride: 0.8, swing: 0.3, bounce: 0.2, knee: 1.8, crouch: 0.05 } }
+  };
+  var STYLE_IDS = Object.keys(STYLES);
+  var isNum = (v) => typeof v === "number" && Number.isFinite(v);
+  var ID = /^[a-z0-9][a-z0-9-]{0,40}$/;
+  function checkTrack(name, keys, problems) {
+    const n = CHANNELS[name].n;
+    if (!Array.isArray(keys)) {
+      problems.push(`track "${name}" isn't a list of keys`);
+      return null;
+    }
+    const out = [];
+    for (const k of keys) {
+      if (!Array.isArray(k) || !isNum(k[0])) {
+        problems.push(`track "${name}": a key needs [time, value]`);
+        continue;
+      }
+      const t2 = clamp(k[0]);
+      const raw = n === 1 ? Array.isArray(k[1]) ? k[1] : [k[1]] : k[1];
+      if (!Array.isArray(raw) || raw.length !== n || !raw.every(isNum)) {
+        problems.push(`track "${name}" at ${t2}: needs ${n} number${n > 1 ? "s" : ""}`);
+        continue;
+      }
+      const e = k[2] === void 0 ? "inOut" : k[2];
+      if (!EASES.includes(e)) problems.push(`track "${name}" at ${t2}: ease "${e}" isn't one of ${EASES.join(", ")}`);
+      out.push([t2, raw.map(Number), EASES.includes(e) ? e : "inOut"]);
+    }
+    out.sort((a, b) => a[0] - b[0]);
+    return out.length ? out : null;
+  }
+  function checkSteps(label, keys, ok, problems) {
+    if (!Array.isArray(keys)) return [];
+    const out = [];
+    for (const k of keys) {
+      if (!Array.isArray(k) || !isNum(k[0])) {
+        problems.push(`${label}: a key needs [time, value]`);
+        continue;
+      }
+      if (!ok(k[1])) {
+        problems.push(`${label} at ${k[0]}: "${JSON.stringify(k[1])}" isn't allowed`);
+        continue;
+      }
+      out.push([clamp(k[0]), k[1]]);
+    }
+    return out.sort((a, b) => a[0] - b[0]);
+  }
+  var FACE_KEYS = { brows: Object.keys(BROWS), lids: Object.keys(LIDS), smile: "number" };
+  var okFace = (f) => f && typeof f === "object" && Object.entries(f).every(([k, v]) => FACE_KEYS[k] && (FACE_KEYS[k] === "number" ? isNum(v) : FACE_KEYS[k].includes(v)));
+  function normalizeMove(input) {
+    const src = input && typeof input === "object" ? input : {};
+    const problems = [];
+    const id = typeof src.id === "string" && ID.test(src.id) ? src.id : (problems.push(`id "${src.id}" must be lowercase letters, digits and dashes`), "move");
+    const move = {
+      v: MOVE_VERSION,
+      id,
+      name: typeof src.name === "string" && src.name.trim() ? src.name.trim().slice(0, 60) : id,
+      help: typeof src.help === "string" ? src.help.slice(0, 230) : "",
+      kind: KINDS2.includes(src.kind) ? src.kind : (src.kind !== void 0 && problems.push(`kind "${src.kind}" isn't one of ${KINDS2.join(", ")}`), "gesture"),
+      tags: Array.isArray(src.tags) ? src.tags.filter((t2) => typeof t2 === "string").map((t2) => t2.toLowerCase()) : [],
+      phrases: Array.isArray(src.phrases) ? src.phrases.filter((t2) => typeof t2 === "string").map((t2) => t2.toLowerCase().trim()) : [],
+      lengthMs: isNum(src.lengthMs) ? clamp(src.lengthMs, 200, 2e4) : (problems.push("lengthMs is missing; used 1500"), 1500),
+      loop: !!src.loop,
+      hold: isNum(src.hold) ? clamp(src.hold) : null,
+      tracks: {},
+      hands: { F: [], B: [] },
+      face: [],
+      props: [],
+      gait: null,
+      path: null,
+      stance: src.stance === "sit" || src.stance === "stand" ? src.stance : null,
+      pair: null
+    };
+    for (const [k, keys] of Object.entries(src.tracks ?? {})) {
+      if (!CHANNELS[k]) {
+        problems.push(`"${k}" isn't a joint; use ${CHANNEL_KEYS.join(", ")}`);
+        continue;
+      }
+      const tr = checkTrack(k, keys, problems);
+      if (tr) move.tracks[k] = tr;
+    }
+    for (const h of ["F", "B"]) move.hands[h] = checkSteps(`hand ${h}`, src.hands?.[h], (v) => HAND_SHAPES.includes(v), problems);
+    move.face = checkSteps("face", src.face, okFace, problems);
+    for (const p of Array.isArray(src.props) ? src.props : []) {
+      if (!p || typeof p.id !== "string") {
+        problems.push("a prop needs an id");
+        continue;
+      }
+      move.props.push({ id: p.id, hand: p.hand === "B" ? "B" : "F", t0: isNum(p.t0) ? clamp(p.t0) : 0, t1: isNum(p.t1) ? clamp(p.t1) : 1 });
+    }
+    if (src.gait && typeof src.gait === "object") {
+      const g = src.gait;
+      move.gait = {
+        t0: isNum(g.t0) ? clamp(g.t0) : 0,
+        t1: isNum(g.t1) ? clamp(g.t1) : 1,
+        cadence: isNum(g.cadence) ? clamp(g.cadence, 0.3, 5) : 1.8,
+        // steps per second
+        stride: isNum(g.stride) ? clamp(g.stride, 0, 2) : 1,
+        swing: isNum(g.swing) ? clamp(g.swing, 0, 2) : 1,
+        bounce: isNum(g.bounce) ? clamp(g.bounce, 0, 4) : 1,
+        knee: isNum(g.knee) ? clamp(g.knee, 0, 3) : 1,
+        crouch: isNum(g.crouch) ? clamp(g.crouch, 0, 0.2) : 0,
+        skip: !!g.skip,
+        run: !!g.run
+      };
+    }
+    if (src.path && typeof src.path === "object") {
+      const p = src.path;
+      const end = (v, d) => PATH_ENDS.includes(v) ? v : (v !== void 0 && problems.push(`path end "${v}" isn't one of ${PATH_ENDS.join(", ")}`), d);
+      move.path = { from: end(p.from, "here"), to: end(p.to, "here"), t0: isNum(p.t0) ? clamp(p.t0) : 0, t1: isNum(p.t1) ? clamp(p.t1) : 1 };
+    }
+    if (src.pair && typeof src.pair === "object") {
+      move.pair = {
+        role: typeof src.pair.role === "string" ? src.pair.role : "a",
+        partner: typeof src.pair.partner === "string" ? src.pair.partner : id,
+        contact: isNum(src.pair.contact) ? clamp(src.pair.contact) : 0.5
+      };
+    }
+    if (move.hold !== null && move.loop) {
+      problems.push("a move can hold or loop, not both; kept the loop");
+      move.hold = null;
+    }
+    if (!Object.keys(move.tracks).length && !move.gait && !move.path && !move.stance) problems.push("this move has no tracks, walk or path, so nothing moves");
+    for (const k of Object.keys(src)) if (!(k in move) && k !== "v") problems.push(`"${k}" isn't a move field, ignored`);
+    return { move, problems };
+  }
+  function eased(k, e, snap) {
+    switch (e) {
+      case "linear":
+        return k;
+      case "in":
+        return k * k;
+      case "out":
+        return 1 - (1 - k) * (1 - k);
+      case "step":
+        return k < 1 ? 0 : 1;
+      case "back":
+        return smooth(k) + 0.35 * Math.sin(Math.PI * k) * k * k;
+      default:
+        return smooth(k) + snap * Math.sin(Math.PI * k) * k * k;
+    }
+  }
+  function sample(track, u, rest, snap, loop2) {
+    if (!track) return null;
+    const first = track[0], last = track[track.length - 1];
+    if (u <= first[0]) {
+      if (loop2) return last[1];
+      if (first[0] <= 0) return first[1];
+      return mixV(rest, first[1], eased(u / first[0], first[2], snap));
+    }
+    if (u >= last[0]) return last[1];
+    for (let i = 1; i < track.length; i++) {
+      const a = track[i - 1], b = track[i];
+      if (u <= b[0]) return mixV(a[1], b[1], eased((u - a[0]) / Math.max(1e-6, b[0] - a[0]), b[2], snap));
+    }
+    return last[1];
+  }
+  var mixV = (a, b, k) => a.map((x, i) => lerp(x, b[i], k));
+  var stepAt = (steps, u, d) => {
+    let v = d;
+    for (const [t2, x] of steps) if (u >= t2) v = x;
+    return v;
+  };
+  var wobble = (seed, ch, t2, amp) => amp * (Math.sin(t2 * (1.3 + hash(seed, ch) * 1.7) + hash(seed, ch + 50) * 6.28) * 0.6 + Math.sin(t2 * (2.9 + hash(seed, ch + 9)) + hash(seed, ch + 77) * 6.28) * 0.4);
+  function gaitAt(g, ts, fade, st, phase = null) {
+    const sg = st.gait ?? {};
+    const cadence = g.cadence * (g.run ? 1.6 : 1);
+    const stride = g.stride * (sg.stride ?? 1) * (g.run ? 1.35 : 1) * fade;
+    const knee = g.knee * (sg.knee ?? 1);
+    const ph = phase ?? Math.PI * cadence * ts;
+    const placed = (off) => {
+      const f = ((ph + off) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+      const step = g.step;
+      if (f < Math.PI) return [step / 2 - step * (f / Math.PI), 0];
+      const q = (f - Math.PI) / Math.PI, e = q * q * (3 - 2 * q);
+      return [-step / 2 + step * e, -Math.sin(q * Math.PI) * 0.045 * stride * knee];
+    };
+    const legs = (off) => {
+      const s = Math.sin(ph + off);
+      const th = s * 0.42 * stride;
+      const bend = Math.max(0, Math.sin(ph + off + 0.9)) * 0.7 * stride * knee + (g.skip ? Math.max(0, s) * 0.5 * fade : 0);
+      return [th, bend];
+    };
+    const swing = 0.32 * g.swing * (sg.swing ?? 1) * stride;
+    const arm = (off) => [0.12 + Math.sin(ph + off) * swing * (g.run ? 1.4 : 1), 0.12 + (g.run ? 1.3 : 0.25) * fade + Math.max(0, Math.sin(ph + off)) * 0.2 * stride];
+    const bounce = g.bounce * (sg.bounce ?? 1);
+    const bob = -Math.abs(Math.sin(ph)) * 0.012 * stride * bounce - (g.skip ? Math.abs(Math.sin(ph)) * 0.03 * fade : 0);
+    const crouch = (g.crouch + (sg.crouch ?? 0)) * fade;
+    const feet = phase !== null && g.step ? { footF: placed(0), footB: placed(Math.PI) } : { legF: legs(0), legB: legs(Math.PI) };
+    return {
+      ...feet,
+      // the front arm swings with the BACK leg, as people walk
+      armF: arm(Math.PI),
+      armB: arm(0),
+      root: [0, bob + crouch],
+      lean: [g.run ? 0.14 * fade : 0]
+    };
+  }
+  function moveProgress(move, spanMs, ms, tempo = 1) {
+    const len = move.lengthMs / Math.max(0.2, tempo);
+    if (move.loop) return { u: ms % len / len, wall: ms };
+    if (move.hold !== null && spanMs > len) {
+      const inMs = len * move.hold, outMs = len - inMs;
+      if (ms < inMs) return { u: ms / len, wall: ms };
+      if (ms > spanMs - outMs) return { u: move.hold + (ms - (spanMs - outMs)) / len, wall: ms };
+      return { u: move.hold, wall: ms };
+    }
+    return { u: clamp(ms / len), wall: ms };
+  }
+  function playMove(move, ms, opts = {}) {
+    const st = STYLES[opts.style] ?? STYLES.neutral;
+    const energy = clamp(opts.energy ?? 0.5);
+    const size = clamp(opts.size ?? 1, 0.3, 1.6) * st.size;
+    const tempo = clamp(opts.tempo ?? 1, 0.4, 2) * st.tempo;
+    const seed = opts.seed ?? 0;
+    const snap = st.snap * (0.5 + energy);
+    const spanMs = opts.spanMs ?? move.lengthMs / tempo;
+    const { u } = moveProgress(move, spanMs, ms, tempo);
+    const t2 = ms / 1e3;
+    const joints = {};
+    for (const k of CHANNEL_KEYS) {
+      const v = sample(move.tracks[k], u, REST[k], snap, move.loop);
+      if (!v) continue;
+      joints[k] = ["armF", "armB", "legF", "legB", "lean", "head"].includes(k) ? v.map((x, i) => REST[k][i] + (x - REST[k][i]) * size) : v.slice();
+    }
+    if (move.gait && u >= move.gait.t0 && u <= move.gait.t1) {
+      const span = Math.max(1e-3, move.gait.t1 - move.gait.t0);
+      const g = (u - move.gait.t0) / span;
+      const fade = Math.min(1, g / 0.12, (1 - g) / 0.12);
+      const wt = (u - move.gait.t0) * (move.lengthMs / 1e3);
+      let phase = null;
+      if (move.path && opts.travelBodies > 0) {
+        const { t0, t1 } = move.path;
+        const covered = smooth(clamp((u - t0) / Math.max(1e-3, t1 - t0))) * opts.travelBodies;
+        const sg = st.gait ?? {};
+        const step = 0.34 * move.gait.stride * (sg.stride ?? 1) * (move.gait.run ? 1.35 : 1);
+        phase = Math.PI * covered / Math.max(0.05, step);
+      }
+      const gj = gaitAt(phase !== null ? { ...move.gait, step: 0.34 * move.gait.stride * ((st.gait ?? {}).stride ?? 1) * (move.gait.run ? 1.35 : 1) } : move.gait, wt, smooth(clamp(fade)), st, phase);
+      for (const [k, v] of Object.entries(gj)) {
+        if (move.tracks[k]) continue;
+        joints[k] = k === "root" && joints.root ? [joints.root[0] + v[0], joints.root[1] + v[1]] : v;
+      }
+    }
+    joints.lean = [(joints.lean?.[0] ?? 0) + st.lean];
+    joints.head = [(joints.head?.[0] ?? 0) + st.headTilt + wobble(seed, 1, t2, 1.5 * energy), (joints.head?.[1] ?? 0) + st.headDrop];
+    for (const a of ["armF", "armB"]) {
+      if (!joints[a] && st.armsIn) joints[a] = REST[a].slice();
+      if (joints[a]) joints[a] = [joints[a][0] - st.armsIn + wobble(seed, a === "armF" ? 3 : 5, t2, 0.04 * energy), joints[a][1] + wobble(seed, a === "armF" ? 4 : 6, t2, 0.05 * energy)];
+    }
+    if (opts.mirror) {
+      [joints.armF, joints.armB] = [joints.armB, joints.armF];
+      [joints.legF, joints.legB] = [joints.legB, joints.legF];
+      [joints.footF, joints.footB] = [joints.footB, joints.footF];
+      for (const k of ["armF", "armB", "legF", "legB", "footF", "footB"]) if (!joints[k]) delete joints[k];
+    }
+    const hands = {
+      F: stepAt(move.hands[opts.mirror ? "B" : "F"], u, "relaxed"),
+      B: stepAt(move.hands[opts.mirror ? "F" : "B"], u, "relaxed")
+    };
+    const face = stepAt(move.face, u, null);
+    const props = move.props.filter((p) => u >= p.t0 && u <= p.t1).map((p) => ({ id: p.id, hand: opts.mirror ? p.hand === "F" ? "B" : "F" : p.hand, open: joints.open?.[0] ?? 0 }));
+    let travel = null, facing = null;
+    if (move.path) {
+      const { from, to, t0, t1 } = move.path;
+      const p = smooth(clamp((u - t0) / Math.max(1e-3, t1 - t0)));
+      travel = { from, to, p };
+      if (from !== to && u >= t0 && u <= t1) facing = to === "left" || from === "right" ? "left" : to === "right" || from === "left" ? "right" : null;
+    }
+    return { joints, hands, face, props, travel, facing, stance: move.stance && u >= 0.5 ? move.stance : null, u };
+  }
+  var MOVE_EASE_MS = 260;
+  function movesAt(spans, shelf, timeMs, opts = {}) {
+    if (!spans?.length) return null;
+    let sit = 0, seat = [];
+    let out = null;
+    for (const s of spans) {
+      const move = shelf[s.move];
+      if (!move) continue;
+      if (move.stance && timeMs >= s.endMs) {
+        sit = move.stance === "sit" ? 1 : 0;
+        seat = sit ? move.props.filter((p) => p.t1 >= 1).map((p) => ({ id: s.prop ?? p.id, hand: p.hand, open: 0 })) : [];
+      }
+      if (timeMs < s.startMs - MOVE_EASE_MS || timeMs >= s.endMs + MOVE_EASE_MS) continue;
+      const ms = Math.max(0, timeMs - s.startMs);
+      const r = playMove(move, Math.min(ms, s.endMs - s.startMs), { ...opts, style: s.style ?? opts.style, seed: s.seed ?? opts.seed, spanMs: s.endMs - s.startMs, travelBodies: s.dist });
+      const kin = clamp((timeMs - (s.startMs - MOVE_EASE_MS)) / MOVE_EASE_MS);
+      const kout = clamp((s.endMs + MOVE_EASE_MS - timeMs) / MOVE_EASE_MS);
+      const w = smooth(move.path || move.stance ? kin : Math.min(kin, kout));
+      if (s.prop) for (const p of r.props) p.id = s.prop;
+      out = { ...r, joints: { ...r.joints, w }, target: s.target ?? null, move: move.id };
+    }
+    if (!out) return sit ? { joints: { sit: [1], w: 1 }, hands: { F: "relaxed", B: "relaxed" }, face: null, props: seat, travel: null, facing: null, sit } : null;
+    if (out.joints.sit === void 0 && sit) {
+      out.joints.sit = [1];
+      out.props = [...seat, ...out.props];
+    }
+    return out;
+  }
+  function buildShelf(list) {
+    const shelf = {}, problems = [];
+    for (const src of list ?? []) {
+      const { move, problems: p } = normalizeMove(src);
+      for (const x of p) problems.push(`${move.id}: ${x}`);
+      if (shelf[move.id]) problems.push(`${move.id}: there are two moves with this id; kept the first`);
+      else shelf[move.id] = move;
+    }
+    return { shelf, problems };
+  }
+
+  // characters/core/motion.mjs
+  var WINDOW_MS = 900;
+  var DT = 1e3 / 120;
+  var SPRINGS = {
+    armF: [{ w: 15, z: 0.62, lag: 0 }, { w: 17, z: 0.55, lag: 60 }],
+    armB: [{ w: 15, z: 0.62, lag: 0 }, { w: 17, z: 0.55, lag: 60 }],
+    legF: [{ w: 26, z: 0.8, lag: 0 }, { w: 28, z: 0.75, lag: 20 }],
+    legB: [{ w: 26, z: 0.8, lag: 0 }, { w: 28, z: 0.75, lag: 20 }],
+    footF: [{ w: 0, z: 1, lag: 0 }, { w: 0, z: 1, lag: 0 }],
+    // not sprung (see below)
+    footB: [{ w: 0, z: 1, lag: 0 }, { w: 0, z: 1, lag: 0 }],
+    root: [{ w: 16, z: 0.75, lag: 0 }, { w: 18, z: 0.5, lag: 0 }],
+    lean: [{ w: 9, z: 0.72, lag: 40 }],
+    head: [{ w: 9, z: 0.6, lag: 90 }, { w: 10, z: 0.7, lag: 90 }],
+    sit: [{ w: 10, z: 0.9, lag: 0 }],
+    view: [{ w: 8, z: 0.85, lag: 0 }],
+    open: [{ w: 14, z: 0.5, lag: 0 }]
+  };
+  var CHANNELS2 = Object.keys(SPRINGS);
+  var ANTICIPATE = { armF: [0.16, 0], armB: [0.16, 0], root: [0, 0.35], lean: [0.2], head: [0.1, 0] };
+  var LOOK_AHEAD_MS = 140;
+  function targetsAt(src, ms, o) {
+    const pb = src.poseSpans ? poseBlendAt(src.poseSpans, ms) : { pose: "rest", poseK: 0 };
+    const arms = poseArms(pb.pose, pb.poseK, ms / 1e3, o.talk);
+    const mv = src.moveSpans?.length ? movesAt(src.moveSpans, src.shelf, ms, { energy: o.energy, seed: o.seed }) : null;
+    const J = mv?.joints ?? null, w = J ? clamp(J.w ?? 1) : 0;
+    const mix2 = (name, base) => J?.[name] ? base.map((b, i) => lerp(b, J[name][i], w)) : base;
+    const ch = {
+      armF: mix2("armF", arms.armF),
+      armB: mix2("armB", arms.armB),
+      legF: mix2("legF", [0, 0]),
+      legB: mix2("legB", [0, 0]),
+      root: mix2("root", [0, 0]),
+      lean: mix2("lean", [0]),
+      head: mix2("head", [0, 0]),
+      sit: mix2("sit", [o.sitting ? 1 : 0]),
+      view: mix2("view", [o.view]),
+      open: mix2("open", [0])
+    };
+    if (J?.footF) {
+      ch.footF = J.footF.slice();
+      ch.footB = J.footB.slice();
+    }
+    return { ch, mv, footW: J?.footF ? w : 0 };
+  }
+  function performAt(src, timeMs, o = {}) {
+    const opts = { view: 0, talk: 0, energy: 0.5, seed: 0, sitting: false, ...o };
+    const n = Math.ceil(WINDOW_MS / DT), ahead = Math.ceil(LOOK_AHEAD_MS / DT);
+    const t0 = timeMs - n * DT;
+    const samples = [];
+    for (let i = 0; i <= n + ahead; i++) samples.push(targetsAt(src, Math.max(0, t0 + i * DT), opts).ch);
+    const now = targetsAt(src, timeMs, opts);
+    const antic = 0.4 + opts.energy * 0.8;
+    const out = {};
+    for (const name of CHANNELS2) {
+      const springs = SPRINGS[name];
+      if (!samples[n][name]) continue;
+      if (name === "footF" || name === "footB") {
+        out[name] = samples[n][name].slice();
+        continue;
+      }
+      const vals = [];
+      for (let j = 0; j < springs.length; j++) {
+        const { w, z, lag } = springs[j];
+        const lagN = Math.round(lag / DT);
+        const target = (i) => {
+          const k = Math.max(0, Math.min(samples.length - 1, i - lagN));
+          const here = samples[k][name]?.[j] ?? samples[n][name][j];
+          const a = ANTICIPATE[name]?.[j] ?? 0;
+          if (!a) return here;
+          const fut = samples[Math.min(samples.length - 1, k + ahead)][name]?.[j] ?? here;
+          return here - a * antic * (fut - here);
+        };
+        let y = target(0), v = 0;
+        for (let i = 1; i <= n; i++) {
+          const acc = w * w * (target(i) - y) - 2 * z * w * v;
+          v += acc * (DT / 1e3);
+          y += v * (DT / 1e3);
+        }
+        vals.push(y);
+      }
+      out[name] = vals;
+    }
+    if (!now.footW) {
+      delete out.footF;
+      delete out.footB;
+    }
+    const t2 = timeMs / 1e3, seed = opts.seed ?? 0;
+    const still = 1 - Math.min(1, now.footW + (now.mv?.travel ? 1 : 0));
+    out.root = [(out.root?.[0] ?? 0) + Math.sin(t2 * 0.55 + hash(seed, 3) * 6.28) * 45e-4 * still, out.root?.[1] ?? 0];
+    out.lean = [(out.lean?.[0] ?? 0) + Math.sin(t2 * 0.55 + hash(seed, 3) * 6.28 + 1.2) * 0.012 * still];
+    const mv = now.mv;
+    return {
+      joints: { ...out, w: 1 },
+      hands: mv?.hands ?? null,
+      props: mv?.props ?? [],
+      smile: mv?.face?.smile ?? 0,
+      faceCue: mv?.face ?? null,
+      breath: Math.sin(t2 * (2 * Math.PI / (3.6 + hash(seed, 9))) + hash(seed, 11) * 6.28),
+      facing: mv?.facing ?? null,
+      travel: mv?.travel ?? null,
+      move: mv?.move ?? null
+    };
+  }
+
+  // characters/moves/shelf.mjs
+  var UP = [2.55, 0.25];
+  var OUT = [1.5, 0.05];
+  var REST_ARM = [0.12, 0.1];
+  var SHELF_DATA = [
+    // ---- gestures (they replace the four old arm poses one for one) ----------------------
+    {
+      id: "wave",
+      name: "Wave",
+      kind: "gesture",
+      tags: ["greet", "hands"],
+      phrases: ["waves", "wave", "waves hello", "waves goodbye", "greets", "\u03C7\u03B1\u03B9\u03C1\u03B5\u03C4\u03AC", "\u03BA\u03BF\u03C5\u03BD\u03AC\u03B5\u03B9 \u03C4\u03BF \u03C7\u03AD\u03C1\u03B9"],
+      help: "A friendly wave with the hand up by the head.",
+      lengthMs: 1700,
+      tracks: {
+        armF: [[0.15, [2.45, 0.45]], [0.24, [2.5, 0.95]], [0.33, [2.5, 0.1]], [0.42, [2.5, 0.95]], [0.51, [2.5, 0.1]], [0.6, [2.5, 0.95]], [0.69, [2.5, 0.3]], [1, REST_ARM]],
+        head: [[0.2, [4, 0]], [0.75, [4, 0]], [1, [0, 0]]]
+      },
+      hands: { F: [[0.1, "wave"], [0.85, "relaxed"]] },
+      face: [[0.1, { smile: 0.35, brows: "happy" }], [0.9, {}]]
+    },
+    {
+      id: "point",
+      name: "Point",
+      kind: "gesture",
+      tags: ["hands", "explain"],
+      phrases: ["points", "point", "points to the side", "shows", "\u03B4\u03B5\u03AF\u03C7\u03BD\u03B5\u03B9"],
+      help: "Points out to the side with one finger. Holds as long as the line needs.",
+      lengthMs: 1400,
+      hold: 0.4,
+      tracks: { armF: [[0.3, OUT, "back"], [0.75, OUT], [1, REST_ARM]], head: [[0.3, [-3, 0]], [0.8, [-3, 0]], [1, [0, 0]]] },
+      hands: { F: [[0.12, "point"], [0.85, "relaxed"]] }
+    },
+    {
+      id: "shrug",
+      name: "Shrug",
+      kind: "gesture",
+      tags: ["question", "hands"],
+      phrases: ["shrugs", "shrug", "\u03C3\u03B7\u03BA\u03CE\u03BD\u03B5\u03B9 \u03C4\u03BF\u03C5\u03C2 \u03CE\u03BC\u03BF\u03C5\u03C2"],
+      help: "Both hands up and open: who knows?",
+      lengthMs: 1500,
+      tracks: {
+        armF: [[0.3, [0.55, 1.75], "back"], [0.7, [0.55, 1.75]], [1, REST_ARM]],
+        armB: [[0.3, [0.55, 1.75], "back"], [0.7, [0.55, 1.75]], [1, REST_ARM]],
+        head: [[0.3, [-6, 0.02]], [0.75, [-6, 0.02]], [1, [0, 0]]]
+      },
+      hands: { F: [[0.15, "open"], [0.85, "relaxed"]], B: [[0.15, "open"], [0.85, "relaxed"]] },
+      face: [[0.2, { brows: "raised" }], [0.85, {}]]
+    },
+    {
+      id: "explain",
+      name: "Explain",
+      kind: "gesture",
+      tags: ["hands", "explain"],
+      phrases: ["explains", "explaining", "gestures", "\u03B5\u03BE\u03B7\u03B3\u03B5\u03AF"],
+      help: "Talking with the hands: the front hand beats along with the words.",
+      lengthMs: 2e3,
+      hold: 0.3,
+      tracks: {
+        armF: [[0.2, [0.45, 1.35]], [0.35, [0.55, 1.75]], [0.5, [0.42, 1.25]], [0.65, [0.55, 1.7]], [0.8, [0.45, 1.35]], [1, REST_ARM]],
+        armB: [[0.25, [0.3, 0.8]], [0.8, [0.3, 0.8]], [1, REST_ARM]]
+      },
+      hands: { F: [[0.15, "open"], [0.88, "relaxed"]] }
+    },
+    {
+      id: "thumbs-up",
+      name: "Thumbs up",
+      kind: "gesture",
+      tags: ["hands", "yes"],
+      phrases: ["thumbs up", "gives a thumbs up", "\u03BC\u03C0\u03C1\u03AC\u03B2\u03BF"],
+      help: "A thumbs up in front of the chest, with a smile.",
+      lengthMs: 1300,
+      hold: 0.35,
+      tracks: { armF: [[0.3, [0.35, -1.9], "back"], [0.75, [0.35, -1.9]], [1, REST_ARM]] },
+      hands: { F: [[0.15, "thumbsUp"], [0.85, "relaxed"]] },
+      face: [[0.15, { smile: 0.4, brows: "happy" }], [0.9, {}]]
+    },
+    {
+      id: "facepalm",
+      name: "Facepalm",
+      kind: "gesture",
+      tags: ["emotion", "hands"],
+      phrases: ["facepalms", "facepalm", "head in hand"],
+      help: "Hand to the face, head down: oh no.",
+      lengthMs: 1800,
+      hold: 0.45,
+      tracks: {
+        armF: [[0.3, [0.3, -2.85]], [0.75, [0.3, -2.85]], [1, REST_ARM]],
+        head: [[0.3, [-6, 0.12]], [0.75, [-6, 0.12]], [1, [0, 0]]],
+        lean: [[0.3, [0.06]], [0.75, [0.06]], [1, [0]]]
+      },
+      hands: { F: [[0.2, "open"], [0.85, "relaxed"]] },
+      face: [[0.25, { brows: "worried", lids: "closed" }], [0.85, {}]]
+    },
+    // ---- poses held for a while ------------------------------------------------------------
+    {
+      id: "hands-on-hips",
+      name: "Hands on hips",
+      kind: "pose",
+      tags: ["stance", "confident"],
+      phrases: ["hands on hips", "puts hands on hips"],
+      help: "Hands on the hips, elbows out. Held until the line ends.",
+      lengthMs: 1200,
+      hold: 0.4,
+      tracks: { armF: [[0.35, [0.75, -1.75]], [0.8, [0.75, -1.75]], [1, REST_ARM]], armB: [[0.35, [0.75, -1.75]], [0.8, [0.75, -1.75]], [1, REST_ARM]] },
+      hands: { F: [[0.2, "fist"], [0.9, "relaxed"]], B: [[0.2, "fist"], [0.9, "relaxed"]] }
+    },
+    {
+      id: "arms-crossed",
+      name: "Arms crossed",
+      kind: "pose",
+      tags: ["stance", "grumpy"],
+      phrases: ["crosses arms", "arms crossed", "folds arms", "\u03C3\u03C4\u03B1\u03C5\u03C1\u03CE\u03BD\u03B5\u03B9 \u03C4\u03B1 \u03C7\u03AD\u03C1\u03B9\u03B1"],
+      help: "Arms folded across the chest. Held until the line ends.",
+      lengthMs: 1200,
+      hold: 0.4,
+      tracks: { armF: [[0.35, [0.15, -2.45]], [0.8, [0.15, -2.45]], [1, REST_ARM]], armB: [[0.35, [0.1, -2.3]], [0.8, [0.1, -2.3]], [1, REST_ARM]] },
+      hands: { F: [[0.2, "fist"], [0.9, "relaxed"]], B: [[0.2, "fist"], [0.9, "relaxed"]] }
+    },
+    {
+      id: "bow",
+      name: "Bow",
+      kind: "gesture",
+      tags: ["greet", "polite"],
+      phrases: ["bows", "bow", "takes a bow", "\u03C5\u03C0\u03BF\u03BA\u03BB\u03AF\u03BD\u03B5\u03C4\u03B1\u03B9"],
+      help: "A polite bow from the waist, best seen side on.",
+      lengthMs: 1800,
+      tracks: {
+        lean: [[0.35, [0.85]], [0.65, [0.85]], [1, [0]]],
+        head: [[0.35, [0, 0.14]], [0.65, [0, 0.14]], [1, [0, 0]]],
+        armF: [[0.35, [0.35, -1.7]], [0.65, [0.35, -1.7]], [1, REST_ARM]],
+        armB: [[0.35, [0.25, 0.1]], [0.65, [0.25, 0.1]], [1, REST_ARM]],
+        view: [[0.15, [1.6]], [0.85, [1.6]], [1, [0]]]
+      }
+    },
+    // ---- whole body ------------------------------------------------------------------------
+    {
+      id: "cheer",
+      name: "Jump and cheer",
+      kind: "gesture",
+      tags: ["emotion", "happy", "jump"],
+      phrases: ["cheers", "jumps", "jumps for joy", "celebrates", "\u03C0\u03B1\u03BD\u03B7\u03B3\u03C5\u03C1\u03AF\u03B6\u03B5\u03B9", "\u03C0\u03B7\u03B4\u03AC\u03B5\u03B9"],
+      help: "A little crouch, a jump with both fists up, and a soft landing.",
+      lengthMs: 1300,
+      tracks: {
+        root: [[0.18, [0, 0.05]], [0.38, [0, -0.13], "out"], [0.55, [0, 0], "in"], [0.65, [0, 0.03]], [0.8, [0, 0]]],
+        armF: [[0.18, [0.4, 0.6]], [0.38, UP, "back"], [0.8, UP], [1, REST_ARM]],
+        armB: [[0.18, [0.4, 0.6]], [0.38, UP, "back"], [0.8, UP], [1, REST_ARM]],
+        legF: [[0.38, [0.2, 0.5]], [0.55, [0, 0]]],
+        legB: [[0.38, [-0.1, 0.7]], [0.55, [0, 0]]]
+      },
+      hands: { F: [[0.3, "fist"], [0.9, "relaxed"]], B: [[0.3, "fist"], [0.9, "relaxed"]] },
+      face: [[0.2, { smile: 0.6, brows: "raised", lids: "wide" }], [0.95, {}]]
+    },
+    {
+      id: "dance",
+      name: "Little dance",
+      kind: "idle",
+      tags: ["happy", "dance"],
+      phrases: ["dances", "dance", "\u03C7\u03BF\u03C1\u03B5\u03CD\u03B5\u03B9"],
+      help: "A bouncy little dance that loops as long as it is asked to.",
+      lengthMs: 1e3,
+      loop: true,
+      tracks: {
+        root: [[0, [-0.01, 0.02]], [0.25, [0, -0.01]], [0.5, [0.01, 0.02]], [0.75, [0, -0.01]], [1, [-0.01, 0.02]]],
+        armF: [[0, [2.3, 0.6]], [0.5, [0.8, 1.6]], [1, [2.3, 0.6]]],
+        armB: [[0, [0.8, 1.6]], [0.5, [2.3, 0.6]], [1, [0.8, 1.6]]],
+        legF: [[0, [0.15, 0.5]], [0.5, [0, 0.05]], [1, [0.15, 0.5]]],
+        legB: [[0, [0, 0.05]], [0.5, [0.15, 0.5]], [1, [0, 0.05]]],
+        head: [[0, [-6, 0]], [0.5, [6, 0]], [1, [-6, 0]]]
+      },
+      hands: { F: [[0, "open"]], B: [[0, "open"]] },
+      face: [[0, { smile: 0.5 }]]
+    },
+    {
+      id: "walk-in",
+      name: "Walk in",
+      kind: "travel",
+      tags: ["enter", "walk"],
+      phrases: ["walks in", "enters", "comes in", "arrives", "\u03BC\u03C0\u03B1\u03AF\u03BD\u03B5\u03B9", "\u03AD\u03C1\u03C7\u03B5\u03C4\u03B1\u03B9"],
+      help: "Walks in from the left side of the picture to their place, then turns to the camera.",
+      lengthMs: 2600,
+      tracks: { view: [[0, [2]], [0.84, [2]], [1, [0]]] },
+      gait: { t0: 0, t1: 0.88, cadence: 2 },
+      path: { from: "left", to: "here", t0: 0, t1: 0.86 }
+    },
+    {
+      id: "walk-in-right",
+      name: "Walk in from the right",
+      kind: "travel",
+      tags: ["enter", "walk"],
+      phrases: ["walks in from the right", "enters from the right", "comes in from the right"],
+      help: "Walks in from the right side of the picture to their place.",
+      lengthMs: 2600,
+      tracks: { view: [[0, [2]], [0.84, [2]], [1, [0]]] },
+      gait: { t0: 0, t1: 0.88, cadence: 2 },
+      path: { from: "right", to: "here", t0: 0, t1: 0.86 }
+    },
+    {
+      id: "walk-out",
+      name: "Walk out",
+      kind: "travel",
+      tags: ["exit", "walk"],
+      phrases: ["walks out", "leaves", "exits", "walks off", "\u03C6\u03B5\u03CD\u03B3\u03B5\u03B9", "\u03B2\u03B3\u03B1\u03AF\u03BD\u03B5\u03B9"],
+      help: "Turns and walks out of the picture to the right.",
+      lengthMs: 2600,
+      tracks: { view: [[0, [0]], [0.12, [2]], [1, [2]]] },
+      gait: { t0: 0.08, t1: 1, cadence: 2 },
+      path: { from: "here", to: "right", t0: 0.1, t1: 1 }
+    },
+    {
+      id: "run-across",
+      name: "Run across",
+      kind: "travel",
+      tags: ["run", "fast"],
+      phrases: ["runs across", "runs past", "dashes across", "\u03C4\u03C1\u03AD\u03C7\u03B5\u03B9"],
+      help: "Runs across the whole picture from left to right.",
+      lengthMs: 1800,
+      tracks: { view: [[0, [2]], [1, [2]]] },
+      gait: { t0: 0, t1: 1, cadence: 2.4, run: true, stride: 1.2 },
+      path: { from: "left", to: "right", t0: 0, t1: 1 }
+    },
+    {
+      id: "sit-down",
+      name: "Sit down",
+      kind: "stance",
+      tags: ["sit"],
+      stance: "sit",
+      phrases: ["sits down", "sits", "takes a seat", "\u03BA\u03AC\u03B8\u03B5\u03C4\u03B1\u03B9"],
+      help: "Sits down and stays sitting until told to stand up.",
+      lengthMs: 1300,
+      tracks: { sit: [[0.15, [0]], [0.85, [1]]], lean: [[0.2, [0]], [0.5, [0.3]], [0.9, [0]]], armF: [[0.5, [0.3, -0.4]], [1, [0.2, -0.7]]], armB: [[0.5, [0.3, -0.4]], [1, [0.2, -0.7]]] },
+      props: [{ id: "chair", hand: "F", t0: 0, t1: 1 }]
+    },
+    {
+      id: "stand-up",
+      name: "Stand up",
+      kind: "stance",
+      tags: ["sit"],
+      stance: "stand",
+      phrases: ["stands up", "gets up", "rises", "\u03C3\u03B7\u03BA\u03CE\u03BD\u03B5\u03C4\u03B1\u03B9"],
+      help: "Gets up from sitting.",
+      lengthMs: 1200,
+      tracks: { sit: [[0, [1]], [0.2, [1]], [0.85, [0]]], lean: [[0.1, [0]], [0.4, [0.35]], [0.9, [0]]], armF: [[0, [0.2, -0.7]], [0.5, [0.3, -0.4]], [1, REST_ARM]], armB: [[0, [0.2, -0.7]], [0.5, [0.3, -0.4]], [1, REST_ARM]] },
+      props: [{ id: "chair", hand: "F", t0: 0, t1: 1 }]
+    },
+    // ---- with props ----------------------------------------------------------------------
+    {
+      id: "drink",
+      name: "Drink",
+      kind: "gesture",
+      tags: ["prop", "eat"],
+      phrases: ["drinks", "sips", "has a sip", "\u03C0\u03AF\u03BD\u03B5\u03B9"],
+      help: "Lifts a cup (or whatever they hold) to the mouth for a sip.",
+      lengthMs: 2200,
+      tracks: {
+        armF: [[0, [0.25, -1.45]], [0.3, [0.25, -2.7]], [0.65, [0.25, -2.7]], [0.95, [0.25, -1.45]]],
+        head: [[0.3, [-8, -0.03]], [0.65, [-8, -0.03]], [0.9, [0, 0]]]
+      },
+      props: [{ id: "cup", hand: "F", t0: 0, t1: 1 }],
+      face: [[0.3, { lids: "half" }], [0.7, {}]]
+    },
+    {
+      id: "give",
+      name: "Give",
+      kind: "pair",
+      tags: ["prop", "two people"],
+      phrases: ["gives", "hands", "passes", "\u03B4\u03AF\u03BD\u03B5\u03B9"],
+      help: "Holds something out to the other speaker and lets go.",
+      lengthMs: 2e3,
+      tracks: { armF: [[0, [0.5, 1.3]], [0.45, [1.25, 0.25]], [0.7, [1.25, 0.25]], [1, REST_ARM]], lean: [[0.45, [0.08]], [0.7, [0.08]], [1, [0]]] },
+      props: [{ id: "box", hand: "F", t0: 0, t1: 0.55 }],
+      face: [[0.3, { smile: 0.3 }], [0.95, {}]],
+      pair: { role: "giver", partner: "receive", contact: 0.55 }
+    },
+    {
+      id: "receive",
+      name: "Receive",
+      kind: "pair",
+      tags: ["prop", "two people"],
+      phrases: ["takes", "receives", "accepts", "\u03C0\u03B1\u03AF\u03C1\u03BD\u03B5\u03B9"],
+      help: "Reaches out and takes what the other speaker holds out.",
+      lengthMs: 2e3,
+      tracks: { armF: [[0.25, REST_ARM], [0.5, [1.2, 0.3]], [0.62, [1.2, 0.3]], [1, [0.5, 1.3]]] },
+      props: [{ id: "box", hand: "F", t0: 0.55, t1: 1 }],
+      face: [[0.5, { smile: 0.4, brows: "raised" }], [0.95, {}]],
+      pair: { role: "receiver", partner: "give", contact: 0.55 }
+    },
+    {
+      id: "open-box",
+      name: "Open the box",
+      kind: "gesture",
+      tags: ["prop", "surprise"],
+      phrases: ["opens the box", "opens the present", "opens the gift", "unwraps", "\u03B1\u03BD\u03BF\u03AF\u03B3\u03B5\u03B9"],
+      help: "Holds a box in front and lifts the lid, surprised.",
+      lengthMs: 2400,
+      hold: 0.75,
+      tracks: {
+        armF: [[0, [0.3, -1.45]], [1, [0.3, -1.45]]],
+        armB: [[0.25, [0.25, -1.3]], [0.42, [0.35, -2.2]], [0.66, [0.7, -2.6]], [0.85, [0.25, -1.3]]],
+        open: [[0.4, [0]], [0.68, [1], "back"]],
+        head: [[0.3, [0, 0.04]], [0.7, [-4, -0.02]]]
+      },
+      props: [{ id: "box", hand: "F", t0: 0, t1: 1 }],
+      face: [[0.68, { smile: 0.55, brows: "raised", lids: "wide" }]]
+    }
+  ];
+
+  // characters/core/profile.mjs
+  var SUBJECTS = [
+    { id: "dnd", label: "D&D" },
+    { id: "dogs", label: "Dogs and puppies" },
+    { id: "manipulation", label: "Narcissism and manipulation defence" },
+    { id: "softskills", label: "Life coaching and soft skills" },
+    { id: "seasonal", label: "Seasonal" },
+    { id: "ai", label: "ELI5 AI and automation" },
+    { id: "tropes", label: "Pop-culture ethics and tropes" },
+    { id: "everyday", label: "Everyday people" }
+  ];
+  var SUBJECT_IDS = SUBJECTS.map((s) => s.id);
+
+  // characters/presets/drawn.mjs
+  var W = (id, ...colors) => ({ id, colors });
+  var DRAWN_PRESETS = [
+    // ---- D&D
+    {
+      id: "dnd-dungeon-master",
+      subjects: ["dnd"],
+      name: "The Dungeon Master",
+      description: "A cheerful narrator with glasses who runs the game and voices every monster.",
+      personality: "Dramatic, kind, loves a twist",
+      card: { build: "round", hair: "curly", hairColor: "#5a3825", beard: "short", wear: [W("sweater", "#6b3fa0"), W("jeans", "#2d3446"), W("sneakers", "#f2f2f2", "#6b3fa0"), W("glasses", "#262a33")], expression: "smile", energy: 0.8 }
+    },
+    {
+      id: "dnd-dwarf",
+      subjects: ["dnd"],
+      name: "Dwarf fighter",
+      description: "A short, broad dwarf warrior with a huge red beard and a dented helmet.",
+      personality: "Gruff, loyal, brave to a fault",
+      card: { height: 0.8, build: "round", muscle: 0.8, hair: "bald", hairColor: "#a8322b", beard: "full", moustache: "thick", wear: [W("tshirt", "#7a5230"), W("trousers", "#4b3a2a"), W("boots", "#2b1d12"), W("helmet", "#9aa3ab", "#6b4429")], expression: "grumpy" }
+    },
+    {
+      id: "dnd-elf-wizard",
+      subjects: ["dnd"],
+      name: "Elf wizard",
+      description: "A tall, slim elf with long silver hair and a flowing robe.",
+      personality: "Calm, clever, a little vain",
+      card: { height: 1.1, build: "thin", hair: "long", hairColor: "#d9d9e0", ears: "big", wear: [W("dress", "#2f4fa0"), W("himation", "#7fd3ff"), W("sandals", "#7a5230")], expression: "neutral" }
+    },
+    // ---- dogs
+    {
+      id: "dogs-trainer",
+      subjects: ["dogs"],
+      name: "Dog trainer",
+      description: "A friendly dog trainer in a green polo shirt with a treat pouch and a lead.",
+      personality: "Patient, upbeat, explains with examples",
+      card: { hair: "ponytail", hairColor: "#5a3825", wear: [W("polo", "#3f8f4a"), W("jeans", "#2d3446"), W("sneakers", "#f2f2f2", "#3f8f4a"), W("cap", "#3f8f4a")], expression: "smile", energy: 0.7 }
+    },
+    {
+      id: "dogs-vet",
+      subjects: ["dogs"],
+      name: "The vet",
+      description: "A calm vet in a white coat with glasses.",
+      personality: "Gentle, precise, reassuring",
+      card: { hair: "sidepart", hairColor: "#262a33", wear: [W("shirt", "#7fd3ff"), W("blazer", "#f2f2f2"), W("trousers", "#2d3446"), W("shoes", "#16181d"), W("glasses", "#262a33")], expression: "smile" }
+    },
+    {
+      id: "dogs-owner",
+      subjects: ["dogs", "everyday"],
+      name: "New dog owner",
+      description: "A young new dog owner in a hoodie, a bit overwhelmed.",
+      personality: "Eager, worried, asks lots of questions",
+      card: { height: 0.95, hair: "spiky", hairColor: "#c9a46e", wear: [W("hoodie", "#e07b39"), W("jeans", "#3a6fb0"), W("sneakers", "#f2f2f2", "#e07b39")], expression: "neutral", energy: 0.8 }
+    },
+    // ---- manipulation defence (archetypes, never diagnoses or real people)
+    {
+      id: "manip-charmer",
+      subjects: ["manipulation"],
+      name: "The charmer",
+      description: "A smooth talker in a sharp blazer with a big smile.",
+      personality: "Flattering at first, then cold and controlling",
+      card: { hair: "sidepart", hairColor: "#262a33", wear: [W("shirt", "#ffffff"), W("blazer", "#2d3446"), W("tie", "#a8322b"), W("trousers", "#2d3446"), W("shoes", "#16181d")], expression: "smile" }
+    },
+    {
+      id: "manip-target",
+      subjects: ["manipulation"],
+      name: "The one who learns",
+      description: "An ordinary person in a cardigan-style sweater who learns to spot manipulation.",
+      personality: "Kind, doubtful at first, steadier by the end",
+      card: { hair: "bob", hairColor: "#5a3825", wear: [W("sweater", "#e8d5a8"), W("jeans", "#2d3446"), W("shoes", "#5a3825")], expression: "neutral" }
+    },
+    {
+      id: "manip-wise-friend",
+      subjects: ["manipulation", "softskills"],
+      name: "The wise friend",
+      description: "An older friend with grey hair and warm eyes who names what is happening.",
+      personality: "Warm, direct, never preachy",
+      card: { hair: "bun", hairColor: "#b0b0b0", cheeks: true, wear: [W("sweater", "#3f8f4a"), W("skirt", "#2d3446"), W("shoes", "#5a3825"), W("glasses", "#5a3825")], expression: "smile" }
+    },
+    // ---- soft skills
+    {
+      id: "soft-coach",
+      subjects: ["softskills"],
+      name: "The coach",
+      description: "An energetic life coach in a bright polo with a headset microphone.",
+      personality: "Encouraging, practical, a little cheesy",
+      card: { muscle: 0.4, hair: "buzz", hairColor: "#262a33", wear: [W("polo", "#d4405c"), W("trousers", "#2d3446"), W("sneakers", "#ffffff", "#d4405c")], expression: "smile", energy: 0.9 }
+    },
+    {
+      id: "soft-new-hire",
+      subjects: ["softskills", "everyday"],
+      name: "The new hire",
+      description: "A nervous new hire on their first day, shirt tucked in too neatly.",
+      personality: "Nervous, keen to please",
+      card: { height: 0.96, build: "thin", hair: "short", hairColor: "#262a33", wear: [W("shirt", "#7fd3ff"), W("tie", "#2f6fb5"), W("trousers", "#2d3446"), W("shoes", "#16181d")], expression: "neutral", blinkRate: 1.5 }
+    },
+    {
+      id: "soft-team-lead",
+      subjects: ["softskills"],
+      name: "The team lead",
+      description: "A composed team lead in a blazer, always with a notebook.",
+      personality: "Fair, busy, listens before deciding",
+      card: { hair: "braid", hairColor: "#5a3825", wear: [W("tshirt", "#f2f2f2"), W("blazer", "#6b3fa0"), W("trousers", "#2d3446"), W("shoes", "#16181d"), W("earrings", "#f2c84b")], expression: "neutral" }
+    },
+    // ---- seasonal (costume pieces come in Phase 5)
+    {
+      id: "season-winter-gift-giver",
+      subjects: ["seasonal"],
+      name: "Winter gift-giver",
+      description: "A jolly, round man with a big white beard in a red sweater.",
+      personality: "Jolly, warm, a little forgetful",
+      card: { build: "round", hair: "short", hairColor: "#ffffff", beard: "full", moustache: "thick", cheeks: true, wear: [W("sweater", "#a8322b"), W("trousers", "#a8322b"), W("boots", "#16181d"), W("beanie", "#a8322b")], expression: "smile" }
+    },
+    {
+      id: "season-snow-kid",
+      subjects: ["seasonal", "everyday"],
+      name: "Snow-day kid",
+      description: "A small kid bundled up in a scarf and beanie.",
+      personality: "Excited about everything",
+      card: { height: 0.78, headSize: 1.2, hair: "pigtails", hairColor: "#a8322b", freckles: true, wear: [W("hoodie", "#2f6fb5"), W("jeans", "#2d3446"), W("boots", "#e07b39"), W("scarf", "#f2c84b"), W("beanie", "#d4405c")], expression: "smile", energy: 1 }
+    },
+    {
+      id: "season-spooky-host",
+      subjects: ["seasonal"],
+      name: "Spooky host",
+      description: "A pale, thin host in a black suit and top hat for Halloween stories.",
+      personality: "Theatrical, slow, secretly sweet",
+      card: { height: 1.1, build: "thin", skin: "#e8e2da", hair: "sidepart", hairColor: "#000000", wear: [W("shirt", "#ffffff"), W("blazer", "#16181d"), W("bowtie", "#a8322b"), W("trousers", "#16181d"), W("shoes", "#16181d"), W("tophat", "#16181d", "#a8322b")], expression: "serious" }
+    },
+    // ---- ELI5 AI
+    {
+      id: "ai-tinkerer",
+      subjects: ["ai"],
+      name: "The tinkerer",
+      description: "A curious maker in a hoodie with goggles-style glasses, always building automations.",
+      personality: "Curious, explains with analogies",
+      card: { hair: "mohawk", hairColor: "#3f8f4a", wear: [W("hoodie", "#2d3446"), W("jeans", "#3a6fb0"), W("sneakers", "#f2c84b", "#2d3446"), W("glasses", "#262a33")], expression: "smile", energy: 0.8 }
+    },
+    {
+      id: "ai-beginner",
+      subjects: ["ai", "everyday"],
+      name: "Confused beginner",
+      description: "Someone new to computers, holding a phone and frowning at it.",
+      personality: "Honest about not knowing, quick to laugh",
+      card: { build: "round", hair: "curly", hairColor: "#b0b0b0", wear: [W("sweater", "#e85d8a"), W("trousers", "#2d3446"), W("shoes", "#5a3825"), W("glasses", "#5a3825")], expression: "neutral" }
+    },
+    {
+      id: "ai-office-skeptic",
+      subjects: ["ai", "softskills"],
+      name: "The skeptic",
+      description: "An office worker in a shirt and tie who doubts every new tool.",
+      personality: "Dry, sarcastic, secretly impressed",
+      card: { hair: "tuft", hairColor: "#262a33", moustache: "thin", wear: [W("shirt", "#f2f2f2"), W("tie", "#2d3446"), W("trousers", "#4b3a2a"), W("shoes", "#16181d")], expression: "grumpy" }
+    },
+    // ---- tropes (original designs only)
+    {
+      id: "trope-chosen-one",
+      subjects: ["tropes"],
+      name: "The Chosen One",
+      description: "A young hero in a plain hoodie who just found out they are special.",
+      personality: "Unsure, stubborn, grows into it",
+      card: { height: 0.94, hair: "spiky", hairColor: "#262a33", wear: [W("hoodie", "#3f8f4a"), W("jeans", "#2d3446"), W("sneakers", "#ffffff", "#3f8f4a")], expression: "neutral" }
+    },
+    {
+      id: "trope-mentor",
+      subjects: ["tropes", "dnd"],
+      name: "The Mentor",
+      description: "An old mentor with a long grey beard and a calm smile.",
+      personality: "Cryptic, patient, always one step ahead",
+      card: { posture: "slouch", hair: "bald", hairColor: "#b0b0b0", beard: "full", moustache: "thick", wear: [W("chiton", "#e8d5a8", "#7a5230"), W("himation", "#5a3825"), W("sandals", "#7a5230")], expression: "smile" }
+    },
+    {
+      id: "trope-villain",
+      subjects: ["tropes"],
+      name: "The monologuing villain",
+      description: "A tall villain in a dark suit who explains the whole plan.",
+      personality: "Grand, theatrical, can't stop talking",
+      card: { height: 1.12, build: "thin", hair: "sidepart", hairColor: "#000000", moustache: "handlebar", wear: [W("shirt", "#16181d"), W("blazer", "#6b3fa0"), W("trousers", "#16181d"), W("shoes", "#16181d")], expression: "grumpy", energy: 0.9 }
+    },
+    // ---- everyday
+    {
+      id: "everyday-yiayia",
+      subjects: ["everyday"],
+      name: "Yiayia",
+      description: "A small Greek grandmother with a grey bun, a black dress and a brown shawl.",
+      personality: "Loving, bossy, feeds everyone",
+      card: { height: 0.85, build: "round", hair: "bun", hairColor: "#b0b0b0", cheeks: true, wear: [W("dress", "#16181d"), W("scarf", "#5a3825"), W("shoes", "#16181d")], expression: "smile" }
+    },
+    {
+      id: "everyday-dad",
+      subjects: ["everyday"],
+      name: "Dad",
+      description: "A friendly dad in a polo shirt and shorts.",
+      personality: "Corny jokes, calm in a crisis",
+      card: { build: "round", hair: "short", hairColor: "#5a3825", beard: "stubble", wear: [W("polo", "#3a6fb0"), W("shorts", "#c9a46e"), W("sneakers", "#ffffff", "#3a6fb0")], expression: "smile" }
+    },
+    {
+      id: "everyday-teen",
+      subjects: ["everyday"],
+      name: "The teenager",
+      description: "A teenager in a hoodie and headphones-style headband, always on the phone.",
+      personality: "Bored, witty, kinder than they look",
+      card: { height: 0.97, build: "thin", hair: "long", hairColor: "#262a33", wear: [W("hoodie", "#6b3fa0"), W("jeans", "#2d3446"), W("sneakers", "#ffffff", "#6b3fa0"), W("headband", "#d4405c")], expression: "neutral" }
+    }
+  ];
+
+  // characters/core/index.mjs
+  var SHELF = buildShelf(SHELF_DATA).shelf;
+
+  // characters/samples/motion-ab-page.mjs
+  var PLAN = [
+    { move: "walk-in", label: "Walk in" },
+    { move: "wave", label: "Wave" },
+    { pose: "shrug", label: "Shrug (a talking pose)" },
+    { move: "cheer", label: "Jump and cheer" },
+    { move: "explain", label: "Explain" },
+    { move: "thumbs-up", label: "Thumbs up" },
+    { move: "dance", label: "Little dance" },
+    { move: "sit-down", label: "Sit down" },
+    { move: "stand-up", label: "Stand up" },
+    { move: "walk-out", label: "Walk out" }
+  ];
+  var t = 400;
+  var moveSpans = [];
+  var poseSpans = [];
+  var marks = [];
+  for (const p of PLAN) {
+    const m = p.move ? SHELF[p.move] : null;
+    const len = m ? m.loop ? m.lengthMs * 3 : m.hold !== null ? m.lengthMs * 1.5 : m.lengthMs : 1800;
+    if (m) moveSpans.push({ startMs: t, endMs: t + len, move: p.move, seed: 2, dist: m.path ? 1.6 : void 0 });
+    else poseSpans.push({ startMs: t, endMs: t + len, pose: p.pose });
+    marks.push({ ...p, startMs: t, endMs: t + len });
+    t += len + 900;
+  }
+  var TOTAL = t + 600;
+  var ui = { look: "sticker", who: 0, slow: 1 };
+  var $ = (id) => document.getElementById(id);
+  var stages = [$("before"), $("after")];
+  var layers = stages.map(() => document.createElement("canvas"));
+  function stageX(st, mv, w) {
+    if (!mv?.travel) return w / 2;
+    const at = { here: w / 2, left: -w * 0.2, right: w * 1.2 };
+    return at[mv.travel.from] + (at[mv.travel.to] - at[mv.travel.from]) * mv.travel.p;
+  }
+  function frame(now) {
+    const ms = window.__freeze ?? now * ui.slow % TOTAL;
+    const cur = marks.find((m) => ms < m.endMs + 900) ?? marks[0];
+    $("now").textContent = cur.label;
+    const preset = DRAWN_PRESETS[ui.who];
+    const card = normalizeCard({ ...preset.card, name: preset.name, look: ui.look }).card;
+    const first = moveSpans[0], last = moveSpans[moveSpans.length - 1];
+    const away = ms < first.startMs || ms > last.endMs + 300;
+    stages.forEach((cv, k) => {
+      const dpr = Math.min(2, devicePixelRatio || 1);
+      const W2 = Math.round(cv.clientWidth * dpr), H = Math.round(cv.clientHeight * dpr);
+      if (cv.width !== W2 || cv.height !== H) {
+        cv.width = W2;
+        cv.height = H;
+      }
+      const ctx = cv.getContext("2d");
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, W2, H);
+      if (away) return;
+      const fr = frameFor(card, ui.look, "full", { x: W2 * 0.25, y: H * 0.08, w: W2 * 0.5, h: H * 0.8 });
+      let state, mv = null;
+      if (k === 0) {
+        mv = movesAt(moveSpans, SHELF, ms, {});
+        state = characterState({ timeMs: ms, viseme: 0, poseSpans, view: 0, move: mv });
+      } else {
+        const perf = performAt({ poseSpans, moveSpans, shelf: SHELF }, ms, { view: 0, energy: 0.6, seed: 2 });
+        mv = perf;
+        state = characterState({ timeMs: ms, viseme: 0, poseSpans, view: 0, move: { joints: perf.joints, hands: perf.hands ?? { F: "relaxed", B: "relaxed" }, props: perf.props, face: perf.faceCue }, breath: perf.breath });
+      }
+      const x = stageX(cv, mv, W2);
+      const mirror = mv?.facing ? mv.facing === "left" : false;
+      ctx.fillStyle = "rgba(0,0,0,0.14)";
+      ctx.beginPath();
+      ctx.ellipse(x, fr.y, fr.S * 0.1, fr.S * 0.016, 0, 0, Math.PI * 2);
+      ctx.fill();
+      drawFigure(ctx, card, { look: ui.look, S: fr.S, x, y: fr.y, mirror, state, layerSize: { w: W2, h: H }, layerCanvas: layers[k] });
+    });
+    requestAnimationFrame(frame);
+  }
+  $("look").innerHTML = LOOKS.map((l) => `<option value="${l.id}">${l.name}</option>`).join("");
+  $("look").value = ui.look;
+  $("look").onchange = (e) => {
+    ui.look = e.target.value;
+  };
+  $("who").innerHTML = DRAWN_PRESETS.map((p, i) => `<option value="${i}">${p.name}</option>`).join("");
+  $("who").onchange = (e) => {
+    ui.who = +e.target.value;
+  };
+  $("slow").onchange = (e) => {
+    ui.slow = +e.target.value;
+  };
+  requestAnimationFrame(frame);
+  window.__marks = marks;
+})();
+</script></body></html>
