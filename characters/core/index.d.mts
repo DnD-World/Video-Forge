@@ -158,3 +158,21 @@ export const PROP_IDS: string[];
 export const PROP_NAMES: Record<string, string[]>;
 export function drawProp(G: unknown, arm: unknown, prop: string, o?: { open?: number; colors?: string[]; palm?: number }): void;
 export function drawHand(G: unknown, arm: unknown, shape: string, o: { relaxed: (arm: unknown) => void }): void;
+
+// ---- one character, two forms (profile.mjs, presets/drawn.mjs) --------------------------------
+export interface Shared { form: "puppet" | "drawn"; description: string; personality: string; subjects: string[] }
+interface FormSource { form?: "puppet" | "drawn"; character?: CharacterCard | null; puppetPath?: string; sheetPath?: string }
+export const SUBJECTS: { id: string; label: string }[];
+export const FORMS: ("puppet" | "drawn")[];
+export const SHARED_FIELDS: { key: "description" | "personality"; label: string; max: number; help: string; examples: string[] }[];
+export function normalizeShared(src?: unknown): { shared: Shared; problems: string[] };
+export function formOf(sp?: FormSource): "drawn" | "puppet" | "sheet" | "none";
+export function activeCard(sp?: FormSource): CharacterCard | null;
+export interface CardChange { key: string; label: string; from: unknown; to: unknown }
+export function cardDiff(before: CharacterCard, after: CharacterCard): CardChange[];
+export function applyDiff(card: CharacterCard, diff: CardChange[], acceptedKeys: string[]): CharacterCard;
+export function describeCard(card: CharacterCard, shared?: { description?: string; personality?: string }): string;
+export function puppetPickPrompt(description: string, shelf: { slug: string; name: string; framing: string }[]): { system: string; user: string };
+export function readPuppetPick(text: string, shelf: { slug: string }[]): { pick: string; why: string } | { order: string; why: string } | { problem: string };
+export interface DrawnPreset { id: string; subjects: string[]; name: string; description: string; personality: string; card: Partial<CharacterCard> }
+export const DRAWN_PRESETS: DrawnPreset[];

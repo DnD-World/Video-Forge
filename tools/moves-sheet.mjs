@@ -4,6 +4,7 @@
 //
 //   npm run moves:sheet -- [--moves wave,drink] [--look sticker] [--style tired]
 //                          [--framing full|waist|head] [--view 0..2] [--out name]
+//   npm run moves:sheet -- --presets [--look sticker] --out presets   (the prepared characters)
 //
 // Writes characters/checks/moves-<name>.png: each row a move, each column a
 // moment through it. Proof pictures: what a move really looks like, drawn by
@@ -34,7 +35,7 @@ async function main() {
       look: arg("look", "sticker"), style: arg("style", "neutral"), framing: arg("framing", "full"),
       view: arg("view") !== undefined ? Number(arg("view")) : null, cols: Number(arg("cols", 6)), cell: Number(arg("cell", 220)),
     };
-    const url = await p.js(`window.__sheet(${JSON.stringify(opts)})`);
+    const url = process.argv.includes("--presets") ? await p.js(`window.__presets(${JSON.stringify(opts)})`) : await p.js(`window.__sheet(${JSON.stringify(opts)})`);
     const file = path.join(OUT, `moves-${arg("out", "sheet")}.png`);
     await fs.writeFile(file, Buffer.from(url.split(",")[1], "base64"));
     if (p.consoleErrors.length) { console.error(p.consoleErrors.join("\n")); process.exitCode = 1; }

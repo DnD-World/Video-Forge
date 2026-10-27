@@ -8,7 +8,7 @@ import { Toggle } from "./components/ui/Toggle";
 import { SpeakerAvatar } from "./components/canvas/SpeakerAvatar";
 import { PuppetAvatar } from "./components/canvas/PuppetAvatar";
 import { CharacterAvatar } from "./components/canvas/CharacterAvatar";
-import { facingView, lookById } from "../characters/core/index.mjs";
+import { activeCard, facingView, lookById } from "../characters/core/index.mjs";
 import { WaveformScene } from "./components/canvas/WaveformScene";
 import { BackgroundScene } from "./components/canvas/BackgroundScene";
 import { SubtitleScene } from "./components/canvas/SubtitleScene";
@@ -650,16 +650,16 @@ export default function App() {
                               idleMotion
                             ),
                             sp.size * canvasSize.w
-                          ) + travelBob(move, previewTimeMs, sp.size * canvasSize.w, !!sp.character)),
+                          ) + travelBob(move, previewTimeMs, sp.size * canvasSize.w, !!activeCard(sp))),
                     cursor: draggingId === sp.id ? "grabbing" : "grab",
                     touchAction: "none",
                   }}
                   className="z-10"
                 >
-                  {sp.character ? (
+                  {activeCard(sp) ? (
                     // a drawn character: same signals as the puppet, drawn by code
                     <CharacterAvatar
-                      card={sp.character}
+                      card={activeCard(sp)!}
                       size={sp.size * canvasSize.w}
                       timeMs={previewTimeMs}
                       viseme={blend.to}
@@ -670,7 +670,7 @@ export default function App() {
                       browRight={browAt(browTracks[sp.id], previewTimeMs)}
                       head={headPoseAt(sp.id, headTracks[sp.id], previewTimeMs, idleMotion)}
                       poseSpans={poseTracks[sp.id]}
-                      {...facingView(sp.facing, sp, speakers.filter((o) => o.id !== sp.id), { dialogue: lookById(sp.character.look).profile ? 2 : 1 })}
+                      {...facingView(sp.facing, sp, speakers.filter((o) => o.id !== sp.id), { dialogue: lookById(activeCard(sp)!.look).profile ? 2 : 1 })}
                       active={activeSpeakerId === sp.id}
                       move={move}
                       bgOpacity={sp.bgOpacity}

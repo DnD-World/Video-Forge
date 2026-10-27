@@ -12,6 +12,7 @@ import { useSettingsStore } from "./useSettingsStore";
 import { parseScript } from "../lib/narration/parseScript";
 import { parseDramaboxScript } from "../lib/narration/parseDramaboxScript";
 import { plainError } from "../lib/plainError";
+import { activeCard } from "../../characters/core/index.mjs";
 
 export type Row = Record<string, string>;
 export interface RowCheck { ok: boolean; why: string; lines: number }
@@ -128,7 +129,7 @@ export const useManyStore = create<ManyState>((set, get) => ({
       openingPhrase: s.openingPhrase,
       puppetPath: s.puppetPath,
       sheetPath: s.sheetPath,
-      character: s.character,
+      character: activeCard(s) ?? undefined,
       engine: (s.ttsEngine === "dramabox" ? "gemini" : s.ttsEngine ?? "gemini") as "gemini",
       geminiMode: s.geminiMode,
       geminiModel: s.geminiModel,

@@ -50,3 +50,25 @@ window.__sheet = ({ moves, cols = 6, cell = 220, look = "sticker", style = "neut
   return cv.toDataURL("image/png");
 };
 window.__looks = LOOKS.map((l) => l.id);
+
+// the prepared drawn characters, in a grid (one look), named
+import { DRAWN_PRESETS, normalizeCard } from "../core/index.mjs";
+window.__presets = ({ look = "sticker", cols = 6, cell = 200 }) => {
+  const rows = Math.ceil(DRAWN_PRESETS.length / cols);
+  const cv = document.createElement("canvas");
+  cv.width = cols * cell; cv.height = rows * (cell + 24);
+  const ctx = cv.getContext("2d");
+  ctx.fillStyle = "#0d1b2a"; ctx.fillRect(0, 0, cv.width, cv.height);
+  const layer = document.createElement("canvas");
+  DRAWN_PRESETS.forEach((p, i) => {
+    const x0 = (i % cols) * cell, y0 = Math.floor(i / cols) * (cell + 24);
+    ctx.fillStyle = BG[look] ?? "#24395a"; ctx.fillRect(x0 + 2, y0 + 2, cell - 4, cell - 4);
+    const card = { ...normalizeCard({ name: p.name, ...p.card }).card, look };
+    const fr = frameFor(card, look, "full", { x: x0 + 8, y: y0 + 6, w: cell - 16, h: cell - 12 });
+    ctx.save(); ctx.beginPath(); ctx.rect(x0 + 2, y0 + 2, cell - 4, cell - 4); ctx.clip();
+    drawFigure(ctx, card, { look, S: fr.S, x: fr.x, y: fr.y, state: autoPerformance(0.4, { seed: i, talking: false }), layerSize: { w: cv.width, h: cv.height }, layerCanvas: layer });
+    ctx.restore();
+    ctx.fillStyle = "#e8f1f2"; ctx.font = "600 13px sans-serif"; ctx.fillText(p.name, x0 + 8, y0 + cell + 16);
+  });
+  return cv.toDataURL("image/png");
+};
