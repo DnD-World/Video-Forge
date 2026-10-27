@@ -111,6 +111,14 @@ BUILD ORDER (Ak, 26 Oct: "I do not want to choose sequence"). Claude decides the
      patch; the Mentor's robe reads like a shield; thumbs on the stick-figure
      look are faint; a seated drawn character facing the camera still reads
      weakly; a picture puppet can't hold props yet.
+   - 27 Oct evening: PRs #9 (Video Forge) and #11 (Image Forge) MERGED (Ak's
+     go-ahead; Image Forge CI moved to Node 22 first). Both apps installed
+     (0.3.0 / 1.1.1). Review page for #49 B/C sent to Ak:
+     node tools/review-mixing.mjs → characters/checks/review-nikos.html.
+   - NEXT VERSION (Ak, 27 Oct): better installer pictures in both apps —
+     promote our things and show what is being installed (electron-builder
+     NSIS installerSidebar 164×314 / installerHeader 150×57 images, a
+     welcome/finish page showing the app's screens and the sister Forge).
 3. MEDIUM: variety. Looks (beards, shoes, 3 shadow looks), wardrobe, free media, emoji pop-ups, Image Forge in the same layout, the rest of Phase 5.
 4. HIGH: #43 timeline.
 
