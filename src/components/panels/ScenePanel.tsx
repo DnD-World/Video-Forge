@@ -14,6 +14,7 @@ import { Tabs } from "../ui/Tabs";
 import { BackgroundPanel } from "./BackgroundPanel";
 import { SetPicker } from "./SetPicker";
 import { SubtitleFontPicker } from "./SubtitleFontPicker";
+import { CAPTION_STYLES, type CaptionStyle } from "../../lib/subtitles/captionStyles";
 import { RenderBar } from "../render/RenderBar";
 import { PresetsPanel } from "./PresetsPanel";
 import { MusicPanel } from "./MusicPanel";
@@ -371,6 +372,55 @@ export function ScenePanel({
             />
             {subtitles.enabled && (
               <>
+                <div>
+                  <div data-tip="One click sets every control below to a caption look. You can still change anything afterwards." className="label-etched mb-2">Caption style</div>
+                  <div className="flex flex-wrap gap-2">
+                    {CAPTION_STYLES.map((cs: CaptionStyle) => (
+                      <HudButton
+                        key={cs.id}
+                        data-tip={cs.tip}
+                        onClick={() => {
+                          setSubtitles(cs.set);
+                          // the font downloads in the background; the look applies either way
+                          if (cs.font) {
+                            const { family, weight } = cs.font;
+                            window.byok.fonts.ensure(family, weight)
+                              .then(() => setSubtitles({ fontFamily: family, fontWeight: weight }))
+                              .catch(() => {});
+                          }
+                        }}
+                      >
+                        {cs.signature ? `★ ${cs.label}` : cs.label}
+                      </HudButton>
+                    ))}
+                  </div>
+                  <p className="text-sm text-neutral-500 mt-2">★ = our own looks. The rest are the styles that already work on short videos.</p>
+                </div>
+                <div>
+                  <div data-tip="Which words are on screen: the whole line, only the words said so far, or one big word at a time." className="label-etched mb-2">Words shown</div>
+                  <div className="flex flex-wrap gap-2">
+                    {([
+                      ["all", "whole line"],
+                      ["spoken", "as they are said"],
+                      ["word", "one at a time"],
+                    ] as const).map(([id, label]) => (
+                      <HudButton
+                        key={id}
+                        data-tip={`Shows ${label === "whole line" ? "the whole line at once" : label === "one at a time" ? "one big word at a time" : "each word only once it is said"}.`}
+                        active={(subtitles.reveal ?? "all") === id}
+                        onClick={() => setSubtitles({ reveal: id })}
+                      >
+                        {label}
+                      </HudButton>
+                    ))}
+                  </div>
+                </div>
+                <Toggle
+                  data-tip="Words already said keep the highlight colour, like karaoke."
+                  label="Keep said words coloured"
+                  checked={!!subtitles.keepSpoken}
+                  onChange={(v) => setSubtitles({ keepSpoken: v })}
+                />
                 <SubtitleFontPicker />
 
                 <div>
@@ -407,6 +457,9 @@ export function ScenePanel({
                       ["halo", "strong halo"],
                       ["box", "highlight box"],
                       ["lift", "lift & grow"],
+                      ["sweep", "★ marker sweep"],
+                      ["burst", "★ comic sticker"],
+                      ["ink", "★ ink fill"],
                     ] as const).map(([id, label]) => (
                       <HudButton
                         key={id}
