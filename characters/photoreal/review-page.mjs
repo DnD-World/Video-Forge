@@ -1,13 +1,46 @@
 // Live review: the photoreal puppet bent by the skeleton (skin.mjs, mixing an
 // A-pose and a T-pose picture per arm: multi.mjs) next to a drawn character,
-// the same moves at the same moment through the same motion layer.
+// the same moves at the same moment through the same motion layer — upper
+// body only, behind a news desk (Ak, 28 Oct 2026: "lets focus on the upper
+// body. so sitting on a news desk with the bottom half hidden would be fine").
 // tools/photoreal-review.mjs builds it with the pictures inside.
 import { SHELF, performAt, characterState, solveRig, defaultCard, lookById, drawFigure, frameFor, normalizeCard, DRAWN_PRESETS } from "../core/index.mjs";
 import { buildSkin } from "./skin.mjs";
 import { makePuppet } from "./multi.mjs";
 
 const { sources } = window.__REVIEW;
-const MOVES = ["wave", "point", "shrug", "cheer", "explain", "thumbs-up", "facepalm", "dance", "arms-crossed"];
+const MOVES = ["wave", "point", "shrug", "explain", "thumbs-up", "facepalm", "cheer", "arms-crossed", "bow"];
+
+/** Upper body only: the legs and the body's height stay put (they are under the desk). */
+const seated = (perf) => {
+  const j = { ...perf.joints };
+  delete j.legF; delete j.legB; delete j.footF; delete j.footB;
+  j.root = [0, 0]; j.sit = [0];
+  return { ...perf, joints: j };
+};
+
+/** A news desk across the lower part of the frame, and a studio behind. */
+function studio(ctx, W, H, deskTop) {
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, "#0e2340"); g.addColorStop(1, "#06111f");
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  // soft screens of light behind the presenter
+  for (const [x, w, c] of [[0.12, 0.22, "rgba(91,227,181,0.10)"], [0.68, 0.22, "rgba(127,211,255,0.10)"]]) {
+    ctx.fillStyle = c; ctx.fillRect(W * x, H * 0.1, W * w, H * 0.42);
+    ctx.strokeStyle = c.replace("0.10", "0.35"); ctx.lineWidth = 2; ctx.strokeRect(W * x, H * 0.1, W * w, H * 0.42);
+  }
+}
+function desk(ctx, W, H, deskTop) {
+  const top = ctx.createLinearGradient(0, deskTop - H * 0.03, 0, deskTop + H * 0.03);
+  top.addColorStop(0, "#e9eef4"); top.addColorStop(1, "#a9b6c4");
+  ctx.fillStyle = top;
+  ctx.beginPath(); ctx.moveTo(W * 0.04, deskTop); ctx.lineTo(W * 0.96, deskTop); ctx.lineTo(W, deskTop + H * 0.035); ctx.lineTo(0, deskTop + H * 0.035); ctx.closePath(); ctx.fill();
+  const front = ctx.createLinearGradient(0, deskTop, 0, H);
+  front.addColorStop(0, "#1b3556"); front.addColorStop(1, "#0b1a2e");
+  ctx.fillStyle = front; ctx.fillRect(0, deskTop + H * 0.035, W, H);
+  ctx.fillStyle = "#5be3b5"; ctx.fillRect(0, deskTop + H * 0.06, W, H * 0.008);
+  ctx.globalAlpha = 0.5; ctx.fillRect(0, deskTop + H * 0.07, W, H * 0.025); ctx.globalAlpha = 1;
+}
 const loadImg = (src) => new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.src = src; });
 
 const built = [];
@@ -45,7 +78,7 @@ function frame(now) {
   const ms = window.__freeze ?? (now * ui.slow) % TOTAL;
   const cur = spans.find((s) => ms < s.endMs + 900) ?? spans[0];
   $("now").textContent = SHELF[cur.move].name;
-  const perf = performAt({ moveSpans: spans, shelf: SHELF }, ms, { view: 0, energy: 0.5, seed: 2 });
+  const perf = seated(performAt({ moveSpans: spans, shelf: SHELF }, ms, { view: 0, energy: 0.5, seed: 2 }));
   const state = characterState({ timeMs: ms, viseme: 0, view: 0, move: { joints: perf.joints, hands: perf.hands ?? { F: "relaxed", B: "relaxed" }, props: perf.props, face: perf.faceCue }, breath: perf.breath });
   stages.forEach((cv, k) => {
     const dpr = Math.min(2, devicePixelRatio || 1);
@@ -53,14 +86,18 @@ function frame(now) {
     if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
     const ctx = cv.getContext("2d");
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.clearRect(0, 0, W, H);
+    const deskTop = H * 0.7;
+    studio(ctx, W, H, deskTop);
     if (k === 0) {
       const sk = solveRig(rigCard, rigLook, state);
-      puppet.draw(ctx, sk, rest, { x: W / 2, y: H * 0.95, h: H * 0.72 });
+      // the hips sit just below the desk top; the rest of the body is under it
+      const h = H * 1.2;
+      puppet.draw(ctx, sk, rest, { x: W / 2, y: deskTop + h * 0.46, h });
     } else {
-      const fr = frameFor(drawn, "sticker", "full", { x: W * 0.2, y: H * 0.14, w: W * 0.6, h: H * 0.8 });
+      const fr = frameFor(drawn, "sticker", "waist", { x: W * 0.15, y: H * 0.08, w: W * 0.7, h: H * 0.72 });
       drawFigure(ctx, drawn, { look: "sticker", S: fr.S, x: fr.x, y: fr.y, state, layerSize: { w: W, h: H }, layerCanvas: layer });
     }
+    desk(ctx, W, H, deskTop);
   });
   requestAnimationFrame(frame);
 }

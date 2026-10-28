@@ -36,7 +36,11 @@ export function makePuppet(sources, { size = 512 } = {}) {
     draw(ctx, sk, rest, { x, y, h }) {
       const raised = (i) => Math.abs(Math.atan2(sk.arms[i].el[0] - sk.arms[i].sh[0], sk.arms[i].el[1] - sk.arms[i].sh[1]));
       const armW = [weightsFor(raised(0), 0), weightsFor(raised(1), 1)];
-      const bodyW = srcs.map((_, i) => (armW[0][i] + armW[1][i]) / 2);
+      // the body always from the picture with the arms lowest: its sleeves hang
+      // down, while an arms-out picture's sleeves stick out sideways and show
+      // as stubs once its arms are moved (Ak, 28 Oct 2026: torn sleeve)
+      const lowest = srcs.reduce((b, s, i) => (s.skin.armAngle[0] + s.skin.armAngle[1] < srcs[b].skin.armAngle[0] + srcs[b].skin.armAngle[1] ? i : b), 0);
+      const bodyW = srcs.map((_, i) => (i === lowest ? 1 : 0));
       const posed = srcs.map((s) => poseSkin(s.skin, sk, rest));
       const front = posed[0].front;
       const layer = (name, weights) => {

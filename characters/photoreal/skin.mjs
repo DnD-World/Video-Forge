@@ -126,6 +126,19 @@ export function buildSkin(alpha, w, h, points, { cell = 8, armEdges = false } = 
     }
     return null;
   };
+  const armFringe = (p) => {
+    for (const k of ["0", "1"]) {
+      const u = byId["upper" + k], f = byId["fore" + k], r = radius[k];
+      const d = Math.min(segDist(p, u.a, u.b), segDist(p, f.a, f.b));
+      if (d > r * 2) continue;
+      const ax = sub(u.b, u.a), len = Math.hypot(ax[0], ax[1]) || 1;
+      const along = ((p[0] - u.a[0]) * ax[0] + (p[1] - u.a[1]) * ax[1]) / len;
+      if (along < r * 1.1) continue;
+      const body = Math.min(segDist(p, byId.torso.a, byId.torso.b) - armW * 1.6, segDist(p, byId["thigh" + k].a, byId["thigh" + k].b) - armW);
+      if (d < body) return true;
+    }
+    return false;
+  };
   const cols = Math.ceil(w / cell), rows = Math.ceil(h / cell);
   const layers = { body: new Map(), arm0: new Map(), arm1: new Map() };
   for (let gy = 0; gy < rows; gy++) for (let gx = 0; gx < cols; gx++) {
@@ -133,11 +146,16 @@ export function buildSkin(alpha, w, h, points, { cell = 8, armEdges = false } = 
     // a cell counts if any of its 5 sample points is opaque
     if (![[cx, cy], [gx * cell + 1, gy * cell + 1], [(gx + 1) * cell - 1, gy * cell + 1], [gx * cell + 1, (gy + 1) * cell - 1], [(gx + 1) * cell - 1, (gy + 1) * cell - 1]].some(([x, y]) => opaque(x, y))) continue;
     const k = armOf([cx, cy]);
+    // the arm's own edge pixels that are not part of the arm cut (a fringe of
+    // sleeve or skin past the shoulder, nearer the arm than any body bone)
+    // are left out: in the body they hang in the air where the arm used to
+    // be (Ak, 28 Oct 2026: torn bits of sleeve)
+    if (k === null && armFringe([cx, cy])) continue;
     layers[k === null ? "body" : "arm" + k].set(gx + gy * cols, [gx, gy]);
     // the arm's root overlaps the shoulder a little, so the joint stays covered
     if (k === null) for (const j of ["0", "1"]) {
       const sh = byId["upper" + j].a;
-      if (Math.hypot(cx - sh[0], cy - sh[1]) < radius[j] * 1.1) layers["arm" + j].set(gx + gy * cols, [gx, gy]);
+      if (Math.hypot(cx - sh[0], cy - sh[1]) < radius[j] * 1.9) layers["arm" + j].set(gx + gy * cols, [gx, gy]);
     }
   }
   const out = {};
@@ -157,7 +175,7 @@ export function buildSkin(alpha, w, h, points, { cell = 8, armEdges = false } = 
         for (const k of ["0", "1"]) {
           const j = ids.indexOf("upper" + k), up = byId["upper" + k];
           const dj = Math.hypot(p[0] - up.a[0], p[1] - up.a[1]); // px from the shoulder joint
-          ws[j] *= Math.max(0, 1 - dj / (radius[k] * 1.5)) ** 2 * 0.6;
+          ws[j] *= Math.max(0, 1 - dj / (radius[k] * 2.1)) ** 1.5 * 1.6;
         }
       } else {
         // an arm layer only bends with the torso right at the shoulder
