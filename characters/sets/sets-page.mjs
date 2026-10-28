@@ -20,6 +20,8 @@ const CASTS = {
   meeting: [{ p: 0 }, { d: "soft-team-lead" }, { d: "soft-new-hire" }, { d: "ai-office-skeptic" }],
   stage: [{ p: 0 }, { d: "soft-coach" }, { d: "manip-wise-friend" }],
   podcast: [{ p: 0 }, { d: "everyday-teen" }],
+  podcastSplit: [{ p: 0 }, { d: "everyday-teen" }],
+  gameshow: [{ p: 0 }, { d: "dnd-dungeon-master" }, { d: "everyday-yiayia" }],
 };
 const MOVES = ["explain", "point", "shrug", "thumbs-up", "wave", "facepalm", "explain"];
 const SEAT = (perf) => { const j = { ...perf.joints }; delete j.legF; delete j.legB; delete j.footF; delete j.footB; j.root = [0, 0]; j.sit = [0]; return { ...perf, joints: j }; };
@@ -31,12 +33,14 @@ function draw(cv, id, ms) {
   const ctx = cv.getContext("2d");
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   const set = SETS[id], cast = CASTS[id], seats = set.seats(cast.length, W, H);
-  const opts = { t: ms / 1000, title: id === "news" ? "MORNING BRIEF" : id === "stage" ? "THE FUTURE OF WORK" : "" };
+  const opts = { t: ms / 1000, title: id === "news" ? "MORNING BRIEF" : id === "stage" ? "THE FUTURE OF WORK" : "", names: ["NIKOS", "MAYA"], scores: [120, 80] };
   set.back(ctx, W, H, opts);
   // people take turns: one talks for 3 s, the others listen
   const speaker = Math.floor(ms / 3000) % cast.length;
   cast.forEach((c, i) => {
     const seat = seats[i];
+    ctx.save();
+    if (set.clip) { const [cx, cy, cw, ch] = set.clip(i, W, H); ctx.beginPath(); ctx.rect(cx, cy, cw, ch); ctx.clip(); }
     const view = seat.face === "camera" ? 0 : 1;
     const mirror = seat.face === "left";
     const talking = i === speaker;
@@ -48,7 +52,7 @@ function draw(cv, id, ms) {
       const sk = solveRig(rigCard, rigLook, { ...state, view: 0 });
       ctx.save();
       if (mirror) { ctx.translate(seat.x * 2, 0); ctx.scale(-1, 1); }
-      pr[c.p].draw(ctx, sk, restFor(0), { x: seat.x, y: seat.y + seat.h * 0.46, h: seat.h, face: { viseme: talk.mouth.to, prevViseme: talk.mouth.from, mix: talk.mouth.mix, lid: talk.lid.to, brow: perf.faceCue?.brows ?? talk.brows.left } });
+      pr[c.p].draw(ctx, sk, restFor(0), { x: seat.x, y: seat.y + seat.h * pr[c.p].hipShare, h: seat.h, face: { viseme: talk.mouth.to, prevViseme: talk.mouth.from, mix: talk.mouth.mix, lid: talk.lid.to, brow: perf.faceCue?.brows ?? talk.brows.left } });
       ctx.restore();
     } else {
       const p = DRAWN_PRESETS.find((x) => x.id === c.d);
@@ -61,6 +65,7 @@ function draw(cv, id, ms) {
       const hipFromFeet = -lookById("sticker").p.hy * fr.S;
       drawFigure(ctx, card, { look: "sticker", S: fr.S, x: seat.x, y: seat.y + hipFromFeet, mirror, state, layerSize: { w: W, h: H }, layerCanvas: layer });
     }
+    ctx.restore();
   });
   set.front(ctx, W, H, opts);
 }

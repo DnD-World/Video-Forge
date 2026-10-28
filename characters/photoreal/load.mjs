@@ -30,6 +30,14 @@ function onBody(part, alpha, w, box) {
     const a = alpha[Math.round(box.y + j * sy) * w + Math.round(box.x + i * sx)] ?? 0;
     if (a < 200) d.data[(j * part.width + i) * 4 + 3] = Math.min(d.data[(j * part.width + i) * 4 + 3], a);
   }
+  // feathered edges: a part fades out over its outer fifth, so swapping
+  // mouths does not flash a patch of slightly different skin (Ak: choppy face)
+  const fw = part.width * 0.2, fh = part.height * 0.2;
+  for (let j = 0; j < part.height; j++) for (let i = 0; i < part.width; i++) {
+    const e = Math.min(i / fw, (part.width - 1 - i) / fw, j / fh, (part.height - 1 - j) / fh, 1);
+    const k = e * e * (3 - 2 * e);
+    d.data[(j * part.width + i) * 4 + 3] = Math.round(d.data[(j * part.width + i) * 4 + 3] * k);
+  }
   x.putImageData(d, 0, 0);
   return part;
 }

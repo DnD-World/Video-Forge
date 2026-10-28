@@ -38,7 +38,9 @@ canvas{display:block;width:100%;aspect-ratio:16/9}figcaption{padding:12px 16px}f
 <figure><canvas data-set="news"></canvas><figcaption><b>News desk</b><span>one or two presenters</span></figcaption></figure>
 <figure><canvas data-set="meeting"></canvas><figcaption><b>Conference room</b><span>a team of up to four around a table</span></figcaption></figure>
 <figure><canvas data-set="stage"></canvas><figcaption><b>Conference stage</b><span>a speaker at the podium, a panel beside</span></figcaption></figure>
-<figure><canvas data-set="podcast"></canvas><figcaption><b>Podcast</b><span>two hosts at microphones</span></figcaption></figure>
+<figure><canvas data-set="podcast"></canvas><figcaption><b>Podcast, facing each other</b><span>two hosts across a table</span></figcaption></figure>
+<figure><canvas data-set="podcastSplit"></canvas><figcaption><b>Podcast, split screen</b><span>each host in their own half, with a name tag</span></figcaption></figure>
+<figure><canvas data-set="gameshow"></canvas><figcaption><b>Game show</b><span>a host and two contestants at buzzer stands</span></figcaption></figure>
 </div></main>
 <script>window.__SETS=${JSON.stringify({ presenters: [{ manifest, files }] })};</script>
 <script type="module">${js}</script></body></html>`;

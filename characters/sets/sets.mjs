@@ -46,7 +46,7 @@ export const SETS = {
       ctx.fillStyle = accent; ctx.fillRect(0, top + H * 0.06, W, H * 0.008);
       if (title) { ctx.fillStyle = "#e8f1f2"; ctx.font = `700 ${Math.round(H * 0.05)}px Sora, sans-serif`; ctx.textAlign = "center"; ctx.fillText(title, W / 2, top + H * 0.17); ctx.textAlign = "start"; }
     },
-    seats: (n, W, H) => spread(Math.min(n, 2), W, n > 1 ? 0.3 : 0.5, n > 1 ? 0.7 : 0.5, H * 0.74, H * 1.15, towardsMiddle),
+    seats: (n, W, H) => spread(Math.min(n, 2), W, n > 1 ? 0.3 : 0.5, n > 1 ? 0.7 : 0.5, H * 0.86, H * 1.15, towardsMiddle),
   },
 
   meeting: {
@@ -79,7 +79,7 @@ export const SETS = {
       }
       ctx.fillStyle = lin(ctx, 0, top + H * 0.12, 0, H, [[0, "#b7c0ca"], [1, "#9aa5b1"]]); ctx.fillRect(0, top + H * 0.12, W, H);
     },
-    seats: (n, W, H) => spread(Math.min(n, 4), W, n > 1 ? 0.2 : 0.5, n > 1 ? 0.8 : 0.5, H * 0.76, H * 0.95, towardsMiddle),
+    seats: (n, W, H) => spread(Math.min(n, 4), W, n > 1 ? 0.2 : 0.5, n > 1 ? 0.8 : 0.5, H * 0.86, H * 0.95, towardsMiddle),
   },
 
   stage: {
@@ -109,8 +109,8 @@ export const SETS = {
       ctx.fillStyle = accent + "aa"; ctx.fillRect(W * 0.45, H * 0.72, W * 0.47, H * 0.006);
     },
     seats: (n, W, H) => {
-      const s = [{ x: W * 0.27, y: H * 0.7, h: H * 1.05, face: "right" }];
-      if (n > 1) s.push(...spread(Math.min(n - 1, 2), W, 0.58, 0.8, H * 0.76, H * 0.9, () => "left"));
+      const s = [{ x: W * 0.27, y: H * 0.8, h: H * 1.05, face: "right" }];
+      if (n > 1) s.push(...spread(Math.min(n - 1, 2), W, 0.58, 0.8, H * 0.86, H * 0.9, () => "left"));
       return s.slice(0, n);
     },
   },
@@ -148,7 +148,74 @@ export const SETS = {
         ctx.strokeStyle = "#111"; ctx.lineWidth = Math.max(2, W * 0.004); ctx.beginPath(); ctx.arc(W * (x + dir * 0.1), top + H * 0.01, W * 0.025, Math.PI, 0); ctx.stroke();
       }
     },
-    seats: (n, W, H) => spread(Math.min(n, 2), W, n > 1 ? 0.3 : 0.5, n > 1 ? 0.7 : 0.5, H * 0.76, H * 1.05, towardsMiddle),
+    // facing each other across the table
+    seats: (n, W, H) => spread(Math.min(n, 2), W, n > 1 ? 0.27 : 0.5, n > 1 ? 0.73 : 0.5, H * 0.87, H * 1.05, (i) => (i === 0 ? "right" : "left")),
+  },
+
+  podcastSplit: {
+    label: "Podcast (split screen)",
+    help: "Two hosts each in their own half of the screen, each at a microphone, the way a video podcast cuts them.",
+    max: 2,
+    back(ctx, W, H) {
+      for (const [x0, tint] of [[0, "#2a2230"], [W / 2, "#1f2a33"]]) {
+        ctx.save(); ctx.beginPath(); ctx.rect(x0, 0, W / 2, H); ctx.clip();
+        ctx.fillStyle = lin(ctx, 0, 0, 0, H, [[0, tint], [1, "#121016"]]); ctx.fillRect(x0, 0, W / 2, H);
+        const cw = W * 0.05, ch = H * 0.09;
+        for (let y = H * 0.05; y < H * 0.6; y += ch * 1.06) for (let x = x0 + W * 0.03; x < x0 + W / 2 - W * 0.03; x += cw * 1.06) { ctx.fillStyle = "rgba(255,255,255,0.05)"; rr(ctx, x, y, cw, ch, cw * 0.15); ctx.fill(); }
+        ctx.fillStyle = rad(ctx, x0 + W / 4, H * 0.45, W * 0.3, [[0, "rgba(255,180,110,0.14)"], [1, "rgba(255,180,110,0)"]]); ctx.fillRect(x0, 0, W / 2, H);
+        ctx.restore();
+      }
+    },
+    front(ctx, W, H, { accent = "#ff5f7a", names = [] } = {}) {
+      const top = H * 0.78;
+      for (const [i, x0] of [[0, 0], [1, W / 2]]) {
+        ctx.fillStyle = "#24180f"; ctx.fillRect(x0, top, W / 2, H);
+        const mx = x0 + W / 4 + (i ? -1 : 1) * W * 0.07;
+        ctx.strokeStyle = "#1c1c22"; ctx.lineWidth = Math.max(3, W * 0.006); ctx.lineCap = "round";
+        ctx.beginPath(); ctx.moveTo(mx + (i ? -1 : 1) * W * 0.08, top); ctx.lineTo(mx, H * 0.58); ctx.stroke();
+        ctx.fillStyle = "#2a2a33"; rr(ctx, mx - W * 0.016, H * 0.52, W * 0.032, H * 0.09, W * 0.016); ctx.fill();
+        if (names[i]) {
+          ctx.fillStyle = accent; rr(ctx, x0 + W * 0.02, H * 0.86, W * 0.16, H * 0.07, H * 0.012); ctx.fill();
+          ctx.fillStyle = "#fff"; ctx.font = `700 ${Math.round(H * 0.04)}px Sora, sans-serif`; ctx.fillText(names[i], x0 + W * 0.035, H * 0.91);
+        }
+      }
+      ctx.fillStyle = "#0b0b10"; ctx.fillRect(W / 2 - W * 0.003, 0, W * 0.006, H);
+    },
+    seats: (n, W, H) => [{ x: W * 0.25, y: H * 0.9, h: H * 1.15, face: "camera" }, { x: W * 0.75, y: H * 0.9, h: H * 1.15, face: "camera" }].slice(0, n),
+    /** each host is drawn only inside their own half */
+    clip: (i, W, H) => [i * W / 2, 0, W / 2, H],
+  },
+
+  gameshow: {
+    label: "Game show",
+    help: "A host at a podium and contestants behind buzzer stands with scores, under bright lights.",
+    max: 3,
+    back(ctx, W, H, { t = 0 } = {}) {
+      ctx.fillStyle = lin(ctx, 0, 0, 0, H, [[0, "#2b0d4f"], [1, "#0d0420"]]); ctx.fillRect(0, 0, W, H);
+      // a sunburst behind, slowly turning
+      ctx.save(); ctx.translate(W / 2, H * 0.42); ctx.rotate(t * 0.15);
+      for (let i = 0; i < 24; i++) { ctx.fillStyle = i % 2 ? "rgba(255,212,0,0.10)" : "rgba(255,72,176,0.08)"; ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, W, (i / 24) * 6.283, ((i + 1) / 24) * 6.283); ctx.closePath(); ctx.fill(); }
+      ctx.restore();
+      // chasing bulbs along the top
+      for (let i = 0; i < 30; i++) { const on = (i + Math.floor(t * 8)) % 3 === 0; ctx.fillStyle = on ? "#ffe14d" : "#7a5a10"; ctx.beginPath(); ctx.arc(W * (0.02 + i * 0.033), H * 0.04, W * 0.007, 0, 6.3); ctx.fill(); }
+      ctx.fillStyle = "#ffd400"; ctx.font = `800 ${Math.round(H * 0.075)}px Sora, sans-serif`; ctx.textAlign = "center"; ctx.fillText("WHO KNOWS?", W / 2, H * 0.2); ctx.textAlign = "start";
+    },
+    front(ctx, W, H, { scores = [120, 80], t = 0 } = {}) {
+      const floor = H * 0.86;
+      ctx.fillStyle = lin(ctx, 0, floor, 0, H, [[0, "#3a1466"], [1, "#12052a"]]); ctx.fillRect(0, floor, W, H);
+      const podium = (x, w, top, label, glow) => {
+        ctx.fillStyle = lin(ctx, x, 0, x + w, 0, [[0, "#ff48b0"], [1, "#a01f74"]]);
+        ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x + w, top); ctx.lineTo(x + w * 0.92, H); ctx.lineTo(x + w * 0.08, H); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = "#ffd400"; ctx.fillRect(x, top, w, H * 0.012);
+        ctx.fillStyle = "#12052a"; rr(ctx, x + w * 0.18, top + H * 0.05, w * 0.64, H * 0.08, H * 0.01); ctx.fill();
+        ctx.fillStyle = glow ? "#ffe14d" : "#5be3b5"; ctx.font = `800 ${Math.round(H * 0.06)}px Sora, sans-serif`; ctx.textAlign = "center"; ctx.fillText(label, x + w / 2, top + H * 0.115); ctx.textAlign = "start";
+      };
+      podium(W * 0.06, W * 0.22, H * 0.68, "HOST", false);
+      scores.forEach((sc, i) => podium(W * (0.5 + i * 0.25), W * 0.2, H * 0.72, String(sc), Math.floor(t) % 2 === i));
+      scores.forEach((_, i) => { ctx.fillStyle = "#e2231a"; ctx.beginPath(); ctx.ellipse(W * (0.6 + i * 0.25), H * 0.715, W * 0.025, H * 0.015, 0, 0, 6.3); ctx.fill(); });
+    },
+    seats: (n, W, H) => [{ x: W * 0.17, y: H * 0.82, h: H * 1.05, face: "right" }, { x: W * 0.6, y: H * 0.86, h: H * 0.95, face: "left" }, { x: W * 0.85, y: H * 0.86, h: H * 0.95, face: "left" }].slice(0, n),
   },
 };
+
 export const SET_IDS = Object.keys(SETS);

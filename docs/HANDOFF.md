@@ -149,6 +149,21 @@ BUILD ORDER (Ak, 26 Oct: "I do not want to choose sequence"). Claude decides the
      furniture hides the legs: desk presenter, team in a conference room,
      speakers at a conference, recorded podcast. Queued for the variety
      batch: those four sets + wiring photoreal presenters into the app.
+   - 28 Oct, Ak on batch 3:
+     - Sets wanted: game show, news desk, conference room, conference stage,
+       podcast (split screen or facing each other). All six built
+       (characters/sets/sets.mjs); next: inside the app.
+     - Photoreal Nikos: keep, but "anything other than a gimmicky use will
+       not work at this level" (face choppy frame to frame, hands/fingers
+       poor). Done: feathered face parts, narrower hand cross-fade.
+     - #6 motion library: grow it WITH in-between (mid / semi-mid) poses so
+       moves look more fluid.
+     - #8 pop-ups: animated ICONS too, not only emoji; predict what his
+       subjects need (D&D, dogs, manipulation defence, soft skills,
+       seasonal, ELI5 AI, tropes) — same for #2 looks, #3 wardrobe,
+       #4 costumes, #5 shoes.
+     - #9 captions: copy the styles that already work; at most 3 new
+       signature styles.
 3. MEDIUM: variety. Looks (beards, shoes, 3 shadow looks), wardrobe, free media, emoji pop-ups, Image Forge in the same layout, the rest of Phase 5.
 4. HIGH: #43 timeline.
 
