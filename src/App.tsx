@@ -40,6 +40,8 @@ import { buildSpeakerMoveTracks, moveAt, placeTracks, seatedTracks, stagePlaceme
 import type { MoveSpan } from "../characters/core/index.mjs";
 import { seatSpeakers } from "./lib/motion/seats";
 import { SetLayer } from "./components/canvas/SetLayer";
+import { PopLayer } from "./components/canvas/PopLayer";
+import { buildPopTracks } from "./lib/motion/popTracks";
 import { sampleAnalysis } from "./lib/waveform/audioAnalysis";
 import { useCornerFlare } from "./lib/motion/useCornerFlare";
 import { SparkField } from "./components/ui/SparkField";
@@ -260,6 +262,7 @@ export default function App() {
   );
   // Moves from the motion library ([walks in], [sits down]…), as the render does them.
   const cast = useMemo(() => speakers.map((sp) => ({ id: sp.id, label: sp.label, x: sp.x, size: sp.size })), [speakers]);
+  const pops = useMemo(() => buildPopTracks(narration?.segments ?? []), [narration]);
   const moveTracks = useMemo(() => (scene ? seatedTracks : (t: Record<string, MoveSpan[]>) => t)(buildSpeakerMoveTracks(narration?.segments ?? [], cast)), [narration, cast, scene]);
   const headTracks = useMemo(
     () => buildSpeakerHeadTracks(narration?.segments ?? []),
@@ -739,6 +742,8 @@ export default function App() {
 
               {/* the set's furniture in front of the speakers */}
               <SetLayer scene={scene} part="front" width={canvasSize.w} height={canvasSize.h} timeMs={previewTimeMs} />
+              {/* [pop …] and emoji tags: animated icons beside the speaker */}
+              <PopLayer pops={pops} speakers={speakers} width={canvasSize.w} height={canvasSize.h} timeMs={previewTimeMs} />
 
               {/* Above the avatars, matching the render's layer order. */}
               <SubtitleScene

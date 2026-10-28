@@ -223,3 +223,20 @@ window.__pat2 = () => {
   for (let i = 0; i < d.length; i += 4) if (d[i] > 230 && d[i + 1] > 220 && d[i + 2] > 180) light++;
   return { light, url: c.toDataURL() };
 };
+
+// the animated icons: every icon at three moments
+import { ICONS, ICON_IDS, drawPop } from "../icons/icons.mjs";
+window.__icons = ({ cell = 110 }) => {
+  const times = [150, 600, 1400];
+  const cols = 9, groups = ICON_IDS.length;
+  const rows = Math.ceil(groups / cols);
+  const cv = Object.assign(document.createElement("canvas"), { width: cols * cell * times.length, height: rows * (cell + 18) });
+  const ctx = cv.getContext("2d");
+  ctx.fillStyle = "#24395a"; ctx.fillRect(0, 0, cv.width, cv.height);
+  ICON_IDS.forEach((id, n) => {
+    const c = n % cols, r = Math.floor(n / cols);
+    times.forEach((ms, j) => drawPop(ctx, { icon: id, startMs: 0, endMs: 5000 }, (c * times.length + j + 0.5) * cell, r * (cell + 18) + cell * 0.52, cell * 0.62, ms));
+    ctx.fillStyle = "#e8f1f2"; ctx.font = "600 12px sans-serif"; ctx.textAlign = "center"; ctx.fillText(ICONS[id].label, (c * times.length + 1.5) * cell, r * (cell + 18) + cell + 8);
+  });
+  return cv.toDataURL("image/png");
+};

@@ -29,6 +29,10 @@ import { displayLine } from "../../src/lib/narration/displayText";
 import { withAudioTags } from "../../src/lib/narration/elevenTags";
 import { elevenLineKey, paidGate, readPaidLine, savePaidLine, type PaidPolicy } from "./paidVoice";
 
+/** Pop-up tags ([pop red flag], [🎉]) are for the picture only: no voice ever sees them. */
+const noPops = (t: string) => t.replace(/\[\s*(?:pop|icon|εικονίδιο)(?:\s|:)[^\]]*\]\s*/giu, "").replace(/\[\s*\p{Extended_Pictographic}[^\]]*\]\s*/gu, "");
+
+
 /** One line of script, with its speaker's voice already resolved.
  *
  *  THIS IS THE PIPER PATH ONLY. DramaBox does not synthesise here — it runs on
@@ -207,7 +211,7 @@ export async function estimatePaid(
     }
   }
   const accents = await accentMap(segments.map((x) => x.text));
-  const spoken = (t: string) => applyPronunciations(withAccents(t, accents), sayList);
+  const spoken = (t: string) => applyPronunciations(withAccents(noPops(t), accents), sayList);
   const dir = paidLinesDir(outputDir);
   let lines = 0;
   let chars = 0;
@@ -308,7 +312,7 @@ export async function buildNarration(
   if (accents.size) {
     console.log(`[video-forge] accents restored for ${accents.size} capitalised word(s): ${[...accents.values()].slice(0, 8).join(", ")}`);
   }
-  const spoken = (t: string) => applyPronunciations(withAccents(t, accents), sayList);
+  const spoken = (t: string) => applyPronunciations(withAccents(noPops(t), accents), sayList);
 
   // PAID LINES: counted and checked BEFORE the first one is bought, so a
   // batch that is not allowed to spend, or a job that outgrew the yes it was

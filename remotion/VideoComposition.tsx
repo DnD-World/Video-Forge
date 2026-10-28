@@ -25,6 +25,8 @@ import { buildSpeakerMoveTracks, moveAt, placeTracks, seatedTracks, stagePlaceme
 import type { MoveSpan } from "../characters/core/index.mjs";
 import { seatSpeakers } from "../src/lib/motion/seats";
 import { SetLayer } from "../src/components/canvas/SetLayer";
+import { PopLayer } from "../src/components/canvas/PopLayer";
+import { buildPopTracks } from "../src/lib/motion/popTracks";
 import { facingView, lookById } from "../characters/core/index.mjs";
 import { BackgroundLayer } from "./BackgroundLayer";
 import { MusicTrack } from "./MusicTrack";
@@ -151,6 +153,7 @@ export function VideoComposition({
   );
   // Moves from the motion library: [walks in], [sits down], [gives the box to Maria]…
   const cast = useMemo(() => speakers.map((sp) => ({ id: sp.id, label: sp.label, x: sp.x, size: sp.size })), [speakers]);
+  const pops = useMemo(() => buildPopTracks(narrationSegments), [narrationSegments]);
   const moveTracks = useMemo(() => (scene ? seatedTracks : (t: Record<string, MoveSpan[]>) => t)(buildSpeakerMoveTracks(narrationSegments, cast)), [narrationSegments, cast, scene]);
 
   // Every image any avatar might draw: a flattened sheet, or every layer of a
@@ -472,6 +475,7 @@ export function VideoComposition({
 
       {/* the set's furniture in front of the speakers, hiding them from the waist down */}
       <SetLayer scene={scene} part="front" width={width} height={height} timeMs={timeMs} />
+      <PopLayer pops={pops} speakers={speakers} width={width} height={height} timeMs={timeMs} />
 
       {/* Last, so subtitles sit above the waveform and the avatars. */}
       {/* THE CAPTION'S PANE, and it lives here rather than inside SubtitleScene
