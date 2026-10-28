@@ -49,7 +49,8 @@ export function applyLayer(look, dst, L, lc, { w, h, S, ink = "#3ef0ff" }) {
       dst.save(); dst.shadowColor = "rgba(40,30,20,0.35)"; dst.shadowBlur = S * 0.02; dst.shadowOffsetX = S * 0.008; dst.shadowOffsetY = S * 0.012; dst.drawImage(L, 0, 0); dst.restore();
       return;
     case "riso":
-      dst.save(); dst.globalCompositeOperation = "multiply"; dst.globalAlpha = 0.55; dst.drawImage(L, S * 0.009, S * 0.005); dst.globalAlpha = 1; dst.drawImage(L, 0, 0); dst.restore();
+      // a second pass a hair out of line (it was nearly a centimetre: "like without reading glasses")
+      dst.save(); dst.globalCompositeOperation = "multiply"; dst.globalAlpha = 0.4; dst.drawImage(L, S * 0.0035, S * 0.002); dst.globalAlpha = 1; dst.drawImage(L, 0, 0); dst.restore();
       return;
     case "glow":
       dst.save(); dst.shadowColor = ink; dst.shadowBlur = S * 0.035; dst.drawImage(L, 0, 0); dst.drawImage(L, 0, 0); dst.restore();

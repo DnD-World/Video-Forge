@@ -76,6 +76,7 @@ type Ctx = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 export const LOOKS: Look[];
 export const LOOK_IDS: string[];
 export function lookById(id: string): Look;
+export function stageOf(look: Look | string): [string, string];
 export const FIELDS: Field[];
 export const WARDROBE: { id: string; label: string; slot: string; colors: number; patterns: boolean }[];
 export const CARD_VERSION: number;

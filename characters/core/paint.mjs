@@ -122,7 +122,13 @@ export function paint(G, fill0, { role = "cloth", feature = false, outline, noSh
   const ink = G.ink;
   const ow = outline ?? look.outline ?? 0;
   let fill = feature ? fill0 : toneColor(look, fill0, role);
-  if (!feature && look.fill === "none") fill = null;
+  if (!feature && look.fill === "none") {
+    // line art still has a front and a back: the shape erases what is behind
+    // it (a braid behind the head, a helmet strap behind the face), then
+    // only its outline is drawn. drawFigure always gives these looks a layer.
+    if (fill0 && pen.last?.closed) { ctx.save(); ctx.globalCompositeOperation = "destination-out"; ctx.fillStyle = "#000"; ctx.fill(); ctx.restore(); }
+    fill = null;
+  }
   if (fill) {
     if (look.fill === "hatch" && !feature) {
       // ballpoint: faces stay clean paper, everything else is hatched

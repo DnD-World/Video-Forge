@@ -35,7 +35,7 @@ export const PATTERNS = ["none", "stripes", "checks", "dots", "corduroy"];
 // in between the two outlines blend point for point. Each kind is that same
 // outline with its own proportions and details.
 /** A leg's end lifted by a stroke's radius, so its round cap sits on the floor. */
-export const ankle = (p, r) => [p[0], p[1] - r];
+export const ankle = (p, r) => [p[0], p[1] - r * 2.2];
 const lerpP = (a, b, k) => a.map((p, i) => [p[0] + (b[i][0] - p[0]) * k, p[1] + (b[i][1] - p[1]) * k]);
 const smoothK = (k) => k * k * (3 - 2 * k);
 

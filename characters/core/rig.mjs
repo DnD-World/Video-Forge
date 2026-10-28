@@ -189,7 +189,8 @@ export function solveRig(card, look, state = {}) {
   const ex = R * 0.33 * (card.eyeSpacing ?? 1);
   // eyes relative to the head centre; the far eye squeezes and then hides
   const eyes = [
-    { x: faceDX - ex * lerp(1, 0.62, turn) * (1 - side), y: -R * 0.02, scaleX: lerp(1, 0.75, turn), visible: side < 0.55, far: true },
+    // the far eye slides back round the head and narrows to half an eye before it hides
+    { x: faceDX - ex * lerp(1, 0.86, turn) * (1 - side * 0.25), y: -R * 0.02, scaleX: lerp(1, 0.72, turn) * (1 - side * 1.1), visible: side < 0.7, far: true },
     { x: faceDX + ex * (1 - side * 0.55), y: -R * 0.02, scaleX: 1, visible: true, far: false },
   ];
   const face = {

@@ -3,10 +3,23 @@
 import { build } from "esbuild";
 import fs from "node:fs";
 import path from "node:path";
+import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const out = await build({ entryPoints: [path.join(root, "characters/samples/motion-ab-page.mjs")], bundle: true, write: false, format: "iife", target: "es2022", logLevel: "warning" });
+// BEFORE is the engine as it was just before the motion work, taken from git
+const BEFORE = "a6561d1";
+const old = path.join(root, "characters/checks", `before-${BEFORE}`);
+if (!fs.existsSync(path.join(old, "characters/core/index.mjs"))) {
+  fs.mkdirSync(old, { recursive: true });
+  execFileSync("git", ["-C", root, "archive", "--format=tar", "-o", path.join(old, "src.tar"), BEFORE, "characters", "explainer/core"]);
+  execFileSync("tar", ["-xf", "src.tar"], { cwd: old });
+  fs.rmSync(path.join(old, "src.tar"));
+}
+const out = await build({
+  entryPoints: [path.join(root, "characters/samples/motion-ab-page.mjs")], bundle: true, write: false, format: "iife", target: "es2022", logLevel: "warning",
+  alias: { "before-core": path.join(old, "characters/core/index.mjs") },
+});
 const js = out.outputFiles[0].text.replaceAll("</script", "<\\/script");
 const html = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
@@ -24,13 +37,13 @@ select{font:inherit;background:#1c3555;color:var(--ink);border:1px solid #2b4b72
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 @media (max-width:760px){.grid{grid-template-columns:1fr}}
 figure{margin:0;background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden}
-canvas{display:block;width:100%;aspect-ratio:4/3;background:linear-gradient(#ffe6f2 0 84%,#f7c6dc 84%)}
+canvas{display:block;width:100%;aspect-ratio:4/3}
 figcaption{padding:12px 16px}figcaption b{font-size:18px}figcaption span{color:var(--muted);font-size:14px;display:block}
 figure.after{border-color:var(--mint);box-shadow:0 0 0 1px var(--mint) inset}
 ul{color:var(--muted);font-size:14px;margin:18px 0 0;padding-left:20px}
 </style></head><body><main>
 <h1>Movement <span>— before and after</span></h1>
-<p class="lead">The same character, the same moves, at the same moment. Left: how drawn characters moved until today. Right: with weight, follow-through, a small wind-up before big moves, breathing, and feet that stay planted when walking. Change the character or the drawing style; slow it down to see the difference.</p>
+<p class="lead">The same character, the same moves, at the same moment. Left: the drawing engine exactly as it was before this work (taken from its saved version). Right: with weight, follow-through, a small wind-up before big moves, breathing, and feet that stay planted when walking. Change the character or the drawing style; slow it down to see the difference.</p>
 <div class="bar"><span class="now" id="now"></span>
 <label>Character <select id="who"></select></label>
 <label>Style <select id="look"></select></label>

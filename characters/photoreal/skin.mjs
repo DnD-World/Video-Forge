@@ -233,7 +233,7 @@ export function poseSkin(skin, sk, rest, { bodyH } = {}) {
   const crossing = (i) => {
     const half = Math.abs(sk.arms[i].sh[0] - sk.neck[0]);
     const reach = (sk.arms[i].ha[0] - sk.neck[0]) * Math.sign(sk.arms[i].sh[0] - sk.neck[0]);
-    return reach < half * 0.72 && sk.arms[i].ha[1] > sk.head[1] - sk.R && sk.arms[i].ha[1] < sk.hy + 0.03;
+    return reach < half * 1.02 && sk.arms[i].ha[1] > sk.head[1] - sk.R && sk.arms[i].ha[1] < sk.hy + 0.03;
   };
   return { body: place(skin.layers.body), arm0: place(skin.layers.arm0), arm1: place(skin.layers.arm1), front: [crossing(0), crossing(1)] };
 }

@@ -214,11 +214,15 @@ export function drawCharacter(ctx, card, { look: look0 = card.look, S, x = 0, y 
     const p = G.U(pts);
     if (look.limb === "line") { pen.poly(p, false); ctx.strokeStyle = ink; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.lineWidth = w * S; ctx.stroke(); return; }
     if (look.limb === "hose") {
-      const a = p[0], b = p[2], mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2, dx = b[0] - a[0], dy = b[1] - a[1];
-      const k = role === "leg" ? 0.16 : 0.32;
-      // bow away from the body: the hip/shoulder's side of the centre line
+      // one smooth tube THROUGH the elbow or knee (Ak, 28 Oct 2026: the
+      // straight bow ignored the joint, so arms and legs never bent); with
+      // the joint nearly straight it still bows a little, the rubber-hose way
+      const a = p[0], e = p[1], b = p[2], dx = b[0] - a[0], dy = b[1] - a[1];
       const sgn = -(Math.sign(pts[0][0] - sk.neck[0]) || 1);
-      pen.curve([a, [mx - dy * k * sgn, my + dx * k * sgn], b]);
+      const len = Math.hypot(dx, dy) || 1;
+      const straight = Math.abs(((e[0] - a[0]) * dy - (e[1] - a[1]) * dx) / len) < len * 0.06;
+      const k = straight ? (role === "leg" ? 0.08 : 0.16) : 0;
+      pen.curve([a, [e[0] - dy * k * sgn, e[1] + dx * k * sgn], b]);
     } else pen.poly(p, false);
     G.line(color, w, { role: role === "leg" || role === "arm" ? (color === card.skin ? "skin" : "cloth") : "cloth" });
   };
@@ -252,7 +256,13 @@ export function drawCharacter(ctx, card, { look: look0 = card.look, S, x = 0, y 
   const crossing = (arm) => {
     const half = Math.abs(arm.sh[0] - sk.neck[0]);
     const reach = (arm.ha[0] - sk.neck[0]) * Math.sign(arm.sh[0] - sk.neck[0]); // < half: towards the middle
-    return reach < half * 0.72 && arm.ha[1] > sk.head[1] - sk.R && arm.ha[1] < sk.hy + 0.03;
+    // in front as soon as the hand reaches the body's edge, before any of it would be hidden
+    // (later, the hand first slid behind the body and then jumped in front)
+    // (counting the hand's own size), and only while the forearm folds inward,
+    // so arms hanging at rest stay behind
+    const side = Math.sign(arm.sh[0] - sk.neck[0]);
+    const inward = (arm.el[0] - arm.ha[0]) * side > 0;
+    return inward && reach < half * 1.02 + sk.limbW * 1.3 && arm.ha[1] > sk.head[1] - sk.R && arm.ha[1] < sk.hy + 0.22;
   };
   const inFront = facingFront ? sk.arms.filter(crossing) : [sk.arms[1]];
   const behind = sk.arms.filter((a) => !inFront.includes(a));
@@ -280,7 +290,7 @@ export function drawCharacter(ctx, card, { look: look0 = card.look, S, x = 0, y 
   if (!look.noNeck) {
     const l = sk.neck[0], nw = sk.R * 0.16;
     pen.poly(G.U([[l - nw, sk.sy - 0.03], [l + nw, sk.sy - 0.03], [l + nw, sk.sy + 0.004], [l - nw, sk.sy + 0.004]]));
-    G.fill(card.skin, { role: "skin", noShade: true, outline: 0 });
+    G.fill(card.skin, { role: "skin", noShade: true, outline: look.fill === "glass" ? look.outline : 0 });
   }
   phase("neck");
 
@@ -295,8 +305,23 @@ export function drawCharacter(ctx, card, { look: look0 = card.look, S, x = 0, y 
     ctx.save();
     ctx.translate(sk.head[0] * S, sk.head[1] * S);
     ctx.rotate(sk.rot);
+    // HAIR AND HATS TURN WITH THE HEAD (Ak, 28 Oct 2026). They are drawn for a
+    // face looking at the camera; as the head turns, every point slides round
+    // the head like a point on a ball: the front hairline goes towards the
+    // forehead, the back of the hair comes into view behind.
+    const yaw = (Math.min(sk.v, 2) / 2) * Math.PI * 0.42;
+    const rxS = sk.rx * S;
+    const wrapRound = ([x, y]) => {
+      const u = x / rxS;
+      if (yaw <= 0 || u <= -1) return [x, y];
+      if (u >= 1) return [x + rxS * (Math.sin(Math.min(Math.PI / 2, Math.PI / 2)) - 1), y];
+      const th = Math.asin(u), w = (th + Math.PI / 2) / Math.PI; // 0 at the back edge, 1 at the front
+      return [rxS * Math.sin(Math.min(Math.PI / 2, th + yaw * w * (1 - w) * 2.2)), y];
+    };
+    pen.warp = wrapRound;
     phase("hairBack");
     hair.back?.(G, sk, S, hairColor, t);
+    pen.warp = null;
     const ears = sk.face.ears.filter((e) => e.visible && card.ears !== "none");
     const earR = { small: 0.14, round: 0.18, big: 0.24 }[card.ears] ?? 0.14;
     const drawEar = (e) => { pen.ellipse(e.x * S, e.y * S, sk.R * earR * 0.8 * S, sk.R * earR * 1.15 * S); G.fill(card.skin, { role: "skin", noShade: true }); };
@@ -311,9 +336,11 @@ export function drawCharacter(ctx, card, { look: look0 = card.look, S, x = 0, y 
     G.fill(card.skin, { role: "skin" });
     ears.filter((e) => Math.abs(e.x) <= sk.rx * 0.8).forEach(drawEar);
     face = drawFace(G, state);
+    pen.warp = wrapRound;
     hair.front?.(G, sk, S, hairColor, t);
     if (card.highlight) highlight(G, sk, S, card.highlight);
     phase("head");
+    pen.warp = null;
     phase("face");
     ctx.restore();
   }
@@ -595,7 +622,8 @@ function jawBeard(G, kind, hairC, mx, my) {
 /** The character with its look's whole-figure treatment, via a layer canvas. */
 export function drawFigure(ctx, card, opts) {
   const look = typeof (opts.look ?? card.look) === "string" ? lookById(opts.look ?? card.look) : opts.look;
-  if (!look.layer || !opts.layerSize) return drawCharacter(ctx, card, { ...opts, look });
+  // line-art looks erase what is behind each shape, so they always need their own layer
+  if ((!look.layer && look.fill !== "none") || !opts.layerSize) return drawCharacter(ctx, card, { ...opts, look });
   const { w, h } = opts.layerSize;
   const L = opts.layerCanvas ?? newCanvas(w, h);
   if (L.width !== w || L.height !== h) { L.width = w; L.height = h; }

@@ -84,9 +84,11 @@ export function makePen(ctx, { t = 0, boil = 0, rate = 8 } = {}) {
   const pen = {
     ctx,
     last: null,
+    /** Optional point warp (head-local px → px), e.g. hair wrapping round a turning head. */
+    warp: null,
     /** Start a fresh path from points (closed by default). */
     poly(pts, closed = true) {
-      const q = pts.map(jit);
+      const q = (pen.warp ? pts.map(pen.warp) : pts).map(jit);
       pen.last = { q, closed };
       pen.trace(q, closed);
       return pen;

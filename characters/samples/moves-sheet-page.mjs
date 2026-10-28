@@ -1,12 +1,12 @@
 // A contact sheet of moves: each row a move, each column a moment in it,
 // drawn on a real canvas by the engine. tools/moves-sheet.mjs saves it as PNG
 // (proof pictures for checks and for Ak's A/B pages).
-import { SHELF, LOOKS, drawFigure, frameFor, autoPerformance, movesAt } from "../core/index.mjs";
+import { stageOf, SHELF, LOOKS, drawFigure, frameFor, autoPerformance, movesAt } from "../core/index.mjs";
 import { sampleCards } from "../core/check.mjs";
 
-const BG = { sticker: "#ffe6f2", stick: "#efe2cf", sitcom: "#c7a6e8", hose: "#cfc6b4", corp: "#fbf4ec", geo: "#1f1a4a", karag: "#f6e3b4", pop: "#ffd400" };
+const BG = new Proxy({}, { get: (_, k) => stageOf(String(k))[0] });
 
-window.__sheet = ({ moves, cols = 6, cell = 220, look = "sticker", style = "neutral", framing = "full", who = 0, view = null }) => {
+window.__sheet = ({ moves, cols = 6, cell = 220, look = "sticker", style = "neutral", framing = "full", who = 0, view = null, preset = null }) => {
   const list = (moves?.length ? moves : Object.keys(SHELF)).filter((id) => SHELF[id]);
   const cv = document.createElement("canvas");
   const labelW = 150;
@@ -26,7 +26,8 @@ window.__sheet = ({ moves, cols = 6, cell = 220, look = "sticker", style = "neut
       ctx.beginPath(); ctx.rect(x0 + 2, y0 + 2, cell - 4, cell - 4); ctx.clip();
       ctx.fillStyle = BG[look] ?? "#24395a"; ctx.fillRect(x0, y0, cell, cell);
       ctx.fillStyle = "rgba(0,0,0,0.07)"; ctx.fillRect(x0, y0 + cell * 0.9, cell, cell * 0.1);
-      const card = { ...sampleCards()[who], look };
+      const pr = preset ? DRAWN_PRESETS.find((p) => p.id === preset) : null;
+      const card = pr ? { ...normalizeCard({ ...pr.card, name: pr.name }).card, look } : { ...sampleCards()[who], look };
       const fr = frameFor(card, look, framing, { x: x0 + cell * 0.1, y: y0 + cell * 0.04, w: cell * 0.8, h: cell * 0.88 });
       const mv = movesAt([{ startMs: 0, endMs: span, move: id, style }], SHELF, ms, { energy: 0.4, seed: 1 });
       let x = fr.x, mirror = false;
@@ -129,5 +130,72 @@ window.__shoes = ({ look = "sticker", cell = 220 }) => {
       ctx.restore();
     });
   });
+  return cv.toDataURL("image/png");
+};
+
+// QC: flashes. Plays a sequence of moves at 30 fps through the motion layer
+// and finds pixels that change colour for ONE frame and change back (a flash
+// or a stray line), per look. Returns counts and the worst frame, marked.
+import { performAt, characterState as cs2, SHELF as SH2, LOOKS as LK2 } from "../core/index.mjs";
+window.__flicker = ({ looks = null, preset = "dnd-dwarf", moves = ["walk-in", "wave", "cheer", "explain", "dance", "drink", "sit-down", "stand-up"], size = 260 }) => {
+  const pr = DRAWN_PRESETS.find((p) => p.id === preset);
+  const spans = []; let t = 300;
+  if (!moves.length) t = 4000; // standing still, breathing: any flash is a real one
+  for (const id of moves) { const m = SH2[id]; const len = m.loop ? m.lengthMs * 2 : m.hold !== null ? m.lengthMs * 1.4 : m.lengthMs; spans.push({ startMs: t, endMs: t + len, move: id, seed: 1, dist: m.path ? 1.6 : undefined }); t += len + 400; }
+  const out = [];
+  const layer = document.createElement("canvas");
+  for (const L of (looks ?? LK2.map((l) => l.id))) {
+    const card = { ...normalizeCard({ ...pr.card, name: pr.name }).card, look: L };
+    const cv = Object.assign(document.createElement("canvas"), { width: size, height: size });
+    const ctx = cv.getContext("2d", { willReadFrequently: true });
+    const frames = [];
+    for (let ms = 0; ms < t; ms += 1000 / 30) {
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.fillStyle = BG[L]; ctx.fillRect(0, 0, size, size);
+      const fr = frameFor(card, L, "full", { x: size * 0.15, y: size * 0.05, w: size * 0.7, h: size * 0.9 });
+      const perf = performAt({ moveSpans: spans, shelf: SH2 }, ms, { view: 0, energy: 0.5, seed: 1 });
+      const st = cs2({ timeMs: ms, viseme: 0, view: 0, move: { joints: perf.joints, hands: perf.hands ?? { F: "relaxed", B: "relaxed" }, props: perf.props, face: perf.faceCue, facing: perf.facing, travel: null }, breath: perf.breath });
+      drawFigure(ctx, card, { look: L, S: fr.S, x: fr.x, y: fr.y, mirror: perf.facing === "left", state: st, layerSize: { w: size, h: size }, layerCanvas: layer });
+      frames.push(ctx.getImageData(0, 0, size, size).data.slice());
+    }
+    let total = 0, worst = 0, worstAt = 0;
+    for (let i = 1; i < frames.length - 1; i++) {
+      const a = frames[i - 1], b = frames[i], c = frames[i + 1];
+      let n = 0;
+      for (let p = 0; p < a.length; p += 4) {
+        const dac = Math.abs(a[p] - c[p]) + Math.abs(a[p + 1] - c[p + 1]) + Math.abs(a[p + 2] - c[p + 2]);
+        const dab = Math.abs(a[p] - b[p]) + Math.abs(a[p + 1] - b[p + 1]) + Math.abs(a[p + 2] - b[p + 2]);
+        if (dac < 30 && dab > 160) n++;
+      }
+      total += n;
+      if (n > worst) { worst = n; worstAt = i; }
+    }
+    out.push({ look: L, frames: frames.length, flashPixels: total, worstFrame: worstAt, worstPixels: worst });
+  }
+  return out;
+};
+
+// consecutive frames (30 fps) of one move through the motion layer, for QC by eye
+window.__frames = ({ move = "drink", look = "sticker", preset = "dnd-dwarf", from = 0, n = 12, cell = 200, step = 1 }) => {
+  const pr = DRAWN_PRESETS.find((p) => p.id === preset);
+  const card = { ...normalizeCard({ ...pr.card, name: pr.name }).card, look };
+  const m = SH2[move];
+  const spans = [{ startMs: 200, endMs: 200 + (m.hold !== null ? m.lengthMs * 1.4 : m.lengthMs), move, seed: 1 }];
+  const cols = 6, rows = Math.ceil(n / cols);
+  const cv = Object.assign(document.createElement("canvas"), { width: cols * cell, height: rows * cell });
+  const ctx = cv.getContext("2d");
+  const layer = document.createElement("canvas");
+  for (let i = 0; i < n; i++) {
+    const ms = from + (i * step * 1000) / 30;
+    const x0 = (i % cols) * cell, y0 = Math.floor(i / cols) * cell;
+    ctx.save(); ctx.beginPath(); ctx.rect(x0, y0, cell, cell); ctx.clip();
+    ctx.fillStyle = BG[look]; ctx.fillRect(x0, y0, cell, cell);
+    const fr = frameFor(card, look, "waist", { x: x0 + 6, y: y0 + 6, w: cell - 12, h: cell - 12 });
+    const perf = performAt({ moveSpans: spans, shelf: SH2 }, ms, { view: 0, energy: 0.5, seed: 1 });
+    const st = cs2({ timeMs: ms, viseme: 0, view: 0, move: { joints: perf.joints, hands: perf.hands ?? { F: "relaxed", B: "relaxed" }, props: perf.props, face: perf.faceCue }, breath: perf.breath });
+    drawFigure(ctx, card, { look, S: fr.S, x: fr.x, y: fr.y, state: st, layerSize: { w: cv.width, h: cv.height }, layerCanvas: layer });
+    ctx.fillStyle = "#000"; ctx.font = "11px sans-serif"; ctx.fillText(Math.round(ms) + "ms", x0 + 4, y0 + 12);
+    ctx.restore();
+  }
   return cv.toDataURL("image/png");
 };

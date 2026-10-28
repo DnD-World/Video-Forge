@@ -1,8 +1,11 @@
 // BEFORE | AFTER for the motion layer (motion.mjs): the same character, the
-// same moves, at the same moment — left as the targets alone (how it moved
-// until 27 Oct 2026), right through springs, overlap, anticipation, weight,
-// breathing and planted feet. Built into motion-ab.html by tools/motion-ab.mjs.
-import { SHELF, LOOKS, drawFigure, frameFor, characterState, movesAt, performAt, normalizeCard, DRAWN_PRESETS } from "../core/index.mjs";
+// same moves, at the same moment. BEFORE is the engine exactly as it was
+// before the motion work (git a6561d1, extracted and bundled by
+// tools/motion-ab.mjs as "before-core"), so nothing new leaks into it;
+// AFTER is today's engine with springs, overlap, anticipation, weight,
+// breathing and planted feet.
+import { SHELF, LOOKS, drawFigure, frameFor, characterState, performAt, normalizeCard, DRAWN_PRESETS, stageOf } from "../core/index.mjs";
+import * as OLD from "before-core";
 
 const PLAN = [
   { move: "walk-in", label: "Walk in" },
@@ -46,6 +49,7 @@ function frame(now) {
   $("now").textContent = cur.label;
   const preset = DRAWN_PRESETS[ui.who];
   const card = normalizeCard({ ...preset.card, name: preset.name, look: ui.look }).card;
+  const oldCard = OLD.normalizeCard({ ...preset.card, name: preset.name, look: ui.look }).card;
   // off stage before the walk in and after the walk out
   const first = moveSpans[0], last = moveSpans[moveSpans.length - 1];
   const away = ms < first.startMs || ms > last.endMs + 300;
@@ -55,13 +59,15 @@ function frame(now) {
     if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
     const ctx = cv.getContext("2d");
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.clearRect(0, 0, W, H);
+    const [bg, floor] = stageOf(ui.look);
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = floor; ctx.fillRect(0, H * 0.84, W, H * 0.16);
     if (away) return;
     const fr = frameFor(card, ui.look, "full", { x: W * 0.25, y: H * 0.08, w: W * 0.5, h: H * 0.8 });
     let state, mv = null;
     if (k === 0) {
-      mv = movesAt(moveSpans, SHELF, ms, {});
-      state = characterState({ timeMs: ms, viseme: 0, poseSpans, view: 0, move: mv });
+      mv = OLD.movesAt(moveSpans, OLD.SHELF, ms, {});
+      state = OLD.characterState({ timeMs: ms, viseme: 0, poseSpans, view: 0, move: mv });
     } else {
       const perf = performAt({ poseSpans, moveSpans, shelf: SHELF }, ms, { view: 0, energy: 0.6, seed: 2 });
       mv = perf;
@@ -71,7 +77,7 @@ function frame(now) {
     const mirror = mv?.facing ? mv.facing === "left" : false;
     ctx.fillStyle = "rgba(0,0,0,0.14)";
     ctx.beginPath(); ctx.ellipse(x, fr.y, fr.S * 0.1, fr.S * 0.016, 0, 0, Math.PI * 2); ctx.fill();
-    drawFigure(ctx, card, { look: ui.look, S: fr.S, x, y: fr.y, mirror, state, layerSize: { w: W, h: H }, layerCanvas: layers[k] });
+    (k === 0 ? OLD.drawFigure : drawFigure)(ctx, k === 0 ? oldCard : card, { look: ui.look, S: fr.S, x, y: fr.y, mirror, state, layerSize: { w: W, h: H }, layerCanvas: layers[k] });
   });
   requestAnimationFrame(frame);
 }

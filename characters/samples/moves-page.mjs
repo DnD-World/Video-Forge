@@ -2,7 +2,7 @@
 // engine (characters/core), side by side in every style — "walk" next to a
 // tired walk, a proud walk, a sneaky walk. Built into moves.html by
 // tools/moves-page.mjs.
-import { LOOKS, SHELF, STYLES, STYLE_IDS, drawFigure, frameFor, autoPerformance, movesAt } from "../core/index.mjs";
+import { stageOf, LOOKS, SHELF, STYLES, STYLE_IDS, drawFigure, frameFor, autoPerformance, movesAt } from "../core/index.mjs";
 import { sampleCards } from "../core/check.mjs";
 
 const cards = sampleCards();
@@ -10,8 +10,7 @@ const ui = { look: "sticker", who: 0, styles: "all", move: "all", playing: true,
 const grid = document.getElementById("grid");
 const $ = (id) => document.getElementById(id);
 
-const STAGE = { sticker: ["#ffe6f2", "#f7c6dc"], stick: ["#efe2cf", "#d9c6a8"], sitcom: ["#c7a6e8", "#a985cf"], hose: ["#cfc6b4", "#b3a88f"], geo: ["#1f1a4a", "#2c2668"], corp: ["#fbf4ec", "#eadbc8"], pop: ["#ffd400", "#f0b800"] };
-const stage = () => STAGE[ui.look] ?? ["#1b2c44", "#24395a"];
+const stage = () => stageOf(ui.look);
 
 let rows = [];
 function build() {

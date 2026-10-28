@@ -33,8 +33,20 @@ async function main() {
     const opts = {
       moves: arg("moves", "") ? arg("moves").split(",") : null,
       look: arg("look", "sticker"), style: arg("style", "neutral"), framing: arg("framing", "full"),
-      view: arg("view") !== undefined ? Number(arg("view")) : null, cols: Number(arg("cols", 6)), cell: Number(arg("cell", 220)),
+      view: arg("view") !== undefined ? Number(arg("view")) : null, cols: Number(arg("cols", 6)), cell: Number(arg("cell", 220)), preset: arg("preset", null),
     };
+    if (process.argv.includes("--flicker")) {
+      const r = await p.js(`window.__flicker(${JSON.stringify({ preset: arg("preset", "dnd-dwarf"), looks: arg("looks") ? arg("looks").split(",") : null, ...(arg("moves") !== undefined ? { moves: arg("moves") ? arg("moves").split(",") : [] } : {}) })})`);
+      for (const x of r) console.log(x.look.padEnd(10), "flash pixels", String(x.flashPixels).padStart(6), " worst frame", x.worstFrame, "(" + x.worstPixels + ")");
+      return;
+    }
+    if (process.argv.includes("--frames")) {
+      const url = await p.js(`window.__frames(${JSON.stringify({ move: arg("moves", "drink"), look: arg("look", "sticker"), preset: arg("preset", "dnd-dwarf"), from: Number(arg("from", 0)), n: Number(arg("n", 12)), step: Number(arg("step", 1)) })})`);
+      const file = path.join(OUT, `moves-${arg("out", "frames")}.png`);
+      await fs.writeFile(file, Buffer.from(url.split(",")[1], "base64"));
+      console.log("wrote", path.relative(ROOT, file));
+      return;
+    }
     const fn = process.argv.includes("--presets") ? "__presets" : process.argv.includes("--faces") ? "__faces" : process.argv.includes("--shoes") ? "__shoes" : "__sheet";
     const url = await p.js(`window.${fn}(${JSON.stringify(opts)})`);
     const file = path.join(OUT, `moves-${arg("out", "sheet")}.png`);
