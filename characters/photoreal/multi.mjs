@@ -59,6 +59,10 @@ export function makePuppet(sources, { size = 512 } = {}) {
         });
       };
       for (const i of [0, 1]) if (!front[i]) layer("arm" + i, armW[i]);
+      // under the body: another picture's bare torso, to fill the shirt the
+      // body picture's arms were hiding (else a ragged edge shows as they move)
+      const under = srcs.findIndex((_, i) => i !== lowest);
+      if (under >= 0) layer("core", srcs.map((_, i) => (i === under ? 1 : 0)));
       layer("body", bodyW);
       for (const i of [0, 1]) if (front[i]) layer("arm" + i, armW[i]);
     },

@@ -48,7 +48,7 @@ figcaption{padding:12px 16px}figcaption b{font-size:18px}figcaption span{color:v
 </div>
 <section class="q"><h2>What I need from you</h2>
 <p>Is the desk presenter good enough to build into the app? Still to do if yes:</p>
-<ul><li>a ragged bit of white sleeve next to the apron, on the side of a moving arm (much smaller than before; not gone)</li><li>hands that change shape (a hand sheet is already generated, not yet wired)</li><li>talking and blinking on this face (the puppet's existing face parts, layered on top)</li><li>every new photoreal presenter needs 2 extra pictures from Image Forge (arms down, arms out): about 4 US cents</li></ul>
+<ul><li>a small torn flap of shirt at the armpit when an arm lifts (the ragged sleeve is fixed)</li><li>hands that change shape (a hand sheet is already generated, not yet wired)</li><li>talking and blinking on this face (the puppet's existing face parts, layered on top)</li><li>every new photoreal presenter needs 2 extra pictures from Image Forge (arms down, arms out): about 4 US cents</li></ul>
 <div class="opts">
 <div class="opt rec"><b>Yes, build it</b> — recommended<small>Photoreal presenters at a desk, with all the arm and head moves; I finish the list above.</small></div>
 <div class="opt"><b>Fix first</b><small>Show me again after the hands and the talking face are done.</small></div>
