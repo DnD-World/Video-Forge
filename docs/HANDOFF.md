@@ -144,8 +144,11 @@ BUILD ORDER (Ak, 26 Oct: "I do not want to choose sequence"). Claude decides the
      Open: ragged sleeve bit next to the apron when an arm moves; dwarf
      helmet design; drink's cup should reach the mouth; different shoe
      designs later (Ak expects them in a later batch).
-     PR DnD-World/Video-Forge#10 (batch2-motion) still not merged: the
-     permission system refused the merge; Ak to say "merge 10".
+     PR DnD-World/Video-Forge#10 (batch2-motion) MERGED 28 Oct.
+     Ak's decision 28 Oct: photoreal puppets are HALF BODY in scenes where
+     furniture hides the legs: desk presenter, team in a conference room,
+     speakers at a conference, recorded podcast. Queued for the variety
+     batch: those four sets + wiring photoreal presenters into the app.
 3. MEDIUM: variety. Looks (beards, shoes, 3 shadow looks), wardrobe, free media, emoji pop-ups, Image Forge in the same layout, the rest of Phase 5.
 4. HIGH: #43 timeline.
 
