@@ -122,7 +122,11 @@ export function buildSkin(alpha, w, h, points, { cell = 8, armEdges = false } = 
         const ax0 = sub(u.b, u.a), l0 = Math.hypot(ax0[0], ax0[1]) || 1;
         if (((p[0] - u.a[0]) * ax0[0] + (p[1] - u.a[1]) * ax0[1]) / l0 > -r * 0.35) return k;
       }
-      const d = Math.min(du, df);
+      const d0 = Math.min(du, df);
+      // on the side facing the body the cut is tighter: a hand resting against
+      // an apron must not take bits of apron with it when it moves
+      const towardBody = segDist(p, byId.torso.a, byId.torso.b) < segDist(u.b, byId.torso.a, byId.torso.b);
+      const d = towardBody ? d0 * 1.55 : d0;
       // within the arm's thickness; or a little beyond it when this arm is the
       // nearest bone of all (its edge), but never as far as a nearby apron
       if (d > r * 1.15) {
@@ -268,5 +272,10 @@ export function poseSkin(skin, sk, rest, { bodyH } = {}) {
     const reach = (sk.arms[i].ha[0] - sk.neck[0]) * Math.sign(sk.arms[i].sh[0] - sk.neck[0]);
     return reach < half * 1.02 && sk.arms[i].ha[1] > sk.head[1] - sk.R && sk.arms[i].ha[1] < sk.hy + 0.03;
   };
-  return { body: place(skin.layers.body), arm0: place(skin.layers.arm0), arm1: place(skin.layers.arm1), core: place(skin.layers.core), front: [crossing(0), crossing(1)] };
+  return {
+    body: place(skin.layers.body), arm0: place(skin.layers.arm0), arm1: place(skin.layers.arm1), core: place(skin.layers.core),
+    front: [crossing(0), crossing(1)],
+    // the head bone's move, for the face parts drawn on top (face.mjs)
+    head: { start: T.head.start, turn: T.head.turn, a: byId.head.a },
+  };
 }

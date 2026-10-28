@@ -39,8 +39,11 @@ window.__detect = async (dataUrl) => {
       // Image Forge puppets stand on flat magenta: its key gives the crisp edge,
       // the outline throws away stray background haze the key would keep
       const r = d.data[i], g = d.data[i + 1], bl = d.data[i + 2];
-      const key = 1 - Math.max(0, Math.min(1, ((Math.min(r, bl) - g) - 60) / 60));
-      d.data[i + 3] = Math.round(255 * Math.min(out > 0.02 ? 1 : 0, key) * Math.min(1, out * 3));
+      const key = 1 - Math.max(0, Math.min(1, ((Math.min(r, bl) - g) - 28) / 42));
+      // a stray speck outside the person (the outline is sure it is background) goes too
+      d.data[i + 3] = Math.round(255 * Math.min(out > 0.12 ? 1 : 0, key) * Math.min(1, out * 2.5));
+      // magenta spill on the edge: pull the pink out of what stays
+      if (d.data[i + 3] > 0 && r > g + 20 && bl > g + 20) { const m = Math.min(r, bl) - g; d.data[i] -= m * 0.6; d.data[i + 2] -= m * 0.6; }
     }
     kx.putImageData(d, 0, 0);
     keyed = kc.toDataURL("image/png");
