@@ -21,7 +21,10 @@ import { SubtitleScene } from "../src/components/canvas/SubtitleScene";
 import { SpeakerAvatar } from "../src/components/canvas/SpeakerAvatar";
 import { PuppetAvatar } from "../src/components/canvas/PuppetAvatar";
 import { CharacterAvatar } from "../src/components/canvas/CharacterAvatar";
-import { buildSpeakerMoveTracks, moveAt, placeTracks, stagePlacement, travelBob } from "../src/lib/motion/moveTracks";
+import { buildSpeakerMoveTracks, moveAt, placeTracks, seatedTracks, stagePlacement, travelBob } from "../src/lib/motion/moveTracks";
+import type { MoveSpan } from "../characters/core/index.mjs";
+import { seatSpeakers } from "../src/lib/motion/seats";
+import { SetLayer } from "../src/components/canvas/SetLayer";
 import { facingView, lookById } from "../characters/core/index.mjs";
 import { BackgroundLayer } from "./BackgroundLayer";
 import { MusicTrack } from "./MusicTrack";
@@ -61,7 +64,8 @@ function withAlpha(hex: string, alpha: number): string {
 export function VideoComposition({
   musicWaveform,
   musicColor,
-  speakers,
+  speakers: speakers0,
+  scene,
   audioFileName,
   analysis,
   spectrumFileName,
@@ -93,6 +97,9 @@ export function VideoComposition({
   nativeMedia = false,
   aiLabel = false,
 }: RenderProps) {
+  const { width: frameW, height: frameH } = useVideoConfig();
+  // a set seats the speakers (src/lib/motion/seats.ts); without one, they stand where they were placed
+  const speakers = useMemo(() => seatSpeakers(speakers0, scene, frameW, frameH), [speakers0, scene, frameW, frameH]);
   const frame = useCurrentFrame();
   const { width, height, fps, durationInFrames } = useVideoConfig();
 
@@ -144,7 +151,7 @@ export function VideoComposition({
   );
   // Moves from the motion library: [walks in], [sits down], [gives the box to Maria]…
   const cast = useMemo(() => speakers.map((sp) => ({ id: sp.id, label: sp.label, x: sp.x, size: sp.size })), [speakers]);
-  const moveTracks = useMemo(() => buildSpeakerMoveTracks(narrationSegments, cast), [narrationSegments, cast]);
+  const moveTracks = useMemo(() => (scene ? seatedTracks : (t: Record<string, MoveSpan[]>) => t)(buildSpeakerMoveTracks(narrationSegments, cast)), [narrationSegments, cast, scene]);
 
   // Every image any avatar might draw: a flattened sheet, or every layer of a
   // layered puppet. Resolved to public-dir URLs here, once, and handed to the
@@ -225,9 +232,11 @@ export function VideoComposition({
           }}
         />
       )}
+      {/* the set's back wall, over any background clips (a set is its own place) */}
+      <SetLayer scene={scene} part="back" width={width} height={height} timeMs={timeMs} />
       <div style={{ position: "absolute", inset: 0 }}>
         <WaveformScene
-          tracks={placeTracks(tracks, stages.map((x) => x.stage))}
+          tracks={placeTracks(scene ? tracks.filter((t) => t.speakerIndex === null) : tracks, stages.map((x) => x.stage))}
           width={width}
           height={height}
           timeMs={timeMs}
@@ -460,6 +469,9 @@ export function VideoComposition({
       })}
 
       <SubtitleFont font={subtitleFont} />
+
+      {/* the set's furniture in front of the speakers, hiding them from the waist down */}
+      <SetLayer scene={scene} part="front" width={width} height={height} timeMs={timeMs} />
 
       {/* Last, so subtitles sit above the waveform and the avatars. */}
       {/* THE CAPTION'S PANE, and it lives here rather than inside SubtitleScene

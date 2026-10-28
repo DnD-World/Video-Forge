@@ -514,6 +514,10 @@ export interface SfxClip {
 
 export interface ProjectState {
   render: RenderSettings;
+  /** A set the speakers sit in (characters/sets/sets.mjs: news desk,
+   *  conference room, stage, podcast, game show), or null for none. With a
+   *  set, speakers are seated by it; their own places are kept for later. */
+  scene: { id: string; title?: string; names?: string[] } | null;
   /** Background clips, in order. Empty means a plain dark background. */
   backgrounds: BackgroundScene[];
   /** Scrim over the background clips, 0–1. Backgrounds sit under the waveform,

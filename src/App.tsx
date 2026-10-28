@@ -36,7 +36,10 @@ import {
   blinkAt, browAt, buildSpeakerBrowTracks,
   buildSpeakerHeadTracks, headPoseAt, buildSpeakerPoseTracks, poseAt,
 } from "./lib/motion/facePerformance";
-import { buildSpeakerMoveTracks, moveAt, placeTracks, stagePlacement, travelBob } from "./lib/motion/moveTracks";
+import { buildSpeakerMoveTracks, moveAt, placeTracks, seatedTracks, stagePlacement, travelBob } from "./lib/motion/moveTracks";
+import type { MoveSpan } from "../characters/core/index.mjs";
+import { seatSpeakers } from "./lib/motion/seats";
+import { SetLayer } from "./components/canvas/SetLayer";
 import { sampleAnalysis } from "./lib/waveform/audioAnalysis";
 import { useCornerFlare } from "./lib/motion/useCornerFlare";
 import { SparkField } from "./components/ui/SparkField";
@@ -135,7 +138,12 @@ export default function App() {
 
   const fps = useProjectStore((s) => s.fps);
   const render = useProjectStore((s) => s.render);
-  const speakers = useProjectStore((s) => s.speakers);
+  const storeSpeakers = useProjectStore((s) => s.speakers);
+  const scene = useProjectStore((s) => s.scene);
+  const renderSize = useProjectStore((s) => s.render);
+  // a set seats the speakers, as the render does (src/lib/motion/seats.ts);
+  // their own places stay in the project for when the set is turned off
+  const speakers = useMemo(() => seatSpeakers(storeSpeakers, scene, renderSize.width, renderSize.height), [storeSpeakers, scene, renderSize.width, renderSize.height]);
   const updateSpeaker = useProjectStore((s) => s.updateSpeaker);
   const musicWaveform = useProjectStore((s) => s.musicWaveform);
   const musicColor = useProjectStore((s) => s.musicColor);
@@ -252,7 +260,7 @@ export default function App() {
   );
   // Moves from the motion library ([walks in], [sits down]…), as the render does them.
   const cast = useMemo(() => speakers.map((sp) => ({ id: sp.id, label: sp.label, x: sp.x, size: sp.size })), [speakers]);
-  const moveTracks = useMemo(() => buildSpeakerMoveTracks(narration?.segments ?? [], cast), [narration, cast]);
+  const moveTracks = useMemo(() => (scene ? seatedTracks : (t: Record<string, MoveSpan[]>) => t)(buildSpeakerMoveTracks(narration?.segments ?? [], cast)), [narration, cast, scene]);
   const headTracks = useMemo(
     () => buildSpeakerHeadTracks(narration?.segments ?? []),
     [narration]
@@ -573,8 +581,11 @@ export default function App() {
                 sampleUrl={step === "look" ? sampleUrls[sampleClip ?? ""] ?? null : null}
               />
 
+              {/* the set's back wall (a set is its own place, over any clips) */}
+              <SetLayer scene={scene} part="back" width={canvasSize.w} height={canvasSize.h} timeMs={previewTimeMs} />
+
               <WaveformScene
-                tracks={placeTracks(tracks, speakers.map((sp, k) => stagePlacement(moveTracks[sp.id], moveAt(moveTracks[sp.id], previewTimeMs), cast[k], cast, previewTimeMs)))}
+                tracks={placeTracks(scene ? tracks.filter((t) => t.speakerIndex === null) : tracks, speakers.map((sp, k) => stagePlacement(moveTracks[sp.id], moveAt(moveTracks[sp.id], previewTimeMs), cast[k], cast, previewTimeMs)))}
                 width={canvasSize.w}
                 height={canvasSize.h}
                 timeMs={previewTimeMs}
@@ -725,6 +736,9 @@ export default function App() {
                 </div>
                 );
               })}
+
+              {/* the set's furniture in front of the speakers */}
+              <SetLayer scene={scene} part="front" width={canvasSize.w} height={canvasSize.h} timeMs={previewTimeMs} />
 
               {/* Above the avatars, matching the render's layer order. */}
               <SubtitleScene

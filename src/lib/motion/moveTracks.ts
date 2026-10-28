@@ -140,3 +140,10 @@ export function placeTracks<T extends { speakerIndex: number | null; anchor: { x
     return [{ ...t, anchor: { ...t.anchor, x: t.anchor.x + st.dx } }];
   });
 }
+
+/** Seated in a set: no walking in or out, sitting down or standing up — everyone is already at their seat. */
+export function seatedTracks(tracks: Record<string, MoveSpan[]>): Record<string, MoveSpan[]> {
+  const out: Record<string, MoveSpan[]> = {};
+  for (const [id, spans] of Object.entries(tracks)) out[id] = spans.filter((s) => !SHELF[s.move]?.path && !SHELF[s.move]?.stance);
+  return out;
+}

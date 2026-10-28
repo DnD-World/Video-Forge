@@ -151,6 +151,7 @@ export const useManyStore = create<ManyState>((set, get) => ({
       subtitles: project.subtitles,
       backgroundDim: project.backgroundDim,
       backgroundBlur: project.backgroundBlur,
+      scene: project.scene,
       backgroundCrossfadeMs: project.backgroundCrossfadeMs,
     };
     const list = rows

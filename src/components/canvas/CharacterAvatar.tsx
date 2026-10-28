@@ -41,6 +41,9 @@ interface Props {
   /** All of this speaker's moves (moveTracks.ts): the motion layer springs
    *  between them and the talking poses (characters/core/motion.mjs). */
   moveSpans?: MoveSpan[];
+  /** Seated in a set (src/lib/motion/seats.ts): draw on a canvas the size of
+   *  the frame, at this scale and feet point, instead of fitting a box. */
+  stage?: { w: number; h: number; S: number; x: number; y: number };
   bgOpacity: number;
   borderOpacity: number;
   bgColor?: string;
@@ -54,7 +57,7 @@ const SHAPE_RADIUS: Record<OutlineShape, string> = { circle: "50%", rounded: "18
 
 export function CharacterAvatar({
   card, size, timeMs, viseme, prevViseme, mix = 1, lidFrom, lidTo, lidMix, browLeft, browRight, head,
-  poseSpans, view = 0, mirror: mirror0 = false, active = false, move = null, moveSpans,
+  poseSpans, view = 0, mirror: mirror0 = false, active = false, move = null, moveSpans, stage,
   bgOpacity, borderOpacity, bgColor = "#1a1a1a", borderColor = "#d98a3d", outlineShape = "none",
   frameWidth, sizeFraction,
 }: Props) {
@@ -66,13 +69,14 @@ export function CharacterAvatar({
     if (!cv) return;
     const dpr = typeof window !== "undefined" ? Math.min(2, window.devicePixelRatio || 1) : 1;
     const px = Math.max(8, Math.round(size * dpr));
-    if (cv.width !== px || cv.height !== px) { cv.width = px; cv.height = px; }
+    const cw = stage ? Math.max(8, Math.round(stage.w * dpr)) : px, ch = stage ? Math.max(8, Math.round(stage.h * dpr)) : px;
+    if (cv.width !== cw || cv.height !== ch) { cv.width = cw; cv.height = ch; }
     const ctx = cv.getContext("2d");
     if (!ctx) return;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.clearRect(0, 0, px, px);
+    ctx.clearRect(0, 0, cw, ch);
     const look = lookById(card.look);
-    const { S, x, y } = frameFor(card, look, card.framing, { x: 0, y: 0, w: px, h: px });
+    const { S, x, y } = stage ? { S: stage.S * dpr, x: stage.x * dpr, y: stage.y * dpr } : frameFor(card, look, card.framing, { x: 0, y: 0, w: px, h: px });
     // THE MOTION LAYER: springs, overlap, anticipation, weight and breath
     // between every pose and move — the same pose for the same frame in the
     // preview and in every render worker
@@ -86,7 +90,7 @@ export function CharacterAvatar({
     const facing = perf.facing ?? move?.facing;
     const mirror = facing ? facing === "left" : mirror0;
     if (!layer.current && typeof document !== "undefined") layer.current = document.createElement("canvas");
-    drawFigure(ctx, card, { look, S, x, y, mirror, state, layerSize: { w: px, h: px }, layerCanvas: layer.current ?? undefined });
+    drawFigure(ctx, card, { look, S, x, y, mirror, state, layerSize: { w: cw, h: ch }, layerCanvas: layer.current ?? undefined });
   });
 
   const framed = outlineShape !== "none";
@@ -94,7 +98,7 @@ export function CharacterAvatar({
     frameWidth !== undefined && sizeFraction ? Math.max(0, (frameWidth * size) / (sizeFraction * 1080)) : Math.max(1, size * 0.015);
   return (
     <div
-      style={{
+      style={stage ? { width: stage.w, height: stage.h, position: "relative" } : {
         width: size, height: size, position: "relative",
         borderRadius: SHAPE_RADIUS[outlineShape],
         overflow: framed ? "hidden" : "visible",

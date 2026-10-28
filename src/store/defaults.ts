@@ -58,6 +58,7 @@ export const defaultProject: ProjectState = {
   // that softens every project's footage would be a decision made for people
   // who never asked for it.
   backgroundBlur: 0,
+  scene: null,
   backgroundCrossfadeMs: 600,
   language: "el",
   narration: null,

@@ -12,6 +12,7 @@ import { Slider } from "../ui/Slider";
 import { Toggle } from "../ui/Toggle";
 import { Tabs } from "../ui/Tabs";
 import { BackgroundPanel } from "./BackgroundPanel";
+import { SetPicker } from "./SetPicker";
 import { SubtitleFontPicker } from "./SubtitleFontPicker";
 import { RenderBar } from "../render/RenderBar";
 import { PresetsPanel } from "./PresetsPanel";
@@ -333,6 +334,7 @@ export function ScenePanel({
 
         {tab === "background" && (
           <>
+            <SetPicker />
             <BackgroundPanel />
             {/* The clips already on this machine. Sits under the search on
                 purpose: reaching for what is already here should be the first

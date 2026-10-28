@@ -261,6 +261,8 @@ export function SubtitleScene({
     <div
       style={{
         position: "absolute",
+        // above the speakers and a set's furniture, in the preview as in the render
+        zIndex: 12,
         left: 0,
         right: 0,
         display: "flex",
