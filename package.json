@@ -18,12 +18,14 @@
     "outros": "electron . --add-outros",
     "ask-forge": "node tools/ask-forge.mjs",
     "brand": "node tools/use-brand.mjs",
-    "test": "node --test tools/lib/forgeLink.test.mjs tools/lib/brand.test.mjs tools/lib/migrateUserData.test.mjs tools/lib/scriptMatch.test.mjs tools/lib/greekAccents.test.mjs tools/lib/mediaCache.test.mjs tools/lib/forgeKeys.test.mjs tools/lib/forgeShelf.test.mjs tools/lib/sheet.test.mjs tools/lib/hoverHelp.test.mjs tools/lib/forgeHub.test.mjs tools/lib/ipcSurface.test.mjs tools/lib/pathGuard.test.mjs tools/lib/paidVoice.test.mjs tools/lib/work.test.mjs tools/lib/vaultFile.test.mjs tools/lib/partFile.test.mjs tools/lib/projectFile.test.mjs tools/lib/history.test.mjs tools/lib/spliceLine.test.mjs tools/lib/subtitlePages.test.mjs explainer/explainer.test.mjs explainer/sfx.test.mjs characters/characters.test.mjs",
+    "test": "node --test tools/lib/forgeLink.test.mjs tools/lib/brand.test.mjs tools/lib/migrateUserData.test.mjs tools/lib/scriptMatch.test.mjs tools/lib/greekAccents.test.mjs tools/lib/mediaCache.test.mjs tools/lib/forgeKeys.test.mjs tools/lib/forgeShelf.test.mjs tools/lib/sheet.test.mjs tools/lib/hoverHelp.test.mjs tools/lib/forgeHub.test.mjs tools/lib/ipcSurface.test.mjs tools/lib/pathGuard.test.mjs tools/lib/paidVoice.test.mjs tools/lib/work.test.mjs tools/lib/vaultFile.test.mjs tools/lib/partFile.test.mjs tools/lib/projectFile.test.mjs tools/lib/history.test.mjs tools/lib/moveTracks.test.mjs tools/lib/spliceLine.test.mjs tools/lib/subtitlePages.test.mjs explainer/explainer.test.mjs explainer/sfx.test.mjs characters/characters.test.mjs characters/moves.test.mjs characters/profile.test.mjs characters/motion.test.mjs",
     "test:link": "node --test tools/lib/forgeLink.test.mjs",
     "test:explainer": "node --test explainer/explainer.test.mjs",
     "test:characters": "node --test characters/characters.test.mjs",
     "characters:sheet": "node tools/character-sheet.mjs",
     "characters:check": "electron tools/character-check.mjs",
+    "moves:sheet": "electron tools/moves-sheet.mjs",
+    "moves:page": "node tools/moves-page.mjs",
     "explainer:check": "electron tools/explainer-check.mjs",
     "explainer:render": "electron tools/explainer-render.mjs",
     "explainer:bakeoff": "electron tools/explainer-bakeoff.mjs"
@@ -53,6 +55,7 @@
     "zustand": "^4.5.4"
   },
   "devDependencies": {
+    "@mediapipe/tasks-vision": "1.1.1",
     "@types/node": "^20.14.0",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",

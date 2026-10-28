@@ -21,6 +21,7 @@ import { SubtitleScene } from "../src/components/canvas/SubtitleScene";
 import { SpeakerAvatar } from "../src/components/canvas/SpeakerAvatar";
 import { PuppetAvatar } from "../src/components/canvas/PuppetAvatar";
 import { CharacterAvatar } from "../src/components/canvas/CharacterAvatar";
+import { buildSpeakerMoveTracks, moveAt, placeTracks, stagePlacement, travelBob } from "../src/lib/motion/moveTracks";
 import { facingView, lookById } from "../characters/core/index.mjs";
 import { BackgroundLayer } from "./BackgroundLayer";
 import { MusicTrack } from "./MusicTrack";
@@ -141,6 +142,9 @@ export function VideoComposition({
     () => buildSpeakerHeadTracks(narrationSegments),
     [narrationSegments]
   );
+  // Moves from the motion library: [walks in], [sits down], [gives the box to Maria]…
+  const cast = useMemo(() => speakers.map((sp) => ({ id: sp.id, label: sp.label, x: sp.x, size: sp.size })), [speakers]);
+  const moveTracks = useMemo(() => buildSpeakerMoveTracks(narrationSegments, cast), [narrationSegments, cast]);
 
   // Every image any avatar might draw: a flattened sheet, or every layer of a
   // layered puppet. Resolved to public-dir URLs here, once, and handed to the
@@ -181,6 +185,11 @@ export function VideoComposition({
   // frame index, never from a wall clock. Frame 240 at 30fps is 8000ms on
   // every worker, in any order, on every machine.
   const timeMs = (frame / fps) * 1000;
+  // Where every speaker stands this frame: walking in or out, or off stage.
+  const stages = speakers.map((sp, i) => {
+    const move = moveAt(moveTracks[sp.id], timeMs, sp.gestures ?? 0.5);
+    return { move, stage: stagePlacement(moveTracks[sp.id], move, cast[i], cast, timeMs) };
+  });
 
   // Same source as the waveform's active-speaker gate, so the head that moves
   // more is always the head whose waveform is lit.
@@ -218,7 +227,7 @@ export function VideoComposition({
       )}
       <div style={{ position: "absolute", inset: 0 }}>
         <WaveformScene
-          tracks={tracks}
+          tracks={placeTracks(tracks, stages.map((x) => x.stage))}
           width={width}
           height={height}
           timeMs={timeMs}
@@ -345,14 +354,16 @@ export function VideoComposition({
           activeSpeakerId === sp.id,
           idleMotion
         );
+        const { move, stage } = stages[i];
+        if (stage.hidden) return null;
         return (
           <div
             key={sp.id}
             style={{
               position: "absolute",
-              left: `${sp.x * 100}%`,
+              left: `${(sp.x + stage.dx) * 100}%`,
               top: `${sp.y * 100}%`,
-              transform: "translate(-50%, -50%)" + motionTransform(motion, size),
+              transform: "translate(-50%, -50%)" + motionTransform(motion, size) + travelBob(move, timeMs, size, !!sp.character),
             }}
           >
             {/* The very same components the preview draws. Duplicating the disk
@@ -379,6 +390,8 @@ export function VideoComposition({
                 poseSpans={poseTracks[sp.id]}
                 {...facingView(sp.facing, sp, speakers.filter((o) => o.id !== sp.id), { dialogue: lookById(sp.character.look).profile ? 2 : 1 })}
                 active={activeSpeakerId === sp.id}
+                move={move}
+                moveSpans={moveTracks[sp.id]}
                 bgOpacity={sp.bgOpacity}
                 borderOpacity={sp.borderOpacity}
                 bgColor={sp.bgColor}

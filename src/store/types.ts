@@ -5,7 +5,7 @@ import type { ExpressionOptions } from "../lib/narration/expression";
 /** 1:1 and 4:5 joined 16:9 and 9:16 on 21 Oct 2026 (Ak: "we need 4:5 all over"). */
 export type AspectRatio = "9:16" | "16:9" | "1:1" | "4:5";
 export type Engine = "remotion" | "ffmpeg";
-export type Fps = 10 | 24 | 30;
+export type Fps = 10 | 24 | 30 | 60;
 
 export interface RenderSettings {
   format: AspectRatio;
@@ -301,9 +301,19 @@ export interface SpeakerConfig {
    *  every project saved before puppets existed still opens with its face on. */
   puppetPath?: string;
   /** A character drawn by code (characters/core) — the third kind of face.
-   *  When set it WINS over the puppet and the sheet. A small JSON card, so it
-   *  lives in the project itself and rides into the render with no files. */
+   *  A small JSON card, so it lives in the project itself and rides into the
+   *  render with no files. Which form shows is `form` (formOf in
+   *  characters/core/profile.mjs is the one rule; old saves: the card wins). */
   character?: CharacterCard;
+  /** ONE CHARACTER, TWO FORMS (#13, 27 Oct 2026): which one is on screen.
+   *  Both are kept, so switching back loses nothing. Unset = old rule. */
+  form?: "puppet" | "drawn";
+  /** Who they are, in a sentence or two: shared by both forms, read by the AI. */
+  description?: string;
+  /** How they talk and act. */
+  personality?: string;
+  /** Subject ids (characters/core/profile.mjs SUBJECTS) the libraries sort by. */
+  subjects?: string[];
   /** The disc behind this speaker.
    *
    *  SUCCESSOR TO bgColor + bgOpacity, which described a flat colour and could

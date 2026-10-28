@@ -15,6 +15,7 @@
 // processes and needs real filesystem access.
 // ---------------------------------------------------------------------------
 
+import { activeCard } from "../../characters/core/index.mjs";
 import path from "node:path";
 import fsp from "node:fs/promises";
 import os from "node:os";
@@ -350,7 +351,8 @@ export async function renderVideo(
         sheetFileName,
         puppet: prepared?.puppet ?? null,
         puppetFiles: prepared?.files ?? {},
-        character: sp.character ?? null,
+        // the one rule for which form shows (characters/core/profile.mjs)
+        character: activeCard(sp) ?? null,
       });
     }
 

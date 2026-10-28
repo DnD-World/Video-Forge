@@ -30,7 +30,13 @@ const STYLES = [
 
 const fileUrl = (p: string) => `file:///${p.replace(/\\/g, "/").replace(/^\/+/, "")}`;
 
-export function PuppetShelf({ current, onPick, startOrdering = false }: { current?: string; onPick: (rigPath: string, name: string, framing: "head" | "waist" | "full") => void; startOrdering?: boolean }) {
+export function PuppetShelf({ current, onPick, startOrdering = false, prefill }: {
+  current?: string;
+  onPick: (rigPath: string, name: string, framing: "head" | "waist" | "full") => void;
+  startOrdering?: boolean;
+  /** "Order a puppet of this drawn character": the order form opens filled in. */
+  prefill?: { name: string; description: string } | null;
+}) {
   const [puppets, setPuppets] = useState<ShelfPuppet[]>([]);
   const [ordering, setOrdering] = useState(startOrdering);
   useEffect(() => {
@@ -40,6 +46,13 @@ export function PuppetShelf({ current, onPick, startOrdering = false }: { curren
   const [description, setDescription] = useState("");
   const [style, setStyle] = useState("pixar");
   const [framing, setFraming] = useState<"head" | "waist" | "full">("waist");
+  useEffect(() => {
+    if (!prefill) return;
+    setOrdering(true);
+    setName(prefill.name);
+    setDescription(prefill.description);
+    setFraming("full");
+  }, [prefill]);
   const [auto, setAuto] = useState(true);
   const [pictures, setPictures] = useState<string[]>([]);
   const [note, setNote] = useState("");

@@ -12,6 +12,7 @@
 // project store is the follow-up that makes this automatic.
 // ---------------------------------------------------------------------------
 
+import { activeCard } from "../../../characters/core/index.mjs";
 import { useEffect, useRef, useState } from "react";
 import { ErrorLine } from "../ui/ErrorLine";
 import { plainError } from "../../lib/plainError";
@@ -178,8 +179,9 @@ export function RenderBar() {
           // place rather than being decided twice.
           sheetPath: sp.sheetPath,
           puppetPath: sp.puppetPath,
-          // a drawn character is JSON and wins over both (same rule everywhere)
-          character: sp.character,
+          // a drawn character is JSON; it shows when the speaker's form is drawn
+          // (formOf, characters/core/profile.mjs — the one rule everywhere)
+          character: activeCard(sp) ?? undefined,
         })),
         width: o.width ?? (draft ? even(render.width / 3) : render.width),
         height: o.height ?? (draft ? even(render.height / 3) : render.height),

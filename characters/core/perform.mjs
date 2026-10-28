@@ -49,12 +49,21 @@ export function facingView(facing, me, others = [], { dialogue = 1 } = {}) {
 /**
  * Video Forge's signals → drawCharacter state.
  * sig: { timeMs, viseme, prevViseme, mix, lidFrom, lidTo, lidMix, browLeft,
- *        browRight, head, poseSpans | pose, view, mirror, active }
+ *        browRight, head, poseSpans | pose, view, mirror, active,
+ *        move: what movesAt (moves.mjs) gave for this moment, or null }
+ *
+ * A move's face cues (raised brows, a smile, wide eyes) win over the script's
+ * while it plays; its joints, hand shapes and props go to the skeleton.
  */
 export function characterState(sig) {
   const t = (sig.timeMs ?? 0) / 1000;
   const pb = sig.poseSpans ? poseBlendAt(sig.poseSpans, sig.timeMs ?? 0) : { pose: sig.pose ?? "rest", poseK: sig.pose ? 1 : 0 };
+  const mv = sig.move ?? null, mf = mv?.face ?? null;
   return {
+    joints: mv?.joints ?? null,
+    hands: mv?.hands ?? null,
+    props: mv?.props ?? [],
+    smile: mf?.smile ?? 0,
     t,
     view: sig.view ?? 0,
     pose: pb.pose,
@@ -62,11 +71,13 @@ export function characterState(sig) {
     head: sig.head ?? null,
     talk: sig.active ? 1 : 0,
     mouth: { from: sig.prevViseme ?? sig.viseme ?? 0, to: sig.viseme ?? 0, mix: sig.mix ?? 1 },
-    lid: { from: sig.lidFrom ?? "open", to: sig.lidTo ?? sig.lidFrom ?? "open", mix: sig.lidMix ?? 1 },
-    brows: { left: sig.browLeft ?? "serious", right: sig.browRight ?? sig.browLeft ?? "serious" },
+    // a move's eyes give way to blinks (closed beats wide), never the other way round
+    lid: mf?.lids && sig.lidTo !== "closed" && sig.lidFrom !== "closed" ? { from: mf.lids, to: mf.lids, mix: 1 } : { from: sig.lidFrom ?? "open", to: sig.lidTo ?? sig.lidFrom ?? "open", mix: sig.lidMix ?? 1 },
+    brows: mf?.brows ? { left: mf.brows, right: mf.brows } : { left: sig.browLeft ?? "serious", right: sig.browRight ?? sig.browLeft ?? "serious" },
     gaze: 0.4,
     walk: sig.walk ?? null,
     sitting: !!sig.sitting,
+    breath: sig.breath ?? 0,
   };
 }
 

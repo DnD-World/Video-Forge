@@ -15,14 +15,16 @@
 // ---------------------------------------------------------------------------
 
 import { clamp, lerp, shade } from "./math.mjs";
-import { TAU, makePen } from "./pen.mjs";
+import { TAU, makePen, spline } from "./pen.mjs";
 import { inkFor, newCanvas, paint, strokeLine, toneColor, hatchPattern, dotPattern } from "./paint.mjs";
 import { lookById } from "./looks.mjs";
 import { solveRig, anchors, figureExtent } from "./rig.mjs";
-import { ITEMS, itemById } from "./wardrobe.mjs";
+import { ITEMS, itemById, barefoot, ankle } from "./wardrobe.mjs";
 import { EXPRESSION_REST, EXPRESSION_SMILE, browShape, lidAmount, mouthShape } from "./face.mjs";
 import { applyLayer } from "./fx.mjs";
 import { RecordingCtx } from "./record.mjs";
+import { drawHand, palmPx } from "./hands.mjs";
+import { drawProp, drawSeat, PROPS } from "./props.mjs";
 
 // ---- hair ----------------------------------------------------------------------------------
 // Each style: back (behind the head) and/or front (on top), head-centred px.
@@ -167,7 +169,7 @@ export function frameFor(card, look0, framing = "full", box) {
  * Draw the character. Returns measurements for the checks (px, canvas space,
  * before the caller's own transforms): { mouth, eyes, head }.
  */
-export function drawCharacter(ctx, card, { look: look0 = card.look, S, x = 0, y = 0, mirror = false, state = {} } = {}) {
+export function drawCharacter(ctx, card, { look: look0 = card.look, S, x = 0, y = 0, mirror = false, state = {}, headless = false } = {}) {
   const look = typeof look0 === "string" ? lookById(look0) : look0;
   const t = state.t ?? 0;
   const sk = solveRig(card, look, state);
@@ -199,6 +201,8 @@ export function drawCharacter(ctx, card, { look: look0 = card.look, S, x = 0, y 
   ctx.save();
   ctx.translate(x, y);
   if (mirror) ctx.scale(-1, 1);
+  // a move's whole-body shift: a step aside, or off the floor in a jump
+  ctx.translate((sk.root?.[0] ?? 0) * S, (sk.root?.[1] ?? 0) * S);
 
   // limb colours: rubber-hose limbs are one bendy tube in the colour that covers them
   const longTop = wear.find((w) => ["top", "outer", "full"].includes(w.slot) && ["shirt", "hoodie", "hoodie_up", "sweater", "blazer"].includes(w.id));
@@ -210,38 +214,72 @@ export function drawCharacter(ctx, card, { look: look0 = card.look, S, x = 0, y 
     const p = G.U(pts);
     if (look.limb === "line") { pen.poly(p, false); ctx.strokeStyle = ink; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.lineWidth = w * S; ctx.stroke(); return; }
     if (look.limb === "hose") {
-      const a = p[0], b = p[2], mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2, dx = b[0] - a[0], dy = b[1] - a[1];
-      const k = role === "leg" ? 0.16 : 0.32;
-      // bow away from the body: the hip/shoulder's side of the centre line
+      // one smooth tube THROUGH the elbow or knee (Ak, 28 Oct 2026: the
+      // straight bow ignored the joint, so arms and legs never bent); with
+      // the joint nearly straight it still bows a little, the rubber-hose way
+      const a = p[0], e = p[1], b = p[2], dx = b[0] - a[0], dy = b[1] - a[1];
       const sgn = -(Math.sign(pts[0][0] - sk.neck[0]) || 1);
-      pen.curve([a, [mx - dy * k * sgn, my + dx * k * sgn], b]);
+      const len = Math.hypot(dx, dy) || 1;
+      const straight = Math.abs(((e[0] - a[0]) * dy - (e[1] - a[1]) * dx) / len) < len * 0.06;
+      const k = straight ? (role === "leg" ? 0.08 : 0.16) : 0;
+      pen.curve([a, [e[0] - dy * k * sgn, e[1] + dx * k * sgn], b]);
     } else pen.poly(p, false);
     G.line(color, w, { role: role === "leg" || role === "arm" ? (color === card.skin ? "skin" : "cloth") : "cloth" });
   };
-  const hand = (arm) => {
+  const relaxedHand = (arm) => {
     const [hx, hy] = [arm.ha[0] * S, arm.ha[1] * S];
     if (look.gloves) { pen.circle(hx, hy, 0.028 * S); G.fill("#ffffff", { role: "eye", noShade: true }); return; }
     if (look.limb === "line") { pen.circle(hx, hy, 0.012 * S); G.fill(card.skin, { role: "skin", noShade: true }); return; }
     pen.circle(hx, hy, sk.limbW * 0.62 * S); G.fill(card.skin, { role: "skin", noShade: true });
   };
+  // hand shapes and props come from a move (moves.mjs); without one: the round hand
+  const which = (arm) => (arm.front ? "F" : "B");
   const drawArm = (arm) => {
     limb([arm.sh, arm.el, arm.ha], look.limb === "line" ? ink : armColor, sk.limbW, "arm");
     if (look.limb !== "hose") phase("arm", arm);
-    hand(arm);
+    const held = (state.props ?? []).filter((p) => PROPS[p.id] && PROPS[p.id].hold !== "seat" && p.hand === which(arm));
+    const palm = palmPx(G);
+    // an open hand under what rests on it; a fist in front of the handle it holds
+    const under = held.filter((p) => PROPS[p.id].hold === "under"), fist = held.filter((p) => PROPS[p.id].hold !== "under");
+    if (under.length && !fist.length) drawHand(G, arm, "open", { relaxed: relaxedHand });
+    for (const p of [...under, ...fist]) drawProp(G, arm, p.id, { ...p, palm });
+    if (fist.length) drawHand(G, arm, "fist", { relaxed: relaxedHand });
+    else if (!held.length) drawHand(G, arm, state.hands?.[which(arm)], { relaxed: relaxedHand });
   };
 
-  // ---- behind everything
+  // Which arms go behind the body (Ak, 27 Oct 2026). Facing the camera, both
+  // arms hang BEHIND the body, so the shoulders are clean and the two sides
+  // match; an arm comes in front only while its hand is across the body (a cup
+  // at the mouth, a thumbs up, arms folded). Turned or side-on, the near arm
+  // is in front and the far one behind, as a body really overlaps.
+  const facingFront = sk.side < 0.5 && sk.turn < 0.5;
+  const crossing = (arm) => {
+    const half = Math.abs(arm.sh[0] - sk.neck[0]);
+    const reach = (arm.ha[0] - sk.neck[0]) * Math.sign(arm.sh[0] - sk.neck[0]); // < half: towards the middle
+    // in front as soon as the hand reaches the body's edge, before any of it would be hidden
+    // (later, the hand first slid behind the body and then jumped in front)
+    // (counting the hand's own size), and only while the forearm folds inward,
+    // so arms hanging at rest stay behind
+    const side = Math.sign(arm.sh[0] - sk.neck[0]);
+    const inward = (arm.el[0] - arm.ha[0]) * side > 0;
+    return inward && reach < half * 1.02 + sk.limbW * 1.3 && arm.ha[1] > sk.head[1] - sk.R && arm.ha[1] < sk.hy + 0.22;
+  };
+  const inFront = facingFront ? sk.arms.filter(crossing) : [sk.arms[1]];
+  const behind = sk.arms.filter((a) => !inFront.includes(a));
+
+  // ---- behind everything: a seat a move brought along, then the back of the clothes
+  for (const p of state.props ?? []) if (PROPS[p.id]?.hold === "seat") drawSeat(G, sk, p.id, p);
   phase("back");
-  drawArm(sk.arms[0]);
+  for (const arm of behind) drawArm(arm);
 
   // ---- legs and feet
   for (const leg of sk.legs) {
-    limb([leg.hip, leg.knee, leg.foot], look.limb === "line" ? ink : legColor, sk.legW, "leg");
+    limb([leg.hip, leg.knee, ankle(leg.foot, sk.legW / 2)], look.limb === "line" ? ink : legColor, sk.legW, "leg");
   }
   if (look.limb !== "hose") phase("legs");
   for (const leg of sk.legs) {
     if (has("feet")) phase("feet", leg.foot, leg.front ? 1 : -1);
-    else { pen.ellipse((leg.foot[0] + 0.012) * S, (leg.foot[1] - 0.006) * S, 0.024 * S, 0.01 * S); G.fill(card.skin, { role: "skin", noShade: true }); }
+    else barefoot(G, leg.foot, leg.front ? 1 : -1);
   }
 
   // ---- torso: bare skin first, then clothes in layers
@@ -252,42 +290,63 @@ export function drawCharacter(ctx, card, { look: look0 = card.look, S, x = 0, y 
   if (!look.noNeck) {
     const l = sk.neck[0], nw = sk.R * 0.16;
     pen.poly(G.U([[l - nw, sk.sy - 0.03], [l + nw, sk.sy - 0.03], [l + nw, sk.sy + 0.004], [l - nw, sk.sy + 0.004]]));
-    G.fill(card.skin, { role: "skin", noShade: true, outline: 0 });
+    G.fill(card.skin, { role: "skin", noShade: true, outline: look.fill === "glass" ? look.outline : 0 });
   }
   phase("neck");
 
-  // ---- head group (rotates as one)
-  // a raised hood hides the hair (only a fringe would show; the hood draws its own edge)
-  const hooded = wear.some((w) => w.id === "hoodie_up");
-  const hair = hooded ? {} : HAIR[card.hair] ?? HAIR.short;
-  const hairColor = card.hairColor ?? "#262a33";
-  ctx.save();
-  ctx.translate(sk.head[0] * S, sk.head[1] * S);
-  ctx.rotate(sk.rot);
-  phase("hairBack");
-  hair.back?.(G, sk, S, hairColor, t);
-  const ears = sk.face.ears.filter((e) => e.visible && card.ears !== "none");
-  const earR = { small: 0.14, round: 0.18, big: 0.24 }[card.ears] ?? 0.14;
-  const drawEar = (e) => { pen.ellipse(e.x * S, e.y * S, sk.R * earR * 0.8 * S, sk.R * earR * 1.15 * S); G.fill(card.skin, { role: "skin", noShade: true }); };
-  ears.filter((e) => Math.abs(e.x) > sk.rx * 0.8).forEach(drawEar);
-  // the head
-  const headPts = () => {
-    if (card.headShape === "square") return pen.rpoly([[-sk.rx * S, -sk.ry * S], [sk.rx * S, -sk.ry * S], [sk.rx * S, sk.ry * S], [-sk.rx * S, sk.ry * S]], sk.R * 0.45 * S);
-    if (card.headShape === "egg") return pen.blob([[0, -sk.ry * S], [sk.rx * 0.9 * S, -sk.ry * 0.45 * S], [sk.rx * S, sk.ry * 0.35 * S], [0, sk.ry * S], [-sk.rx * S, sk.ry * 0.35 * S], [-sk.rx * 0.9 * S, -sk.ry * 0.45 * S]]);
-    return pen.ellipse(0, 0, sk.rx * S, sk.ry * S);
-  };
-  headPts();
-  G.fill(card.skin, { role: "skin" });
-  ears.filter((e) => Math.abs(e.x) <= sk.rx * 0.8).forEach(drawEar);
-  const face = drawFace(G, state);
-  hair.front?.(G, sk, S, hairColor, t);
-  if (card.highlight) highlight(G, sk, S, card.highlight);
-  phase("head");
-  phase("face");
-  ctx.restore();
+  // ---- head group (rotates as one). headless: the body only, for a
+  // picture puppet's own head on top (experiment #49c)
+  let face = { mouth: { x: 0, y: 0, w: 0, h: 0 }, eyes: [] };
+  if (!headless) {
+    // a raised hood hides the hair (only a fringe would show; the hood draws its own edge)
+    const hooded = wear.some((w) => w.id === "hoodie_up");
+    const hair = hooded ? {} : HAIR[card.hair] ?? HAIR.short;
+    const hairColor = card.hairColor ?? "#262a33";
+    ctx.save();
+    ctx.translate(sk.head[0] * S, sk.head[1] * S);
+    ctx.rotate(sk.rot);
+    // HAIR AND HATS TURN WITH THE HEAD (Ak, 28 Oct 2026). They are drawn for a
+    // face looking at the camera; as the head turns, every point slides round
+    // the head like a point on a ball: the front hairline goes towards the
+    // forehead, the back of the hair comes into view behind.
+    const yaw = (Math.min(sk.v, 2) / 2) * Math.PI * 0.42;
+    const rxS = sk.rx * S;
+    const wrapRound = ([x, y]) => {
+      const u = x / rxS;
+      if (yaw <= 0 || u <= -1) return [x, y];
+      if (u >= 1) return [x + rxS * (Math.sin(Math.min(Math.PI / 2, Math.PI / 2)) - 1), y];
+      const th = Math.asin(u), w = (th + Math.PI / 2) / Math.PI; // 0 at the back edge, 1 at the front
+      return [rxS * Math.sin(Math.min(Math.PI / 2, th + yaw * w * (1 - w) * 2.2)), y];
+    };
+    pen.warp = wrapRound;
+    phase("hairBack");
+    hair.back?.(G, sk, S, hairColor, t);
+    pen.warp = null;
+    const ears = sk.face.ears.filter((e) => e.visible && card.ears !== "none");
+    const earR = { small: 0.14, round: 0.18, big: 0.24 }[card.ears] ?? 0.14;
+    const drawEar = (e) => { pen.ellipse(e.x * S, e.y * S, sk.R * earR * 0.8 * S, sk.R * earR * 1.15 * S); G.fill(card.skin, { role: "skin", noShade: true }); };
+    ears.filter((e) => Math.abs(e.x) > sk.rx * 0.8).forEach(drawEar);
+    // the head
+    const headPts = () => {
+      if (card.headShape === "square") return pen.rpoly([[-sk.rx * S, -sk.ry * S], [sk.rx * S, -sk.ry * S], [sk.rx * S, sk.ry * S], [-sk.rx * S, sk.ry * S]], sk.R * 0.45 * S);
+      if (card.headShape === "egg") return pen.blob([[0, -sk.ry * S], [sk.rx * 0.9 * S, -sk.ry * 0.45 * S], [sk.rx * S, sk.ry * 0.35 * S], [0, sk.ry * S], [-sk.rx * S, sk.ry * 0.35 * S], [-sk.rx * 0.9 * S, -sk.ry * 0.45 * S]]);
+      return pen.ellipse(0, 0, sk.rx * S, sk.ry * S);
+    };
+    headPts();
+    G.fill(card.skin, { role: "skin" });
+    ears.filter((e) => Math.abs(e.x) <= sk.rx * 0.8).forEach(drawEar);
+    face = drawFace(G, state);
+    pen.warp = wrapRound;
+    hair.front?.(G, sk, S, hairColor, t);
+    if (card.highlight) highlight(G, sk, S, card.highlight);
+    phase("head");
+    pen.warp = null;
+    phase("face");
+    ctx.restore();
+  }
 
-  // ---- front arm last
-  drawArm(sk.arms[1]);
+  // ---- arms in front last
+  for (const arm of inFront) drawArm(arm);
   if (look.rivets) {
     for (const q of [sk.arms[1].sh, sk.arms[1].el, sk.arms[0].el, sk.legs[0].hip, sk.legs[1].hip, sk.legs[0].knee, sk.legs[1].knee]) {
       pen.circle(q[0] * S, q[1] * S, S * 0.006); ctx.fillStyle = look.rivets; ctx.fill();
@@ -298,12 +357,12 @@ export function drawCharacter(ctx, card, { look: look0 = card.look, S, x = 0, y 
 
   // measurements in canvas px (head rotation ignored: it is a few degrees)
   const flip = mirror ? -1 : 1;
-  const hx = x + flip * sk.head[0] * S, hy = y + sk.head[1] * S;
+  const hx = x + flip * (sk.head[0] + (sk.root?.[0] ?? 0)) * S, hy = y + (sk.head[1] + (sk.root?.[1] ?? 0)) * S;
   return {
     head: { x: hx, y: hy, r: sk.R * S },
     mouth: { x: hx + flip * face.mouth.x * S, y: hy + face.mouth.y * S, w: face.mouth.w * S, h: face.mouth.h * S },
     eyes: face.eyes.map((e) => ({ x: hx + flip * e.x * S, y: hy + e.y * S, r: e.r * S, visible: e.visible })),
-    hands: sk.arms.map((a) => ({ x: x + flip * a.ha[0] * S, y: y + a.ha[1] * S })),
+    hands: sk.arms.map((a) => ({ x: x + flip * (a.ha[0] + (sk.root?.[0] ?? 0)) * S, y: y + (a.ha[1] + (sk.root?.[1] ?? 0)) * S })),
     ink,
   };
 }
@@ -438,14 +497,11 @@ function drawFace(G, state) {
   const hairC = card.hairColor ?? "#262a33";
   const mx = F.mouth.x * S, my = F.mouth.y * S;
   if (card.beard && card.beard !== "none") {
-    if (card.beard === "stubble") { ctx.save(); pen.ellipse(mx, my + R * 0.15 * S, R * 0.62 * S, R * 0.42 * S); ctx.clip(); ctx.fillStyle = dotPattern(ctx, 0.35); ctx.fillRect(mx - R * S, my - R * 0.3 * S, R * 2 * S, R * S); ctx.restore(); }
-    else if (card.beard === "goatee") { pen.blob([[mx - R * 0.18 * S, my + R * 0.1 * S], [mx + R * 0.18 * S, my + R * 0.1 * S], [mx + R * 0.1 * S, my + R * 0.5 * S], [mx, my + R * 0.62 * S], [mx - R * 0.1 * S, my + R * 0.5 * S]]); G.fill(hairC, { role: "hair", noShade: true }); }
-    else {
-      const big = card.beard === "full" ? 1 : 0.75;
-      // the beard turns with the face: its far side tucks in towards the jaw line
-      const back = lerp(-sk.rx * 0.95, -sk.rx * 0.1, sk.side), backLow = lerp(-sk.rx * 0.6, sk.rx * 0.05, sk.side);
-      pen.blob([[back * S, -R * 0.05 * S], [backLow * S, R * 0.55 * big * S], [mx, R * (0.95 + 0.25 * big) * S], [sk.rx * 0.75 * S, R * 0.55 * big * S], [sk.rx * 0.97 * S, -R * 0.02 * S], [mx + R * 0.3 * S, my - R * 0.05 * S], [mx - R * 0.3 * S, my - R * 0.05 * S]]);
+    if (card.beard === "goatee") {
+      pen.blob([[mx - R * 0.17 * S, my + R * 0.12 * S], [mx + R * 0.17 * S, my + R * 0.12 * S], [mx + R * 0.13 * S, my + R * 0.42 * S], [mx, my + R * 0.6 * S], [mx - R * 0.13 * S, my + R * 0.42 * S]]);
       G.fill(hairC, { role: "hair", noShade: true });
+    } else {
+      jawBeard(G, card.beard, hairC, mx, my);
     }
   }
 
@@ -453,7 +509,7 @@ function drawFace(G, state) {
   const rest = EXPRESSION_REST[card.expression] ?? 0;
   const mfrom = state.mouth?.from ?? rest, mto = state.mouth?.to ?? rest;
   const m = mouthShape(mfrom === 0 ? rest : mfrom, mto === 0 ? rest : mto, state.mouth?.mix ?? 1);
-  const smile = m.smile + (EXPRESSION_SMILE[card.expression] ?? 0);
+  const smile = m.smile + (EXPRESSION_SMILE[card.expression] ?? 0) + (state.smile ?? 0);
   const ms = look.mouthScale ?? 1;
   const w = m.w * R * F.mouth.w * S * ms, h = m.h * R * S * ms;
   const mouthStyle = look.mouth ?? card.mouth ?? "plain";
@@ -461,7 +517,18 @@ function drawFace(G, state) {
   const lineW = Math.max(1.6, R * 0.055 * S);
   if (h < R * 0.03 * S) {
     const press = m.press;
-    pen.curve([[mx - w / 2, my - smile * R * 0.1 * S], [mx, my + smile * R * 0.08 * S], [mx + w / 2, my - smile * R * 0.1 * S]]);
+    // a smooth shallow arc, never a V (Ak, 27 Oct 2026): a circle through the
+    // two corners whose dip is at most a third of the width; the mouth widens
+    // a little as the smile grows, the way a real one does
+    const arc = [];
+    const half = (w / 2) * (1 + Math.min(0.35, Math.abs(smile) * 0.3));
+    const sag = Math.sign(smile) * Math.min(Math.abs(smile) * R * 0.16 * S, half * 0.55);
+    const cy = my - sag * 0.45; // the corners rise as the middle drops
+    for (let i = 0; i <= 16; i++) {
+      const u = i / 16 * 2 - 1;
+      arc.push([mx + u * half, cy + sag * Math.sqrt(Math.max(0, 1 - u * u * 0.92)) - sag * Math.sqrt(0.08)]);
+    }
+    pen.poly(arc, false);
     if (lipC) { ctx.strokeStyle = lipC; ctx.lineWidth = lineW * (2.2 + press); ctx.lineCap = "round"; ctx.stroke(); }
     ctx.strokeStyle = featureInk; ctx.lineWidth = lineW * (1 + press * 0.5); ctx.lineCap = "round"; ctx.stroke();
   } else {
@@ -472,7 +539,7 @@ function drawFace(G, state) {
       const a = (i / 28) * TAU, c = Math.cos(a), s = Math.sin(a);
       const px = Math.sign(c) * Math.abs(c) ** (2 / ex) * (w / 2);
       const py = Math.sign(s) * Math.abs(s) ** (2 / ex) * (h / 2) * (s < 0 ? 0.7 : 1);
-      pts.push([mx + px, my + py - smile * R * 0.05 * S * Math.abs(c)]);
+      pts.push([mx + px, my + py - smile * R * 0.05 * S * c * c]); // corners lift smoothly
     }
     pen.poly(pts);
     const inside = look.fill === "none" ? null : mono ? featureInk : "#5b1f2a";
@@ -501,10 +568,62 @@ function drawFace(G, state) {
   return { eyes: eyesOut, mouth: { x: F.mouth.x, y: F.mouth.y, w: Math.max(m.w * R * F.mouth.w * ms, R * 0.2), h: Math.max(m.h * R * ms, R * 0.04) } };
 }
 
+/**
+ * A beard that follows the jaw (Ak, 25 + 27 Oct 2026: "beards don't follow the
+ * round lower jawline"). The outer edge IS the head's own outline, a touch
+ * outside it, from one sideburn round the chin to the other, hanging below
+ * the chin by the beard's length; the inner edge runs from each sideburn down
+ * the cheek to the mouth corners and under the lower lip, so the mouth always
+ * shows. It turns with the head: the sideburns sit at the ears, wherever the
+ * turn has put them. Stubble is the same shape as a soft shadow.
+ */
+function jawBeard(G, kind, hairC, mx, my) {
+  const { ctx, pen, S, sk, look } = G;
+  const R = sk.R, F = sk.face;
+  const rx = sk.rx * 1.04, ry = sk.ry * 1.04;
+  const len = { full: 0.32, short: 0.08, stubble: 0 }[kind] ?? 0.2;
+  const low = kind === "full" ? 0 : 0.06; // a short beard keeps more cheek bare
+  const farEar = F.ears[0], nearEar = F.ears[1];
+  const nearSide = nearEar.visible && sk.turn < 0.5; // the near sideburn shows
+  const hw = R * 0.36 * F.mouth.w;
+  const angleAt = (x) => Math.acos(Math.max(-1, Math.min(1, x / rx)));
+  // the jaw, from the far ear round the chin to the near ear (or, turned, to
+  // the front of the chin just below the mouth)
+  const aFar = angleAt(farEar.x);
+  const aNear = nearSide ? angleAt(nearEar.x) : angleAt(Math.min(rx * 0.9, mx / S + hw * 1.6));
+  const jaw = [];
+  for (let i = 0; i <= 24; i++) {
+    const t = aNear + (aFar - aNear) * (i / 24);
+    const down = Math.max(0, Math.sin(t));
+    jaw.push([Math.cos(t) * rx * S, Math.max(Math.sin(t) * ry, 0) * (1 + len * down ** 4) * S]);
+  }
+  const earY = (e) => (e.y + R * 0.08) * S;
+  const strip = R * 0.15; // sideburn width
+  // the inner edge, back from the near side to the far side: down the near
+  // sideburn, low across the cheek to the mouth corner, under the lower lip,
+  // and up the far side the same way
+  const inner = [];
+  if (nearSide) inner.push([nearEar.x * S, earY(nearEar)], [(nearEar.x - strip) * S, earY(nearEar)], [(nearEar.x - strip * 1.1) * S, (R * (0.34 + low)) * S]);
+  inner.push([mx + hw * S, my + R * (0.06 + low) * S], [mx, my + R * (0.2 + low * 0.5) * S], [mx - hw * S, my + R * (0.06 + low) * S]);
+  inner.push([(farEar.x + strip * 1.1) * S, (R * (0.34 + low)) * S], [(farEar.x + strip) * S, earY(farEar)], [farEar.x * S, earY(farEar)]);
+  const pts = [...jaw, ...spline(inner.reverse(), 5)];
+  pen.poly(pts);
+  if (kind === "stubble") {
+    ctx.save();
+    ctx.globalAlpha = 0.3;
+    ctx.fillStyle = toneColor(look, hairC, "hair");
+    ctx.fill();
+    ctx.restore();
+    return;
+  }
+  G.fill(hairC, { role: "hair", noShade: true });
+}
+
 /** The character with its look's whole-figure treatment, via a layer canvas. */
 export function drawFigure(ctx, card, opts) {
   const look = typeof (opts.look ?? card.look) === "string" ? lookById(opts.look ?? card.look) : opts.look;
-  if (!look.layer || !opts.layerSize) return drawCharacter(ctx, card, { ...opts, look });
+  // line-art looks erase what is behind each shape, so they always need their own layer
+  if ((!look.layer && look.fill !== "none") || !opts.layerSize) return drawCharacter(ctx, card, { ...opts, look });
   const { w, h } = opts.layerSize;
   const L = opts.layerCanvas ?? newCanvas(w, h);
   if (L.width !== w || L.height !== h) { L.width = w; L.height = h; }

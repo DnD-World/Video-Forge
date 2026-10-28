@@ -23,14 +23,21 @@ let makeCanvas = (w, h) => {
 export function setCanvasFactory(fn) { makeCanvas = fn; patterns.clear(); }
 export const newCanvas = (w, h) => makeCanvas(w, h);
 
-const patterns = new Map();
+// One cache per kind of canvas: the recording canvas that measures a figure
+// (record.mjs) hands out a stand-in pattern, and sharing one cache let that
+// stand-in be reused on real canvases, where it draws nothing (28 Oct 2026:
+// every punched hole, halftone dot and hatch after the first measuring).
+const caches = new Map();
+const patterns = { clear: () => caches.clear() };
 function pattern(ctx, key, size, draw) {
-  let p = patterns.get(key);
+  let cache = caches.get(ctx.constructor);
+  if (!cache) caches.set(ctx.constructor, (cache = new Map()));
+  let p = cache.get(key);
   if (!p) {
     const c = makeCanvas(size, size);
     draw(c.getContext("2d"), size);
     p = ctx.createPattern(c, "repeat");
-    patterns.set(key, p);
+    cache.set(key, p);
   }
   return p;
 }
@@ -43,6 +50,18 @@ export const dotPattern = (ctx, a) => pattern(ctx, "dots" + a, 8, (g) => {
 });
 export const holePattern = (ctx) => pattern(ctx, "holes", 11, (g) => {
   g.fillStyle = "rgba(255,244,210,0.95)"; g.beginPath(); g.arc(5.5, 5.5, 1.2, 0, TAU); g.fill();
+});
+/**
+ * Karagiozis ornaments: the rows of small holes punched in the leather, with
+ * a tiny star of holes between them; `light` is the screen showing through.
+ */
+export const punchPattern = (ctx, light, big = false) => pattern(ctx, "punch" + light + big, big ? 22 : 16, (g, n) => {
+  g.fillStyle = light;
+  const r = big ? 2.8 : 1.9;
+  const dot = (x, y, rr = r) => { g.beginPath(); g.arc(x, y, rr, 0, TAU); g.fill(); };
+  dot(n * 0.25, n * 0.25); dot(n * 0.75, n * 0.75);
+  if (big) { for (const [dx, dy] of [[0, -4], [4, 0], [0, 4], [-4, 0]]) dot(n * 0.75 + dx, n * 0.25 + dy, 1.3); dot(n * 0.75, n * 0.25, 1.6); }
+  else dot(n * 0.75, n * 0.25, 0.9);
 });
 export const grainPattern = (ctx) => pattern(ctx, "grain", 160, (g, n) => {
   const d = g.createImageData(n, n);
@@ -122,20 +141,29 @@ export function paint(G, fill0, { role = "cloth", feature = false, outline, noSh
   const ink = G.ink;
   const ow = outline ?? look.outline ?? 0;
   let fill = feature ? fill0 : toneColor(look, fill0, role);
-  if (!feature && look.fill === "none") fill = null;
+  if (!feature && look.fill === "none") {
+    // line art still has a front and a back: the shape erases what is behind
+    // it (a braid behind the head, a helmet strap behind the face), then
+    // only its outline is drawn. drawFigure always gives these looks a layer.
+    if (fill0 && pen.last?.closed) { ctx.save(); ctx.globalCompositeOperation = "destination-out"; ctx.fillStyle = "#000"; ctx.fill(); ctx.restore(); }
+    fill = null;
+  }
   if (fill) {
     if (look.fill === "hatch" && !feature) {
       // ballpoint: faces stay clean paper, everything else is hatched
-      ctx.fillStyle = role === "skin" || role === "eye" ? look.paper ?? "#fbfaf3" : hatchPattern(ctx, ink);
-      ctx.fill();
+      // paper first, so what is behind the shape does not show between the hatch lines
+      ctx.fillStyle = look.paper ?? "#fbfaf3"; ctx.fill();
+      if (role !== "skin" && role !== "eye") { ctx.fillStyle = hatchPattern(ctx, ink); ctx.fill(); }
     } else if (look.offset && !feature && pen.last) {
       pen.trace(pen.last.q, pen.last.closed, look.offset[0] * S, look.offset[1] * S);
       ctx.fillStyle = fill; ctx.fill();
       pen.trace(pen.last.q, pen.last.closed);
     } else if (look.translucent && !feature) {
+      // painted see-through leather, punched with rows of holes the light shines through
       ctx.save();
-      ctx.globalAlpha = 0.82; ctx.fillStyle = fill; ctx.fill();
-      ctx.globalAlpha = 0.55; ctx.fillStyle = holePattern(ctx); ctx.fill();
+      ctx.globalAlpha = 0.86; ctx.fillStyle = fill; ctx.fill();
+      ctx.globalAlpha = 1;
+      if (role !== "skin" && role !== "eye") { ctx.fillStyle = punchPattern(ctx, look.light ?? "#fff4d2", !!look.cutouts); ctx.fill(); }
       ctx.restore();
     } else {
       ctx.fillStyle = fill; ctx.fill();
@@ -163,6 +191,14 @@ export function paint(G, fill0, { role = "cloth", feature = false, outline, noSh
   if (ow > 0) {
     ctx.strokeStyle = ink; ctx.lineWidth = ow * S; ctx.lineJoin = "round"; ctx.lineCap = "round";
     ctx.stroke();
+    // shadow-theatre figures have a second thin line just inside the edge
+    if (look.doubleLine && fill && !feature && role !== "eye") {
+      ctx.save(); ctx.clip();
+      ctx.lineWidth = ow * S * 3.6; ctx.strokeStyle = ink; ctx.stroke();
+      ctx.lineWidth = ow * S * 2.6; ctx.strokeStyle = fill; ctx.stroke();
+      ctx.restore();
+      ctx.lineWidth = ow * S; ctx.strokeStyle = ink; ctx.stroke(); // the main edge again, on top
+    }
   }
 }
 

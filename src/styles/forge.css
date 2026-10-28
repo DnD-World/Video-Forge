@@ -596,3 +596,19 @@ html[data-motion="off"] body::before { animation: none; }
 .forge-many-empty b { font-size: 1.3rem; color: var(--ink); }
 .forge-many-pulse { font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); padding: 6px 12px; border-radius: 999px; border: 1px solid var(--accent); animation: forge-pulse 2s ease-in-out infinite; }
 .forge-studio .chip { font-size: .85rem; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: rgba(4, 18, 26, .6); }
+
+/* ---- two kinds of character (27 Oct 2026): pictures vs drawings ---- */
+.forge-kinds { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 10px; }
+.forge-kinds .kind { border-radius: 16px; padding: 10px 12px 12px; border: 1px solid var(--line); }
+.forge-kinds .kind.pic { background: linear-gradient(160deg, rgba(255, 179, 91, .10), rgba(4, 18, 26, .4)); border-color: rgba(255, 179, 91, .35); }
+.forge-kinds .kind.drawn { background: linear-gradient(160deg, rgba(91, 227, 181, .10), rgba(4, 18, 26, .4)); border-color: rgba(91, 227, 181, .35); }
+.forge-kinds h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font: 600 .95rem "Sora", sans-serif; color: var(--ink); }
+.forge-kinds h3 small { margin-left: auto; font-weight: 400; font-size: .75rem; color: var(--ink-2); letter-spacing: .04em; text-transform: uppercase; }
+.forge-kinds .label-etched { margin-top: 6px; }
+.kind-badge { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 6px; flex: none; }
+.kind-badge svg { width: 13px; height: 13px; }
+.kind-badge.pic { color: #ffb35b; background: rgba(255, 179, 91, .14); }
+.kind-badge.drawn { color: #5be3b5; background: rgba(91, 227, 181, .14); }
+.forge-who .who.on .kind-badge { background: rgba(0, 26, 16, .18); color: #001a10; }
+.drawn-face { display: block; width: 100%; aspect-ratio: 1; border-radius: 50%; overflow: hidden; background: radial-gradient(circle at 50% 35%, #1b4a3e, #04121a 70%); }
+.drawn-face > div { width: 100% !important; height: 100% !important; }

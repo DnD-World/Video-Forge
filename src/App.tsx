@@ -8,7 +8,7 @@ import { Toggle } from "./components/ui/Toggle";
 import { SpeakerAvatar } from "./components/canvas/SpeakerAvatar";
 import { PuppetAvatar } from "./components/canvas/PuppetAvatar";
 import { CharacterAvatar } from "./components/canvas/CharacterAvatar";
-import { facingView, lookById } from "../characters/core/index.mjs";
+import { activeCard, facingView, lookById } from "../characters/core/index.mjs";
 import { WaveformScene } from "./components/canvas/WaveformScene";
 import { BackgroundScene } from "./components/canvas/BackgroundScene";
 import { SubtitleScene } from "./components/canvas/SubtitleScene";
@@ -36,6 +36,7 @@ import {
   blinkAt, browAt, buildSpeakerBrowTracks,
   buildSpeakerHeadTracks, headPoseAt, buildSpeakerPoseTracks, poseAt,
 } from "./lib/motion/facePerformance";
+import { buildSpeakerMoveTracks, moveAt, placeTracks, stagePlacement, travelBob } from "./lib/motion/moveTracks";
 import { sampleAnalysis } from "./lib/waveform/audioAnalysis";
 import { useCornerFlare } from "./lib/motion/useCornerFlare";
 import { SparkField } from "./components/ui/SparkField";
@@ -249,6 +250,9 @@ export default function App() {
     () => buildSpeakerPoseTracks(narration?.segments ?? [], Object.fromEntries(speakers.map((sp) => [sp.id, sp.gestures ?? 0.5]))),
     [narration, speakers]
   );
+  // Moves from the motion library ([walks in], [sits down]…), as the render does them.
+  const cast = useMemo(() => speakers.map((sp) => ({ id: sp.id, label: sp.label, x: sp.x, size: sp.size })), [speakers]);
+  const moveTracks = useMemo(() => buildSpeakerMoveTracks(narration?.segments ?? [], cast), [narration, cast]);
   const headTracks = useMemo(
     () => buildSpeakerHeadTracks(narration?.segments ?? []),
     [narration]
@@ -570,7 +574,7 @@ export default function App() {
               />
 
               <WaveformScene
-                tracks={tracks}
+                tracks={placeTracks(tracks, speakers.map((sp, k) => stagePlacement(moveTracks[sp.id], moveAt(moveTracks[sp.id], previewTimeMs), cast[k], cast, previewTimeMs)))}
                 width={canvasSize.w}
                 height={canvasSize.h}
                 timeMs={previewTimeMs}
@@ -612,9 +616,14 @@ export default function App() {
                 const blend = track
                   ? visemeBlendAt(track, previewTimeMs / 1000, visemeFadeMs / 1000)
                   : { from: VISEME.NEUTRAL, to: VISEME.NEUTRAL, mix: 1 };
+                // a move: where they stand now (walking in, off stage…), as the render places them
+                const ci = cast.findIndex((c) => c.id === sp.id);
+                const move = draggingId === sp.id ? null : moveAt(moveTracks[sp.id], previewTimeMs, sp.gestures ?? 0.5);
+                const stage = draggingId === sp.id ? { dx: 0, hidden: false, facing: null } : stagePlacement(moveTracks[sp.id], move, cast[ci], cast, previewTimeMs);
                 return (
                 <div
                   key={sp.id}
+                  data-tip={stage.hidden ? `${sp.label} is off stage at this moment: a [walks in] or [walks out] in the script moves them. Drag to set where they stand once they arrive.` : undefined}
                   onPointerDown={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -623,8 +632,10 @@ export default function App() {
                   title="Drag to reposition"
                   style={{
                     position: "absolute",
-                    left: `${sp.x * 100}%`,
+                    left: `${(sp.x + (stage.hidden ? 0 : stage.dx)) * 100}%`,
                     top: `${sp.y * 100}%`,
+                    // off stage: shown faint at their spot so they can still be placed (the render leaves them out)
+                    opacity: stage.hidden ? 0.28 : 1,
                     // Dragging freezes the idle motion: a head that keeps
                     // breathing while you're trying to place it fights the mouse.
                     transform:
@@ -639,16 +650,16 @@ export default function App() {
                               idleMotion
                             ),
                             sp.size * canvasSize.w
-                          )),
+                          ) + travelBob(move, previewTimeMs, sp.size * canvasSize.w, !!activeCard(sp))),
                     cursor: draggingId === sp.id ? "grabbing" : "grab",
                     touchAction: "none",
                   }}
                   className="z-10"
                 >
-                  {sp.character ? (
+                  {activeCard(sp) ? (
                     // a drawn character: same signals as the puppet, drawn by code
                     <CharacterAvatar
-                      card={sp.character}
+                      card={activeCard(sp)!}
                       size={sp.size * canvasSize.w}
                       timeMs={previewTimeMs}
                       viseme={blend.to}
@@ -659,8 +670,10 @@ export default function App() {
                       browRight={browAt(browTracks[sp.id], previewTimeMs)}
                       head={headPoseAt(sp.id, headTracks[sp.id], previewTimeMs, idleMotion)}
                       poseSpans={poseTracks[sp.id]}
-                      {...facingView(sp.facing, sp, speakers.filter((o) => o.id !== sp.id), { dialogue: lookById(sp.character.look).profile ? 2 : 1 })}
+                      {...facingView(sp.facing, sp, speakers.filter((o) => o.id !== sp.id), { dialogue: lookById(activeCard(sp)!.look).profile ? 2 : 1 })}
                       active={activeSpeakerId === sp.id}
+                      move={move}
+                      moveSpans={moveTracks[sp.id]}
                       bgOpacity={sp.bgOpacity}
                       borderOpacity={sp.borderOpacity}
                       bgColor={sp.bgColor}

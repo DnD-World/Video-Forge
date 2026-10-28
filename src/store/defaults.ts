@@ -47,7 +47,7 @@ export const defaultProject: ProjectState = {
   // still in the Scene panel for anyone who wants it.
   visemeFadeMs: 0,
   idleMotion: 0.7,
-  fps: 24,
+  fps: 30,
   speakers: [],
   script: "",
   backgrounds: [],

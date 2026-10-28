@@ -39,7 +39,7 @@ const TAB_LABELS: Record<Tab, string> = {
   many: "Many videos",
 };
 
-const FPS_OPTIONS: Fps[] = [10, 24, 30];
+const FPS_OPTIONS: Fps[] = [10, 24, 30, 60];
 const SUB_POS: SubtitleConfig["position"][] = ["top", "center", "bottom"];
 
 /** The four-step layout (11 Oct 2026) shows a different slice of this panel
@@ -290,7 +290,7 @@ export function ScenePanel({
                 ))}
               </div>
               <p className="text-sm text-neutral-500 mt-2">
-                Higher is smoother and slower to render. 24 is a good default.
+                Higher is smoother and slower to render. 30 is a good default; 60 makes moving characters silky, and takes about twice as long.
               </p>
             </section>
 
