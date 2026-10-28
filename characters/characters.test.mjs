@@ -22,7 +22,7 @@ test("a default card is valid and complete", () => {
 });
 
 test("normalizeCard fixes and explains bad input, never throws", () => {
-  const { card, problems } = normalizeCard({ name: "", look: "pixel", height: 9, skin: "pink", hair: "dreadlocks", wear: [{ id: "cape" }, { id: "tshirt" }], foo: 1 });
+  const { card, problems } = normalizeCard({ name: "", look: "pixel", height: 9, skin: "pink", hair: "dreadlocks", wear: [{ id: "jetpack" }, { id: "tshirt" }], foo: 1 });
   assert.equal(card.look, "stick");
   assert.equal(card.height, 1.15);
   assert.equal(card.skin, "#f3d6bd");
@@ -98,12 +98,12 @@ test("performance signals map onto the drawing state", () => {
 });
 
 test("AI answers go through the same checks as typed input", () => {
-  const reply = '```json\n{"name":"Pirate Pete","hair":"curly","hairColor":"#5a3825","skin":"#c68b5e","beard":"full","wear":[{"id":"shirt"},{"id":"eyepatch"},{"id":"boots"}],"wings":true}\n```';
+  const reply = '```json\n{"name":"Pirate Pete","hair":"curly","hairColor":"#5a3825","skin":"#c68b5e","beard":"full","wear":[{"id":"shirt"},{"id":"jetpack"},{"id":"boots"}],"wings":true}\n```';
   const { card, problems } = readCardAnswer(reply);
   assert.equal(card.name, "Pirate Pete");
   assert.equal(card.beard, "full");
   assert.deepEqual(card.wear.map((w) => w.id), ["shirt", "boots"]);
-  assert.ok(problems.some((p) => /eyepatch/.test(p)) && problems.some((p) => /wings/.test(p)));
+  assert.ok(problems.some((p) => /jetpack/.test(p)) && problems.some((p) => /wings/.test(p)));
   assert.throws(() => readCardAnswer("I can't help with that"));
 });
 

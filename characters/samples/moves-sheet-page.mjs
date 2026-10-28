@@ -240,3 +240,24 @@ window.__icons = ({ cell = 110 }) => {
   });
   return cv.toDataURL("image/png");
 };
+
+// every costume pack on one character, named
+import { COSTUMES as __COST } from "../core/index.mjs";
+window.__costumes = ({ look = "sticker", cols = 7, cell = 200, view = 0 }) => {
+  const rows = Math.ceil(__COST.length / cols);
+  const cv = Object.assign(document.createElement("canvas"), { width: cols * cell, height: rows * (cell + 22) });
+  const ctx = cv.getContext("2d");
+  ctx.fillStyle = "#0d1b2a"; ctx.fillRect(0, 0, cv.width, cv.height);
+  const layer = document.createElement("canvas");
+  __COST.forEach((c, i) => {
+    const x0 = (i % cols) * cell, y0 = Math.floor(i / cols) * (cell + 22);
+    ctx.save(); ctx.beginPath(); ctx.rect(x0 + 2, y0 + 2, cell - 4, cell - 4); ctx.clip();
+    ctx.fillStyle = BG[look]; ctx.fillRect(x0, y0, cell, cell);
+    const card = { ...normalizeCard({ name: c.label, wear: c.wear, hair: "short", hairColor: c.hairColor ?? "#5a3825", ...(c.beard ? { beard: c.beard } : {}) }).card, look };
+    const fr = frameFor(card, look, "full", { x: x0 + 8, y: y0 + 6, w: cell - 16, h: cell - 12 });
+    drawFigure(ctx, card, { look, S: fr.S, x: fr.x, y: fr.y, state: { t: 0.6, view }, layerSize: { w: cv.width, h: cv.height }, layerCanvas: layer });
+    ctx.restore();
+    ctx.fillStyle = "#e8f1f2"; ctx.font = "600 13px sans-serif"; ctx.fillText(c.label, x0 + 8, y0 + cell + 16);
+  });
+  return cv.toDataURL("image/png");
+};

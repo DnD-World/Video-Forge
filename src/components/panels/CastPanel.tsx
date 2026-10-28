@@ -26,7 +26,7 @@ import { usePlayer } from "../../lib/motion/usePreviewPlayer";
 import { plainError } from "../../lib/plainError";
 import { PuppetShelf } from "./PuppetShelf";
 import { CharacterAvatar } from "../canvas/CharacterAvatar";
-import { DRAWN_PRESETS, LOOKS, SUBJECTS, defaultCard, describeCard, formOf, normalizeCard } from "../../../characters/core/index.mjs";
+import { COSTUMES, DRAWN_PRESETS, LOOKS, SUBJECTS, defaultCard, describeCard, formOf, normalizeCard } from "../../../characters/core/index.mjs";
 import { resolveAssetDir } from "../../lib/puppets/puppetAssets";
 import { useSpeakerLibraryStore } from "../../store/useSpeakerLibraryStore";
 import { usePuppetDefs } from "../../lib/puppets/usePuppets";
@@ -805,6 +805,18 @@ function CharacterKind({ sp, update, onOrder }: {
                 personality: sp.personality || p.personality,
                 subjects: subjects.length ? subjects : p.subjects,
               });
+            }}
+          />
+          <Picker
+            aria-label="Dress as"
+            data-tip="Put on a whole costume in one click: wizard, knight, vet, Santa, pirate… Face, skin and voice stay theirs."
+            value=""
+            placeholder="Dress as…"
+            options={[{ value: "", label: "Dress as…" }, ...COSTUMES.filter((c) => !subjects.length || c.subjects.some((x) => subjects.includes(x))).map((c) => ({ value: c.id, label: c.label }))]}
+            onChange={(v) => {
+              const c = COSTUMES.find((x) => x.id === v);
+              if (!c) return;
+              update({ character: normalizeCard({ ...sp.character, wear: c.wear, ...(c.beard ? { beard: c.beard } : {}), ...(c.hairColor ? { hairColor: c.hairColor } : {}) }).card });
             }}
           />
           <Picker

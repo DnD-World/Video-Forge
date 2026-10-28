@@ -21,3 +21,4 @@ import { SHELF_DATA } from "../moves/shelf.mjs";
 export const SHELF = build(SHELF_DATA).shelf;
 export { SUBJECTS, FORMS, SHARED_FIELDS, normalizeShared, formOf, activeCard, cardDiff, applyDiff, describeCard, puppetPickPrompt, readPuppetPick } from "./profile.mjs";
 export { DRAWN_PRESETS } from "../presets/drawn.mjs";
+export { COSTUMES } from "../presets/costumes.mjs";

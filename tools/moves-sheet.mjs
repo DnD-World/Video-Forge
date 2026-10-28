@@ -49,7 +49,7 @@ async function main() {
       console.log("wrote", path.relative(ROOT, file));
       return;
     }
-    const fn = process.argv.includes("--presets") ? "__presets" : process.argv.includes("--faces") ? "__faces" : process.argv.includes("--shoes") ? "__shoes" : process.argv.includes("--icons") ? "__icons" : "__sheet";
+    const fn = process.argv.includes("--presets") ? "__presets" : process.argv.includes("--faces") ? "__faces" : process.argv.includes("--shoes") ? "__shoes" : process.argv.includes("--icons") ? "__icons" : process.argv.includes("--costumes") ? "__costumes" : "__sheet";
     const url = await p.js(`window.${fn}(${JSON.stringify(opts)})`);
     const file = path.join(OUT, `moves-${arg("out", "sheet")}.png`);
     await fs.writeFile(file, Buffer.from(url.split(",")[1], "base64"));
