@@ -135,6 +135,17 @@ BUILD ORDER (Ak, 26 Oct: "I do not want to choose sequence"). Claude decides the
        shapes, talking face not wired yet. Ak asked: portraits only as LAST
        resort. 6 Nikos pictures made on the credit (~$0.10), in
        characters/checks/photoreal/ (never commit: Nikos is private).
+   - 28 Oct (HIGH, Ak's second round): bd9ade3 (1930s elbows/knees, hair
+     turns with head, 1.5 eyes, line looks hide what is behind, arms come in
+     front smoothly, stage colours, true before/after from git a6561d1, QC
+     tools --flicker/--frames), b28a2e8 (Karagiozis traditional + black
+     cut-out look; BUG fixed: patterns dropped after measuring), 76319f2
+     (photoreal presenter at a news desk, upper body only, per Ak).
+     Open: ragged sleeve bit next to the apron when an arm moves; dwarf
+     helmet design; drink's cup should reach the mouth; different shoe
+     designs later (Ak expects them in a later batch).
+     PR DnD-World/Video-Forge#10 (batch2-motion) still not merged: the
+     permission system refused the merge; Ak to say "merge 10".
 3. MEDIUM: variety. Looks (beards, shoes, 3 shadow looks), wardrobe, free media, emoji pop-ups, Image Forge in the same layout, the rest of Phase 5.
 4. HIGH: #43 timeline.
 
