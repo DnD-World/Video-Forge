@@ -74,7 +74,8 @@ export function solveRig(card, look, state = {}) {
   const { t = 0, pose = "rest", poseK = 1, head = null, talk = 0, walk = null } = state;
   const J = state.joints ?? null, W = J ? clamp(J.w ?? 1) : 0;
   const jv = (name, i, base) => (J?.[name] && W > 0 ? lerp(base, J[name][i], W) : base);
-  const view = jv("view", 0, state.view ?? 0);
+  // shadow-theatre figures exist only in profile: the look fixes the view
+  const view = look.forceView ?? jv("view", 0, state.view ?? 0);
   const sitK = clamp(jv("sit", 0, state.sitting === true ? 1 : Number(state.sitting) || 0));
   const sitting = sitK > 0.5;
   const sway = (state.sway ?? card.sway ?? 0.5) * Math.sin(t * 1.6 + (card.seed ?? 0)) * 0.006;
@@ -83,7 +84,8 @@ export function solveRig(card, look, state = {}) {
   const muscle = card.muscle ?? 0;
   const v = clamp(view, 0, 2);
   const turn = Math.min(v, 1), side = Math.max(0, v - 1); // 0–1 each
-  const wf = lerp(1, 0.72, turn) * lerp(1, 0.62, side); // body width as it turns
+  // body width as it turns; flat shadow-theatre figures keep their bulk side on
+  const wf = lerp(1, 0.72, turn) * lerp(1, look.sideWidth ?? 0.62, side);
   const headR = P.headR * (card.headSize ?? 1);
 
   // walking: a bob and a lean; sitting: hips drop to stool height
@@ -127,8 +129,10 @@ export function solveRig(card, look, state = {}) {
     // an arm raised high lifts its shoulder: the body takes part, not just the arm
     const lift = Math.max(0, Math.min(1, (a1 - 1.25) / 1.4)) * 0.014 * h;
     const sh = [shX + shoulderLean, sy + 0.02 - lift];
-    const el = [sh[0] + dir * Math.sin(a1) * ua * xs, sh[1] + Math.cos(a1) * ua];
-    const ha = [el[0] + dir * Math.sin(a1 + a2) * fa * xs, el[1] + Math.cos(a1 + a2) * fa];
+    // Karagiozis's famous long arm: the look lengthens the front arm
+    const long = front ? look.longArm ?? 1 : 1;
+    const el = [sh[0] + dir * Math.sin(a1) * ua * long * xs, sh[1] + Math.cos(a1) * ua * long];
+    const ha = [el[0] + dir * Math.sin(a1 + a2) * fa * long * xs, el[1] + Math.cos(a1 + a2) * fa * long];
     return { which, front, sh, el, ha, dir };
   };
   const arms = [arm("b"), arm("f")];

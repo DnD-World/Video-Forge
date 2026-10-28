@@ -24,7 +24,11 @@
 //   shade      two-tone shading strength (geo, noir); halftone dot shading (pop)
 //   inner      a lighter line inside the outline (MBE sticker)
 //   offset     colour printed off the line by [dx, dy] (1950s)
-//   translucent painted see-through leather with light holes (Karagiozis)
+//   translucent painted see-through leather with punched holes (Karagiozis);
+//              cutouts: bigger holes and stars (the black figures); light: their colour
+//   doubleLine a thin line just inside the outline (shadow theatre)
+//   forceView  the only view the look has (2 = side on); longArm: front arm length;
+//              sideWidth: how much of the body's width stays side on (flat figures keep it)
 //   layer      a treatment of the whole figure: "sticker" | "chalk" | "paper" |
 //              "riso" | "glow" | "lamp"
 //   rivets     pins at the joints (shadow theatre)
@@ -60,8 +64,14 @@ export const LOOKS = [
     p: { headR: 0.13, sy: -0.66, hy: -0.4, sw: 0.09, hw: 0.075 }, outline: 0.0045, limb: "tube", limbW: 0.03, eyes: "dot", tone: "mono", mono: "#17100b", incise: true, ink: "#d27a42", profile: true },
   { id: "shadow", stage: "#f2e2bf", name: "Shadow puppet (1920s silhouette)", blurb: "Jointed black silhouettes; eyes and mouth cut out.",
     p: { headR: 0.13, sy: -0.66, hy: -0.4, sw: 0.09, hw: 0.075 }, outline: 0, limb: "tube", limbW: 0.03, eyes: "dot", tone: "mono", mono: "#0b0806", ink: "#ffcf8a", rivets: "#2a1a10", profile: true },
-  { id: "karag", stage: "#f6e3b4", name: "Karagiozis (Greek shadow theatre)", blurb: "Painted, see-through figures pinned at the joints, pressed against a lit screen.",
-    p: { headR: 0.15, sy: -0.64, hy: -0.39, sw: 0.09, hw: 0.08 }, outline: 0.008, limb: "tube", limbW: 0.036, eyes: "dot", translucent: true, ink: "#3a1f12", layer: "lamp", rivets: "#3a1f12", tone: "vivid", profile: true },
+  // Karagiozis (Ak, 28 Oct 2026: "has not been moved from generic"): strictly
+  // in profile, painted see-through leather in strong colours, a thick dark
+  // line with a thin one inside it, rows of punched holes the lamp shines
+  // through, pins at every joint, and the long front arm the hero is known for
+  { id: "karag", stage: "#f6e3b4", name: "Karagiozis (Greek shadow theatre)", blurb: "Side-on painted leather figures with punched ornaments and a long arm, pinned at the joints, pressed against a lit screen.",
+    p: { headR: 0.16, sy: -0.64, hy: -0.39, sw: 0.09, hw: 0.08 }, outline: 0.009, doubleLine: true, limb: "tube", limbW: 0.04, eyes: "oval", translucent: true, ink: "#1e0f08", layer: "lamp", rivets: "#1e0f08", tone: "vivid", profile: true, forceView: 2, sideWidth: 1.15, longArm: 1.35, light: "#fff1c8" },
+  { id: "karagblack", stage: "#f6e3b4", name: "Karagiozis (black leather, cut-outs)", blurb: "The older black figures: solid dark leather with many cut-outs that let the lamp through.",
+    p: { headR: 0.16, sy: -0.64, hy: -0.39, sw: 0.09, hw: 0.08 }, outline: 0, limb: "tube", limbW: 0.04, eyes: "oval", translucent: true, cutouts: true, tone: "mono", mono: "#1a120c", ink: "#fff1c8", layer: "lamp", rivets: "#5a3a20", profile: true, forceView: 2, sideWidth: 1.15, longArm: 1.35, light: "#ffe7a8" },
   { id: "mid", stage: "#efe3c8", name: "1950s mid-century", blurb: "Flat geometric shapes, colour printed slightly off the line.",
     p: { headR: 0.13, sy: -0.68, hy: -0.42, sw: 0.08, hw: 0.065 }, outline: 0.0045, limb: "line", limbW: 0.006, eyes: "small", offset: [0.012, 0.008], ink: "#2b2622" },
   { id: "chalk", stage: "#2f4a3a", name: "Chalkboard", blurb: "Powdery chalk lines on a green board.",

@@ -199,3 +199,27 @@ window.__frames = ({ move = "drink", look = "sticker", preset = "dnd-dwarf", fro
   }
   return cv.toDataURL("image/png");
 };
+import { punchPattern as __pp, hatchPattern as __hp } from "../core/paint.mjs";
+window.__pat = () => {
+  const out = {};
+  for (const [name, mk] of [["punch", (x) => __pp(x, "#ffffff", false)], ["hatch", (x) => __hp(x, "#ffffff")]]) {
+    const c = Object.assign(document.createElement("canvas"), { width: 64, height: 64 });
+    const x = c.getContext("2d");
+    x.fillStyle = "#553311"; x.fillRect(0, 0, 64, 64);
+    x.fillStyle = mk(x); x.beginPath(); x.rect(0, 0, 64, 64); x.fill();
+    const d = x.getImageData(0, 0, 64, 64).data; let light = 0;
+    for (let i = 0; i < d.length; i += 4) if (d[i] > 150) light++;
+    out[name] = light;
+  }
+  return out;
+};
+window.__pat2 = () => {
+  const c = Object.assign(document.createElement("canvas"), { width: 400, height: 400 });
+  const x = c.getContext("2d");
+  x.fillStyle = "#553311"; x.fillRect(0, 0, 400, 400);
+  const card = { ...normalizeCard({ name: "k", wear: [{ id: "tshirt", colors: ["#2255aa"] }, { id: "trousers", colors: ["#2255aa"] }] }).card, look: "karag" };
+  drawFigure(x, card, { look: "karag", S: 380, x: 200, y: 390, state: {}, layerSize: { w: 400, h: 400 }, layerCanvas: document.createElement("canvas") });
+  const d = x.getImageData(0, 0, 400, 400).data; let light = 0;
+  for (let i = 0; i < d.length; i += 4) if (d[i] > 230 && d[i + 1] > 220 && d[i + 2] > 180) light++;
+  return { light, url: c.toDataURL() };
+};

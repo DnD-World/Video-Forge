@@ -40,6 +40,8 @@ async function main() {
       for (const x of r) console.log(x.look.padEnd(10), "flash pixels", String(x.flashPixels).padStart(6), " worst frame", x.worstFrame, "(" + x.worstPixels + ")");
       return;
     }
+    if (process.argv.includes("--pat2")) { const r = await p.js("window.__pat2()"); console.log(r.light); await fs.writeFile(path.join(OUT, "pat2.png"), Buffer.from(r.url.split(",")[1], "base64")); return; }
+    if (process.argv.includes("--pat")) { console.log(JSON.stringify(await p.js("window.__pat()"))); return; }
     if (process.argv.includes("--frames")) {
       const url = await p.js(`window.__frames(${JSON.stringify({ move: arg("moves", "drink"), look: arg("look", "sticker"), preset: arg("preset", "dnd-dwarf"), from: Number(arg("from", 0)), n: Number(arg("n", 12)), step: Number(arg("step", 1)) })})`);
       const file = path.join(OUT, `moves-${arg("out", "frames")}.png`);
