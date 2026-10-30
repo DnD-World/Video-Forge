@@ -153,6 +153,8 @@ export type RenderProps = {
    *  footage back without darkening it, so avatars and text can carry their
    *  own surfaces over a bright clip. */
   backgroundBlur: number;
+  /** A set the speakers sit in (src/lib/motion/seats.ts), or null. */
+  scene?: { id: string; title?: string; names?: string[] } | null;
   /** Colour effect on the footage (src/lib/background/colorLook.ts). */
   backgroundColorLook?: string;
   /** Where the footage sits, as fractions of frame HEIGHT — `{ top: 1/3,

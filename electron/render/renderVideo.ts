@@ -78,6 +78,7 @@ export interface RenderJob {
   }[];
   backgroundDim?: number;
   backgroundBlur?: number;
+  scene?: { id: string; title?: string; names?: string[] } | null;
   backgroundBand?: { top: number; bottom: number } | null;
   glass?: RenderProps["glass"];
   backgroundCrossfadeMs?: number;
@@ -529,6 +530,7 @@ export async function renderVideo(
       backgrounds,
       backgroundDim: job.backgroundDim ?? 0,
       backgroundBlur: job.backgroundBlur ?? 0,
+      scene: job.scene ?? null,
       backgroundColorLook: job.backgroundColorLook ?? "none",
       backgroundBand: job.backgroundBand ?? null,
       logo: logoProps,

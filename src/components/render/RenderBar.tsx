@@ -58,6 +58,7 @@ export function RenderBar() {
   const backgrounds = useProjectStore((s) => s.backgrounds);
   const backgroundDim = useProjectStore((s) => s.backgroundDim);
   const backgroundBlur = useProjectStore((s) => s.backgroundBlur);
+  const scene = useProjectStore((s) => s.scene);
   const backgroundColorLook = useProjectStore((s) => s.backgroundColorLook);
   const backgroundCrossfadeMs = useProjectStore((s) => s.backgroundCrossfadeMs);
   const setAttachedAudio = useProjectStore((s) => s.setAttachedAudio);
@@ -225,6 +226,7 @@ export function RenderBar() {
         backgroundDim,
         // Blur never reached an in-app render before 12 Oct 2026 — only jobs set it.
         backgroundBlur,
+        scene,
         backgroundColorLook,
         backgroundCrossfadeMs,
         subtitles,

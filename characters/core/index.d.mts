@@ -184,3 +184,5 @@ export function puppetPickPrompt(description: string, shelf: { slug: string; nam
 export function readPuppetPick(text: string, shelf: { slug: string }[]): { pick: string; why: string } | { order: string; why: string } | { problem: string };
 export interface DrawnPreset { id: string; subjects: string[]; name: string; description: string; personality: string; card: Partial<CharacterCard> }
 export const DRAWN_PRESETS: DrawnPreset[];
+export interface Costume { id: string; label: string; subjects: string[]; wear: WornItem[]; beard?: string; hairColor?: string }
+export const COSTUMES: Costume[];

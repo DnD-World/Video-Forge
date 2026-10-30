@@ -206,6 +206,29 @@ function eased(k, e, snap) {
 }
 
 /** A channel's value at u (0–1 of the move), from rest before the first key. */
+/**
+ * IN-BETWEENS (Ak, 28 Oct 2026: "mid and semi-mid poses … make the movements
+ * look a lot more fluid"). Between two keys a joint does not slide in a
+ * straight line: an animator draws a breakdown pose half way, where the arm
+ * travels in an arc — the elbow bends as the upper arm swings and opens out
+ * again as it lands — and the head and body lean into the move. This gives
+ * every move those in-betweens, from how far the upper arm travels in the
+ * current stretch: { swing (radians travelled), s (0 → 1 → 0 over the stretch), dir }.
+ */
+function stretchAt(track, u, rest) {
+  if (!track) return null;
+  const pts = track[0][0] > 0 ? [[0, rest], ...track] : track;
+  for (let i = 1; i < pts.length; i++) {
+    const a = pts[i - 1], b = pts[i];
+    if (u >= a[0] && u <= b[0]) {
+      const k = (u - a[0]) / Math.max(1e-6, b[0] - a[0]);
+      const d = b[1][0] - a[1][0];
+      return { swing: Math.abs(d), s: Math.sin(Math.PI * k), dir: Math.sign(d) };
+    }
+  }
+  return null;
+}
+
 function sample(track, u, rest, snap, loop) {
   if (!track) return null;
   const first = track[0], last = track[track.length - 1];
@@ -310,6 +333,17 @@ export function playMove(move, ms, opts = {}) {
     if (!v) continue;
     // size scales how far a joint goes from rest (not the root, view or sit)
     joints[k] = ["armF", "armB", "legF", "legB", "lean", "head"].includes(k) ? v.map((x, i) => REST[k][i] + (x - REST[k][i]) * size) : v.slice();
+  }
+
+  // in-betweens: an arm swinging through a big stretch bends at the elbow on
+  // the way (an arc, not a slide), the hand trails a touch, the head leans
+  // into the move a little — then everything opens out as the key lands
+  for (const k of ["armF", "armB"]) {
+    const st = stretchAt(move.tracks[k], u, REST[k]);
+    if (!st || !joints[k] || st.swing < 0.25) continue;
+    const bend = Math.min(0.9, st.swing * 0.42) * st.s;
+    joints[k] = [joints[k][0], joints[k][1] + bend * (joints[k][1] >= 0 ? 1 : -1)];
+    joints.head = [(joints.head?.[0] ?? 0) + st.dir * st.s * Math.min(4, st.swing * 2.2) * (k === "armF" ? 1 : -1), joints.head?.[1] ?? 0];
   }
 
   // walking: generated, unless the move keys that channel itself (a walk with a cup)

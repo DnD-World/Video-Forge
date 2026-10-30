@@ -117,6 +117,7 @@ interface Actions {
   setVisemeFadeMs: (v: number) => void;
   setIdleMotion: (v: number) => void;
   setFps: (fps: Fps) => void;
+  setScene: (scene: ProjectState["scene"]) => void;
   setScript: (text: string) => void;
   setLanguage: (lang: string) => void;
   setNarration: (n: NarrationResult | null) => void;
@@ -185,6 +186,7 @@ export const useProjectStore = create<ProjectState & Actions>()(
   setIdleMotion: (idleMotion) => set({ idleMotion }),
 
   setFps: (fps) => set({ fps }),
+  setScene: (scene) => set({ scene }),
 
   setScript: (text) => set({ script: text }),
 
@@ -374,6 +376,7 @@ export const useProjectStore = create<ProjectState & Actions>()(
         backgrounds: s.backgrounds,
         backgroundDim: s.backgroundDim,
         backgroundCrossfadeMs: s.backgroundCrossfadeMs,
+        scene: s.scene,
         pauseSameMs: s.pauseSameMs,
         pauseTurnMs: s.pauseTurnMs,
         visemeFadeMs: s.visemeFadeMs,

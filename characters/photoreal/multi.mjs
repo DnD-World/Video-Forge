@@ -15,8 +15,11 @@
 
 import { poseSkin } from "./skin.mjs";
 import { makeMeshRenderer } from "./glmesh.mjs";
+import { drawFace, faceParts } from "./face.mjs";
 
-const FADE = 0.22; // radians over which two pictures cross-fade
+// radians over which two pictures cross-fade. Narrow: two different hands
+// laid half over each other read as a mess of fingers (Ak, 28 Oct 2026)
+const FADE = 0.07;
 
 export function makePuppet(sources, { size = 512 } = {}) {
   const srcs = sources.map((s) => ({ ...s, R: makeMeshRenderer(s.image, s.skin, size, size) }));
@@ -32,8 +35,12 @@ export function makePuppet(sources, { size = 512 } = {}) {
     w[best[1]] = 1 - t * 0.5; w[next[1]] = t * 0.5;
     return w;
   };
+  const r0 = srcs[0].skin.rig;
   return {
-    draw(ctx, sk, rest, { x, y, h }) {
+    /** Where the hips are, as a share of the full height up from the feet (to seat the person). */
+    hipShare: (r0.floor - r0.torso[0][1]) / (r0.floor - r0.top),
+    /** face (optional): { viseme, prevViseme, mix, lid, brow } — talks with the arms-down picture's face parts */
+    draw(ctx, sk, rest, { x, y, h, face = null }) {
       const raised = (i) => Math.abs(Math.atan2(sk.arms[i].el[0] - sk.arms[i].sh[0], sk.arms[i].el[1] - sk.arms[i].sh[1]));
       const armW = [weightsFor(raised(0), 0), weightsFor(raised(1), 1)];
       // the body always from the picture with the arms lowest: its sleeves hang
@@ -59,7 +66,23 @@ export function makePuppet(sources, { size = 512 } = {}) {
         });
       };
       for (const i of [0, 1]) if (!front[i]) layer("arm" + i, armW[i]);
+      // under the body: another picture's bare torso, to fill the shirt the
+      // body picture's arms were hiding (else a ragged edge shows as they move)
+      const under = srcs.findIndex((_, i) => i !== lowest);
+      if (under >= 0) layer("core", srcs.map((_, i) => (i === under ? 1 : 0)));
       layer("body", bodyW);
+      // the face, on the body picture's head (its parts were made on that picture)
+      const fs = srcs[lowest];
+      if (face && fs.face) {
+        const rig = fs.skin.rig, bodyH = rig.floor - rig.top, side = bodyH * 1.25, cx = (rig.torso[0][0] + rig.torso[1][0]) / 2;
+        const px = h * 1.25, sc = px / side;
+        ctx.save();
+        ctx.translate(x - px / 2, y - px + h * 0.06);
+        ctx.scale(sc, sc);
+        ctx.translate(-(cx - side / 2), -(rig.floor - side + bodyH * 0.06));
+        drawFace(ctx, fs.face, posed[lowest].head, faceParts(fs.face, face));
+        ctx.restore();
+      }
       for (const i of [0, 1]) if (front[i]) layer("arm" + i, armW[i]);
     },
   };

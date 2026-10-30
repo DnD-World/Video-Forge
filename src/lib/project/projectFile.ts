@@ -31,7 +31,7 @@ export const PLAIN_FIELDS = [
   "pauseSameMs", "pauseTurnMs", "visemeFadeMs", "idleMotion",
   "cards", "logo",
   "backgrounds", "backgroundDim", "backgroundBlur", "backgroundColorLook", "backgroundCrossfadeMs",
-  "musicVolume", "musicDuck", "sfx",
+  "musicVolume", "musicDuck", "sfx", "scene",
 ] as const;
 
 type Plain = (typeof PLAIN_FIELDS)[number];

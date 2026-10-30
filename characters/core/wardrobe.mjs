@@ -23,7 +23,7 @@
 import { shade } from "./math.mjs";
 
 /** Slots: one item each, except the ones in MULTI. "full" fills top + bottom. */
-export const SLOTS = ["top", "outer", "full", "bottom", "feet", "neck", "head", "hair", "eyes", "ears"];
+export const SLOTS = ["top", "outer", "full", "bottom", "feet", "neck", "head", "hair", "eyes", "ears", "cape"];
 const MULTI = new Set(["hair"]);
 export const PATTERNS = ["none", "stripes", "checks", "dots", "corduroy"];
 
@@ -289,6 +289,103 @@ export const ITEMS = [
     face: (G, c) => { const { sk } = G, S = G.S; const [e0, e1] = sk.face.eyes; const r = sk.R * 0.22; for (const e of [e0, e1]) if (e.visible) { G.pen.rpoly([[(e.x - r * e.scaleX) * S, (e.y - r * 0.7) * S], [(e.x + r * e.scaleX) * S, (e.y - r * 0.7) * S], [(e.x + r * 0.85 * e.scaleX) * S, (e.y + r * 0.75) * S], [(e.x - r * 0.85 * e.scaleX) * S, (e.y + r * 0.75) * S]], r * 0.4 * S); G.fill(c[0], { feature: true }); } if (e0.visible) { G.pen.poly([[(e0.x + r * e0.scaleX) * S, (e0.y - r * 0.4) * S], [(e1.x - r) * S, (e1.y - r * 0.4) * S]], false); G.line(c[0], 0.004, { feature: true }); } } },
   { id: "earrings", label: "Earrings", slot: "ears", colors: ["#e0b040"],
     face: (G, c) => { const { sk } = G, S = G.S; for (const e of sk.face.ears) if (e.visible) { G.pen.circle(e.x * S, (e.y + sk.R * 0.24) * S, sk.R * 0.06 * S); G.fill(c[0], { feature: true }); } } },
+  // ---- costumes (28 Oct 2026): picked for Ak's subjects — D&D, dogs,
+  // manipulation defence, soft skills, seasonal, ELI5 AI, tropes
+  { id: "wizardhat", label: "Wizard hat", slot: "head", colors: ["#3b2a7a", "#ffd400"],
+    head: (G, c) => { const { sk } = G, S = G.S, t = G.t ?? 0, tip = Math.sin(t * 1.5) * sk.rx * 0.12;
+      G.pen.blob([[-sk.rx * 0.95 * S, -sk.ry * 0.55 * S], [-sk.rx * 0.35 * S, -sk.ry * 1.4 * S], [(sk.rx * 0.35 + tip) * S, -sk.ry * 2.35 * S], [(sk.rx * 0.6 + tip) * S, -sk.ry * 2.2 * S], [sk.rx * 0.55 * S, -sk.ry * 1.3 * S], [sk.rx * 0.95 * S, -sk.ry * 0.55 * S]]); G.fill(c[0]);
+      G.pen.ellipse(0, -sk.ry * 0.58 * S, sk.rx * 1.45 * S, sk.ry * 0.16 * S); G.fill(c[0]);
+      for (const [x, y, r] of [[-0.25, -1.1, 0.13], [0.2, -1.6, 0.1], [0.05, -0.85, 0.08]]) { G.pen.circle(x * sk.rx * S, y * sk.ry * S, r * sk.rx * S); G.fill(c[1] ?? "#ffd400", { noShade: true, outline: 0 }); } } },
+  { id: "crown", label: "Crown", slot: "head", colors: ["#ffc93c", "#d7261e"],
+    head: (G, c) => { const { sk } = G, S = G.S, x = sk.rx * 0.82, y0 = -sk.ry * 0.62, y1 = -sk.ry * 1.25;
+      G.pen.poly([[-x * S, y0 * S], [-x * S, y1 * S], [-x * 0.5 * S, (y0 + y1) * 0.55 * S], [0, (y1 - sk.ry * 0.12) * S], [x * 0.5 * S, (y0 + y1) * 0.55 * S], [x * S, y1 * S], [x * S, y0 * S]]); G.fill(c[0]);
+      for (const k of [-0.5, 0, 0.5]) { G.pen.circle(k * x * S, (y0 - sk.ry * 0.12) * S, sk.rx * 0.09 * S); G.fill(c[1] ?? "#d7261e", { noShade: true }); } } },
+  { id: "witchhat", label: "Witch hat", slot: "head", colors: ["#1f1a24", "#7a3fa0"],
+    head: (G, c) => { const { sk } = G, S = G.S, bend = sk.rx * 0.5;
+      G.pen.blob([[-sk.rx * 0.85 * S, -sk.ry * 0.6 * S], [-sk.rx * 0.2 * S, -sk.ry * 1.6 * S], [bend * S, -sk.ry * 2.25 * S], [(bend + sk.rx * 0.45) * S, -sk.ry * 2.0 * S], [sk.rx * 0.3 * S, -sk.ry * 1.5 * S], [sk.rx * 0.85 * S, -sk.ry * 0.6 * S]]); G.fill(c[0]);
+      G.pen.rpoly([[-sk.rx * 0.82 * S, -sk.ry * 0.85 * S], [sk.rx * 0.82 * S, -sk.ry * 0.85 * S], [sk.rx * 0.84 * S, -sk.ry * 0.7 * S], [-sk.rx * 0.84 * S, -sk.ry * 0.7 * S]], 0.004 * S); G.fill(c[1] ?? "#7a3fa0", { noShade: true });
+      G.pen.ellipse(0, -sk.ry * 0.62 * S, sk.rx * 1.7 * S, sk.ry * 0.17 * S); G.fill(c[0]); } },
+  { id: "santahat", label: "Santa hat", slot: "head", colors: ["#d7261e", "#ffffff"],
+    head: (G, c) => { const { sk } = G, S = G.S, t = G.t ?? 0, sw = Math.sin(t * 2) * sk.rx * 0.1;
+      G.pen.blob([[-sk.rx * 0.98 * S, -sk.ry * 0.5 * S], [-sk.rx * 0.6 * S, -sk.ry * 1.3 * S], [(sk.rx * 0.6 + sw) * S, -sk.ry * 1.55 * S], [(sk.rx * 1.25 + sw) * S, -sk.ry * 0.9 * S], [sk.rx * 0.9 * S, -sk.ry * 1.1 * S], [sk.rx * 0.98 * S, -sk.ry * 0.5 * S]]); G.fill(c[0]);
+      G.pen.rpoly([[-sk.rx * 1.08 * S, -sk.ry * 0.68 * S], [sk.rx * 1.08 * S, -sk.ry * 0.68 * S], [sk.rx * 1.08 * S, -sk.ry * 0.38 * S], [-sk.rx * 1.08 * S, -sk.ry * 0.38 * S]], sk.ry * 0.14 * S); G.fill(c[1] ?? "#ffffff", { noShade: true });
+      G.pen.circle((sk.rx * 1.25 + sw) * S, -sk.ry * 0.85 * S, sk.rx * 0.22 * S); G.fill(c[1] ?? "#ffffff", { noShade: true }); } },
+  { id: "tricorn", label: "Pirate hat", slot: "head", colors: ["#1a1a1a", "#e0b040"],
+    head: (G, c) => { const { sk } = G, S = G.S;
+      G.pen.blob([[-sk.rx * 1.45 * S, -sk.ry * 0.55 * S], [-sk.rx * 1.1 * S, -sk.ry * 1.25 * S], [0, -sk.ry * 1.05 * S], [sk.rx * 1.1 * S, -sk.ry * 1.25 * S], [sk.rx * 1.45 * S, -sk.ry * 0.55 * S], [0, -sk.ry * 0.72 * S]]); G.fill(c[0]);
+      G.pen.curve([[-sk.rx * 1.3 * S, -sk.ry * 0.62 * S], [0, -sk.ry * 0.8 * S], [sk.rx * 1.3 * S, -sk.ry * 0.62 * S]]); G.line(c[1] ?? "#e0b040", 0.004, { feature: true });
+      G.pen.circle(0, -sk.ry * 1.0 * S, sk.rx * 0.16 * S); G.fill("#f4f1e8", { noShade: true }); } },
+  { id: "chefhat", label: "Chef hat", slot: "head", colors: ["#ffffff"],
+    head: (G, c) => { const { sk } = G, S = G.S;
+      G.pen.rpoly([[-sk.rx * 0.8 * S, -sk.ry * 0.95 * S], [sk.rx * 0.8 * S, -sk.ry * 0.95 * S], [sk.rx * 0.82 * S, -sk.ry * 0.55 * S], [-sk.rx * 0.82 * S, -sk.ry * 0.55 * S]], 0.006 * S); G.fill(c[0], { noShade: true });
+      for (const x of [-0.55, 0, 0.55]) { G.pen.circle(x * sk.rx * S, -sk.ry * 1.35 * S, sk.rx * 0.52 * S); G.fill(c[0], { noShade: true }); } } },
+  { id: "greathelm", label: "Knight helmet", slot: "head", colors: ["#b8c2cc", "#1a1a1a"],
+    head: (G, c) => { const { sk } = G, S = G.S;
+      G.pen.rpoly([[-sk.rx * 1.08 * S, -sk.ry * 1.1 * S], [sk.rx * 1.08 * S, -sk.ry * 1.1 * S], [sk.rx * 1.1 * S, sk.ry * 1.05 * S], [-sk.rx * 1.1 * S, sk.ry * 1.05 * S]], sk.rx * 0.45 * S); G.fill(c[0]);
+      G.pen.rpoly([[-sk.rx * 0.85 * S, -sk.ry * 0.2 * S], [sk.rx * 0.95 * S, -sk.ry * 0.2 * S], [sk.rx * 0.95 * S, -sk.ry * 0.02 * S], [-sk.rx * 0.85 * S, -sk.ry * 0.02 * S]], 0.003 * S); G.fill(c[1] ?? "#1a1a1a", { feature: true });
+      G.pen.poly([[sk.face.faceDX * S, -sk.ry * 1.05 * S], [sk.face.faceDX * S, sk.ry * 0.95 * S]], false); G.line(shade(c[0], -0.3), 0.004, { feature: true }); } },
+  { id: "beret", label: "Beret", slot: "head", colors: ["#a8322b"],
+    head: (G, c) => { const { sk } = G, S = G.S; G.pen.ellipse(-sk.rx * 0.15 * S, -sk.ry * 0.78 * S, sk.rx * 1.15 * S, sk.ry * 0.38 * S, -0.15); G.fill(c[0]); G.pen.circle(-sk.rx * 0.1 * S, -sk.ry * 1.18 * S, sk.rx * 0.08 * S); G.fill(c[0], { noShade: true }); } },
+  { id: "bunnyears", label: "Bunny ears", slot: "hair", colors: ["#f4f1e8", "#ffb3c7"],
+    head: (G, c) => { const { sk } = G, S = G.S, t = G.t ?? 0;
+      for (const s of [-1, 1]) { const flop = s > 0 ? Math.sin(t * 2) * 0.15 : 0; G.ctx.save(); G.ctx.translate(s * sk.rx * 0.4 * S, -sk.ry * 0.8 * S); G.ctx.rotate(s * 0.15 + flop); G.pen.ellipse(0, -sk.ry * 0.7 * S, sk.rx * 0.22 * S, sk.ry * 0.75 * S); G.fill(c[0]); G.pen.ellipse(0, -sk.ry * 0.65 * S, sk.rx * 0.11 * S, sk.ry * 0.55 * S); G.fill(c[1] ?? "#ffb3c7", { noShade: true, outline: 0 }); G.ctx.restore(); } } },
+  { id: "dogears", label: "Dog ears", slot: "hair", colors: ["#8a5a36"],
+    head: (G, c) => { const { sk } = G, S = G.S, t = G.t ?? 0;
+      for (const s of [-1, 1]) { G.ctx.save(); G.ctx.translate(s * sk.rx * 0.75 * S, -sk.ry * 0.6 * S); G.ctx.rotate(s * (0.35 + Math.sin(t * 3 + s) * 0.08)); G.pen.ellipse(s * sk.rx * 0.12 * S, sk.ry * 0.35 * S, sk.rx * 0.26 * S, sk.ry * 0.55 * S); G.fill(c[0]); G.ctx.restore(); } } },
+  { id: "headset", label: "Headset", slot: "ears", colors: ["#2a2a33"],
+    face: (G, c) => { const { sk } = G, S = G.S, e = sk.face.ears[1];
+      G.pen.ellipse(0, -sk.ry * 0.05 * S, sk.rx * 1.05 * S, sk.ry * 1.0 * S, 0, Math.PI * 1.05, Math.PI * 1.95); G.line(c[0], 0.008, { feature: true });
+      G.pen.circle(e.x * S, e.y * S, sk.R * 0.2 * S); G.fill(c[0], { feature: true });
+      G.pen.curve([[e.x * S, (e.y + sk.R * 0.1) * S], [(e.x - sk.R * 0.15) * S, sk.ry * 0.55 * S], [sk.face.mouth.x * S + sk.R * 0.25 * S, sk.face.mouth.y * S]]); G.line(c[0], 0.004, { feature: true });
+      G.pen.circle(sk.face.mouth.x * S + sk.R * 0.25 * S, sk.face.mouth.y * S, sk.R * 0.07 * S); G.fill(c[0], { feature: true }); } },
+  { id: "eyepatch", label: "Eye patch", slot: "eyes", colors: ["#1a1a1a"],
+    face: (G, c) => { const { sk } = G, S = G.S, e = sk.face.eyes[1];
+      G.pen.poly([[-sk.rx * 0.95 * S, -sk.ry * 0.45 * S], [sk.rx * 0.95 * S, sk.ry * 0.15 * S]], false); G.line(c[0], 0.003, { feature: true });
+      G.pen.ellipse(e.x * S, e.y * S, sk.R * 0.24 * S, sk.R * 0.2 * S); G.fill(c[0], { feature: true }); } },
+  { id: "labcoat", label: "Lab coat / vet coat", slot: "outer", colors: ["#f4f6f8"],
+    torso: (G, c) => { const { sk } = G, n = vNotch(sk, 0.4, 0.4); G.pen.rpoly(G.U(torsoShape(sk, sk.hy + 0.18, 1.35, n)), 0.012 * G.S); G.fill(c[0], { noShade: true }); G.pen.poly(G.U([[sk.neck[0], n.vb], [sk.neck[0], sk.hy + 0.17]]), false); G.line(shade(c[0], -0.25), 0.003, { feature: true }); G.pen.rpoly(G.U([[sk.sx * 0.35, sk.waistY], [sk.sx * 0.8, sk.waistY], [sk.sx * 0.8, sk.waistY + 0.05], [sk.sx * 0.35, sk.waistY + 0.05]]), 0.004 * G.S); G.line(shade(c[0], -0.2), 0.003, { feature: true }); },
+    arm: sleeve(1.75) },
+  { id: "apron", label: "Apron", slot: "outer", colors: ["#2f6b4f"],
+    torso: (G, c) => { const { sk } = G, l = sk.neck[0];
+      G.pen.rpoly(G.U([[l - sk.sx * 0.5, sk.sy + 0.04], [l + sk.sx * 0.5, sk.sy + 0.04], [l + sk.hx * 1.05, sk.hy + 0.16], [l - sk.hx * 1.05, sk.hy + 0.16]]), 0.01 * G.S); G.fill(c[0]);
+      for (const s of [-1, 1]) { G.pen.poly(G.U([[l + s * sk.sx * 0.45, sk.sy + 0.045], [l + s * sk.sx * 0.25, sk.sy - 0.005]]), false); G.line(c[0], 0.004); }
+      G.pen.rpoly(G.U([[l - sk.hx * 0.45, sk.waistY + 0.03], [l + sk.hx * 0.45, sk.waistY + 0.03], [l + sk.hx * 0.45, sk.waistY + 0.08], [l - sk.hx * 0.45, sk.waistY + 0.08]]), 0.004 * G.S); G.line(shade(c[0], -0.3), 0.003, { feature: true }); } },
+  { id: "armor", label: "Armour", slot: "outer", colors: ["#b8c2cc", "#8a5a36"],
+    torso: (G, c) => { const { sk } = G;
+      G.pen.rpoly(G.U(torsoShape(sk, sk.hy + 0.03, 1.12)), 0.03 * G.S); G.fill(c[0]);
+      for (const k of [0.45, 0.62, 0.8]) { const y = sk.sy + (sk.hy - sk.sy) * k; G.pen.poly(G.U([[-sk.sx * 0.85, y], [sk.sx * 0.85, y]]), false); G.line(shade(c[0], -0.3), 0.003, { feature: true }); }
+      G.pen.rpoly(G.U([[-sk.hx * 1.05, sk.hy - 0.015], [sk.hx * 1.05, sk.hy - 0.015], [sk.hx * 1.05, sk.hy + 0.02], [-sk.hx * 1.05, sk.hy + 0.02]]), 0.004 * G.S); G.fill(c[1] ?? "#8a5a36");
+      for (const s of [-1, 1]) { G.pen.ellipse((sk.neck[0] + s * sk.sx * 0.95) * G.S, (sk.sy + 0.02) * G.S, sk.sx * 0.42 * G.S, 0.035 * G.S); G.fill(c[0]); } } },
+  { id: "robe", label: "Long robe", slot: "full", colors: ["#3b2a7a", "#ffd400"], patterns: false,
+    torso: (G, c) => { const { sk } = G, w = sk.hx;
+      G.pen.rpoly(G.U([...torsoShape(sk, sk.hy, 1).slice(0, 2), [w * 2.1, -0.02], [-w * 2.1, -0.02]]), 0.02 * G.S); G.fill(c[0]);
+      G.pen.poly(G.U([[sk.neck[0], sk.sy + 0.01], [sk.neck[0], -0.03]]), false); G.line(c[1] ?? "#ffd400", 0.006);
+      G.pen.poly(G.U([[-w * 1.1, sk.waistY], [w * 1.1, sk.waistY]]), false); G.line(c[1] ?? "#ffd400", 0.008); },
+    arm: (G, c, arm) => { if (G.look.limb === "line") return; G.pen.poly(G.U(armPath(arm, 1.55)), false); G.line(c[0], G.sk.limbW * 1.7); } },
+  { id: "santacoat", label: "Santa coat", slot: "full", colors: ["#d7261e", "#ffffff"], patterns: false,
+    torso: (G, c) => { const { sk } = G, w = sk.hx;
+      G.pen.rpoly(G.U([...torsoShape(sk, sk.hy, 1.15).slice(0, 2), [w * 1.5, sk.hy + 0.1], [-w * 1.5, sk.hy + 0.1]]), 0.025 * G.S); G.fill(c[0]);
+      G.pen.rpoly(G.U([[-w * 1.5, sk.hy + 0.07], [w * 1.5, sk.hy + 0.07], [w * 1.5, sk.hy + 0.11], [-w * 1.5, sk.hy + 0.11]]), 0.01 * G.S); G.fill(c[1] ?? "#fff", { noShade: true });
+      G.pen.poly(G.U([[sk.neck[0], sk.sy + 0.01], [sk.neck[0], sk.hy + 0.07]]), false); G.line(c[1] ?? "#fff", 0.012);
+      G.pen.rpoly(G.U([[-w * 1.2, sk.waistY - 0.015], [w * 1.2, sk.waistY - 0.015], [w * 1.2, sk.waistY + 0.02], [-w * 1.2, sk.waistY + 0.02]]), 0.004 * G.S); G.fill("#1a1a1a");
+      G.pen.rpoly(G.U([[sk.neck[0] - 0.02, sk.waistY - 0.02], [sk.neck[0] + 0.02, sk.waistY - 0.02], [sk.neck[0] + 0.02, sk.waistY + 0.025], [sk.neck[0] - 0.02, sk.waistY + 0.025]]), 0.003 * G.S); G.fill("#e0b040"); },
+    arm: sleeve(1.8) },
+  { id: "cape", label: "Cape", slot: "cape", colors: ["#a8322b", "#e0b040"],
+    back: (G, c) => { const { sk } = G, t = G.t ?? 0, sw = Math.sin(t * 1.8) * 0.02;
+      G.pen.blob(G.U([[-sk.sx * 1.15, sk.sy], [sk.sx * 1.15, sk.sy], [sk.sx * 1.6 + sw, -0.12], [sw, -0.08], [-sk.sx * 1.6 + sw, -0.12]])); G.fill(shade(c[0], -0.15)); },
+    neck: (G, c) => { const { sk } = G; for (const s of [-1, 1]) { G.pen.circle((sk.neck[0] + s * sk.sx * 0.55) * G.S, (sk.sy + 0.01) * G.S, 0.012 * G.S); G.fill(c[1] ?? "#e0b040", { noShade: true }); } } },
+  // shoes for the costumes and the everyday (shoe() above)
+  { id: "heels", label: "High heels", slot: "feet", colors: ["#a8322b"],
+    feet: (G, c, foot, s) => shoe(G, foot, s, { high: 0.8, len: 0.95, wide: 0.8, sole: 0.004,
+      detail: (G, at, d) => { if (d.k > 0.3) { G.pen.poly(at([[-d.L * 0.12, -d.H * 0.1], [-d.L * 0.05, -d.H * 0.1], [-d.L * 0.09, d.H * 0.9]]), true); G.fill(shade(c[0], -0.4), { noShade: true }); } } }, c) },
+  { id: "pointy", label: "Pointed shoes (medieval / elf)", slot: "feet", colors: ["#3f8f4a"],
+    feet: (G, c, foot, s) => shoe(G, foot, s, { high: 0.85, len: 1.35, sole: 0.004,
+      detail: (G, at, d) => { if (d.k > 0.3) { G.pen.curve(at([[d.L * 0.85, -d.H * 0.2], [d.L * 1.15, -d.H * 0.35], [d.L * 1.25, -d.H * 0.8]])); G.line(c[0], 0.008); } } }, c) },
+  { id: "wellies", label: "Rain boots", slot: "feet", colors: ["#f2c84b"],
+    feet: (G, c, foot, s) => shoe(G, foot, s, { high: 1.05, wide: 1.1, sole: 0.008, shaft: 0.075, soleColor: shade(c[0], -0.5) }, [c[0], c[0]]) },
+  { id: "paws", label: "Paw slippers", slot: "feet", colors: ["#8a5a36", "#f4ead2"],
+    feet: (G, c, foot, s) => shoe(G, foot, s, { high: 1.15, wide: 1.2, len: 1.05, sole: 0.006, soleColor: c[1] ?? "#f4ead2",
+      detail: (G, at, d) => { for (const k of [-1, 0, 1]) { const p = at([[k * d.W * 0.25 * (1 - d.k) + (d.L * 0.8 + k * 0.004) * d.k, -d.H * 0.75]])[0]; G.pen.circle(p[0], p[1], d.W * 0.1 * G.S); G.fill(c[1] ?? "#f4ead2", { noShade: true, outline: 0 }); } } }, c) },
 ];
 
 const BY_ID = Object.fromEntries(ITEMS.map((i) => [i.id, i]));

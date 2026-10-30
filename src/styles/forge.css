@@ -612,3 +612,9 @@ html[data-motion="off"] body::before { animation: none; }
 .forge-who .who.on .kind-badge { background: rgba(0, 26, 16, .18); color: #001a10; }
 .drawn-face { display: block; width: 100%; aspect-ratio: 1; border-radius: 50%; overflow: hidden; background: radial-gradient(circle at 50% 35%, #1b4a3e, #04121a 70%); }
 .drawn-face > div { width: 100% !important; height: 100% !important; }
+
+/* ---- set picker (28 Oct 2026) ---- */
+.forge-set-tile { display: flex; flex-direction: column; gap: 4px; padding: 4px; border-radius: 14px; border: 1px solid var(--line); background: rgba(4, 18, 26, .5); color: var(--ink-2); cursor: pointer; font-size: .82rem; text-align: center; transition: border-color .2s, transform .2s; }
+.forge-set-tile:hover { border-color: var(--line-hot); transform: translateY(-1px); }
+.forge-set-tile.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; color: var(--ink); }
+.forge-set-tile .none { display: grid; place-items: center; aspect-ratio: 16 / 9; border-radius: 10px; background: repeating-linear-gradient(45deg, rgba(255,255,255,.03) 0 8px, transparent 8px 16px); }

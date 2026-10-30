@@ -45,6 +45,10 @@ machine** via a bundled Remotion + FFmpeg pipeline.
 - 🏷️ **Honest AI label** — "Made with Video Forge" on the picture (on by default) and in the file's notes
 - 🔤 **Greek stress fixer** — adds missing accents before the voice speaks; a "Say it like this" list for stubborn words
 - 📊 **Many videos from a sheet** — a Google Sheet link or CSV, one row per video, made one after another into a folder named `<sheet> · <date> · <n> videos`
+- 🎭 **Drawn characters** — 21 art styles, 56 clothes, 21 costume packs; they walk, sit, gesture and hold props from script tags like `[walks in]`, `[gives the box to Maria]`
+- 🛋️ **Sets** — news desk, conference room, stage, podcast (facing or split screen), game show
+- ✨ **Pop-up icons** — `[pop red flag]` or `[🎉]` in a line; 52 animated icons
+- 🔠 **Caption styles** — 8 one-click looks, from karaoke to one-word-at-a-time
 - 💬 **Hover help on every control**
 - 🌊 **6 waveform styles** × 5 positions × 6 behavior modes (only active speakers animate)
 - 🎼 **Smart audio** — auto-ducking, Freesound/Pixabay library, pinned custom uploads
@@ -70,6 +74,7 @@ npm run dev
 ## Guides
 - [Make a video, in plain words](docs/eli5/make-a-video.md)
 - [Writing scripts](docs/WRITING-SCRIPTS.md) · [Making puppets](docs/PUPPET-MAKING.md) · [Install](docs/INSTALL.md)
+- [Brief for an AI that writes scripts](docs/AI-BRIEF.md)
 - [Handoff (current state)](docs/HANDOFF.md) · [Changelog](CHANGELOG.md)
 
 ## 🗺️ Roadmap

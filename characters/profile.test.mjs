@@ -83,3 +83,18 @@ test("puppet picks only come from the shelf; otherwise an order", () => {
   assert.equal(readPuppetPick('{"pick":"santa","order":"a jolly man in red"}', shelf).order, "a jolly man in red");
   assert.ok(readPuppetPick("no json here", shelf).problem);
 });
+
+import { COSTUMES } from "./core/index.mjs";
+test("every costume is a valid outfit (no item dropped or replaced) and draws in every look", () => {
+  for (const c of COSTUMES) {
+    const { card, problems } = normalizeCard({ name: c.label, wear: c.wear, ...(c.beard ? { beard: c.beard } : {}), ...(c.hairColor ? { hairColor: c.hairColor } : {}) });
+    assert.deepEqual(problems, [], c.id);
+    assert.equal(card.wear.length, c.wear.length, c.id);
+    for (const L of LOOKS) for (const view of [0, 2]) {
+      const rc = new RecordingCtx(400, 400);
+      drawCharacter(rc, card, { look: L, S: 300, x: 200, y: 380, state: { view, t: 0.5 } });
+      assert.equal(rc.bad, 0, `${c.id} in ${L.id}`);
+    }
+  }
+  for (const s of ["dnd", "dogs", "manipulation", "softskills", "seasonal", "ai", "tropes"]) assert.ok(COSTUMES.some((c) => c.subjects.includes(s)), s);
+});

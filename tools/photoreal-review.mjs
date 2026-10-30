@@ -1,7 +1,7 @@
 // Build characters/checks/review-photoreal-<name>.html: the photoreal puppet
 // bent by the skeleton next to a drawn character, live, with the question in
 // plain words. Pictures inside; ignored folder (may be a private character).
-//   node tools/photoreal-review.mjs --sources a.png~a.pose.json,t.png~t.pose.json~edges [--name nikos]
+//   node tools/photoreal-review.mjs --dir <presenter folder from make-photoreal> [--name nikos]
 import { build } from "esbuild";
 import fs from "node:fs";
 import path from "node:path";
@@ -9,10 +9,15 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const arg = (k, d) => { const i = process.argv.indexOf(`--${k}`); return i > 0 ? process.argv[i + 1] : d; };
-const sources = arg("sources").split(",").map((part) => {
-  const [img, pose, flag] = part.split("~");
-  return { image: "data:image/png;base64," + fs.readFileSync(img).toString("base64"), pose: JSON.parse(fs.readFileSync(pose, "utf8")), armEdges: flag === "edges" };
-});
+// --dir: a presenter folder from tools/make-photoreal.mjs (pictures, joints, face parts)
+const dir = arg("dir");
+const manifest = JSON.parse(fs.readFileSync(path.join(dir, "photoreal.json"), "utf8"));
+const files = {};
+for (const s of manifest.sources) {
+  files[s.image] = "data:image/png;base64," + fs.readFileSync(path.join(dir, s.image)).toString("base64");
+  files[s.pose] = fs.readFileSync(path.join(dir, s.pose), "utf8");
+}
+for (const p of Object.values(manifest.face?.parts ?? {})) files[p.file] = "data:image/png;base64," + fs.readFileSync(path.join(dir, p.file)).toString("base64");
 const name = arg("name", "puppet");
 const out = await build({ entryPoints: [path.join(root, "characters/photoreal/review-page.mjs")], bundle: true, write: false, format: "esm", target: "es2022", logLevel: "warning" });
 const js = out.outputFiles[0].text.replaceAll("</script", "<\\/script");
@@ -40,7 +45,7 @@ figcaption{padding:12px 16px}figcaption b{font-size:18px}figcaption span{color:v
 .opt{border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:#0f1e31}.opt b{color:var(--mint)}.opt.rec{border-color:var(--mint);box-shadow:0 0 0 1px var(--mint) inset}.opt small{display:block;color:var(--muted);margin-top:4px}
 </style></head><body><main>
 <h1>A photoreal presenter <span>at the news desk</span></h1>
-<p class="lead">Left: ${name === "nikos" ? "Nikos" : "the puppet"}, from two generated pictures (arms down, arms out), bent by the same skeleton and the same movement as the drawn characters — upper body only, the rest hidden behind a news desk, as you asked. Right: a drawn character at the same desk doing exactly the same, for comparison. It loops through every move.</p>
+<p class="lead">Left: ${name === "nikos" ? "Nikos" : "the puppet"}, from two generated pictures (arms down, arms out), bent by the same skeleton and the same movement as the drawn characters, talking and blinking with his own face parts — upper body only, the rest hidden behind a news desk, as you asked. Right: a drawn character at the same desk doing exactly the same, for comparison. It loops through every move.</p>
 <div class="bar"><span class="now" id="now"></span><label>Speed <select id="slow"><option value="1">normal</option><option value="0.5">half</option><option value="0.25">quarter</option></select></label></div>
 <div class="grid">
 <figure class="photo"><canvas id="photo"></canvas><figcaption><b>Photoreal, bent</b><span>two Nano Banana pictures, mixed per arm</span></figcaption></figure>
@@ -48,14 +53,14 @@ figcaption{padding:12px 16px}figcaption b{font-size:18px}figcaption span{color:v
 </div>
 <section class="q"><h2>What I need from you</h2>
 <p>Is the desk presenter good enough to build into the app? Still to do if yes:</p>
-<ul><li>a ragged bit of white sleeve next to the apron, on the side of a moving arm (much smaller than before; not gone)</li><li>hands that change shape (a hand sheet is already generated, not yet wired)</li><li>talking and blinking on this face (the puppet's existing face parts, layered on top)</li><li>every new photoreal presenter needs 2 extra pictures from Image Forge (arms down, arms out): about 4 US cents</li></ul>
+<ul><li>a small torn flap of shirt at the armpit when an arm lifts (the ragged sleeve is fixed)</li><li>hands that change shape (a hand sheet is already generated, not yet wired)</li><li>every new photoreal presenter needs 2 extra pictures from Image Forge (arms down, arms out): about 4 US cents</li></ul>
 <div class="opts">
 <div class="opt rec"><b>Yes, build it</b> — recommended<small>Photoreal presenters at a desk, with all the arm and head moves; I finish the list above.</small></div>
-<div class="opt"><b>Fix first</b><small>Show me again after the hands and the talking face are done.</small></div>
+<div class="opt"><b>Fix first</b><small>Show me again after the hands are done.</small></div>
 <div class="opt"><b>Portraits only</b><small>The last resort: face and shoulders, talking and blinking.</small></div>
 </div></section>
 </main>
-<script>window.__REVIEW=${JSON.stringify({ sources })};</script>
+<script>window.__REVIEW=${JSON.stringify({ manifest, files })};</script>
 <script type="module">${js}</script></body></html>`;
 const file = path.join(root, "characters/checks", `review-photoreal-${name}.html`);
 fs.writeFileSync(file, html);

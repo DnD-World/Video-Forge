@@ -4,6 +4,15 @@ Everything a fresh session needs. `PLAN.md` holds the long history; this is the
 working state. Newest sections first. Plans: `docs/V2-PLAN.md` (Video Forge),
 `docs/FORGES-PLAN.md` (both apps; has a Status section at the bottom).
 
+## Batch 3 merged — 30 Oct 2026
+Sets, pop-up icons, costumes, caption styles, in-between poses are in main.
+Known gaps (next, approved by Ak in this order): 1 sets in Many videos (runJob
+never passes `scene`), 2 script tag switching look/set/on-screen cast mid-video,
+3 script tag playing a local clip with sound, 4 couch set + phone-call frame,
+5 cast per sheet row. Also asked: drawn characters walking in and sitting at a
+set's table; Ak reports intros look desaturated. Brief for Ak's script AI:
+docs/AI-BRIEF.md.
+
 ## Ultra plan — 25–26 Oct 2026 (plan only, nothing built)
 
 Both forges checked end to end; Ak chose the scope on 26 Oct:
@@ -144,8 +153,26 @@ BUILD ORDER (Ak, 26 Oct: "I do not want to choose sequence"). Claude decides the
      Open: ragged sleeve bit next to the apron when an arm moves; dwarf
      helmet design; drink's cup should reach the mouth; different shoe
      designs later (Ak expects them in a later batch).
-     PR DnD-World/Video-Forge#10 (batch2-motion) still not merged: the
-     permission system refused the merge; Ak to say "merge 10".
+     PR DnD-World/Video-Forge#10 (batch2-motion) MERGED 28 Oct.
+     Ak's decision 28 Oct: photoreal puppets are HALF BODY in scenes where
+     furniture hides the legs: desk presenter, team in a conference room,
+     speakers at a conference, recorded podcast. Queued for the variety
+     batch: those four sets + wiring photoreal presenters into the app.
+   - 28 Oct, Ak on batch 3:
+     - Sets wanted: game show, news desk, conference room, conference stage,
+       podcast (split screen or facing each other). All six built
+       (characters/sets/sets.mjs); next: inside the app.
+     - Photoreal Nikos: keep, but "anything other than a gimmicky use will
+       not work at this level" (face choppy frame to frame, hands/fingers
+       poor). Done: feathered face parts, narrower hand cross-fade.
+     - #6 motion library: grow it WITH in-between (mid / semi-mid) poses so
+       moves look more fluid.
+     - #8 pop-ups: animated ICONS too, not only emoji; predict what his
+       subjects need (D&D, dogs, manipulation defence, soft skills,
+       seasonal, ELI5 AI, tropes) — same for #2 looks, #3 wardrobe,
+       #4 costumes, #5 shoes.
+     - #9 captions: copy the styles that already work; at most 3 new
+       signature styles.
 3. MEDIUM: variety. Looks (beards, shoes, 3 shadow looks), wardrobe, free media, emoji pop-ups, Image Forge in the same layout, the rest of Phase 5.
 4. HIGH: #43 timeline.
 

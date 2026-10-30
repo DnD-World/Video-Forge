@@ -4,11 +4,9 @@
 // body only, behind a news desk (Ak, 28 Oct 2026: "lets focus on the upper
 // body. so sitting on a news desk with the bottom half hidden would be fine").
 // tools/photoreal-review.mjs builds it with the pictures inside.
-import { SHELF, performAt, characterState, solveRig, defaultCard, lookById, drawFigure, frameFor, normalizeCard, DRAWN_PRESETS } from "../core/index.mjs";
-import { buildSkin } from "./skin.mjs";
-import { makePuppet } from "./multi.mjs";
+import { SHELF, performAt, characterState, solveRig, defaultCard, lookById, drawFigure, frameFor, normalizeCard, DRAWN_PRESETS, autoPerformance } from "../core/index.mjs";
+import { loadPresenter } from "./load.mjs";
 
-const { sources } = window.__REVIEW;
 const MOVES = ["wave", "point", "shrug", "explain", "thumbs-up", "facepalm", "cheer", "arms-crossed", "bow"];
 
 /** Upper body only: the legs and the body's height stay put (they are under the desk). */
@@ -41,19 +39,8 @@ function desk(ctx, W, H, deskTop) {
   ctx.fillStyle = "#5be3b5"; ctx.fillRect(0, deskTop + H * 0.06, W, H * 0.008);
   ctx.globalAlpha = 0.5; ctx.fillRect(0, deskTop + H * 0.07, W, H * 0.025); ctx.globalAlpha = 1;
 }
-const loadImg = (src) => new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.src = src; });
-
-const built = [];
-for (const s of sources) {
-  const img = await loadImg(s.image);
-  const pc = Object.assign(document.createElement("canvas"), { width: img.width, height: img.height }).getContext("2d");
-  pc.drawImage(img, 0, 0);
-  const d = pc.getImageData(0, 0, img.width, img.height).data;
-  const alpha = new Uint8Array(img.width * img.height);
-  for (let i = 0; i < alpha.length; i++) alpha[i] = d[i * 4 + 3];
-  built.push({ image: img, skin: buildSkin(alpha, img.width, img.height, s.pose.points, { armEdges: s.armEdges }) });
-}
-const puppet = makePuppet(built, { size: 900 });
+const { manifest, files } = window.__REVIEW;
+const puppet = await loadPresenter(manifest, (f) => files[f], { getPose: async (f) => JSON.parse(files[f]) });
 const rigCard = defaultCard({ name: "Rig", look: "corp" });
 const rigLook = lookById("corp");
 const rest = solveRig(rigCard, rigLook, { view: 0 });
@@ -92,7 +79,9 @@ function frame(now) {
       const sk = solveRig(rigCard, rigLook, state);
       // the hips sit just below the desk top; the rest of the body is under it
       const h = H * 1.2;
-      puppet.draw(ctx, sk, rest, { x: W / 2, y: deskTop + h * 0.46, h });
+      // talking and blinking, as the app drives every puppet (here a sample loop)
+      const talk = autoPerformance(ms / 1000, { seed: 3, talking: true });
+      puppet.draw(ctx, sk, rest, { x: W / 2, y: deskTop + h * 0.46, h, face: { viseme: talk.mouth.to, prevViseme: talk.mouth.from, mix: talk.mouth.mix, lid: talk.lid.to, brow: perf.faceCue?.brows ?? talk.brows.left } });
     } else {
       const fr = frameFor(drawn, "sticker", "waist", { x: W * 0.15, y: H * 0.08, w: W * 0.7, h: H * 0.72 });
       drawFigure(ctx, drawn, { look: "sticker", S: fr.S, x: fr.x, y: fr.y, state, layerSize: { w: W, h: H }, layerCanvas: layer });

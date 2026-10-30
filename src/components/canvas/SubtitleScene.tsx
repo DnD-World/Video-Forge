@@ -155,12 +155,14 @@ function toUpperGreek(s: string): string {
  *  dial, because they are not variations of one idea: a halo adds light, a box
  *  removes it, and a lift does not touch colour at all. */
 function emphasisStyle(
-  kind: "glow" | "stroke" | "halo" | "box" | "lift",
+  kind: "glow" | "stroke" | "halo" | "box" | "lift" | "sweep" | "burst" | "ink",
   active: boolean,
   activeColor: string,
   restColor: string,
   glowPx: number,
-  strokePx: number
+  strokePx: number,
+  /** How far through the word the voice is, 0-1 (sweep draws its bar this far). */
+  progress = 1
 ): CSSProperties {
   if (!active) {
     // The unspoken words. `box` and `lift` put a shadow under everything so the
@@ -217,6 +219,40 @@ function emphasisStyle(
         marginInline: "0.18em",
         textShadow: `0 ${(strokePx * 0.45).toFixed(1)}px ${strokePx.toFixed(1)}px rgba(0,0,0,.9), 0 0 ${(glowPx * 0.8).toFixed(1)}px ${activeColor}`,
       };
+    // ---- the three signature styles (28 Oct 2026) ----
+    case "sweep":
+      // FORGE SWEEP: a bar of the highlight colour slides in under the word
+      // being said, like a marker stroke, and the word lifts a hair
+      return {
+        color: activeColor === restColor ? "#ffffff" : restColor,
+        backgroundImage: `linear-gradient(${activeColor}, ${activeColor})`,
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "0 92%",
+        backgroundSize: `${Math.round(Math.min(1, progress * 2.5) * 100)}% 0.24em`,
+        display: "inline-block",
+        transform: "translateY(-0.04em)",
+        textShadow: `0 ${(strokePx * 0.35).toFixed(1)}px ${(strokePx * 0.6).toFixed(1)}px rgba(0,0,0,.85)`,
+      };
+    case "burst":
+      // COMIC BURST: the word jumps out on a tilted sticker of the highlight colour
+      return {
+        color: "#171310",
+        background: activeColor,
+        borderRadius: "0.18em",
+        padding: "0 0.2em",
+        display: "inline-block",
+        transform: "rotate(-4deg) scale(1.1)",
+        marginInline: "0.16em",
+        boxShadow: `0.08em 0.1em 0 #171310`,
+        WebkitTextStrokeWidth: 0,
+        textShadow: "none",
+      };
+    case "ink":
+      // INK DROP: the word takes the highlight colour as it is said, no glow — calm, for lessons
+      return {
+        color: activeColor,
+        textShadow: `0 ${(strokePx * 0.3).toFixed(1)}px 0 rgba(0,0,0,.6)`,
+      };
     case "glow":
     default:
       return {
@@ -261,6 +297,8 @@ export function SubtitleScene({
     <div
       style={{
         position: "absolute",
+        // above the speakers and a set's furniture, in the preview as in the render
+        zIndex: 12,
         left: 0,
         right: 0,
         display: "flex",
@@ -312,7 +350,7 @@ export function SubtitleScene({
             ? `"${config.fontFamily}", ${FONT_STACK}`
             : FONT_STACK,
           fontWeight: config.fontWeight ?? 800,
-          fontSize,
+          fontSize: (config.reveal ?? "all") === "word" ? fontSize * 1.6 : fontSize,
           lineHeight: 1.25,
           letterSpacing: "0.01em",
           // NOT text-transform. CSS uppercases Greek by the Unicode default,
@@ -329,6 +367,11 @@ export function SubtitleScene({
       >
         {cue.words.map((w, i) => {
           const isActive = timeMs >= w.startMs && timeMs < w.endMs;
+          const said = timeMs >= w.endMs;
+          // which words show: the whole line, the words said so far, or one at a time
+          const reveal = config.reveal ?? "all";
+          if (reveal === "spoken" && !said && !isActive) return null;
+          if (reveal === "word" && !(isActive || (i === cue.words.length - 1 && said) || (said && timeMs < (cue.words[i + 1]?.startMs ?? Infinity)))) return null;
           // WHAT GROWS AND WHAT DOES NOT. "lift" scales the spoken word, and a
           // scaled inline-block swallows the space that follows it inside the
           // same box — which ran the words together ("ΜαΣερίφημου", 15 Sep
@@ -336,13 +379,21 @@ export function SubtitleScene({
           // word, and the space stays in the outer one, unscaled.
           const { display, transform, marginInline, ...outer } = emphasisStyle(
             config.activeEmphasis ?? "glow",
-            isActive,
+            isActive || (!!config.keepSpoken && said && (config.activeEmphasis ?? "glow") !== "burst"),
             activeColor,
             config.color,
             glowPx,
-            strokePx
+            strokePx,
+            isActive ? (timeMs - w.startMs) / Math.max(1, w.endMs - w.startMs) : 1
           );
-          const grow = { display, transform, marginInline };
+          // sweep and burst draw on the word itself, so their bar or sticker
+          // turns with it and leaves the trailing space out
+          const onWord = (config.activeEmphasis === "sweep" || config.activeEmphasis === "burst")
+            ? (({ background, backgroundImage, backgroundRepeat, backgroundPosition, backgroundSize, borderRadius, padding, boxShadow }) =>
+                ({ background, backgroundImage, backgroundRepeat, backgroundPosition, backgroundSize, borderRadius, padding, boxShadow }))(outer)
+            : {};
+          for (const k of Object.keys(onWord)) delete (outer as Record<string, unknown>)[k];
+          const grow = { display, transform, marginInline, ...onWord };
           return (
             <Fragment key={i}>
             <span

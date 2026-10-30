@@ -242,7 +242,12 @@ export interface SubtitleConfig {
    *  - `halo`      the glow, several times over, on a black bed
    *  - `box`       a solid block behind the spoken word
    *  - `lift`      the word grows and rises — reads with the sound off */
-  activeEmphasis?: "glow" | "stroke" | "halo" | "box" | "lift";
+  activeEmphasis?: "glow" | "stroke" | "halo" | "box" | "lift" | "sweep" | "burst" | "ink";
+  /** Which words show (28 Oct 2026): the whole line (default), only the words
+   *  said so far (they appear as spoken), or one big word at a time. */
+  reveal?: "all" | "spoken" | "word";
+  /** Words already said keep the highlight colour (karaoke). */
+  keepSpoken?: boolean;
   /** Take the active word's colour and glow from whoever is speaking, instead
    *  of `activeColor`. Ties the caption to the speaker without a second set of
    *  controls to keep in sync — the same rule the waveform already follows. */
@@ -514,6 +519,10 @@ export interface SfxClip {
 
 export interface ProjectState {
   render: RenderSettings;
+  /** A set the speakers sit in (characters/sets/sets.mjs: news desk,
+   *  conference room, stage, podcast, game show), or null for none. With a
+   *  set, speakers are seated by it; their own places are kept for later. */
+  scene: { id: string; title?: string; names?: string[] } | null;
   /** Background clips, in order. Empty means a plain dark background. */
   backgrounds: BackgroundScene[];
   /** Scrim over the background clips, 0–1. Backgrounds sit under the waveform,
