@@ -4,6 +4,15 @@ Everything a fresh session needs. `PLAN.md` holds the long history; this is the
 working state. Newest sections first. Plans: `docs/V2-PLAN.md` (Video Forge),
 `docs/FORGES-PLAN.md` (both apps; has a Status section at the bottom).
 
+## Batch 3 merged — 30 Oct 2026
+Sets, pop-up icons, costumes, caption styles, in-between poses are in main.
+Known gaps (next, approved by Ak in this order): 1 sets in Many videos (runJob
+never passes `scene`), 2 script tag switching look/set/on-screen cast mid-video,
+3 script tag playing a local clip with sound, 4 couch set + phone-call frame,
+5 cast per sheet row. Also asked: drawn characters walking in and sitting at a
+set's table; Ak reports intros look desaturated. Brief for Ak's script AI:
+docs/AI-BRIEF.md.
+
 ## Ultra plan — 25–26 Oct 2026 (plan only, nothing built)
 
 Both forges checked end to end; Ak chose the scope on 26 Oct:

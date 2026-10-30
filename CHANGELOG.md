@@ -5,6 +5,14 @@ Nothing is tagged yet; everything below is under Unreleased.
 
 ## [Unreleased]
 
+### Added (27–30 Oct 2026, batch 2 and 3)
+- Drawn characters: smoother movement layer, in-between poses, round smiles, beards that follow the jaw, shoes, elbows and knees that bend, Karagiozis looks, 1.5-eye turning heads.
+- Sets: news desk, conference room, conference stage, podcast (facing or split screen), game show; speakers are seated, legs hidden.
+- Animated pop-ups: `[pop red flag]`, `[pop d20]` or `[🎉]` in a line; 52 code-drawn icons for Ak's subjects.
+- Costumes: 26 new wardrobe pieces and 21 one-click costume packs ("Dress as…").
+- Caption styles: bold box, karaoke, one word, clean outline, lesson bar, plus forge sweep, comic burst and ink drop; "Words shown" and "Keep said words coloured".
+- docs/AI-BRIEF.md: what the forges can and can't make, for an AI that plans series and writes scripts.
+
 ### Changed (25 Oct 2026)
 - Full-body puppets no longer get the waveform ring around them: adding one (or picking one on a speaker) switches that speaker's ring off. It can still be switched back on in the speaker's waveform settings.
 - The label on the picture and in the MP4 notes now reads "Made with Video Forge" (was "Made with AI · Video Forge").
