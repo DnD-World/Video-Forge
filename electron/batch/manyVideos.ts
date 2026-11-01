@@ -58,6 +58,8 @@ export interface ManyRequest {
   runName: string;
   /** "Made with Video Forge" on each video. */
   aiLabel?: boolean;
+  /** The open project's set, so batch videos are seated like the preview. */
+  scene?: { id: string; title?: string; names?: string[] } | null;
   /** Settings → paid voices in batches. Off unless the user turned it on;
    *  `maxCredits` is the most characters the WHOLE sheet may buy (0 = no cap). */
   paid?: { allow: boolean; maxCredits: number };
@@ -105,6 +107,7 @@ export async function runMany(
         language: row.language,
         outputName: row.name,
         aiLabel: req.aiLabel,
+        scene: req.scene ?? null,
       };
       const result = await runBatchJob(job, {
         ...ctx,

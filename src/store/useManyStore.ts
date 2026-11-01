@@ -182,7 +182,7 @@ export const useManyStore = create<ManyState>((set, get) => ({
       const sheetChars = list.reduce((n, r) => n + (r.script?.length ?? 0), 0);
       if (!window.confirm(`This batch uses a paid ElevenLabs voice.\n\nThe scripts in this sheet are about ${sheetChars.toLocaleString("en-US")} characters in all (every character of an ElevenLabs line is a credit).\nIt will stop buying at: ${most}${money}.\nLines already bought on an earlier run are reused for free.\n\nStart?`)) return;
     }
-    const r = await window.byok.batch.runMany({ rows: list, cast, preset, runName: runNameFor(source, list.length), aiLabel: st.aiLabel, paid });
+    const r = await window.byok.batch.runMany({ rows: list, cast, preset, runName: runNameFor(source, list.length), aiLabel: st.aiLabel, paid, scene: useProjectStore.getState().scene ?? null });
     if (!r.ok) {
       set({ problem: plainError(r.problem ?? "could not start", "Fix that, then press Make all again.") });
       return;
