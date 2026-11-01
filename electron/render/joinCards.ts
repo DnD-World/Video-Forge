@@ -35,7 +35,19 @@ export interface JoinCardsOptions {
   crf: number;
   /** Somewhere to put the normalised parts. Deleted afterwards. */
   tempDir: string;
+  /** Colour boost for the cards, 1 = as made. Flow's clips come out flatter
+   *  than a render beside them (measured 30 Oct 2026; joining changes no
+   *  pixel), so Ak picks a boost. VIDEOFORGE_CARD_SATURATION overrides. */
+  saturation?: number;
 }
+
+/** The boost to use: the option, else the environment, else 1. Clamped. */
+export function cardSaturation(o: { saturation?: number }): number {
+  const env = Number(process.env.VIDEOFORGE_CARD_SATURATION);
+  const v = o.saturation ?? (Number.isFinite(env) && env > 0 ? env : DEFAULT_CARD_SATURATION);
+  return Math.min(2, Math.max(0.5, v));
+}
+export const DEFAULT_CARD_SATURATION = 1;
 
 export interface JoinCardsResult {
   /** The joined file, or `mainPath` unchanged when there was nothing to join. */
@@ -137,9 +149,13 @@ async function normalise(
     "-vf",
     `scale=${o.width}:${o.height}:force_original_aspect_ratio=decrease,` +
       `pad=${o.width}:${o.height}:(ow-iw)/2:(oh-ih)/2:color=black,` +
-      `setsar=1,fps=${o.fps}`,
+      `setsar=1,fps=${o.fps}` +
+      (cardSaturation(o) !== 1 ? `,eq=saturation=${cardSaturation(o)}` : ""),
     "-c:v", "libx264", "-preset", "medium", "-crf", String(o.crf),
     "-pix_fmt", "yuv420p",
+    // tagged like the render it is joined to (Remotion writes BT.709, TV
+    // range), so no player reads the card's colours differently
+    "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709", "-color_range", "tv",
     // MATCH THE LESSON'S TIMESCALE, or the joined file lies about its length.
     // The concat demuxer takes its timebase from the FIRST part, and a card
     // encoded at the default 12288 against a render at 90000 produced a 34
