@@ -143,7 +143,7 @@ working.
 | Feelings: `[excited]`, `[proud]`, `[sarcastic]`, `[surprise]`, `[nervousness]`, `[sadness]`, `[curious]`, `[tired]`, `[frustration]`… | Face and head for the whole line |
 | `[nods]`, `[shakes head]` | Head movement |
 | `[waves]`, `[points]`, `[shrugs]`, `[explains]` | Arm pose (all character kinds) |
-| Moves (drawn characters only): `[walks in]`, `[walks in from the right]`, `[walks out]`, `[runs across]`, `[sits down]`, `[stands up]`, `[thumbs up]`, `[facepalms]`, `[hands on hips]`, `[crosses arms]`, `[bows]`, `[cheers]`, `[dances]`, `[drinks]`, `[gives the box to Maria]`, `[takes]`, `[opens the box]` | Full-body action, starts with the line |
+| Moves (drawn characters only): `[walks in]`, `[walks in from the right]`, `[walks out]`, `[runs across]`, `[sits down]`, `[stands up]`, `[thumbs up]`, `[facepalms]`, `[hands on hips]`, `[crosses arms]`, `[bows]`, `[cheers]`, `[dances]`, `[drinks]`, `[gives the box to Maria]`, `[takes]`, `[opens the box]`, and moves copied from real people such as `[pounds the table]`, `[storms around]`, `[yawns]`, `[buries face in hands]`. **All 154 tags: `docs/MOVE-TAGS.md`** | Full-body action, starts with the line |
 | Style word after a move: graceful, angry, tired, shy, proud, playful, sneaky — e.g. `[walks in tired]`, `[waves shyly]` | Changes how the move looks |
 | `[pop red flag]`, `[pop d20]`, `[pop κόκκινη σημαία]` | An animated icon pops up beside the speaker for ~2 s |
 | `[🎉]` (any emoji) | The emoji pops up instead |

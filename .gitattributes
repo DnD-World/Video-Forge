@@ -2,3 +2,6 @@
 # Without this, git checks them out as CRLF on Windows and every regeneration
 # shows as a full-file diff — which hides the one line that actually changed.
 puppet/*.json text eol=lf
+
+# The secret-scan hook is a shell script: a Windows line ending would break its first line.
+githooks/* text eol=lf
