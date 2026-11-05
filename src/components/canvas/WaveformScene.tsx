@@ -884,7 +884,7 @@ function WaveformSceneDrawn({
           </g>
         );
 
-        const withGlitter = (body: JSX.Element) =>
+        const withGlitter = (body: React.JSX.Element) =>
           glitter ? (
             <g key={ti}>
               {body}
