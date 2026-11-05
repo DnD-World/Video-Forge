@@ -81,18 +81,18 @@ figure.lab figcaption b{color:var(--gold)}
 <p class="lede">Seven tests of the Season 1 plan. On the left, the engine as it is today; on the right, the lab's new layers on the same cast. Everything runs live in this page at the video's own 30 frames a second. Scroll; each test plays when it comes into view.</p>
 <nav class="toc"><a href="#s1">1 · Smooth</a><a href="#s2">2 · Knees and feet</a><a href="#s2b">2b · Side faces</a><a href="#s3">3 · Variety</a><a href="#s4">4 · Two people</a><a href="#s5">5 · Wind</a><a href="#s6">6 · Hint of 3D</a><a href="#s7">7 · Red Flag moment</a></nav>
 <div class="bar">
-<button id="play">❚❚ Pause</button>
-<label>Speed <select id="speed"><option value="1">normal</option><option value="0.5">half</option><option value="0.25">quarter</option></select></label>
-<label>Frames <select id="fps"><option value="30">30 a second (video)</option><option value="60">60 a second</option><option value="12">12 (on twos)</option></select></label>
-<label class="chk"><input type="checkbox" id="blur"> motion blur</label>
-<label>Look <select id="look"><option value="own">each person's own</option><option value="geo">all Geo-minimal</option><option value="paper">all Paper cut-out</option><option value="hose2">all Rubber hose</option></select></label>
-<button id="restart">↺ From the start</button>
-<button id="beat">♪ Beat</button>
+<button id="play" title="Pause or play every picture on the page.">❚❚ Pause</button>
+<label title="Slow everything down to see each movement.">Speed <select id="speed"><option value="1">normal</option><option value="0.5">half</option><option value="0.25">quarter</option></select></label>
+<label title="Pictures per second. 30 is what a video has; 12 looks like hand-drawn cartoons.">Frames <select id="fps"><option value="30">30 a second (video)</option><option value="60">60 a second</option><option value="12">12 (on twos)</option></select></label>
+<label class="chk" title="Smear fast movement a little, like a real camera does."><input type="checkbox" id="blur"> motion blur</label>
+<label title="Draw everyone in their own style, or all in one style to compare.">Look <select id="look"><option value="own">each person's own</option><option value="geo">all Geo-minimal</option><option value="paper">all Paper cut-out</option><option value="hose2">all Rubber hose</option></select></label>
+<button id="restart" title="Start every move again from the beginning, all in step.">↺ From the start</button>
+<button id="beat" title="Play a drum beat the dancer moves to (sound on).">♪ Beat</button>
 </div>
 ${section(1, "Smooth, not choppy", "One wave, both sides. Lab: <b>the hips move first and the hand arrives last</b>, the hand swings on an arc, overshoots a little and settles, and the body never freezes. The orange line is where the hand has been in the last second and a half.",
-  `<div class="row"><label class="chk"><input type="checkbox" id="t1path" checked> show the hand's path</label></div>` + pair(1, "", "", "springs on joint angles", "key poses + overlap + arcs + overshoot") + `<div class="meter" id="m1">Measuring…</div>`)}
+  `<div class="row"><label class="chk" title="Draw the line the hand travels along, to see if it moves in a smooth arc."><input type="checkbox" id="t1path" checked> show the hand's path</label></div>` + pair(1, "", "", "springs on joint angles", "key poses + overlap + arcs + overshoot") + `<div class="meter" id="m1">Measuring…</div>`)}
 ${section(2, "Knees and feet", "Sitting down and getting up. Lab: <b>feet stay planted</b>, knees bend only the way knees bend, the hips go back while the chest leans forward to balance, and she pushes on her knees to stand.",
-  `<div class="row"><label class="chk"><input type="checkbox" id="t2bones" checked> show the bones (lab)</label></div>` + pair(2, "", "", "hips drop; legs swap to a seated shape", "IK legs, planted feet, balance, a lean to rise"))}
+  `<div class="row"><label class="chk" title="Draw the skeleton over the lab character, to see how the joints bend."><input type="checkbox" id="t2bones" checked> show the bones (lab)</label></div>` + pair(2, "", "", "hips drop; legs swap to a seated shape", "IK legs, planted feet, balance, a lean to rise"))}
 ${section("2b", "Side-on faces", "The body turns slowly from the front to full profile and back. Left: <b>the face turns all the way with it</b> (today: a sliver eye, a front-on mouth, a nose bump). Right: <b>the face stops at three-quarter</b> while the body keeps turning: the cartoon way.",
   `<div class="row" id="k2b"></div><div class="duo">
 <figure class="today"><canvas class="stage sq" id="c2ba"></canvas><figcaption><b>Face turns with the body</b><span>as today</span></figcaption></figure>
@@ -102,7 +102,7 @@ ${section(3, "Variety", "Moves made from rules, not drawn frame by frame: <b>a j
 ${section(4, "Two people", "Hands lock onto the other person: <b>hands meet and pump together</b>, arms wrap round a back (the near arm in front, the far arm behind), a hand pats a head and the little one's hair answers it, a ball flies on a real arc and is caught.",
   `<div class="row" id="k4"></div><figure class="lab"><canvas class="stage wide" id="c4"></canvas><figcaption><b>Lab</b><span>Today the engine can't touch a second person at all.</span></figcaption></figure>`)}
 ${section(5, "Gravity and wind", "Hair and the hem are chains with weight: they swing, trail and settle; <b>the wind pushes them and the leaves alike</b>. The green line is the modesty check: a hem may rise at most 1% of her height, and the number shows the worst so far.",
-  `<div class="row" id="k5"></div><div class="row"><label class="chk"><input type="checkbox" id="t5mod" checked> show the modesty check</label></div>` + pair(5, "", "", "follow-through only, no wind", "physics hair and hem, a wind field, leaves"))}
+  `<div class="row" id="k5"></div><div class="row"><label class="chk" title="Show how high the hem rises, against the 1% limit (green: within it, red: over)."><input type="checkbox" id="t5mod" checked> show the modesty check</label></div>` + pair(5, "", "", "follow-through only, no wind", "physics hair and hem, a wind field, leaves"))}
 ${section(6, "A hint of 3D", "The same drawing and the same movement at three strengths. Each part is shaded as what it really is: <b>soft round arms and legs, a lit side and a shadow side on the head and body</b>, a soft shadow from each part on what is behind it, a faint rim of light on the far edges, a shine on the hair. Small parts like pockets are left almost flat.",
   `<div class="row" id="k6"></div><div class="three four4">
 <figure class="today"><canvas class="stage tall" id="c6a"></canvas><figcaption><b>A hint of 3D</b><span>before</span></figcaption></figure>

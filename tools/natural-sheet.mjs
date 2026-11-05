@@ -54,16 +54,16 @@ video{display:none}
 <h1>More <em>natural</em> movement</h1>
 <p class="lede">The same person, three ways. <b>1</b> is today. <b>2</b> adds follow-through: hair, hems and earrings are carried by the body, so they lag, swing past and settle, and long hair hangs down when the head tilts. <b>3</b> is you: act in front of the camera (or open a video of someone) and the drawn character copies the body, with the follow-through on top. A take can be saved and used in an episode.</p>
 <div class="bar"><span class="now" id="now"></span>
-<label>Who <select id="who"></select></label>
-<button id="outfit">Next outfit</button>
-<label>Speed <select id="slow"><option value="1">normal</option><option value="0.5">half</option><option value="0.25">quarter</option></select></label>
-<label class="chk"><input type="checkbox" id="legs" checked> copy the legs</label>
-<label class="chk"><input type="checkbox" id="turn"> turn with my head</label></div>
+<label title="Pick which character to watch.">Who <select id="who"></select></label>
+<button id="outfit" title="Dress the character in their next outfit.">Next outfit</button>
+<label title="Slow everything down to see each movement.">Speed <select id="slow"><option value="1">normal</option><option value="0.5">half</option><option value="0.25">quarter</option></select></label>
+<label class="chk" title="Copy your legs too. Off: only the upper body follows you."><input type="checkbox" id="legs" checked> copy the legs</label>
+<label class="chk" title="Turn the character when you turn your head."><input type="checkbox" id="turn"> turn with my head</label></div>
 <div class="grid">
 <figure class="f1"><canvas class="stage" id="s0"></canvas><figcaption><b><i class="num">1</i>Today</b><span>joints have weight; hair and clothes are stiff</span></figcaption></figure>
 <figure class="f2"><canvas class="stage" id="s1"></canvas><figcaption><b><i class="num">2</i>+ Follow-through</b><span>hair, hems and earrings trail, swing and settle</span></figcaption></figure>
 <figure class="f3"><canvas class="stage" id="s2"></canvas><canvas id="pip"></canvas><figcaption><b><i class="num">3</i>Acted by you</b><span>a body tracker copies a real person, plus follow-through</span></figcaption>
-<div class="act"><button class="go" id="cam">Use my camera</button><label class="filebtn">Open a video<input type="file" id="file" accept="video/*"></label><button id="neutral">Reset neutral</button><button id="rec">● Record a take</button><button id="save">Save take</button><label class="filebtn">Load take<input type="file" id="load" accept=".json,application/json"></label></div>
+<div class="act"><button class="go" id="cam" title="Use your webcam: the character copies how you move. Nothing is uploaded.">Use my camera</button><label class="filebtn" title="Use a video file instead of the webcam: the character copies the person in it.">Open a video<input type="file" id="file" accept="video/*"></label><button id="neutral" title="Click, then stand still for a second: that pose becomes the starting point the character copies from.">Reset neutral</button><button id="rec" title="Start or stop recording your movement as a take.">● Record a take</button><button id="save" title="Save the recorded take as a file on your computer.">Save take</button><label class="filebtn" title="Open a take you saved earlier and play it on the character.">Load take<input type="file" id="load" accept=".json,application/json"></label></div>
 <div id="actstatus">Nothing is sent anywhere: the tracker runs in this page.</div></figure>
 </div>
 <div class="notes">

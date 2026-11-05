@@ -149,3 +149,10 @@ test("every move draws in every look without bad numbers (hands, props, lifted b
     assert.equal(rc.bad, 0, `${L.id} ${m.id}: drew a NaN`);
   }
 });
+
+test("docs/MOVE-TAGS.md lists every tag the shelf answers to (run node tools/move-tags.mjs)", async () => {
+  const { moveTagsMarkdown } = await import("../tools/move-tags.mjs");
+  const fs = await import("node:fs");
+  const doc = fs.readFileSync(new URL("../docs/MOVE-TAGS.md", import.meta.url), "utf8").split("\r\n").join("\n");
+  assert.equal(doc, moveTagsMarkdown(), "docs/MOVE-TAGS.md is out of date: run node tools/move-tags.mjs");
+});

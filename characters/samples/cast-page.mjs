@@ -68,7 +68,7 @@ function paintProgress() {
     const el = document.querySelector(`[data-group="${g.id}"] em`); if (el) el.textContent = `${ps.filter(done).length}/${ps.length}`;
   }
 }
-$("tabs").innerHTML = `<button data-group="all" aria-pressed="true">Everyone</button>` + CAST.groups.map((g) => `<button data-group="${g.id}" aria-pressed="false">${g.title} <em></em></button>`).join("");
+$("tabs").innerHTML = `<button data-group="all" aria-pressed="true" title="Show the whole cast.">Everyone</button>` + CAST.groups.map((g) => `<button data-group="${g.id}" aria-pressed="false" title="Show only ${g.title}.">${g.title} <em></em></button>`).join("");
 $("tabs").querySelectorAll("button").forEach((b) => { b.onclick = () => {
   ui.group = b.dataset.group;
   $("tabs").querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x === b));
@@ -80,7 +80,7 @@ $("tabs").querySelectorAll("button").forEach((b) => { b.onclick = () => {
 const geoPeople = ["margo", "leo", "clara", "chloe", "kevin", "jenny"].map((id) => people.find((p) => p.id === id)).filter(Boolean);
 const geoRows = GEO_EYES.map((g) => {
   const fig = document.createElement("button");
-  fig.className = "geoopt"; fig.dataset.id = g.id;
+  fig.className = "geoopt"; fig.dataset.id = g.id; fig.title = `Use these eyes (${g.name}) for every Geo-minimal character.`;
   fig.innerHTML = `<canvas></canvas><span><b>${g.name}</b><small>${g.blurb}</small></span>`;
   fig.onclick = () => { store.geoEyes = g.id; save(); paintGeo(); dirtyAll(); };
   $("geogrid").append(fig);
@@ -123,14 +123,14 @@ for (const g of CAST.groups) {
     const c = { p, el, pv: el.querySelector(".pv canvas"), pvLayer: document.createElement("canvas"), hover: "", visible: false, dirty: true, tiles: [] };
     for (const f of p.faces) {
       const b = document.createElement("button");
-      b.className = "tile face"; b.innerHTML = `<canvas></canvas><span>${f.id} · ${f.label}</span>`;
+      b.className = "tile face"; b.title = `Pick face ${f.id} for ${p.name ?? p.id}.`; b.innerHTML = `<canvas></canvas><span>${f.id} · ${f.label}</span>`;
       b.onclick = () => { pickOf(p.id).face = f.id; save(); c.dirty = true; paint(c); paintProgress(); };
       el.querySelector(".faces").append(b);
       c.tiles.push({ kind: "face", id: f.id, b, cv: b.querySelector("canvas") });
     }
     for (const o of p.outfits) {
       const b = document.createElement("button");
-      b.className = "tile outfit"; b.innerHTML = `<canvas></canvas><span>${o.label}</span><i class="tick">✓</i>`;
+      b.className = "tile outfit"; b.title = `Add this outfit to ${p.name ?? p.id}'s picks, or take it off again.`; b.innerHTML = `<canvas></canvas><span>${o.label}</span><i class="tick">✓</i>`;
       b.onclick = () => { const k = pickOf(p.id); k.outfits = k.outfits.includes(o.id) ? k.outfits.filter((x) => x !== o.id) : [...k.outfits, o.id]; save(); c.dirty = true; paint(c); paintProgress(); };
       b.onmouseenter = () => { c.hover = o.id; }; b.onmouseleave = () => { c.hover = ""; };
       b.onfocus = () => { c.hover = o.id; }; b.onblur = () => { c.hover = ""; };

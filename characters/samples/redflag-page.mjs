@@ -165,7 +165,7 @@ const lucas = family.find((p) => p.id === "lucas");
 const hairUi = { look: "paper" };
 const tiles = HAIR_STYLES.map((h) => {
   const b = document.createElement("button");
-  b.className = "hair"; b.dataset.hair = h;
+  b.className = "hair"; b.dataset.hair = h; b.title = `Try the ${h} hair on Lucas, everywhere on this page.`;
   b.innerHTML = `<canvas></canvas><span>${h}</span>`;
   b.onclick = () => { lucas.card = { ...lucas.card, hair: h }; paintHair(); };
   $("hairgrid").append(b);

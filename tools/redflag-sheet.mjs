@@ -88,15 +88,15 @@ footer{max-width:1400px;margin:0 auto;padding:0 16px 40px;color:var(--muted);fon
 <ul id="cast"></ul>
 <section class="hairbox">
 <h2>Hair library <small>Every style the engine has (18; messy, shaggy and undercut are new). Click one to try it on Lucas in every row below. Now: <b id="hairnow"></b></small>
-<span class="seg" role="group" aria-label="Hair look"><button data-hairlook="paper" aria-pressed="true">Paper</button><button data-hairlook="sitcom" aria-pressed="false">Sitcom</button></span></h2>
+<span class="seg" role="group" aria-label="Hair look"><button data-hairlook="paper" aria-pressed="true" title="Hair drawn as flat cut paper shapes.">Paper</button><button data-hairlook="sitcom" aria-pressed="false" title="Hair drawn like a TV cartoon: smooth, with a shine.">Sitcom</button></span></h2>
 <div id="hairgrid"></div>
 </section>
 </header>
 <div class="bar"><div>
-<div class="seg" role="group" aria-label="Framing"><button data-framing="full" aria-pressed="true">Full body</button><button data-framing="waist" aria-pressed="false">Waist up</button><button data-framing="head" aria-pressed="false">Head</button></div>
-<button id="facing" class="solo" aria-pressed="false">Face each other</button>
-<button id="phone" class="solo" aria-pressed="false">Phone size</button>
-<button id="play" class="solo">❚❚ Pause</button>
+<div class="seg" role="group" aria-label="Framing"><button data-framing="full" aria-pressed="true" title="Show the whole body, head to feet.">Full body</button><button data-framing="waist" aria-pressed="false" title="Show from the waist up, like a talking scene.">Waist up</button><button data-framing="head" aria-pressed="false" title="Show head and shoulders only, like a close-up.">Head</button></div>
+<button id="facing" class="solo" aria-pressed="false" title="Turn the characters towards each other, as in a conversation.">Face each other</button>
+<button id="phone" class="solo" aria-pressed="false" title="Show the pictures at phone size, to check they still read small.">Phone size</button>
+<button id="play" class="solo" title="Pause or play every picture on the page.">❚❚ Pause</button>
 <div id="picks"></div>
 </div></div>
 <main id="main"></main>

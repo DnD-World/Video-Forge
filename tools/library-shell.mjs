@@ -41,7 +41,7 @@ export const body = `<main>
 <div class="kicker">The Red Flag Theory · motion library v2</div>
 <h1>Real <em>motion capture</em>, on our people</h1>
 <p class="lede"><span id="count"></span> moves from ready-made motion libraries: CMU Graphics Lab motion capture (free for all uses) and Quaternius (CC0, public domain). Left: a Red Flag character doing the move. Right: the captured person, as a stick figure. A person who sits in the capture sits on a chair here. Keep the ones that feel natural, drop the rest. Your picks stay in this browser; press "Copy my picks" and paste the line in chat.</p>
-<div class="bar"><span id="progress"></span><label>Who <select id="who"></select></label><button id="copy" class="copy">Copy my picks</button></div>
-<div id="copied" hidden><div><b>Copied. Paste this in chat:</b><textarea id="copiedtext" readonly></textarea><button id="copiedclose" class="copy" style="margin:0">Close</button></div></div>
+<div class="bar"><span id="progress"></span><label title="Pick which character performs the moves.">Who <select id="who"></select></label><button id="copy" class="copy" title="Copy your picks as text, to paste back to Claude.">Copy my picks</button></div>
+<div id="copied" hidden><div><b>Copied. Paste this in chat:</b><textarea id="copiedtext" readonly></textarea><button id="copiedclose" class="copy" style="margin:0" title="Close this box.">Close</button></div></div>
 <section id="grid"></section>
 </main><script>%JS%</script></body></html>`;

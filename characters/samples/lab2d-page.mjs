@@ -373,7 +373,7 @@ const $ = (id) => document.getElementById(id);
 const chipState = {};
 function chips(id, items, onPick, start = 0) {
   const el = $(id);
-  el.innerHTML = items.map((it, i) => `<button class="chip${i === start ? " on" : ""}" data-i="${i}">${it.label}</button>`).join("");
+  el.innerHTML = items.map((it, i) => `<button class="chip${i === start ? " on" : ""}" data-i="${i}" title="Play “${it.label}” in this test's pictures.">${it.label}</button>`).join("");
   chipState[id] = start;
   el.querySelectorAll("button").forEach((b) => b.onclick = () => {
     el.querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b));

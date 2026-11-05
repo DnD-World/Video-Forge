@@ -87,11 +87,11 @@ h4{margin:2px 0 8px;font-size:15px}h4 small{color:var(--muted);font-weight:400;f
 </div>
 <div class="bar"><div>
   <div class="seg" id="tabs"></div>
-  <div class="seg"><button data-framing="full" aria-pressed="true">Full body</button><button data-framing="waist" aria-pressed="false">Waist up</button></div>
+  <div class="seg"><button data-framing="full" aria-pressed="true" title="Show the whole body, head to feet.">Full body</button><button data-framing="waist" aria-pressed="false" title="Show from the waist up, like a talking scene.">Waist up</button></div>
   <div id="progress"></div>
-  <button id="copy" class="copy">Copy my picks</button>
+  <button id="copy" class="copy" title="Copy your picks as text, to paste back to Claude.">Copy my picks</button>
 </div></div>
-<div id="copied" hidden><div><p id="copiedmsg"></p><textarea id="copiedtext" readonly></textarea><button id="copiedclose" class="copy">Close</button></div></div>
+<div id="copied" hidden><div><p id="copiedmsg"></p><textarea id="copiedtext" readonly></textarea><button id="copiedclose" class="copy" title="Close this box.">Close</button></div></div>
 <main id="main">
   <section id="geo"><h2>Decide: geo-minimal eyes <small>Monday to Wednesday. Your choice: <span id="geonow"></span>. Click one; every geo-minimal person below updates.</small></h2><div id="geogrid"></div></section>
 </main>

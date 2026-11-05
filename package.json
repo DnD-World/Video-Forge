@@ -29,6 +29,7 @@
     "explainer:check": "electron tools/explainer-check.mjs",
     "explainer:render": "electron tools/explainer-render.mjs",
     "explainer:bakeoff": "electron tools/explainer-bakeoff.mjs",
+    "docs:move-tags": "node tools/move-tags.mjs",
     "build:pages": "node tools/acted-pages.mjs && node tools/lab2d-sheet.mjs && node tools/natural-sheet.mjs && node tools/redflag-cast-sheet.mjs && node tools/redflag-sheet.mjs"
   },
   "dependencies": {

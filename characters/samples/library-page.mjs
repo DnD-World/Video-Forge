@@ -30,7 +30,7 @@ function cardHtml({ clip, id, move }) {
     <div class="pair"><canvas class="fig"></canvas><canvas class="src"></canvas></div>
     <header><b>${clip.name}</b><span>${(move.lengthMs / 1000).toFixed(1)} s${move.tracks.sit ? " · chair" : move.tracks.footF ? " · legs" : ""}</span></header>
     <p><span class="tag ${clip.source}">${SRC[clip.source] ?? clip.source}</span> ${clip.trial ?? clip.anim ?? ""} <a href="${clip.page}" target="_blank" rel="noopener">source</a></p>
-    <div class="btns"><button data-v="keep">Keep</button><button data-v="drop">Drop</button></div>
+    <div class="btns"><button data-v="keep" title="Keep this move in the motion library.">Keep</button><button data-v="drop" title="Mark this move to be left out of the motion library.">Drop</button></div>
   </article>`;
 }
 

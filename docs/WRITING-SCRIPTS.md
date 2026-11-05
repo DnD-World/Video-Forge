@@ -210,6 +210,16 @@ how long a line will take to say.
 **A laugh is not a sound effect** — it is acting, and it belongs in a stage
 direction (`Καίτη [γελάει]: ...`), where the voice performs it.
 
+## Moves, for drawn characters
+
+A drawn character acts out a tag inside its line: `Maria: [walks in] Καλημέρα!`,
+`Nikos: [pounds the table] Φτάνει!`. The move starts with the line. A style word
+changes how it looks (`[walks in tired]`), a prop goes in the hand
+(`[drinks his coffee]`), and a name makes it a move with someone else
+(`[gives the flowers to Maria]`). Every tag, with what it does:
+[MOVE-TAGS.md](MOVE-TAGS.md), generated from the motion library so it is always
+complete. Move tags are English, like stage directions.
+
 ## English for machines, Greek for ears
 
 **Only the spoken text is Greek.** The name before the colon, the stage
