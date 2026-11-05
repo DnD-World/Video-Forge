@@ -222,3 +222,28 @@ export function takeToMove(take, { inMs, outMs, torso = 0.3, legs = "auto", sit 
     ...(hands ? { hands } : {}), ...(face ? { face } : {}),
   };
 }
+
+// ---- which recorded clips become shelf moves (one rule for tools/acted-shelf.mjs and the data test)
+/** Arms must be seen in at least this share of a take's frames for it to become a move. */
+export const MIN_ARMS_SEEN = 0.5;
+/** The shelf id a clip's move gets. */
+export const clipMoveId = (clip) => clip.move ?? clip.id;
+/** Whether a clip gets a quality entry at all (a dropped clip is left out entirely). */
+export const clipTracked = (clip) => !clip.drop;
+/** Whether a clip with this quality entry becomes a shelf move (and a preview). */
+export const clipOnShelf = (clip, quality) => !clip.drop && !!quality && quality.arms >= MIN_ARMS_SEEN;
+
+// Sounds a voice makes. In a script, "[laughs]" is for the voice, not the body (moves.test.mjs).
+const VOICE_SOUNDS = new Set(["laughs", "cries", "sobs", "gasps", "sighs", "γελάει", "κλαίει"]);
+/**
+ * Recorded moves join the starter shelf without changing what any script tag
+ * already does (code review, 5 Nov 2026): a recorded move drops each phrase that
+ * is a voice sound, is already a starter phrase, or starts or ends where a starter
+ * phrase does ("points at" would beat the starter "points" in [points at Maria]).
+ * Returns the recorded moves with their phrases trimmed; ids are left alone.
+ */
+export function trimActedPhrases(starter, acted) {
+  const taken = starter.flatMap((m) => m.phrases ?? []).map((p) => p.toLowerCase().trim());
+  const clash = (p) => VOICE_SOUNDS.has(p) || taken.some((s) => s === p || p.startsWith(s + " ") || s.startsWith(p + " "));
+  return acted.map((m) => ({ ...m, phrases: (m.phrases ?? []).filter((p) => !clash(p.toLowerCase().trim())) }));
+}

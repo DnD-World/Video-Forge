@@ -109,3 +109,26 @@ test("clay details draw finite frames for every Red Flag look in the lab", () =>
     }
   }
 });
+
+// Code review, 5 Nov 2026: the everyday follow-through hem (followAt, no physics) kept the
+// modesty cap too. A huge sideways push may widen the dress by at most HEM_SWAY_MAX.
+test("the follow-through hem keeps the same modesty cap as the physics hem", async () => {
+  const { capHem } = await import("./core/follow.mjs");
+  for (const [dx, dy] of [[5, -5], [-5, 5], [0.001, -0.001]]) {
+    const [cx, cy] = capHem(dx, dy);
+    assert.ok(Math.abs(cx) <= HEM_SWAY_MAX && cy >= -HEM_LIFT_MAX);
+  }
+  const { card } = normalizeCard({ name: "Hem", wear: [{ id: "dress" }] });
+  const look = lookById("sticker"), S = 500;
+  const box = (hem) => {
+    const rc = new RecordingCtx(800, 800);
+    drawCharacter(rc, card, { look, S, x: 400, y: 760, state: { t: 0, view: 0, follow: hem ? { hair: [0, 0], hem, ear: 0, tilt: {} } : undefined } });
+    return rc.box;
+  };
+  const still = box(null);
+  for (const push of [[10, 0], [-10, 0]]) {
+    const b = box(push);
+    const grew = Math.max(still.x0 - b.x0, b.x1 - still.x1);
+    assert.ok(grew <= HEM_SWAY_MAX * S + 1, `the hem swung ${(grew / S).toFixed(3)} of the body height sideways`);
+  }
+});

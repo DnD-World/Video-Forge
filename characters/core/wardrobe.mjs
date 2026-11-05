@@ -295,9 +295,9 @@ export const ITEMS = [
     head: (G, c) => { const { sk } = G, S = G.S, x = -sk.rx * 0.72, y = -sk.ry * 0.8; for (const s of [-1, 1]) { G.pen.ellipse((x + s * sk.rx * 0.17) * S, y * S, sk.rx * 0.17 * S, sk.ry * 0.11 * S, s * 0.5); G.fill(c[0], { noShade: true }); } G.pen.circle(x * S, y * S, sk.rx * 0.07 * S); G.fill(shade(c[0], -0.2), { noShade: true }); } },
   // face
   { id: "glasses", label: "Glasses", slot: "eyes", colors: ["#1a1a1a"],
-    face: (G, c) => { const { sk } = G, S = G.S; const [e0, e1] = sk.face.eyes; const r = sk.R * 0.2; for (const e of [e0, e1]) if (e.visible) { G.pen.ellipse(e.x * S, e.y * S, r * e.scaleX * S, r * S); G.line(c[0], 0.004, { feature: true }); } if (e0.visible) { G.pen.poly([[(e0.x + r * e0.scaleX) * S, e0.y * S], [(e1.x - r) * S, e1.y * S]], false); G.line(c[0], 0.003, { feature: true }); } } },
+    face: (G, c) => { const { sk } = G, S = G.S; const [e0, e1] = sk.face.eyes; const r = sk.R * 0.2; for (const e of [e0, e1]) if (e.visible) { G.pen.ellipse(e.x * S, e.y * S, r * e.scaleX * S, r * S); G.line(c[0], 0.004, { feature: true }); } if (e0.visible && e1.visible) { G.pen.poly([[(e0.x + r * e0.scaleX) * S, e0.y * S], [(e1.x - r * e1.scaleX) * S, e1.y * S]], false); G.line(c[0], 0.003, { feature: true }); } } },
   { id: "sunglasses", label: "Sunglasses", slot: "eyes", colors: ["#141414"],
-    face: (G, c) => { const { sk } = G, S = G.S; const [e0, e1] = sk.face.eyes; const r = sk.R * 0.22; for (const e of [e0, e1]) if (e.visible) { G.pen.rpoly([[(e.x - r * e.scaleX) * S, (e.y - r * 0.7) * S], [(e.x + r * e.scaleX) * S, (e.y - r * 0.7) * S], [(e.x + r * 0.85 * e.scaleX) * S, (e.y + r * 0.75) * S], [(e.x - r * 0.85 * e.scaleX) * S, (e.y + r * 0.75) * S]], r * 0.4 * S); G.fill(c[0], { feature: true }); } if (e0.visible) { G.pen.poly([[(e0.x + r * e0.scaleX) * S, (e0.y - r * 0.4) * S], [(e1.x - r) * S, (e1.y - r * 0.4) * S]], false); G.line(c[0], 0.004, { feature: true }); } } },
+    face: (G, c) => { const { sk } = G, S = G.S; const [e0, e1] = sk.face.eyes; const r = sk.R * 0.22; for (const e of [e0, e1]) if (e.visible) { G.pen.rpoly([[(e.x - r * e.scaleX) * S, (e.y - r * 0.7) * S], [(e.x + r * e.scaleX) * S, (e.y - r * 0.7) * S], [(e.x + r * 0.85 * e.scaleX) * S, (e.y + r * 0.75) * S], [(e.x - r * 0.85 * e.scaleX) * S, (e.y + r * 0.75) * S]], r * 0.4 * S); G.fill(c[0], { feature: true }); } if (e0.visible && e1.visible) { G.pen.poly([[(e0.x + r * e0.scaleX) * S, (e0.y - r * 0.4) * S], [(e1.x - r * e1.scaleX) * S, (e1.y - r * 0.4) * S]], false); G.line(c[0], 0.004, { feature: true }); } } },
   { id: "earrings", label: "Earrings", slot: "ears", colors: ["#e0b040"],
     face: (G, c) => { const { sk } = G, S = G.S;
       // with follow-through (follow.mjs) they hang from the lobe and swing
@@ -357,7 +357,7 @@ export const ITEMS = [
       G.pen.curve([[e.x * S, (e.y + sk.R * 0.1) * S], [(e.x - sk.R * 0.15) * S, sk.ry * 0.55 * S], [sk.face.mouth.x * S + sk.R * 0.25 * S, sk.face.mouth.y * S]]); G.line(c[0], 0.004, { feature: true });
       G.pen.circle(sk.face.mouth.x * S + sk.R * 0.25 * S, sk.face.mouth.y * S, sk.R * 0.07 * S); G.fill(c[0], { feature: true }); } },
   { id: "eyepatch", label: "Eye patch", slot: "eyes", colors: ["#1a1a1a"],
-    face: (G, c) => { const { sk } = G, S = G.S, e = sk.face.eyes[1];
+    face: (G, c) => { const { sk } = G, S = G.S, e = sk.face.eyes.find((x) => !x.far) ?? sk.face.eyes[0]; // the near eye: never hidden
       G.pen.poly([[-sk.rx * 0.95 * S, -sk.ry * 0.45 * S], [sk.rx * 0.95 * S, sk.ry * 0.15 * S]], false); G.line(c[0], 0.003, { feature: true });
       G.pen.ellipse(e.x * S, e.y * S, sk.R * 0.24 * S, sk.R * 0.2 * S); G.fill(c[0], { feature: true }); } },
   { id: "labcoat", label: "Lab coat / vet coat", slot: "outer", colors: ["#f4f6f8"],

@@ -17,6 +17,14 @@
 
 import { clamp } from "./math.mjs";
 
+// MODESTY (Ak, 5 Nov 2026), for every hem the engine draws: a hem may rise at most 1% of the
+// body height and swing at most 2% sideways, so a dress never slides off the hips and legs
+// under it (at 0.075 sideways the handshake's step-in swung the skirt clear of her hips).
+export const HEM_LIFT_MAX = 0.01;
+export const HEM_SWAY_MAX = 0.02;
+/** A hem point's sideways and up/down shift (body heights; up is negative) after the modesty cap. */
+export const capHem = (dx, dy) => [clamp(dx, -HEM_SWAY_MAX, HEM_SWAY_MAX), Math.max(-HEM_LIFT_MAX, dy)];
+
 const WINDOW_MS = 1400;
 const DT = 1000 / 120;
 

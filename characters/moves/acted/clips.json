@@ -471,7 +471,7 @@
  },
  {
   "id": "cmu-18-08",
-  "move": "explain",
+  "move": "explain-acted",
   "name": "Explains with hands",
   "action": "explains with hands",
   "phrases": [
@@ -485,7 +485,7 @@
  },
  {
   "id": "cmu-111-25",
-  "move": "shrug",
+  "move": "shrug-acted",
   "name": "Shrugs",
   "action": "shrugs",
   "phrases": [
@@ -561,7 +561,7 @@
  },
  {
   "id": "cmu-111-37",
-  "move": "wave",
+  "move": "wave-acted",
   "name": "Waves",
   "action": "waves",
   "phrases": [

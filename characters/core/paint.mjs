@@ -264,10 +264,11 @@ function formFill(G, fill, role) {
   bl.addColorStop(0, `rgba(255,244,236,${0.1 * q})`); bl.addColorStop(1, "rgba(255,244,236,0)");
   ctx.fillStyle = bl; ctx.fillRect(b.x0 - 2, b.y0 - 2, w + 4, h + 4);
   // a faint rim of reflected light just inside the edge that turns away from the light
+  // (the path is rebuilt shifted: a canvas path keeps the transform it was built under, so
+  // translating after building it moved nothing — code review, 5 Nov 2026)
   ctx.filter = `blur(${Math.max(1, S * 0.004)}px)`;
-  ctx.translate(-lx * S * 0.006, -ly * S * 0.006);
+  if (pen.last) pen.trace(pen.last.q, pen.last.closed, -lx * S * 0.006, -ly * S * 0.006);
   ctx.strokeStyle = `rgba(255,246,240,${0.14 * q})`; ctx.lineWidth = S * 0.007; ctx.lineJoin = "round"; ctx.stroke();
-  ctx.translate(lx * S * 0.006, ly * S * 0.006);
   if (role === "hair") {
     // the shine band: a soft arc across the upper third
     ctx.strokeStyle = `rgba(255,255,255,${0.3 * k})`; ctx.lineWidth = Math.max(1.5, h * 0.06); ctx.lineCap = "round";
@@ -303,12 +304,14 @@ function formStroke(G, c, width) {
   }
   for (const [x, y] of [q[0], q[q.length - 1]]) { ctx.moveTo(x + w / 2, y); ctx.arc(x, y, w / 2, 0, Math.PI * 2); }
   ctx.clip();
-  pen.trace(q, false);
+  // the shadow side and the lit side: the centreline shifted away from / towards the light
+  // (shifting the points, not the canvas: a path keeps the transform it was built under)
   ctx.lineCap = "round"; ctx.lineJoin = "round";
   ctx.filter = `blur(${Math.max(1, w * 0.18)}px)`;
-  ctx.translate(-lx * w * 0.34, -ly * w * 0.34);
+  pen.trace(q, false, -lx * w * 0.34, -ly * w * 0.34);
   ctx.strokeStyle = `rgba(45,14,50,${0.3 * k})`; ctx.lineWidth = w * 0.5; ctx.stroke();
-  ctx.translate(lx * w * 0.6, ly * w * 0.6);
+  pen.trace(q, false, lx * w * 0.26, ly * w * 0.26);
   ctx.strokeStyle = `rgba(255,248,236,${0.16 * k})`; ctx.lineWidth = w * 0.3; ctx.stroke();
   ctx.restore();
+  pen.trace(q, false);
 }

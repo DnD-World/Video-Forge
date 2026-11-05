@@ -23,6 +23,7 @@ import { ITEMS, itemById, barefoot, ankle } from "./wardrobe.mjs";
 import { EXPRESSION_REST, EXPRESSION_SMILE, browShape, lidAmount, mouthShape } from "./face.mjs";
 import { applyLayer } from "./fx.mjs";
 import { RecordingCtx } from "./record.mjs";
+import { capHem } from "./follow.mjs";
 import { drawHand, palmPx } from "./hands.mjs";
 import { hairContactShadow, faceClay, torsoCreases } from "./clay.mjs";
 import { drawProp, drawSeat, PROPS } from "./props.mjs";
@@ -349,7 +350,9 @@ export function drawCharacter(ctx, card, { look: look0 = card.look, S, x = 0, y 
   const skip = state.armsSkip ?? [], keep = (a) => !skip.includes(which(a));
   // turned towards +x the near arm is the −x one (arms[0]): it comes towards the camera and is
   // drawn over the chest; the far arm goes behind it (Ak, 5 Nov 2026: the near shoulder hid)
-  const inFront = (facingFront ? sk.arms.filter(crossing) : [sk.arms[0]]).filter(keep);
+  // A far arm whose hand crosses the chest (a cup at the mouth, a facepalm) also comes in front,
+  // drawn under the near arm (code review, 5 Nov 2026: in two-person scenes these hid behind the body)
+  const inFront = (facingFront ? sk.arms.filter(crossing) : [...sk.arms.slice(1).filter(crossing), sk.arms[0]]).filter(keep);
   // armsFront: a far arm reaching across the chest in a three-quarter view is in front of it (a handshake)
   for (const a of sk.arms) if ((state.armsFront ?? []).includes(which(a)) && keep(a) && !inFront.includes(a)) inFront.unshift(a);
   const behind = sk.arms.filter((a) => !inFront.includes(a)).filter(keep);
@@ -386,7 +389,9 @@ export function drawCharacter(ctx, card, { look: look0 = card.look, S, x = 0, y 
   if (follow?.hemField) pen.warp = (p) => follow.hemField(p, sk, S, fsx);
   else if (follow?.hem) pen.warp = ([px, py]) => {
     const w = clamp((py / S - sk.waistY) / -sk.waistY) ** 1.5;
-    return [px + follow.hem[0] * fsx * w * S, py + follow.hem[1] * w * S];
+    // the same modesty cap as the physics hem, per point (code review, 5 Nov 2026)
+    const [dx, dy] = capHem(follow.hem[0] * fsx * w, follow.hem[1] * w);
+    return [px + dx * S, py + dy * S];
   };
   phase("torso");
   if (look.formDetail && covers(["top"]) && !covers(["full"])) torsoCreases(G, sk);
@@ -497,6 +502,9 @@ export function drawCharacter(ctx, card, { look: look0 = card.look, S, x = 0, y 
     pen.warp = hairWarp;
     hair.front?.(G, hs, S, hairColor, t);
     if (card.highlight) highlight(G, hs, S, card.highlight);
+    // hats, hoods and helmets only slide round the skull (the cap wrap): the ring swing, the
+    // tuck and the follow-through are for hair (code review, 5 Nov 2026: a cap's brim shrank)
+    pen.warp = yaw > 0 ? ([px, py]) => [capWrap(px), py] : null;
     phase("head");
     pen.warp = null;
     phase("face");
@@ -612,7 +620,8 @@ function drawFace(G, state) {
   }
   // a bruise on one side: purple middle fading to a yellow-green edge, soft so it reads as skin, not paint
   if (card.bruise && card.bruise !== "none") {
-    const e = F.eyes[1]?.visible ? F.eyes[1] : F.eyes[0];
+    // always the near eye (never hidden), so the bruise stays on one side through a head turn
+    const e = F.eyes.find((x) => !x.far) ?? F.eyes[0];
     if (e?.visible) {
       const a = eyeAt(e), eye = card.bruise === "eye";
       const cx = (a.x + (eye ? 0 : R * 0.05 * Math.sign(e.x || 1))) * S, cy = (eye ? a.cy + R * 0.02 : e.y + R * 0.32) * S;
@@ -680,7 +689,8 @@ function drawFace(G, state) {
   if (browStyle !== "none" && eyesStyle !== "none") {
     const names = [state.brows?.left ?? "serious", state.brows?.right ?? state.brows?.left ?? "serious"];
     // "confused" lifts one brow only: the other stays at rest
-    if (names[0] === "confused" && names[1] === "confused") names[0] = "serious";
+    // (the far brow rests, so the lifted one is the near one and still shows in profile)
+    if (names[0] === "confused" && names[1] === "confused") names[Math.max(0, F.eyes.findIndex((e) => e.far))] = "serious";
     const bc = mono || look.incise || look.fill === "none" ? featureInk : look.id === "hose" || look.id === "hose2" ? featureInk : toneColor(look, shade(card.hairColor ?? "#262a33", -0.2), "hair");
     F.eyes.forEach((e, i) => {
       if (!e.visible) return;

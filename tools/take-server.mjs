@@ -17,8 +17,10 @@ const TYPES = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", "
 const ID = /^[a-z0-9][a-z0-9-]{0,60}$/;
 
 function serve(res, base, rel) {
-  const file = path.resolve(base, "." + decodeURIComponent(rel));
-  if (!file.startsWith(base) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) { res.writeHead(404); res.end("not found"); return; }
+  let file;
+  try { file = path.resolve(base, "." + decodeURIComponent(rel)); } catch { res.writeHead(400); res.end("bad address"); return; }
+  // inside the folder itself (base + separator: "samples2" next door is not "samples")
+  if (!file.startsWith(base + path.sep) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) { res.writeHead(404); res.end("not found"); return; }
   res.writeHead(200, { "content-type": TYPES[path.extname(file)] ?? "application/octet-stream", "cache-control": "no-store" });
   fs.createReadStream(file).pipe(res);
 }
@@ -26,6 +28,11 @@ function serve(res, base, rel) {
 http.createServer((req, res) => {
   const url = new URL(req.url, "http://localhost");
   if (req.method === "POST" && url.pathname === "/api/take") {
+    // only the capture page this server sent may save a take: another website open in the same
+    // browser could otherwise post here and overwrite takes (code review, 5 Nov 2026)
+    const self = `http://127.0.0.1:${port}`, from = req.headers.origin;
+    if (from !== self && from !== `http://localhost:${port}`) { res.writeHead(403); res.end("takes can only be saved from this server's own pages"); return; }
+    if (!String(req.headers["content-type"] ?? "").startsWith("application/json")) { res.writeHead(415); res.end("send the take as application/json"); return; }
     const id = url.searchParams.get("id") ?? "";
     if (!ID.test(id)) { res.writeHead(400); res.end("bad id"); return; }
     let body = "";

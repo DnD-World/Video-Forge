@@ -19,10 +19,9 @@ import { clamp, fbm, lerp, noise1 } from "./anim.mjs";
 
 export const STEP = 1 / 120;
 export const GRAVITY = 2.6;             // body heights per s² (a cartoon is a little floaty)
-export const HEM_LIFT_MAX = 0.01;       // a hem may rise at most 1% of the body height
-// and swing at most this far sideways: a dress never slides off the hips and legs under it
-// (5 Nov 2026: at 0.075 the handshake's step-in swung the skirt clear of her hips)
-export const HEM_SWAY_MAX = 0.02;
+// the modesty limits live in the core (follow.mjs) so every hem, physics or not, keeps them
+import { HEM_LIFT_MAX, HEM_SWAY_MAX } from "../core/follow.mjs";
+export { HEM_LIFT_MAX, HEM_SWAY_MAX };
 
 // ---- wind: a steady push, slow gusts, and swirls that drift with it ------------------------------
 export function windAt(w, x, y, t) {

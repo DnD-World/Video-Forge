@@ -47,7 +47,7 @@ async function main() {
     try {
       const take = await trackClip(pose, clip, clock);
       const seen = take.frames.length;
-      const r = await fetch(`/api/take?id=${clip.id}`, { method: "POST", body: JSON.stringify(take) });
+      const r = await fetch(`/api/take?id=${clip.id}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(take) });
       log(`${clip.id}: ${seen} frames ${r.ok ? "saved" : "NOT saved: " + (await r.text())}`);
     } catch (e) { log(`${clip.id}: FAILED ${e.message || e}`); }
   }

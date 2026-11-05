@@ -5,7 +5,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { normalizeTake, takeToMove, activeSpan } from "../characters/core/acted.mjs";
+import { normalizeTake, takeToMove, activeSpan, clipTracked, clipOnShelf, clipMoveId } from "../characters/core/acted.mjs";
 import { normalizeMove } from "../characters/core/moves.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -16,16 +16,16 @@ const out = [], quality = {}, preview = {};
 // how much of the person the tracker really saw: both arms (shoulder, elbow, wrist) and both feet
 const seen = (take, idx) => take.frames.filter((f) => idx.every((i) => (f.lm[i]?.[2] ?? 0) > 0.5)).length / take.frames.length;
 for (const c of clips) {
-  if (c.drop) continue;
+  if (!clipTracked(c)) continue;
   const f = path.join(dir, "takes", c.id + ".json");
   if (!fs.existsSync(f)) { console.log(`${c.id}: no take yet`); continue; }
   const { take, problems } = normalizeTake(JSON.parse(fs.readFileSync(f, "utf8")));
   if (!take || take.frames.length < 8) { console.log(`${c.id}: unusable take (${problems.join("; ") || "too few frames"})`); continue; }
   const q = { frames: take.frames.length, arms: +seen(take, [11, 12, 13, 14, 15, 16]).toFixed(2), feet: +seen(take, [27, 28]).toFixed(2) };
   quality[c.id] = q;
-  if (q.arms < 0.5) { console.log(`${c.id}: skipped, arms seen in only ${Math.round(q.arms * 100)}% of frames`); continue; }
+  if (!clipOnShelf(c, q)) { console.log(`${c.id}: skipped, arms seen in only ${Math.round(q.arms * 100)}% of frames`); continue; }
   const mv = takeToMove(take, {
-    id: c.move ?? c.id, name: c.name ?? c.action, help: c.help ?? `Copied from a real person: ${c.action}.`,
+    id: clipMoveId(c), name: c.name ?? c.action, help: c.help ?? `Copied from a real person: ${c.action}.`,
     kind: c.kind ?? "gesture", tags: c.tags ?? [], phrases: c.phrases ?? [], hands: c.hands, face: c.face,
     inMs: c.inMs, outMs: c.outMs, legs: c.legs ?? (q.feet > 0.8 ? "auto" : false), sit: c.sit ?? "auto", torso: TORSO,
   });

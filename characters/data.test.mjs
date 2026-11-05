@@ -8,7 +8,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { normalizeCard } from "./core/card.mjs";
 import { normalizeWear } from "./core/wardrobe.mjs";
-import { normalizeTake } from "./core/acted.mjs";
+import { normalizeTake, clipTracked, clipOnShelf, clipMoveId } from "./core/acted.mjs";
+import { SHELF_DATA } from "./moves/shelf.mjs";
 import { ACTED_DATA } from "./moves/acted/shelf.mjs";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -80,12 +81,19 @@ test("recorded motion: clips, quality, preview and the shelf agree", () => {
   const takes = new Set(fs.readdirSync(path.join(root, "characters/moves/acted/takes")).map((f) => f.replace(/\.json$/, "")));
   unique(clips.map((c) => c.id), "clip");
   const problems = [];
-  for (const c of clips) {
-    if (!takes.has(c.id)) problems.push(`clip ${c.id}: no take file`);
-    if (!quality[c.id]) problems.push(`clip ${c.id}: no quality entry`);
-    if (!preview[c.move]) problems.push(`clip ${c.id}: no preview for move "${c.move}"`);
-  }
+  // the same rule as tools/acted-shelf.mjs: a dropped clip is left out, a clip whose arms were
+  // seen too little keeps its quality entry but gets no move and no preview
   const shelf = new Set(ACTED_DATA.map((m) => m.id));
-  for (const c of clips) if (!shelf.has(c.move)) problems.push(`move ${c.move}: not on the shelf (run tools/acted-shelf.mjs)`);
+  for (const c of clips) {
+    if (!clipTracked(c)) continue;
+    const id = clipMoveId(c);
+    if (!takes.has(c.id)) problems.push(`clip ${c.id}: no take file`);
+    if (!quality[c.id]) { problems.push(`clip ${c.id}: no quality entry (run tools/acted-shelf.mjs)`); continue; }
+    if (!clipOnShelf(c, quality[c.id])) continue;
+    if (!preview[id]) problems.push(`clip ${c.id}: no preview for move "${id}"`);
+    if (!shelf.has(id)) problems.push(`move ${id}: not on the shelf (run tools/acted-shelf.mjs)`);
+  }
+  // a recorded move with a starter move's id would be silently dropped from the shelf
+  for (const id of shelf) if (SHELF_DATA.some((m) => m.id === id)) problems.push(`move ${id}: a starter move already has this id; give the clip another "move" name`);
   assert.deepEqual(problems, []);
 });
