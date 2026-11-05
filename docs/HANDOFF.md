@@ -4,6 +4,14 @@ Everything a fresh session needs. `PLAN.md` holds the long history; this is the
 working state. Newest sections first. Plans: `docs/V2-PLAN.md` (Video Forge),
 `docs/FORGES-PLAN.md` (both apps; has a Status section at the bottom).
 
+## Package security updates — 5 Nov 2026 (merged)
+
+- **PR 13** (merged): patch updates cleared 30 of 39 Dependabot alerts. electron 43.8.4, fast-uri 3.1.9, zod 4.6.7 (forced with an npm `overrides` entry because @remotion/studio 4.0.500 pins 4.4.3; drop the override once Remotion is at 4.0.540+), postcss 8.5.32, nanoid, source-map-js, postcss-selector-parser, undici, brace-expansion. Versions picked with `npm --before` a week back.
+- **Checked:** `npm test` 222/222, `tsc` clean, `npm run build`, `npm run dev` window opens, test render `npm run job -- jobs/boil-test.json` (27 s, frame checked).
+- **PR 15** (merged): `.github/dependabot.yml` from the standards template, weekly grouped PRs for npm + GitHub Actions. Majors inside a weekly PR go to Ak first.
+- **Still open (10 alerts, all build-time only):** vite 5.4.21 ×8 + esbuild 0.21 ×1 need Vite 6+ and electron-vite 3+ (major, changes the build setup); minimatch ×1 (alert #95, published 5 Nov) fixed only in 11.x.
+- Plain-words report for Ak: `docs/eli5/safety-updates-5-nov.html`.
+
 ## PR 12 code review fixes + easy wins — 5 Nov 2026 (branch `redflag-2d-lab`)
 
 - **Merged 5 Nov:** PR 12 into `redflag-data` (merge commit `0355bdf`), then `redflag-data` into `main` (PR 14; it also carried "Many videos: set carries into every row" and "Intros and outros: colour boost", which were not on main yet). PR 13 (package vulnerability updates, 30 of 39) was opened by a separate session.
