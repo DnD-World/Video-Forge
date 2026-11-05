@@ -1,0 +1,300 @@
+<title>Video Forge Safety Day</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;800&display=swap">
+<style>
+/* Layout: one dark "forge" column, a big count-down meter up top, then lock cards, then the 10 left over. Single dark look by choice (matches the app). */
+:root {
+  color-scheme: dark;
+  --bg: #03090c;
+  --panel: #071c26;
+  --panel-hi: #0b2837;
+  --line: #11374a;
+  --ink: #e6f1f5;
+  --muted: #8fb0bd;
+  --mint: #5ee6b8;
+  --blue: #4ac2e8;
+  --amber: #e8a24a;
+  --red: #ff7a6b;
+  --font: 'Sora', system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.6;
+  margin: 0;
+  overflow-x: hidden;
+}
+.bgfx { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+.wrap {
+  position: relative; z-index: 1;
+  max-width: 880px; margin: 0 auto;
+  padding-block: 48px 72px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 56px;
+}
+h1, h2, h3 { text-wrap: balance; margin: 0; line-height: 1.15; }
+h1 { font-size: clamp(2rem, 6vw, 3.4rem); font-weight: 800; letter-spacing: -0.02em; }
+h2 { font-size: clamp(1.4rem, 3.6vw, 1.9rem); font-weight: 600; }
+h3 { font-size: 1.05rem; font-weight: 600; }
+p { margin: 0; max-width: 65ch; }
+.eyebrow { font-size: .75rem; letter-spacing: .14em; text-transform: uppercase; color: var(--mint); font-weight: 600; }
+.lede { color: var(--muted); font-size: 1.1rem; }
+header { display: flex; flex-direction: column; gap: 14px; }
+
+/* meter */
+.meter {
+  background: linear-gradient(160deg, var(--panel-hi), var(--panel));
+  border: 1px solid var(--line); border-radius: 18px;
+  padding: 28px; display: grid; grid-template-columns: auto 1fr; gap: 28px; align-items: center;
+  box-shadow: 0 0 40px rgb(94 230 184 / .08);
+}
+.dial { position: relative; width: 170px; height: 170px; }
+.dial svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.dial .num {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font-variant-numeric: tabular-nums;
+}
+.dial .big { font-size: 3rem; font-weight: 800; line-height: 1; }
+.dial .small { font-size: .8rem; color: var(--muted); }
+.meter-text { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.stat-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
+.pill { border-radius: 999px; padding: 4px 12px; font-size: .82rem; font-weight: 600; border: 1px solid; font-variant-numeric: tabular-nums; }
+.pill.mint { color: var(--mint); border-color: rgb(94 230 184 / .4); background: rgb(94 230 184 / .08); }
+.pill.amber { color: var(--amber); border-color: rgb(232 162 74 / .4); background: rgb(232 162 74 / .08); }
+.pill.blue { color: var(--blue); border-color: rgb(74 194 232 / .4); background: rgb(74 194 232 / .08); }
+
+/* story */
+.story { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.story > div { border-left: 2px solid var(--line); padding: 4px 0 4px 18px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.story b { color: var(--mint); }
+
+section { display: flex; flex-direction: column; gap: 20px; }
+.cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.card {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+  padding: 20px; display: flex; flex-direction: column; gap: 10px; min-width: 0;
+  transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease;
+}
+.card:hover { transform: translateY(-3px); border-color: var(--blue); box-shadow: 0 8px 30px rgb(74 194 232 / .12); }
+.card .top { display: flex; align-items: center; gap: 12px; }
+.icon {
+  flex: none; width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center;
+  background: var(--panel-hi); color: var(--mint);
+}
+.icon svg { width: 22px; height: 22px; }
+.card .what { color: var(--muted); font-size: .92rem; }
+.card .tag { margin-top: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+
+.ladder { display: flex; flex-direction: column; gap: 12px; }
+.step {
+  display: grid; grid-template-columns: 34px 1fr; gap: 14px; align-items: start;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px;
+}
+.step .n {
+  width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
+  background: rgb(94 230 184 / .12); color: var(--mint); font-weight: 800; font-variant-numeric: tabular-nums;
+}
+.step div { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.step p { color: var(--muted); font-size: .95rem; }
+
+.left { border: 1px solid rgb(232 162 74 / .35); background: linear-gradient(160deg, rgb(232 162 74 / .06), transparent 60%), var(--panel); border-radius: 18px; padding: 26px; display: flex; flex-direction: column; gap: 18px; }
+.left .rows { display: grid; gap: 12px; }
+.left .row { display: grid; grid-template-columns: 64px 1fr; gap: 14px; align-items: start; }
+.left .count { font-size: 1.8rem; font-weight: 800; color: var(--amber); line-height: 1; font-variant-numeric: tabular-nums; }
+.left .row div { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.left .row p { color: var(--muted); font-size: .95rem; }
+.analogy { border-radius: 12px; background: var(--panel-hi); padding: 16px 18px; color: var(--ink); }
+.analogy b { color: var(--amber); }
+
+.table-box { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; }
+table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: .9rem; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: 600; font-size: .75rem; letter-spacing: .1em; text-transform: uppercase; background: var(--panel); }
+td.v { font-variant-numeric: tabular-nums; white-space: nowrap; }
+tr:last-child td { border-bottom: none; }
+.yes { color: var(--mint); font-weight: 600; }
+.no { color: var(--muted); }
+
+footer { color: var(--muted); font-size: .85rem; display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--line); padding-top: 20px; }
+a { color: var(--blue); }
+a:focus-visible, .card:focus-visible { outline: 2px solid var(--mint); outline-offset: 3px; }
+
+.rise { animation: rise .7s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes rise { from { transform: translateY(14px); opacity: .001; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .rise { animation: none; } .card { transition: none; } }
+
+@media (max-width: 640px) {
+  .meter { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+  .meter-text { align-items: center; }
+  .stat-row { justify-content: center; }
+  .story, .cards { grid-template-columns: 1fr; }
+}
+</style>
+
+<canvas class="bgfx" id="fx" aria-hidden="true"></canvas>
+
+<main class="wrap">
+  <header class="rise">
+    <span class="eyebrow">Video Forge · 5 November 2026</span>
+    <h1>We patched 30 of the app's 39 security warnings</h1>
+    <p class="lede">An explain-it-like-I'm-five report on what changed today, why it helps, and why 10 warnings are still open.</p>
+  </header>
+
+  <div class="meter rise" style="animation-delay:.1s">
+    <div class="dial" aria-label="39 warnings at the start of the day, 10 left">
+      <svg viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="42" fill="none" stroke="#11374a" stroke-width="9"/>
+        <circle id="arc" cx="50" cy="50" r="42" fill="none" stroke="#5ee6b8" stroke-width="9" stroke-linecap="round"
+          stroke-dasharray="263.9" stroke-dashoffset="67.7"/>
+      </svg>
+      <div class="num"><span class="big" id="count">10</span><span class="small">warnings left (from 39)</span></div>
+    </div>
+    <div class="meter-text">
+      <h2>From 39 warnings to 10 in one day</h2>
+      <p>GitHub keeps a list of known weak spots in the building blocks the app uses. This morning it showed 39. Tonight it shows 10. None of the 10 are in the part of the app you install.</p>
+      <div class="stat-row">
+        <span class="pill mint">30 fixed</span>
+        <span class="pill amber">10 waiting</span>
+        <span class="pill blue">1 of the 10 appeared today</span>
+      </div>
+    </div>
+  </div>
+
+  <section class="rise" style="animation-delay:.2s">
+    <span class="eyebrow">The idea in one picture</span>
+    <h2>The app is a house built from other people's bricks</h2>
+    <div class="story">
+      <div><h3>Bricks</h3><p>Video Forge is built from about 800 free parts made by other people. One draws the window, one reads web addresses, one turns style sheets into a page. We call them <b>packages</b>.</p></div>
+      <div><h3>Cracks</h3><p>Sometimes someone finds a crack in a brick, and the brick maker sends out a fixed one. GitHub watches our list of bricks and raises a <b>warning</b> for every brick with a known crack.</p></div>
+      <div><h3>Swapping bricks</h3><p>Today we swapped the cracked bricks for fixed ones of the <b>same shape</b>, so nothing else in the house had to move.</p></div>
+      <div><h3>Fresh, not wet</h3><p>We only used bricks that had been out for <b>at least a week</b>. A brick made this morning might have its own new crack that nobody has spotted yet.</p></div>
+    </div>
+  </section>
+
+  <section class="rise" style="animation-delay:.3s">
+    <span class="eyebrow">What changed</span>
+    <h2>Six changes you'd actually feel the benefit of</h2>
+    <div class="cards">
+      <article class="card" tabindex="0">
+        <div class="top"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8M12 18v3"/></svg></span><h3>The app's window and engine</h3></div>
+        <p class="what">Electron, the part that draws the window and runs everything. It got the maker's latest small safety repair, including protection against a set of stolen internet ID cards.</p>
+        <div class="tag"><span class="pill mint">ships in the app</span><span class="pill blue">1 serious warning gone</span></div>
+      </article>
+      <article class="card" tabindex="0">
+        <div class="top"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg></span><h3>The web-address checker</h3></div>
+        <p class="what">A small part that reads addresses like https://… inside the video builder. Tricky addresses could fool it into reading the wrong place. That's the biggest single clean-up today.</p>
+        <div class="tag"><span class="pill mint">ships in the app</span><span class="pill blue">11 warnings gone</span></div>
+      </article>
+      <article class="card" tabindex="0">
+        <div class="top"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span><h3>The data checker</h3></div>
+        <p class="what">Zod checks that data has the right shape before the video builder uses it. Very large data could make it eat all the memory. Remotion, the video builder, still asks for the old one, so we told it to use the fixed one anyway.</p>
+        <div class="tag"><span class="pill mint">ships in the app</span><span class="pill blue">1 serious warning gone</span></div>
+      </article>
+      <article class="card" tabindex="0">
+        <div class="top"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l9 4.5v9L12 21l-9-4.5v-9z"/><path d="M12 12l9-4.5M12 12v9M12 12L3 7.5"/></svg></span><h3>The style-sheet tools</h3></div>
+        <p class="what">Four small parts that turn colours and layouts into a finished page. Some odd inputs could make them spin for a very long time and freeze. Now they don't.</p>
+        <div class="tag"><span class="pill mint">ships in the app</span><span class="pill blue">5 warnings gone</span></div>
+      </article>
+      <article class="card" tabindex="0">
+        <div class="top"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></svg></span><h3>The installer-making tools</h3></div>
+        <p class="what">Parts we only use to build the setup file: a downloader and a file-name matcher. They never reach your computer as part of the app, but now they're clean too.</p>
+        <div class="tag"><span class="pill amber">build tools only</span><span class="pill blue">12 warnings gone</span></div>
+      </article>
+      <article class="card" tabindex="0">
+        <div class="top"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><h3>A weekly check-up</h3></div>
+        <p class="what">New today. Once a week, GitHub opens one tidy list of updates for us to look over, so warnings don't pile up to 39 again. This one changes no app code.</p>
+        <div class="tag"><span class="pill mint">new habit</span></div>
+      </article>
+    </div>
+  </section>
+
+  <section class="rise" style="animation-delay:.4s">
+    <span class="eyebrow">How we made sure nothing broke</span>
+    <h2>Four checks before anything was merged</h2>
+    <div class="ladder">
+      <div class="step"><span class="n">1</span><div><h3>All 222 automatic tests passed</h3><p>Little robots that poke every part of the app and shout if something changed.</p></div></div>
+      <div class="step"><span class="n">2</span><div><h3>The code still fits together</h3><p>A spell-checker for code found no mistakes, and the app built cleanly.</p></div></div>
+      <div class="step"><span class="n">3</span><div><h3>The app opened</h3><p>The Video Forge window came up with no errors.</p></div></div>
+      <div class="step"><span class="n">4</span><div><h3>It made a real video</h3><p>A 27-second test video with Kaiti and Serifis, rings, captions and sound, done in under a minute. I checked a frame by eye. I didn't listen to the sound, only checked that it's there.</p></div></div>
+    </div>
+  </section>
+
+  <section class="left rise" style="animation-delay:.5s">
+    <span class="eyebrow" style="color:var(--amber)">Still open</span>
+    <h2>Why we didn't fix the last 10</h2>
+    <div class="analogy"><b>The short version:</b> these 10 cracks are in the <b>scaffolding</b> we use while building, not in the house you live in. The only fixed bricks for them are a <b>new, bigger shape</b> that doesn't fit the old holes. Swapping them means rebuilding part of the scaffolding, and we'd rather do that on purpose, on a quiet day, than in a rush.</div>
+    <div class="rows">
+      <div class="row"><span class="count">8</span><div><h3>Vite, the "preview while I build" tool</h3><p>It shows the app live while it's being worked on. It isn't part of the app you install. The fix only exists in Vite 6, a new generation. Vite 6 also needs a newer electron-vite, the tool that builds the app, so the build setup changes. That could stop "start the app" or "build the installer" from working until it's adjusted.</p></div></div>
+      <div class="row"><span class="count">1</span><div><h3>esbuild, inside Vite</h3><p>An older copy that comes bundled with Vite 5. It disappears by itself when Vite is upgraded.</p></div></div>
+      <div class="row"><span class="count">1</span><div><h3>minimatch, a file-name matcher</h3><p>Reported today. Only the installer-making tools use it. The only fixed version is a new generation, and it's just hours old, which is too fresh to trust yet.</p></div></div>
+    </div>
+    <p style="color:var(--muted)">Risk while they wait: low. Someone would need to already be on your computer, or tricking the developer preview, to use any of these. A normal person using the installed app never touches these parts.</p>
+  </section>
+
+  <section class="rise" style="animation-delay:.6s">
+    <span class="eyebrow">For the record</span>
+    <h2>Every swapped brick</h2>
+    <div class="table-box">
+      <table>
+        <thead><tr><th>Part</th><th>What it does</th><th>In the app?</th><th>Before → after</th><th>Warnings fixed</th></tr></thead>
+        <tbody>
+          <tr><td>electron</td><td>The window and engine</td><td class="yes">Yes</td><td class="v">43.7.9 → 43.8.4</td><td class="v">1</td></tr>
+          <tr><td>fast-uri</td><td>Reads web addresses</td><td class="yes">Yes</td><td class="v">3.1.4 → 3.1.9</td><td class="v">11</td></tr>
+          <tr><td>zod</td><td>Checks data shape</td><td class="yes">Yes</td><td class="v">4.4.3 → 4.6.7</td><td class="v">1</td></tr>
+          <tr><td>postcss</td><td>Style-sheet tool</td><td class="yes">Yes</td><td class="v">8.5.21 → 8.5.32</td><td class="v">1</td></tr>
+          <tr><td>nanoid</td><td>Makes short IDs</td><td class="yes">Yes</td><td class="v">3.3.16 → 3.3.20</td><td class="v">1</td></tr>
+          <tr><td>source-map-js</td><td>Reads debug maps</td><td class="yes">Yes</td><td class="v">1.2.1 → 1.2.2</td><td class="v">1</td></tr>
+          <tr><td>postcss-selector-parser</td><td>Reads style rules</td><td class="yes">Partly</td><td class="v">7.1.4 → 7.1.7, 6.1.4 → 6.1.5</td><td class="v">2</td></tr>
+          <tr><td>undici</td><td>Downloader for the installer</td><td class="no">No</td><td class="v">7.30.0 → 7.30.1, 6.28.1 → 6.29.1</td><td class="v">9</td></tr>
+          <tr><td>brace-expansion</td><td>File-name matcher</td><td class="no">No</td><td class="v">1.1.18 / 2.1.4 / 5.0.9 → 1.1.21 / 2.1.7 / 5.0.12</td><td class="v">3</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    <span>Changes: <a href="https://github.com/DnD-World/Video-Forge/pull/13">PR 13, the safety updates</a> · <a href="https://github.com/DnD-World/Video-Forge/pull/15">PR 15, the weekly check-up</a>. Both merged on 5 Nov 2026.</span>
+    <span>Counts come from GitHub's Dependabot list for DnD-World/Video-Forge, read at the start and end of the day.</span>
+  </footer>
+</main>
+
+<script>
+(() => {
+  // count-up dial: 39 -> 10
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const arc = document.getElementById('arc'), num = document.getElementById('count');
+  const C = 263.9, from = 39, to = 10;
+  const draw = v => { num.textContent = Math.round(v); arc.setAttribute('stroke-dashoffset', (C * (1 - v / from)).toFixed(1)); };
+  if (!reduce) {
+    let t0 = null;
+    const tick = t => { t0 ??= t; const p = Math.min(1, (t - t0) / 1800); const e = 1 - Math.pow(1 - p, 3); draw(from + (to - from) * e); if (p < 1) requestAnimationFrame(tick); };
+    draw(from); setTimeout(() => requestAnimationFrame(tick), 350);
+  }
+
+  // drifting sparks background
+  const cv = document.getElementById('fx'), cx = cv.getContext('2d');
+  let W, H, dots = [];
+  const size = () => { W = cv.width = innerWidth * devicePixelRatio; H = cv.height = innerHeight * devicePixelRatio; };
+  size(); addEventListener('resize', size);
+  for (let i = 0; i < 70; i++) dots.push({ x: Math.random(), y: Math.random(), r: Math.random() * 1.6 + .4, s: Math.random() * .00025 + .00006, h: Math.random() < .7 ? '94,230,184' : '74,194,232', a: Math.random() * .5 + .15 });
+  const frame = () => {
+    cx.clearRect(0, 0, W, H);
+    const g = cx.createRadialGradient(W * .8, H * .1, 0, W * .8, H * .1, W * .6);
+    g.addColorStop(0, 'rgba(17,55,74,.55)'); g.addColorStop(1, 'rgba(3,9,12,0)');
+    cx.fillStyle = g; cx.fillRect(0, 0, W, H);
+    for (const d of dots) {
+      if (!reduce) { d.y -= d.s; if (d.y < -0.02) { d.y = 1.02; d.x = Math.random(); } }
+      cx.beginPath(); cx.arc(d.x * W, d.y * H, d.r * devicePixelRatio, 0, 7);
+      cx.fillStyle = `rgba(${d.h},${d.a})`; cx.shadowColor = `rgba(${d.h},.8)`; cx.shadowBlur = 8 * devicePixelRatio; cx.fill();
+    }
+    if (!reduce) requestAnimationFrame(frame);
+  };
+  frame();
+})();
+</script>
