@@ -6,6 +6,8 @@ working state. Newest sections first. Plans: `docs/V2-PLAN.md` (Video Forge),
 
 ## PR 12 code review fixes + easy wins — 5 Nov 2026 (branch `redflag-2d-lab`)
 
+- **Merged 5 Nov:** PR 12 is in `redflag-data` (merge commit `0355bdf`). `redflag-data` is NOT in `main` yet: that needs its own PR. A separate session is fixing the 39 package vulnerabilities GitHub flags on `main`.
+
 - **Cloud review (ultrareview) of PR 12: 10 findings, all fixed** (commit "Code review fixes…"). Before/after proof page: `characters/checks/review-fixes.html` (ignored folder; open with the `character-checks` entry in `.claude/launch.json`, port 5591). Built from a scratch script, not kept in the repo.
   - Recorded moves no longer change starter tags: `trimActedPhrases` (core/acted.mjs) drops a recorded move's phrase when it is a voice sound (`laughs`, `cries`, `gasps`, `sobs`, `sighs`) or overlaps a starter phrase. The 3 "known failing" tag tests were caused by this branch and now pass.
   - Three recorded moves had a starter move's id and were silently lost: renamed `wave-acted`, `shrug-acted`, `explain-acted` in clips.json. The data test now fails on any such clash.
