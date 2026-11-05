@@ -1,0 +1,1264 @@
+[
+ {
+  "id": "cmu-13-14",
+  "move": "laugh-bend",
+  "name": "Laughs",
+  "action": "laughs",
+  "phrases": [
+   "laughs",
+   "bursts out laughing",
+   "γελάει"
+  ],
+  "source": "cmu",
+  "trial": "13_14",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 13_14",
+  "face": [
+   [
+    0.05,
+    {
+     "smile": 0.8,
+     "brows": "happy"
+    }
+   ],
+   [
+    0.95,
+    {}
+   ]
+  ]
+ },
+ {
+  "id": "cmu-79-70",
+  "move": "laugh-big",
+  "name": "Laughs hard",
+  "action": "laughs hard",
+  "phrases": [
+   "laughs hard",
+   "cracks up"
+  ],
+  "source": "cmu",
+  "trial": "79_70",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 79_70",
+  "face": [
+   [
+    0.05,
+    {
+     "smile": 0.8,
+     "brows": "happy"
+    }
+   ],
+   [
+    0.95,
+    {}
+   ]
+  ]
+ },
+ {
+  "id": "cmu-79-69",
+  "move": "very-happy",
+  "name": "Very happy",
+  "action": "very happy",
+  "phrases": [
+   "is overjoyed",
+   "is thrilled"
+  ],
+  "source": "cmu",
+  "trial": "79_69",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 79_69",
+  "face": [
+   [
+    0.05,
+    {
+     "smile": 0.8,
+     "brows": "happy"
+    }
+   ],
+   [
+    0.95,
+    {}
+   ]
+  ]
+ },
+ {
+  "id": "cmu-80-43",
+  "move": "happy",
+  "name": "Happy",
+  "action": "happy",
+  "phrases": [
+   "is happy"
+  ],
+  "source": "cmu",
+  "trial": "80_43",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 80_43",
+  "face": [
+   [
+    0.05,
+    {
+     "smile": 0.6,
+     "brows": "happy"
+    }
+   ],
+   [
+    0.95,
+    {}
+   ]
+  ]
+ },
+ {
+  "id": "cmu-142-08",
+  "move": "happy-2",
+  "name": "Happy (2)",
+  "action": "happy (2)",
+  "phrases": [
+   "beams"
+  ],
+  "source": "cmu",
+  "trial": "142_08",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 142_08",
+  "face": [
+   [
+    0.05,
+    {
+     "smile": 0.6,
+     "brows": "happy"
+    }
+   ],
+   [
+    0.95,
+    {}
+   ]
+  ]
+ },
+ {
+  "id": "cmu-79-71",
+  "move": "sad",
+  "name": "Sad",
+  "action": "sad",
+  "phrases": [
+   "is sad",
+   "droops"
+  ],
+  "source": "cmu",
+  "trial": "79_71",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 79_71",
+  "face": [
+   [
+    0.05,
+    {
+     "brows": "worried"
+    }
+   ],
+   [
+    0.95,
+    {}
+   ]
+  ]
+ },
+ {
+  "id": "cmu-142-15",
+  "move": "sad-2",
+  "name": "Sad (2)",
+  "action": "sad (2)",
+  "phrases": [
+   "looks sad"
+  ],
+  "source": "cmu",
+  "trial": "142_15",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 142_15",
+  "face": [
+   [
+    0.05,
+    {
+     "brows": "worried"
+    }
+   ],
+   [
+    0.95,
+    {}
+   ]
+  ]
+ },
+ {
+  "id": "cmu-142-05",
+  "move": "depressed",
+  "name": "Depressed",
+  "action": "depressed",
+  "phrases": [
+   "is depressed",
+   "slumps"
+  ],
+  "source": "cmu",
+  "trial": "142_05",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 142_05",
+  "face": [
+   [
+    0.05,
+    {
+     "brows": "worried"
+    }
+   ],
+   [
+    0.95,
+    {}
+   ]
+  ]
+ },
+ {
+  "id": "cmu-79-72",
+  "move": "cry",
+  "name": "Cries",
+  "action": "cries",
+  "phrases": [
+   "cries",
+   "sobs",
+   "κλαίει"
+  ],
+  "source": "cmu",
+  "trial": "79_72",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 79_72",
+  "face": [
+   [
+    0.05,
+    {
+     "brows": "worried"
+    }
+   ],
+   [
+    0.95,
+    {}
+   ]
+  ]
+ },
+ {
+  "id": "cmu-80-45",
+  "move": "cry-2",
+  "name": "Cries (2)",
+  "action": "cries (2)",
+  "phrases": [
+   "weeps"
+  ],
+  "source": "cmu",
+  "trial": "80_45",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 80_45",
+  "face": [
+   [
+    0.05,
+    {
+     "brows": "worried"
+    }
+   ],
+   [
+    0.95,
+    {}
+   ]
+  ]
+ },
+ {
+  "id": "cmu-79-73",
+  "move": "scared",
+  "name": "Scared",
+  "action": "scared",
+  "phrases": [
+   "is scared",
+   "cowers"
+  ],
+  "source": "cmu",
+  "trial": "79_73",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 79_73",
+  "face": [
+   [
+    0.05,
+    {
+     "brows": "worried"
+    }
+   ],
+   [
+    0.95,
+    {}
+   ]
+  ]
+ },
+ {
+  "id": "cmu-142-16",
+  "move": "scared-2",
+  "name": "Scared (2)",
+  "action": "scared (2)",
+  "phrases": [
+   "flinches"
+  ],
+  "source": "cmu",
+  "trial": "142_16",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 142_16",
+  "face": [
+   [
+    0.05,
+    {
+     "brows": "worried"
+    }
+   ],
+   [
+    0.95,
+    {}
+   ]
+  ]
+ },
+ {
+  "id": "cmu-120-15",
+  "move": "surprised",
+  "name": "Surprised",
+  "action": "surprised",
+  "phrases": [
+   "is surprised",
+   "gasps"
+  ],
+  "source": "cmu",
+  "trial": "120_15",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 120_15",
+  "face": [
+   [
+    0.05,
+    {
+     "brows": "raised"
+    }
+   ],
+   [
+    0.95,
+    {}
+   ]
+  ]
+ },
+ {
+  "id": "cmu-142-19",
+  "move": "shy",
+  "name": "Shy",
+  "action": "shy",
+  "phrases": [
+   "acts shy",
+   "is bashful"
+  ],
+  "source": "cmu",
+  "trial": "142_19",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 142_19",
+  "face": [
+   [
+    0.05,
+    {
+     "brows": "worried",
+     "smile": 0.2
+    }
+   ],
+   [
+    0.95,
+    {}
+   ]
+  ]
+ },
+ {
+  "id": "cmu-80-48",
+  "move": "argue",
+  "name": "Argues",
+  "action": "argues",
+  "phrases": [
+   "argues",
+   "rants"
+  ],
+  "source": "cmu",
+  "trial": "80_48",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 80_48",
+  "face": [
+   [
+    0.05,
+    {
+     "brows": "angry"
+    }
+   ],
+   [
+    0.95,
+    {}
+   ]
+  ]
+ },
+ {
+  "id": "cmu-18-10",
+  "move": "quarrel",
+  "name": "Quarrels (angry hands)",
+  "action": "quarrels (angry hands)",
+  "phrases": [
+   "quarrels",
+   "snaps at"
+  ],
+  "source": "cmu",
+  "trial": "18_10",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 18_10",
+  "face": [
+   [
+    0.05,
+    {
+     "brows": "angry"
+    }
+   ],
+   [
+    0.95,
+    {}
+   ]
+  ]
+ },
+ {
+  "id": "cmu-19-10",
+  "move": "quarrel-2",
+  "name": "Quarrels (2)",
+  "action": "quarrels (2)",
+  "phrases": [
+   "fights back"
+  ],
+  "source": "cmu",
+  "trial": "19_10",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 19_10",
+  "face": [
+   [
+    0.05,
+    {
+     "brows": "angry"
+    }
+   ],
+   [
+    0.95,
+    {}
+   ]
+  ]
+ },
+ {
+  "id": "cmu-22-21",
+  "move": "pound-point",
+  "name": "Pounds the table, points",
+  "action": "pounds the table, points",
+  "phrases": [
+   "pounds the table",
+   "points at"
+  ],
+  "source": "cmu",
+  "trial": "22_21",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 22_21",
+  "face": [
+   [
+    0.05,
+    {
+     "brows": "angry"
+    }
+   ],
+   [
+    0.95,
+    {}
+   ]
+  ]
+ },
+ {
+  "id": "cmu-18-08",
+  "move": "explain-acted",
+  "name": "Explains with hands",
+  "action": "explains with hands",
+  "phrases": [
+   "explains",
+   "talks with hands"
+  ],
+  "source": "cmu",
+  "trial": "18_08",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 18_08"
+ },
+ {
+  "id": "cmu-111-25",
+  "move": "shrug-acted",
+  "name": "Shrugs",
+  "action": "shrugs",
+  "phrases": [
+   "shrugs",
+   "σηκώνει τους ώμους"
+  ],
+  "source": "cmu",
+  "trial": "111_25",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 111_25",
+  "face": [
+   [
+    0.05,
+    {
+     "brows": "raised"
+    }
+   ],
+   [
+    0.95,
+    {}
+   ]
+  ]
+ },
+ {
+  "id": "cmu-113-16",
+  "move": "shrug-2",
+  "name": "Shrugs (2)",
+  "action": "shrugs (2)",
+  "phrases": [
+   "shrugs again"
+  ],
+  "source": "cmu",
+  "trial": "113_16",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 113_16",
+  "face": [
+   [
+    0.05,
+    {
+     "brows": "raised"
+    }
+   ],
+   [
+    0.95,
+    {}
+   ]
+  ]
+ },
+ {
+  "id": "cmu-141-21",
+  "move": "shrug-3",
+  "name": "Shrugs (3)",
+  "action": "shrugs (3)",
+  "phrases": [
+   "who knows"
+  ],
+  "source": "cmu",
+  "trial": "141_21",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 141_21",
+  "face": [
+   [
+    0.05,
+    {
+     "brows": "raised"
+    }
+   ],
+   [
+    0.95,
+    {}
+   ]
+  ]
+ },
+ {
+  "id": "cmu-111-37",
+  "move": "wave-acted",
+  "name": "Waves",
+  "action": "waves",
+  "phrases": [
+   "waves",
+   "χαιρετά"
+  ],
+  "source": "cmu",
+  "trial": "111_37",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 111_37",
+  "face": [
+   [
+    0.05,
+    {
+     "smile": 0.4
+    }
+   ],
+   [
+    0.95,
+    {}
+   ]
+  ]
+ },
+ {
+  "id": "cmu-141-16",
+  "move": "wave-hello",
+  "name": "Waves hello",
+  "action": "waves hello",
+  "phrases": [
+   "waves hello",
+   "greets"
+  ],
+  "source": "cmu",
+  "trial": "141_16",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 141_16",
+  "face": [
+   [
+    0.05,
+    {
+     "smile": 0.4
+    }
+   ],
+   [
+    0.95,
+    {}
+   ]
+  ]
+ },
+ {
+  "id": "cmu-13-26",
+  "move": "wave-point",
+  "name": "Waves and points",
+  "action": "waves and points",
+  "phrases": [
+   "directs",
+   "points the way"
+  ],
+  "source": "cmu",
+  "trial": "13_26",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 13_26"
+ },
+ {
+  "id": "cmu-111-32",
+  "move": "stretch-yawn",
+  "name": "Stretches and yawns",
+  "action": "stretches and yawns",
+  "phrases": [
+   "yawns",
+   "stretches"
+  ],
+  "source": "cmu",
+  "trial": "111_32",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 111_32"
+ },
+ {
+  "id": "cmu-13-04",
+  "move": "chin-in-hand",
+  "name": "Chin in hand (seated)",
+  "action": "chin in hand (seated)",
+  "phrases": [
+   "rests chin in hand",
+   "ponders"
+  ],
+  "source": "cmu",
+  "trial": "13_04",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 13_04"
+ },
+ {
+  "id": "cmu-13-05",
+  "move": "fidget",
+  "name": "Fidgets (seated)",
+  "action": "fidgets (seated)",
+  "phrases": [
+   "fidgets",
+   "is restless"
+  ],
+  "source": "cmu",
+  "trial": "13_05",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 13_05"
+ },
+ {
+  "id": "cmu-14-30",
+  "move": "thinker-sit",
+  "name": "Thinks, ankle on knee (seated)",
+  "action": "thinks, ankle on knee (seated)",
+  "phrases": [
+   "thinks it over"
+  ],
+  "source": "cmu",
+  "trial": "14_30",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 14_30"
+ },
+ {
+  "id": "cmu-74-12",
+  "move": "thinker",
+  "name": "Thinker",
+  "action": "thinker",
+  "phrases": [
+   "thinks",
+   "muses"
+  ],
+  "source": "cmu",
+  "trial": "74_12",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 74_12"
+ },
+ {
+  "id": "cmu-22-03",
+  "move": "face-in-hands",
+  "name": "Face in hands (seated)",
+  "action": "face in hands (seated)",
+  "phrases": [
+   "buries face in hands"
+  ],
+  "source": "cmu",
+  "trial": "22_03",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 22_03",
+  "face": [
+   [
+    0.05,
+    {
+     "brows": "worried"
+    }
+   ],
+   [
+    0.95,
+    {}
+   ]
+  ]
+ },
+ {
+  "id": "cmu-13-01",
+  "move": "sit-stool",
+  "name": "Sits on a stool, stands up",
+  "action": "sits on a stool, stands up",
+  "phrases": [
+   "sits on a stool"
+  ],
+  "source": "cmu",
+  "trial": "13_01",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 13_01"
+ },
+ {
+  "id": "cmu-113-15",
+  "move": "sit-chair",
+  "name": "Sits in a chair, gets up",
+  "action": "sits in a chair, gets up",
+  "phrases": [
+   "sits in a chair"
+  ],
+  "source": "cmu",
+  "trial": "113_15",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 113_15"
+ },
+ {
+  "id": "cmu-143-18",
+  "move": "sit-down-up",
+  "name": "Sits down and gets up",
+  "action": "sits down and gets up",
+  "phrases": [
+   "sits down and gets up"
+  ],
+  "source": "cmu",
+  "trial": "143_18",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 143_18"
+ },
+ {
+  "id": "cmu-40-10",
+  "move": "wait-bus",
+  "name": "Waits (bored)",
+  "action": "waits (bored)",
+  "phrases": [
+   "waits",
+   "is bored"
+  ],
+  "source": "cmu",
+  "trial": "40_10",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 40_10"
+ },
+ {
+  "id": "cmu-141-20",
+  "move": "waiting",
+  "name": "Waits",
+  "action": "waits",
+  "phrases": [
+   "waits impatiently"
+  ],
+  "source": "cmu",
+  "trial": "141_20",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 141_20"
+ },
+ {
+  "id": "cmu-137-28",
+  "move": "wait-normal",
+  "name": "Stands waiting",
+  "action": "stands waiting",
+  "phrases": [
+   "stands around"
+  ],
+  "source": "cmu",
+  "trial": "137_28",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 137_28"
+ },
+ {
+  "id": "cmu-137-32",
+  "move": "wait-old",
+  "name": "Old man waiting",
+  "action": "old man waiting",
+  "phrases": [
+   "waits like an old man"
+  ],
+  "source": "cmu",
+  "trial": "137_32",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 137_32"
+ },
+ {
+  "id": "cmu-137-19",
+  "move": "wait-teen",
+  "name": "Gangly teen waiting",
+  "action": "gangly teen waiting",
+  "phrases": [
+   "slouches"
+  ],
+  "source": "cmu",
+  "trial": "137_19",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 137_19"
+ },
+ {
+  "id": "cmu-79-36",
+  "move": "phone",
+  "name": "Answers the phone",
+  "action": "answers the phone",
+  "phrases": [
+   "answers the phone"
+  ],
+  "source": "cmu",
+  "trial": "79_36",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 79_36"
+ },
+ {
+  "id": "cmu-62-12",
+  "move": "hard-day-drink",
+  "name": "Hard day's drink",
+  "action": "hard day's drink",
+  "phrases": [
+   "has a drink"
+  ],
+  "source": "cmu",
+  "trial": "62_12",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 62_12"
+ },
+ {
+  "id": "cmu-56-02",
+  "move": "vignettes",
+  "name": "Yawns, stretches, grabs",
+  "action": "yawns, stretches, grabs",
+  "phrases": [
+   "grabs angrily"
+  ],
+  "source": "cmu",
+  "trial": "56_02",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 56_02"
+ },
+ {
+  "id": "cmu-17-01",
+  "move": "angry-walk",
+  "name": "Walks angrily",
+  "action": "walks angrily",
+  "phrases": [
+   "storms around"
+  ],
+  "source": "cmu",
+  "trial": "17_01",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 17_01",
+  "face": [
+   [
+    0.05,
+    {
+     "brows": "angry"
+    }
+   ],
+   [
+    0.95,
+    {}
+   ]
+  ]
+ },
+ {
+  "id": "cmu-82-10",
+  "move": "sad-walk",
+  "name": "Sad walk",
+  "action": "sad walk",
+  "phrases": [
+   "walks sadly"
+  ],
+  "source": "cmu",
+  "trial": "82_10",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 82_10",
+  "face": [
+   [
+    0.05,
+    {
+     "brows": "worried"
+    }
+   ],
+   [
+    0.95,
+    {}
+   ]
+  ]
+ },
+ {
+  "id": "cmu-82-12",
+  "move": "happy-walk",
+  "name": "Happy walk",
+  "action": "happy walk",
+  "phrases": [
+   "walks happily"
+  ],
+  "source": "cmu",
+  "trial": "82_12",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 82_12",
+  "face": [
+   [
+    0.05,
+    {
+     "smile": 0.5
+    }
+   ],
+   [
+    0.95,
+    {}
+   ]
+  ]
+ },
+ {
+  "id": "cmu-91-14",
+  "move": "depressed-walk",
+  "name": "Depressed walk",
+  "action": "depressed walk",
+  "phrases": [
+   "trudges"
+  ],
+  "source": "cmu",
+  "trial": "91_14",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 91_14",
+  "face": [
+   [
+    0.05,
+    {
+     "brows": "worried"
+    }
+   ],
+   [
+    0.95,
+    {}
+   ]
+  ]
+ },
+ {
+  "id": "cmu-91-20",
+  "move": "shy-walk",
+  "name": "Shy walk",
+  "action": "shy walk",
+  "phrases": [
+   "walks shyly"
+  ],
+  "source": "cmu",
+  "trial": "91_20",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 91_20",
+  "face": [
+   [
+    0.05,
+    {
+     "brows": "worried"
+    }
+   ],
+   [
+    0.95,
+    {}
+   ]
+  ]
+ },
+ {
+  "id": "cmu-104-12",
+  "move": "excited-walk",
+  "name": "Excited walk",
+  "action": "excited walk",
+  "phrases": [
+   "walks excitedly"
+  ],
+  "source": "cmu",
+  "trial": "104_12",
+  "page": "https://mocap.cs.cmu.edu/",
+  "title": "CMU trial 104_12",
+  "face": [
+   [
+    0.05,
+    {
+     "smile": 0.6
+    }
+   ],
+   [
+    0.95,
+    {}
+   ]
+  ]
+ },
+ {
+  "id": "ual-idle-talking-loop",
+  "move": "ual-talk",
+  "name": "Talking (idle)",
+  "action": "talking (idle)",
+  "phrases": [
+   "talks",
+   "chats"
+  ],
+  "source": "quaternius",
+  "anim": "Idle_Talking_Loop",
+  "page": "https://quaternius.com/packs/universalanimationlibrary.html",
+  "title": "Quaternius UAL: Idle_Talking_Loop"
+ },
+ {
+  "id": "ual-idle-loop",
+  "move": "ual-idle",
+  "name": "Standing idle",
+  "action": "standing idle",
+  "phrases": [
+   "stands"
+  ],
+  "source": "quaternius",
+  "anim": "Idle_Loop",
+  "page": "https://quaternius.com/packs/universalanimationlibrary.html",
+  "title": "Quaternius UAL: Idle_Loop"
+ },
+ {
+  "id": "ual-sitting-enter",
+  "move": "ual-sit-down",
+  "name": "Sits down",
+  "action": "sits down",
+  "phrases": [
+   "sits down"
+  ],
+  "source": "quaternius",
+  "anim": "Sitting_Enter",
+  "page": "https://quaternius.com/packs/universalanimationlibrary.html",
+  "title": "Quaternius UAL: Sitting_Enter"
+ },
+ {
+  "id": "ual-sitting-talking-loop",
+  "move": "ual-sit-talk",
+  "name": "Talks seated",
+  "action": "talks seated",
+  "phrases": [
+   "talks seated"
+  ],
+  "source": "quaternius",
+  "anim": "Sitting_Talking_Loop",
+  "page": "https://quaternius.com/packs/universalanimationlibrary.html",
+  "title": "Quaternius UAL: Sitting_Talking_Loop"
+ },
+ {
+  "id": "ual-sitting-idle-loop",
+  "move": "ual-sit-idle",
+  "name": "Sits idle",
+  "action": "sits idle",
+  "phrases": [
+   "sits"
+  ],
+  "source": "quaternius",
+  "anim": "Sitting_Idle_Loop",
+  "page": "https://quaternius.com/packs/universalanimationlibrary.html",
+  "title": "Quaternius UAL: Sitting_Idle_Loop"
+ },
+ {
+  "id": "ual-sitting-exit",
+  "move": "ual-stand-up",
+  "name": "Stands up",
+  "action": "stands up",
+  "phrases": [
+   "stands up"
+  ],
+  "source": "quaternius",
+  "anim": "Sitting_Exit",
+  "page": "https://quaternius.com/packs/universalanimationlibrary.html",
+  "title": "Quaternius UAL: Sitting_Exit",
+  "sit": true
+ },
+ {
+  "id": "ual-walk-loop",
+  "move": "ual-walk",
+  "name": "Walk",
+  "action": "walk",
+  "phrases": [
+   "walks"
+  ],
+  "source": "quaternius",
+  "anim": "Walk_Loop",
+  "page": "https://quaternius.com/packs/universalanimationlibrary.html",
+  "title": "Quaternius UAL: Walk_Loop"
+ },
+ {
+  "id": "ual-walk-formal-loop",
+  "move": "ual-walk-formal",
+  "name": "Formal walk",
+  "action": "formal walk",
+  "phrases": [
+   "walks formally"
+  ],
+  "source": "quaternius",
+  "anim": "Walk_Formal_Loop",
+  "page": "https://quaternius.com/packs/universalanimationlibrary.html",
+  "title": "Quaternius UAL: Walk_Formal_Loop"
+ },
+ {
+  "id": "ual-dance-loop",
+  "move": "ual-dance",
+  "name": "Dance",
+  "action": "dance",
+  "phrases": [
+   "dances"
+  ],
+  "source": "quaternius",
+  "anim": "Dance_Loop",
+  "page": "https://quaternius.com/packs/universalanimationlibrary.html",
+  "title": "Quaternius UAL: Dance_Loop",
+  "face": [
+   [
+    0.05,
+    {
+     "smile": 0.6
+    }
+   ],
+   [
+    0.95,
+    {}
+   ]
+  ]
+ },
+ {
+  "id": "ual-interact",
+  "move": "ual-interact",
+  "name": "Reaches and presses",
+  "action": "reaches and presses",
+  "phrases": [
+   "presses the button"
+  ],
+  "source": "quaternius",
+  "anim": "Interact",
+  "page": "https://quaternius.com/packs/universalanimationlibrary.html",
+  "title": "Quaternius UAL: Interact"
+ },
+ {
+  "id": "ual-pickup-table",
+  "move": "ual-pickup",
+  "name": "Picks up from table",
+  "action": "picks up from table",
+  "phrases": [
+   "picks it up"
+  ],
+  "source": "quaternius",
+  "anim": "PickUp_Table",
+  "page": "https://quaternius.com/packs/universalanimationlibrary.html",
+  "title": "Quaternius UAL: PickUp_Table"
+ },
+ {
+  "id": "ual-hit-head",
+  "move": "ual-hit-head",
+  "name": "Gets hit (head)",
+  "action": "gets hit (head)",
+  "phrases": [
+   "gets hit"
+  ],
+  "source": "quaternius",
+  "anim": "Hit_Head",
+  "page": "https://quaternius.com/packs/universalanimationlibrary.html",
+  "title": "Quaternius UAL: Hit_Head"
+ },
+ {
+  "id": "ual-hit-chest",
+  "move": "ual-hit-chest",
+  "name": "Gets hit (chest)",
+  "action": "gets hit (chest)",
+  "phrases": [
+   "is struck"
+  ],
+  "source": "quaternius",
+  "anim": "Hit_Chest",
+  "page": "https://quaternius.com/packs/universalanimationlibrary.html",
+  "title": "Quaternius UAL: Hit_Chest"
+ },
+ {
+  "id": "ual-spell-simple-shoot",
+  "move": "ual-spell",
+  "name": "Casts a spell",
+  "action": "casts a spell",
+  "phrases": [
+   "casts a spell"
+  ],
+  "source": "quaternius",
+  "anim": "Spell_Simple_Shoot",
+  "page": "https://quaternius.com/packs/universalanimationlibrary.html",
+  "title": "Quaternius UAL: Spell_Simple_Shoot"
+ },
+ {
+  "id": "ual-sword-attack",
+  "move": "ual-sword",
+  "name": "Sword attack",
+  "action": "sword attack",
+  "phrases": [
+   "swings a sword"
+  ],
+  "source": "quaternius",
+  "anim": "Sword_Attack",
+  "page": "https://quaternius.com/packs/universalanimationlibrary.html",
+  "title": "Quaternius UAL: Sword_Attack"
+ },
+ {
+  "id": "ual-punch-jab",
+  "move": "ual-jab",
+  "name": "Jab",
+  "action": "jab",
+  "phrases": [
+   "punches"
+  ],
+  "source": "quaternius",
+  "anim": "Punch_Jab",
+  "page": "https://quaternius.com/packs/universalanimationlibrary.html",
+  "title": "Quaternius UAL: Punch_Jab"
+ },
+ {
+  "id": "ual-death01",
+  "move": "ual-death",
+  "name": "Dies",
+  "action": "dies",
+  "phrases": [
+   "dies"
+  ],
+  "source": "quaternius",
+  "anim": "Death01",
+  "page": "https://quaternius.com/packs/universalanimationlibrary.html",
+  "title": "Quaternius UAL: Death01"
+ },
+ {
+  "id": "ual-fixing-kneeling",
+  "move": "ual-kneel-fix",
+  "name": "Kneels and fixes",
+  "action": "kneels and fixes",
+  "phrases": [
+   "kneels"
+  ],
+  "source": "quaternius",
+  "anim": "Fixing_Kneeling",
+  "page": "https://quaternius.com/packs/universalanimationlibrary.html",
+  "title": "Quaternius UAL: Fixing_Kneeling"
+ }
+]

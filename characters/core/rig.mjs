@@ -125,7 +125,9 @@ export function solveRig(card, look, state = {}) {
     // swing forwards (+x); otherwise the front arm swings right, the back left
     const dir = side > 0.5 ? 1 : front ? 1 : -1;
     const xs = side > 0.5 ? 1 : front ? 1 : lerp(1, 0.8, turn);
-    const shX = side > 0.5 ? (front ? 0.004 : -0.004) : (front ? sx * 0.95 : -sx * 0.95 * lerp(1, 0.85, turn));
+    // turned towards +x the −x shoulder comes towards the camera and keeps its width; the +x one
+    // goes round the far side of the chest and tucks in (Ak, 5 Nov 2026: the near shoulder was hiding)
+    const shX = side > 0.5 ? (front ? 0.004 : -0.004) : (front ? sx * 0.95 * lerp(1, 0.82, turn) : -sx * 0.95);
     // an arm raised high lifts its shoulder: the body takes part, not just the arm
     const lift = Math.max(0, Math.min(1, (a1 - 1.25) / 1.4)) * 0.014 * h;
     const sh = [shX + shoulderLean, sy + 0.02 - lift];
@@ -193,13 +195,17 @@ export function solveRig(card, look, state = {}) {
   const ex = R * 0.33 * (card.eyeSpacing ?? 1);
   // eyes relative to the head centre; the far eye squeezes and then hides
   const eyes = [
-    // the far eye slides back round the head and narrows to half an eye before it hides
-    { x: faceDX - ex * lerp(1, 0.86, turn) * (1 - side * 0.25), y: -R * 0.02, scaleX: lerp(1, 0.72, turn) * (1 - side * 1.1), visible: side < 0.7, far: true },
-    { x: faceDX + ex * (1 - side * 0.55), y: -R * 0.02, scaleX: 1, visible: true, far: false },
+    // TURNED THE RIGHT WAY ROUND (Ak, 5 Nov 2026: "the eye closest to the camera should not be
+    // smaller"). A head turning towards +x brings its −x eye towards the camera: that eye stays
+    // full size and, in profile, is the one eye we see near the front edge. The +x eye goes
+    // round the far side of the head: it narrows and hides.
+    // in profile it settles a little in from the front edge (5 Nov 2026: it sat on the edge of the face)
+    { x: faceDX + ex * lerp(-lerp(1, 0.9, turn), 0.05, side), y: -R * 0.02, scaleX: 1 - side * 0.12, visible: true, far: false },
+    { x: faceDX + ex * lerp(1, 0.86, turn) * (1 - side * 0.25), y: -R * 0.02, scaleX: lerp(1, 0.7, turn) * (1 - side * 1.1), visible: side < 0.7, far: true },
   ];
   const face = {
     eyes,
-    mouth: { x: faceDX + R * 0.05 * side, y: R * 0.45, w: 1 - side * 0.45 },
+    mouth: { x: faceDX + R * 0.05 * side, y: R * 0.45, w: (1 - turn * 0.18) * (1 - side * 0.4) },
     nose: { x: faceDX + R * (0.02 + 0.35 * side), y: R * 0.18 },
     ears: [
       // the far ear stays in view as the head turns (in profile it is the one ear we see)

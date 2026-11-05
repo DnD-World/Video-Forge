@@ -18,7 +18,7 @@ import { TAU } from "./pen.mjs";
 
 let edgeCanvas = null;
 
-export function applyLayer(look, dst, L, lc, { w, h, S, ink = "#3ef0ff" }) {
+export function applyLayer(look, dst, L, lc, { w, h, S, ink = "#3ef0ff", at = [0, 0] }) {
   switch (look.layer) {
     case "sticker": {
       // a white edge: the figure stamped 16 times around a circle, made white
@@ -45,7 +45,8 @@ export function applyLayer(look, dst, L, lc, { w, h, S, ink = "#3ef0ff" }) {
       dst.drawImage(L, 0, 0);
       return;
     case "paper":
-      lc.save(); lc.globalCompositeOperation = "source-atop"; lc.globalAlpha = 0.08; lc.fillStyle = grainPattern(lc); lc.fillRect(0, 0, w, h); lc.restore();
+      // the fibres belong to the paper: the grain moves with the figure, not with the screen (Ak, 5 Nov 2026)
+      lc.save(); lc.globalCompositeOperation = "source-atop"; lc.globalAlpha = 0.08; lc.translate(at[0], at[1]); lc.fillStyle = grainPattern(lc); lc.fillRect(-at[0], -at[1], w, h); lc.restore();
       dst.save(); dst.shadowColor = "rgba(40,30,20,0.35)"; dst.shadowBlur = S * 0.02; dst.shadowOffsetX = S * 0.008; dst.shadowOffsetY = S * 0.012; dst.drawImage(L, 0, 0); dst.restore();
       return;
     case "riso":

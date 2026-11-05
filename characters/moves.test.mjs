@@ -25,6 +25,7 @@ test("the starter shelf is clean: no problems, unique ids, no phrase used twice"
   assert.deepEqual(problems, []);
   assert.ok(Object.keys(SHELF).length >= 20);
   const seen = new Map();
+  assert.deepEqual(buildShelf([...Object.values(SHELF)]).problems, [], "starter + recorded: no two moves share an id");
   for (const m of Object.values(SHELF)) for (const p of m.phrases) {
     assert.ok(!seen.has(p), `"${p}" is a phrase of both ${seen.get(p)} and ${m.id}`);
     seen.set(p, m.id);
@@ -124,6 +125,19 @@ test("script tags pick the move, its style, its prop and who it is for", () => {
   assert.equal(read("[hands on hips]").move, "hands-on-hips");
   assert.equal(read("[κάθεται]").move, "sit-down");
   assert.equal(read("[laughs]"), null);
+  assert.equal(read("[points at Maria]").move, "point", "a recorded move's phrase never beats a starter one");
+});
+
+test("recorded moves never change what a starter tag does", () => {
+  const starter = buildShelf(SHELF_DATA).shelf;
+  const cast = [{ id: "s1", label: "Maria" }];
+  const tags = Object.values(starter).flatMap((m) => m.phrases).flatMap((p) => [`[${p}]`, `[${p} at Maria]`, `[${p} to Maria]`, `[${p} slowly]`]);
+  for (const t of [...tags, "[laughs]", "[cries]", "[gasps]", "[sobs]", "[sighs]"]) {
+    assert.deepEqual(readMoveTag(t, SHELF, { props: PROP_NAMES, cast }), readMoveTag(t, starter, { props: PROP_NAMES, cast }), t);
+  }
+  // and the recorded moves still answer to their own words
+  assert.equal(readMoveTag("[pounds the table]", SHELF).move, "pound-point");
+  assert.equal(readMoveTag("[storms around]", SHELF).move, "angry-walk");
 });
 
 test("every move draws in every look without bad numbers (hands, props, lifted bodies)", () => {
@@ -134,4 +148,11 @@ test("every move draws in every look without bad numbers (hands, props, lifted b
     drawCharacter(rc, card, { look: L, S: 500, x: 300, y: 560, state: { t: u, view: m.id.startsWith("walk") ? 2 : 0, joints: { ...r.joints, w: 1 }, hands: r.hands, props, smile: r.face?.smile ?? 0 } });
     assert.equal(rc.bad, 0, `${L.id} ${m.id}: drew a NaN`);
   }
+});
+
+test("docs/MOVE-TAGS.md lists every tag the shelf answers to (run node tools/move-tags.mjs)", async () => {
+  const { moveTagsMarkdown } = await import("../tools/move-tags.mjs");
+  const fs = await import("node:fs");
+  const doc = fs.readFileSync(new URL("../docs/MOVE-TAGS.md", import.meta.url), "utf8").split("\r\n").join("\n");
+  assert.equal(doc, moveTagsMarkdown(), "docs/MOVE-TAGS.md is out of date: run node tools/move-tags.mjs");
 });

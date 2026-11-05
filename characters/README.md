@@ -50,6 +50,10 @@ Builds `characters/samples/engine.html`: every look live, with view, pose, frami
 
 ## Things worth knowing
 
+- **Script tags.** Every tag a drawn character answers to is in [docs/MOVE-TAGS.md](../docs/MOVE-TAGS.md), generated from the shelf (`node tools/move-tags.mjs`; a test keeps it current). Recorded moves (`moves/acted`) never take over a starter tag: `trimActedPhrases` drops clashing phrases, and voice sounds like `[laughs]` stay with the voice.
+- **Near and far.** Turned towards +x, index 0 is the near side: `face.eyes[0]`, `arms[0]`, `legs[0]`. Pick by the `far` flag, not the index, for anything that must stay visible.
+- **Modesty.** Every hem, physics or follow-through, is capped by `HEM_LIFT_MAX` (1% of body height) and `HEM_SWAY_MAX` (2%) in `core/follow.mjs`.
+
 - **Readable size.** A full-body figure is small: at 30% of a 1080-wide video its mouth is ~6 px on a phone. `readableSize(card, look, framing)` gives the smallest size where the mouth reads; the form should warn below it. Waist and head framings read much smaller.
 - **Profile looks** (Greek vase, shadow puppet, Karagiozis) turn to full profile when two characters talk (`facingView(..., { dialogue: 2 })`).
 - **Pure functions of time.** No clock, no `Math.random`: line boil and grain use a hash of the frame step, so the preview and every render worker agree.

@@ -138,7 +138,7 @@ export function describeCard(card, shared = {}) {
   bits.push(`${[height, build].filter(Boolean).join(", ") || "Average"} build${card.muscle >= 0.5 ? ", strong" : ""}${card.posture !== "upright" ? `, ${card.posture === "hunch" ? "hunched" : "slouching"}` : ""}.`.replace(/^./, (c) => c.toUpperCase()));
   const hair = card.hair === "bald" ? "bald" : `${colourName(card.hairColor)} ${card.hair} hair`.trim();
   const hc = colourName(card.hairColor);
-  const face = [card.beard !== "none" ? `a ${card.beard} ${hc} beard` : "", card.moustache !== "none" ? `a ${card.moustache} ${hc} moustache` : "", card.freckles ? "freckles" : "", card.cheeks ? "rosy cheeks" : ""].filter(Boolean);
+  const face = [card.beard !== "none" ? `a ${card.beard} ${hc} beard` : "", card.moustache !== "none" ? `a ${card.moustache} ${hc} moustache` : "", card.freckles ? "freckles" : "", card.cheeks ? "rosy cheeks" : "", card.darkCircles ? "dark circles under the eyes" : "", card.bruise === "eye" ? "a black eye" : card.bruise === "cheek" ? "a bruise on one cheek" : "",card.makeup && card.makeup !== "none" ? `${card.makeup} eye makeup` : ""].filter(Boolean);
   bits.push(`${hair.replace(/^./, (c) => c.toUpperCase())}${face.length ? `, ${face.join(", ")}` : ""}.`);
   const wear = (card.wear ?? []).map((w) => {
     const it = itemById(w.id);

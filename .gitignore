@@ -65,3 +65,12 @@ characters/checks/
 
 # Ak's private photos
 nelly/
+
+# Built pages (5 Nov 2026): rebuilt from source with `npm run build:pages`, so they always
+# match the code and aren't reviewed twice. character-sources.html is hand-written and stays.
+characters/samples/capture.html
+characters/samples/lab2d.html
+characters/samples/motion-library.html
+characters/samples/natural-movement.html
+characters/samples/redflag-cast.html
+characters/samples/redflag.html

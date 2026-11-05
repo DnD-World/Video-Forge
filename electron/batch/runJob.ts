@@ -115,6 +115,8 @@ export interface JobSpeaker {
 }
 
 export interface BatchJob {
+  /** The set the speakers sit in (characters/sets/sets.mjs); none if absent. */
+  scene?: { id: string; title?: string; names?: string[] } | null;
   /** "Made with Video Forge" (remotion/AiBadge.tsx). On unless false. */
   aiLabel?: boolean;
   /** A job run has nobody at the window to ask, so paid voices (ElevenLabs) are
@@ -433,6 +435,9 @@ export async function runBatchJob(
     }
     for (const sp of speakers) sp.outlineShape = job.outlineShape;
     onProgress(2, `Frame shape forced to "${job.outlineShape}" for all speakers`);
+  } else if (job.scene) {
+    // seated at a desk, a circle round each head reads as a target, not a frame
+    for (const sp of speakers) sp.outlineShape = "none";
   }
 
   // A preset built for a different-sized cast is the exact mistake that put
@@ -921,6 +926,7 @@ export async function runBatchJob(
       : null,
     glass: job.glass ?? null,
     aiLabel: job.aiLabel ?? true,
+    scene: job.scene ?? null,
   } as RenderJob;
 
   const result = await renderVideo(renderJob, ctx);

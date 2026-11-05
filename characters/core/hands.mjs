@@ -54,8 +54,15 @@ export function drawHand(G, arm, shape, { relaxed }) {
     G.line(skin, fw / S, { role: "skin" });
   };
 
+  // an open or waving hand turns its thumb towards the face, as a real wave does (Ak, 5 Nov 2026);
+  // a finger at +a lies on the forearm's (−sin, cos) side: flip the hand if the head is the other way
+  let flip = 1;
+  if ((shape === "open" || shape === "wave") && sk?.head) {
+    const vx = sk.head[0] * S - hx, vy = sk.head[1] * S - hy;
+    if (vx * -Math.sin(ang) + vy * Math.cos(ang) < 0) flip = -1;
+  }
   // fingers behind the palm first, so the palm's outline sits over their roots
-  for (const [a, len, up] of FINGERS[shape]) finger(a, len, up);
+  for (const [a, len, up] of FINGERS[shape]) finger(a * flip, len, up);
   if (shape === "grip") {
     // a C: the palm with a gap where the prop goes
     pen.ellipse(hx, hy, palm * 1.05, palm * 1.05, ang, 0.9, Math.PI * 2 - 0.9);

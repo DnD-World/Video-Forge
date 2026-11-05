@@ -10,6 +10,7 @@
 // with setCanvasFactory. Nothing here reads the clock or Math.random.
 // ---------------------------------------------------------------------------
 
+import { clayK } from "./clay.mjs";
 import { hash, hexToRgb, luminance, mix, nearest, shade, toHex } from "./math.mjs";
 import { TAU } from "./pen.mjs";
 
@@ -165,6 +166,8 @@ export function paint(G, fill0, { role = "cloth", feature = false, outline, noSh
       ctx.globalAlpha = 1;
       if (role !== "skin" && role !== "eye") { ctx.fillStyle = punchPattern(ctx, look.light ?? "#fff4d2", !!look.cutouts); ctx.fill(); }
       ctx.restore();
+    } else if (look.form && !feature && role !== "eye") {
+      formFill(G, fill, role);
     } else {
       ctx.fillStyle = fill; ctx.fill();
     }
@@ -183,7 +186,8 @@ export function paint(G, fill0, { role = "cloth", feature = false, outline, noSh
       const b = pen.bounds();
       const cx = b ? (b.x0 + b.x1) / 2 : 0;
       if (look.inner) { ctx.strokeStyle = shade(fill, 0.45); ctx.lineWidth = ow * S * 2.6; ctx.stroke(); }
-      if (look.shade && role !== "skin") { ctx.fillStyle = `rgba(20,10,40,${look.shade})`; ctx.fillRect(cx, -1e5, 2e5, 2e5); }
+      // fake 3D lights the shape itself, so the look's flat half-shade steps aside
+      if (look.shade && role !== "skin" && !look.form) { ctx.fillStyle = `rgba(20,10,40,${look.shade})`; ctx.fillRect(cx, -1e5, 2e5, 2e5); }
       if (look.halftone) { ctx.fillStyle = dotPattern(ctx, role === "skin" ? 0.07 : dotAlpha); ctx.fillRect(cx, -1e5, 2e5, 2e5); }
       ctx.restore();
     }
@@ -212,5 +216,102 @@ export function strokeLine(G, color, width, { role = "cloth", outline } = {}) {
     ctx.strokeStyle = G.ink; ctx.lineWidth = (width + ow * 2) * S; ctx.stroke();
   }
   if (look.fill === "none") { ctx.strokeStyle = G.ink; ctx.lineWidth = Math.max(ow, width * 0.5) * S; ctx.stroke(); return; }
+  if (look.form && look.fill !== "hatch") { formStroke(G, c, width); return; }
   ctx.strokeStyle = look.fill === "hatch" ? G.ink : c; ctx.lineWidth = width * S; ctx.stroke();
+}
+
+// ---- fake 3D (2D lab, 4 Nov 2026: "can we imitate a 3D look with fake shading?") -------------
+// Each part is shaded as what it is, from the shape the engine already knows (not
+// guessed from the outline): a filled shape gets a lit side, a core shadow on the
+// far side, a soft bounce of light at its lower edge and a faint rim where it turns
+// away; a limb is a soft round tube; every part casts a soft shadow on what is behind
+// it (that is what makes parts read as in front of each other); hair gets a shine.
+// Light comes from the upper left of the SCREEN (a mirrored figure is lit the same).
+//
+// look.form is the strength: 1 a full toy-like 3D, 0.5 a hint of 3D (Ak, 4 Nov: "less
+// aggressive and more detailed"). Small parts (a pocket, a button) get almost none.
+const lightOf = (G) => [-0.55 * (G.fsx ?? 1), -0.83];
+const formK = (look) => (typeof look.form === "number" ? look.form : 1);
+// arms, hands, legs and feet can take less (look.formLimbs, set while drawArm / the legs draw)
+const limbK = (G) => (G.limbPass && typeof G.look.formLimbs === "number" ? G.look.formLimbs : 1);
+
+function formFill(G, fill, role) {
+  const { ctx, pen, S, look } = G;
+  // hair takes a little more of the 3D than the rest (Ak, 5 Nov 2026: "a bit more for the hair, not the arms and legs")
+  const b = pen.bounds(), k = Math.min(1, formK(look) * limbK(G) * (role === "hair" ? 1.45 : 1));
+  const r = b ? Math.max(b.x1 - b.x0, b.y1 - b.y0) / 2 : 0;
+  const size = Math.min(1, Math.max(0, (r / S - 0.045) / 0.08)); // a pocket or a button ≈ 0, a head or a dress = 1
+  // the soft shadow this part throws on what is behind it
+  ctx.save();
+  ctx.shadowColor = `rgba(40,12,40,${0.26 * k * (0.35 + 0.65 * size)})`; ctx.shadowBlur = S * 0.014 * (0.5 + 0.5 * k);
+  ctx.shadowOffsetX = S * 0.004 * k; ctx.shadowOffsetY = S * 0.006 * k; // canvas shadows ignore the mirror: always down-right
+  ctx.fillStyle = fill; ctx.fill();
+  ctx.restore();
+  if (!b || r < 1.5 || size <= 0) return;
+  const q = k * size;
+  const [lx, ly] = lightOf(G);
+  const w = b.x1 - b.x0, h = b.y1 - b.y0, cx = (b.x0 + b.x1) / 2, cy = (b.y0 + b.y1) / 2;
+  ctx.save(); ctx.clip();
+  // core shadow: dark on the side away from the light, the lit side clean
+  const g = ctx.createRadialGradient(cx + lx * r * 0.45, cy + ly * r * 0.45, r * 0.15, cx + lx * r * 0.2, cy + ly * r * 0.2, r * 1.25);
+  g.addColorStop(0, `rgba(255,248,240,${0.16 * q})`); g.addColorStop(0.45, "rgba(255,255,255,0)");
+  // clay: skin warms to a soft red where the light turns to shadow (light scattering in skin)
+  if (look.formDetail && role === "skin") g.addColorStop(0.64, `rgba(225,70,60,${0.14 * size * 0.5 * clayK(look)})`);
+  g.addColorStop(0.78, `rgba(50,16,60,${0.15 * q})`); g.addColorStop(1, `rgba(50,16,60,${0.32 * q})`);
+  ctx.fillStyle = g; ctx.fillRect(b.x0 - 2, b.y0 - 2, w + 4, h + 4);
+  // bounce light: the floor and the room lift the lower edge a little
+  const bl = ctx.createLinearGradient(0, b.y1, 0, b.y1 - h * 0.22);
+  bl.addColorStop(0, `rgba(255,244,236,${0.1 * q})`); bl.addColorStop(1, "rgba(255,244,236,0)");
+  ctx.fillStyle = bl; ctx.fillRect(b.x0 - 2, b.y0 - 2, w + 4, h + 4);
+  // a faint rim of reflected light just inside the edge that turns away from the light
+  // (the path is rebuilt shifted: a canvas path keeps the transform it was built under, so
+  // translating after building it moved nothing — code review, 5 Nov 2026)
+  ctx.filter = `blur(${Math.max(1, S * 0.004)}px)`;
+  if (pen.last) pen.trace(pen.last.q, pen.last.closed, -lx * S * 0.006, -ly * S * 0.006);
+  ctx.strokeStyle = `rgba(255,246,240,${0.14 * q})`; ctx.lineWidth = S * 0.007; ctx.lineJoin = "round"; ctx.stroke();
+  if (role === "hair") {
+    // the shine band: a soft arc across the upper third
+    ctx.strokeStyle = `rgba(255,255,255,${0.3 * k})`; ctx.lineWidth = Math.max(1.5, h * 0.06); ctx.lineCap = "round";
+    ctx.filter = `blur(${Math.max(1, h * 0.015)}px)`;
+    ctx.beginPath(); ctx.ellipse(cx + lx * w * 0.08, cy - h * 0.12, w * 0.32, h * 0.22, 0, Math.PI * 1.1, Math.PI * 1.75); ctx.stroke();
+  }
+  ctx.restore();
+  // the shine replaced the canvas path: put the shape back, so its outline is drawn round it
+  if (pen.last) pen.trace(pen.last.q, pen.last.closed);
+}
+
+/**
+ * A limb as a soft round tube: the plain stroke, then, kept INSIDE the limb by
+ * clipping to its outline, one blurred shadow down the side away from the light and
+ * a faint blurred light down the near side (no hard bands, so no double lines).
+ */
+function formStroke(G, c, width) {
+  const { ctx, S, pen, look } = G;
+  const k = formK(look) * limbK(G), [lx, ly] = lightOf(G), w = width * S;
+  ctx.save();
+  ctx.shadowColor = `rgba(40,12,40,${0.22 * k})`; ctx.shadowBlur = S * 0.012 * (0.5 + 0.5 * k); ctx.shadowOffsetX = S * 0.003 * k; ctx.shadowOffsetY = S * 0.005 * k;
+  ctx.strokeStyle = c; ctx.lineWidth = w; ctx.stroke();
+  ctx.restore();
+  const q = pen.last?.q;
+  if (!q || q.length < 2 || w < 3) return;
+  ctx.save();
+  // the limb's outline as a clip: a capsule round every segment (all wound the same way, so they add up)
+  ctx.beginPath();
+  for (let i = 1; i < q.length; i++) {
+    const [ax, ay] = q[i - 1], [bx, by] = q[i], L = Math.hypot(bx - ax, by - ay) || 1;
+    const nx = (-(by - ay) / L) * w / 2, ny = ((bx - ax) / L) * w / 2;
+    ctx.moveTo(ax - nx, ay - ny); ctx.lineTo(bx - nx, by - ny); ctx.lineTo(bx + nx, by + ny); ctx.lineTo(ax + nx, ay + ny); ctx.closePath();
+  }
+  for (const [x, y] of [q[0], q[q.length - 1]]) { ctx.moveTo(x + w / 2, y); ctx.arc(x, y, w / 2, 0, Math.PI * 2); }
+  ctx.clip();
+  // the shadow side and the lit side: the centreline shifted away from / towards the light
+  // (shifting the points, not the canvas: a path keeps the transform it was built under)
+  ctx.lineCap = "round"; ctx.lineJoin = "round";
+  ctx.filter = `blur(${Math.max(1, w * 0.18)}px)`;
+  pen.trace(q, false, -lx * w * 0.34, -ly * w * 0.34);
+  ctx.strokeStyle = `rgba(45,14,50,${0.3 * k})`; ctx.lineWidth = w * 0.5; ctx.stroke();
+  pen.trace(q, false, lx * w * 0.26, ly * w * 0.26);
+  ctx.strokeStyle = `rgba(255,248,236,${0.16 * k})`; ctx.lineWidth = w * 0.3; ctx.stroke();
+  ctx.restore();
+  pen.trace(q, false);
 }

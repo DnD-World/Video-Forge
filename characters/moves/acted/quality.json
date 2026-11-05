@@ -1,0 +1,332 @@
+{
+ "cmu-13-14": {
+  "frames": 606,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-79-70": {
+  "frames": 191,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-79-69": {
+  "frames": 205,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-80-43": {
+  "frames": 245,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-142-08": {
+  "frames": 759,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-79-71": {
+  "frames": 270,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-142-15": {
+  "frames": 1344,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-142-05": {
+  "frames": 1683,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-79-72": {
+  "frames": 239,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-80-45": {
+  "frames": 402,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-79-73": {
+  "frames": 222,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-142-16": {
+  "frames": 1455,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-120-15": {
+  "frames": 368,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-142-19": {
+  "frames": 1124,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-80-48": {
+  "frames": 288,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-18-10": {
+  "frames": 452,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-19-10": {
+  "frames": 452,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-22-21": {
+  "frames": 98,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-18-08": {
+  "frames": 522,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-111-25": {
+  "frames": 73,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-113-16": {
+  "frames": 175,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-141-21": {
+  "frames": 68,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-111-37": {
+  "frames": 81,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-141-16": {
+  "frames": 75,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-13-26": {
+  "frames": 757,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-111-32": {
+  "frames": 187,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-13-04": {
+  "frames": 1190,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-13-05": {
+  "frames": 1101,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-14-30": {
+  "frames": 644,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-74-12": {
+  "frames": 76,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-22-03": {
+  "frames": 203,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-13-01": {
+  "frames": 579,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-113-15": {
+  "frames": 239,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-143-18": {
+  "frames": 188,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-40-10": {
+  "frames": 1554,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-141-20": {
+  "frames": 191,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-137-28": {
+  "frames": 931,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-137-32": {
+  "frames": 1255,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-137-19": {
+  "frames": 1331,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-79-36": {
+  "frames": 130,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-62-12": {
+  "frames": 247,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-56-02": {
+  "frames": 855,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-17-01": {
+  "frames": 1577,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-82-10": {
+  "frames": 141,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-82-12": {
+  "frames": 101,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-91-14": {
+  "frames": 693,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-91-20": {
+  "frames": 694,
+  "arms": 1,
+  "feet": 1
+ },
+ "cmu-104-12": {
+  "frames": 106,
+  "arms": 1,
+  "feet": 1
+ },
+ "ual-idle-talking-loop": {
+  "frames": 89,
+  "arms": 1,
+  "feet": 1
+ },
+ "ual-idle-loop": {
+  "frames": 76,
+  "arms": 1,
+  "feet": 1
+ },
+ "ual-sitting-enter": {
+  "frames": 40,
+  "arms": 1,
+  "feet": 1
+ },
+ "ual-sitting-talking-loop": {
+  "frames": 89,
+  "arms": 1,
+  "feet": 1
+ },
+ "ual-sitting-idle-loop": {
+  "frames": 51,
+  "arms": 1,
+  "feet": 1
+ },
+ "ual-sitting-exit": {
+  "frames": 32,
+  "arms": 1,
+  "feet": 1
+ },
+ "ual-walk-loop": {
+  "frames": 41,
+  "arms": 1,
+  "feet": 1
+ },
+ "ual-walk-formal-loop": {
+  "frames": 41,
+  "arms": 1,
+  "feet": 1
+ },
+ "ual-dance-loop": {
+  "frames": 31,
+  "arms": 1,
+  "feet": 1
+ },
+ "ual-interact": {
+  "frames": 61,
+  "arms": 1,
+  "feet": 1
+ },
+ "ual-pickup-table": {
+  "frames": 26,
+  "arms": 1,
+  "feet": 1
+ },
+ "ual-hit-head": {
+  "frames": 14,
+  "arms": 1,
+  "feet": 1
+ },
+ "ual-hit-chest": {
+  "frames": 11,
+  "arms": 1,
+  "feet": 1
+ },
+ "ual-spell-simple-shoot": {
+  "frames": 16,
+  "arms": 1,
+  "feet": 1
+ },
+ "ual-sword-attack": {
+  "frames": 47,
+  "arms": 1,
+  "feet": 1
+ },
+ "ual-punch-jab": {
+  "frames": 27,
+  "arms": 1,
+  "feet": 1
+ },
+ "ual-death01": {
+  "frames": 73,
+  "arms": 1,
+  "feet": 1
+ },
+ "ual-fixing-kneeling": {
+  "frames": 157,
+  "arms": 1,
+  "feet": 1
+ }
+}
