@@ -4,6 +4,134 @@ Everything a fresh session needs. `PLAN.md` holds the long history; this is the
 working state. Newest sections first. Plans: `docs/V2-PLAN.md` (Video Forge),
 `docs/FORGES-PLAN.md` (both apps; has a Status section at the bottom).
 
+## Natural movement + the new PC — 3 Nov 2026 (not committed)
+
+- **Cast picks saved.** Ak's picks are in `brands/redflag/cast.json` under each person's `chosen` (face + outfits, 118 outfits for 40 people). `geoEyes: "own"`: geo-minimal shows each person's own white eyes with lids. That is not yet wired into the `geo` look; only the cast page and the movement page honour it. Young Amber and Rousseau had no face picked, so they keep face A (see `faceNote`).
+- **Follow-through** (`characters/core/follow.mjs`): hair, hems and earrings hang off the body and trail it on springs (deterministic window, like `motion.mjs`). It only applies when `state.follow` is set, so old renders are unchanged. Draw hooks: the hair warp and hem warp in `draw.mjs`, and dangling earrings in `wardrobe.mjs`.
+- **Acted takes** (`characters/core/acted.mjs`): a MediaPipe Pose take (raw 33 points per frame, plus the `neutral` stance) becomes joints. Covered: arms, feet, crouch/jump, head tilt and nod, and an optional turn. Not covered: fingers, face, turning round. Takes are JSON and deterministic, so renders can use them.
+- **Page:** `characters/samples/natural-movement.html` (build: `node tools/natural-sheet.mjs`). Shows today, follow-through and acted by you, with camera, video file, record, save and load. Tested:
+  - with a Pexels dancer clip (`?video=` URL hook);
+  - tracking ran at about 18 frames a second in the browser pane.
+- **Not done:**
+  - the follow-through and takes are not in the Remotion render path or the episode script;
+  - no face tracking (mouth and brows);
+  - the webcam was not tested here (no camera in the pane).
+- **Motion library, v2: real motion capture (3 Nov).**
+  - Ak rejected v1 (stock clips through a body tracker): "bad, even the ones I said keep". The stock takes were deleted. The capture page and take server are kept for later.
+  - v2 uses two sources:
+    - 48 CMU Graphics Lab clips ("free for all uses"; never resell the data).
+    - 18 Quaternius Universal Animation Library clips (CC0; the free Standard zip comes from the OpenGameArt mirror because itch.io refused the download in the pane).
+  - Raw downloads are in the session scratchpad and can be fetched again. `tools/mocap-to-takes.py` runs the 3D skeleton, looks at it from the front and writes takes in the same 33-point format. `node tools/acted-shelf.mjs` turns them into moves (`acted/shelf.mjs`, 66 moves, 629 KB, now in SHELF) plus `acted/preview.json`.
+  - Deep hip drops become the rig's chair sit, with a chair prop.
+  - The list with names, phrases and face cues is `characters/moves/acted/clips.json`. Ak picks on `motion-library.html` (picks key `rf-motion-picks-v2`, line starts `RF-MOTION2`).
+  - Limits:
+    - Front view only: an arm reaching towards the camera looks short.
+    - No fingers.
+    - Some crouches (CMU 142_16 scared, 120_15 surprised) are read as sitting.
+    - The shelf adds about 630 KB to every page that loads the engine.
+  - Research: `docs/research/free-motion-libraries-2026-11.md` and `docs/research/artstation-free-2026-11.md`.
+- **3D trial in Blender (3 Nov).**
+  - Ak's verdict on v2: "palms wrong", "elbow to wrist moves way too much", "gravity non-existent, like Karagiozis". Only one wave was good. Diagnosis: flattening 3D capture to the 2D rig loses depth. Ak chose to try 3D now on the laptop rather than wait for the new PC.
+  - Blender 5.2.3 is installed portable at `C:\Users\strav\Tools\blender-5.2.3-windows-x64` (checksum verified).
+  - Character: Quaternius Universal Base Characters, Standard, CC0, at `C:\Users\strav\Tools\assets\ubc`. Itch.io only worked through BrowserOS neo. It is the Superhero_Female body with Hair_Long, flat toon colours, an inverted-hull outline, and a script-made dress (the bodice is the body pushed out, the skirt a weighted cone).
+  - `tools/blender/export_sources.py` turns CMU and Quaternius clips into 3D joint positions. `tools/blender/trial.py` aims every bone at its source joint each frame from rest; the pelvis, chest and hands are turned by hips, shoulders and thumb, and the head is set by where the face looks. It adds a chair when the hips drop, and the camera follows the hips.
+  - Renders: 480×640 EEVEE, about 0.6 s per frame; peak GPU 56 °C over 7 clips.
+  - Compare page: `characters/samples/trial3d.html` (build `node tools/trial3d-page.mjs`, videos in `characters/samples/trial3d/`).
+  - Not done: a real Chloe (face, proportions), face animation, cloth physics, finger acting. The skirt is still a stiff cone.
+- **Chloe in 3D, three looks (3 Nov).**
+  - Ak: "build Chloe, careful of the dress, it exposes her", and choose a style: clay (Hatch Studios' claymation PSA), stylized 3D, or US chibi.
+  - `tools/blender/chloe3d.py <char dir> <sources.json> <out> <clay|stylized|chibi> <clip> [still frame]` reuses `trial.py`'s retarget (importable now, plus `HEAD_SCALE`). It builds:
+    - A round cartoon head replacing the realistic one, with eyes that blink, lashes, brows, blush, a nose and a mouth that talks on a test rhythm.
+    - A hair cap plus the long hair, the headband (top half only) and gold earrings.
+  - The dress is modest by construction:
+    - The bodice is the body's surface with a crew neck and short sleeves, pushed out 1.6 cm. A plain Smooth modifier shrank it and EXPOSED her; only volume-preserving Laplacian smoothing is safe.
+    - The skirt is real cloth: waist pinned, every vertex softly pulled to its hang (otherwise it got trapped under her when she sat and stayed up), with body and lining as colliders.
+    - A dress-colour lining runs to just above the knee, so if the skirt opens only dress colour shows.
+  - Still renders must step through every frame for the cloth (jumping skips the simulation).
+  - Renders: `C:\Users\strav\Tools\assets\chloe`; batch script `render_all.sh`. Clay renders on twos; Windows ffmpeg has no glob, so frames are renumbered first.
+  - Videos are in `characters/samples/chloe3d/`; pick page `characters/samples/chloe3d.html`.
+  - GPU peaked at 74 °C over the 9 clips.
+- **New PC** (Bosgame M5, Ryzen AI Max+ 395, 128 GB): findings and the list of things the 8 GB laptop made us drop are in `docs/research/new-pc-2026-11.md`.
+
+## The Red Flag Theory family — 2 Nov 2026 (not committed)
+Ak's YouTube cartoon channel (plan: `Blacksmith/season_1_plan_and_roadmap-v2.md`)
+is built on the drawn-character engine. First 4 of 54 cards:
+`brands/redflag/characters.json` (Jake, Rita, Lucas, Amber; no look set, so one
+card serves every look; signature colours are proposals). Side-by-side page:
+`node tools/redflag-sheet.mjs` → `characters/samples/redflag.html` (every look,
+family takes turns talking, framing / facing / phone-size, ☆ Pick saved in the
+browser). Seen working in the browser pane. Gaps found: the engine's "Stained
+glass" look is only thick outlines + a gloss (no lead-line cells); no temple-only
+grey hair; no pleated skirt. Next: Ak picks a look, then signature colours, the
+other 50 cards, then the rooms (Omni loops behind, code furniture in front).
+
+Ak's verdicts (2 Nov): **flashbacks = "1930s rubber hose (early colour)"
+(`hose2`), decided.** Sunday show = paper cut-out, maybe 90s sitcom. The sitcom
+look used to force an overbite arc above every mouth, which read as two mouth
+lines: removed from the look (`looks.mjs`), now only a card with
+`mouth: "overbite"` gets it (13/13 tests pass). Jake's square head stuck out at
+the corners past his hair → oval; all four now share the same dot nose. The
+page has a hair library (all 15 styles, click to try on Lucas). **Video Forge
+gaps Ak hit:** no place in the app to browse the hair library; only 15 hair
+styles (no messy/teen-boy cuts, no temple-grey). Added the same day in
+`draw.mjs`: **messy**, **shaggy** (fringe, covers the ears), **undercut**
+(clipped sides a shade lighter, long top flopping to one side) → 18 styles.
+Seen in paper and sitcom, front view only; the engine checks' test characters
+don't use them, so 3/4 and side views are not checked yet.
+
+Later 2 Nov: Lucas = messy + **dark circles**; Amber = muted orange, Rita =
+teal (approved). New card fields `darkCircles`, `makeup` (none/soft/bold) and
+`makeupColor` in `card.mjs`, drawn in `draw.mjs` after the nose (tests pass).
+Bruises: Ak said add them (2 Nov), despite the notebook's "no on-screen
+violence" rule. New field `bruise` (none/cheek/eye = black eye), one side of
+the face, purple fading to yellow-green. The page has a "Face extras" section
+(paper, sitcom, hose2) showing every new mark. Tears are not a card field
+(they'd follow the script's feelings); not built.
+7 host cards added under `hosts` in `brands/redflag/characters.json` (Margo,
+Leo, Clara, Chloe, Judge Mara, Arthur, Lexi; signature colours proposed). The
+page has "The other days": each show's host in the notebook look + 2
+alternatives (sticker/paper/sitcom; Thu–Fri glass/noir/riso). Margo's petrol
+teal sits close to Rita's teal (never in one frame). Testing note: in the
+browser pane, a background tab doesn't animate, so screenshots look blank:
+front the tab first.
+
+Ak's fixes, 2 Nov (engine-wide, all looked at on the page):
+- Eyes with whites now rest with the upper lid a little down (`LID_REST` in
+  `draw.mjs`, curved lid); only "wide" (surprised) opens them fully.
+- Jake's eyes dot → oval (dots were off-style in paper cut-out).
+- Dark circles stronger; dark circles and bruises now drawn BEFORE the eyes,
+  so a black eye rings the eye and the eyeball stays white.
+- `long` hair redone: two curtains over the shoulders with the neck showing
+  (it read as a bib), face-framing locks, ears hidden (`hidesEars`).
+- Risograph: grain removed (only the off-register second print stays).
+- Robe: the belt crossing the front trim made a cross (judge read as a
+  priest); now a V trim, no belt. New neck item `jabot` (judge's lace
+  collar), worn by Judge Mara.
+- Other days also show pop art, geo-minimal, 1950s and stained glass.
+- Paper cut-out (no outlines): the eyelid crease is a darker skin tone, not
+  ink, unless the card has eye makeup.
+
+**Looks LOCKED (Ak, 2 Nov):** Sun + Sat paper, flashbacks hose2, Mon–Wed geo,
+Thu–Fri glass. Stored as `looks` in `brands/redflag/characters.json`; each
+card's `look` set to match; the page shows only the locked look per day.
+**Cast picker (2 Nov):** `brands/redflag/cast.json` = Season 1 roster 1–40
+(the 11 built + 29 new), each with 3 face candidates and 5–12 outfit
+candidates (signature colour kept on the main piece; new people's colours are
+proposals). Generated by a script (kept outside the repo, in the session
+scratchpad); regenerate by hand-editing cast.json from now on. Page
+`characters/samples/redflag-cast.html` (built by
+`tools/redflag-cast-sheet.mjs`): face and clothes picked separately, plus a
+geo-minimal eyes decision. Picks stay in the browser's localStorage; "Copy my picks" gives
+an `RF-PICKS {...}` line to paste to Claude. Ak picked everything (in a
+browser Claude can't read) and wants FEWER outfits for some people (fewer =
+more recognisable): when the picks arrive, keep only the picked face + outfits.
+Engine: new hair `sides` (bald top, side tufts); `sidepart` now clearly
+swept with a part line (it looked like `short`); moustaches keep a thin
+outline (stained glass turned a grey moustache black). Margo: blond with
+highlights, bright turquoise/yellow/coral clothes.
+Next: the rest of the 54-character roster (NotebookLM source 2; 1–40 have
+specs, 41–54 names only), each with outfits that keep the signature colour.
+
 ## Batch 3 merged — 30 Oct 2026
 Sets, pop-up icons, costumes, caption styles, in-between poses are in main.
 Known gaps (next, approved by Ak in this order): 1 sets in Many videos (runJob
@@ -959,3 +1087,122 @@ each part in the review studio.
   approve Nano Banana for those two.
 - After curation: put the approved Lucky and Alex in the Image Forge README
   showcase (credit already written there).
+
+## Human Generator trial, "Lucas" (2026-11-04)
+- Trial installed into Blender 5.2.3 (user prefs `%APPDATA%/Blender Foundation/Blender/5.2`), content in `C:/Users/strav/Tools/humgen/content/`. Installer, scripts and renders in `C:/Users/strav/Tools/humgen/` (pkg, scripts, audio, out). Original downloads: `D:/downloads`.
+- Scripts: `scripts/setup_hg.py` (headless install), `scripts/probe_lucas.py` (API probe), `scripts/visemes.mts` (Video Forge `buildVisemeTrack` on a WAV; bundle with esbuild), `scripts/lucas_test.py <real|soft|toon> <out> [still]`, `scripts/render_all.sh`.
+- Proven: headless creation through the `HumGen3D.Human` Python API; age 30/50/70; facial rig (43 ARKit shapes + tongue) survives Rigify (67 keys/63 drivers before and after); full finger bones; lip sync by keying face control bones (value / expression factor from `models/face_rig.json`).
+- Laptop render: 0.60-0.76 s/frame at 540x720, EEVEE 32 samples, GPU max 73 C.
+- Trial limits: only Caucasian 1 male, 1 outfit (Relaxed Fit), 1 hair, 1 shoe, 2 expressions; "Stylized" and "Big Head" body keys locked. Body acting is placeholder (breathing, nods, sway), and needs Mixamo (Ak's Adobe login).
+- Page: `characters/samples/lucas-hg.html` (videos in `lucas-hg/`). Waiting on support email answers (AMD 8060S, licence on 2 machines).
+- 2026-11-04: Ak picked **Toon**. Toon v2 in `lucas_test.py` (v1 kept as `lucas_test_v1.py`):
+  - Flat colours: median of the colour texture, or set per object (sweater blue, jeans grey, shoes navy, hair dark brown); real teeth and eyes kept.
+  - Shading: 3 soft steps (shadow, light, highlight) with a warm 2.2 mm ink outline.
+  - Head scaled 1.08; brow lift halved; wall darker.
+  - 0.67 s/frame. Video: `characters/samples/lucas-hg/lucas-toon.mp4` (v1 is `lucas-toon-v1.mp4`).
+- Next: Mixamo motion. Ak must sign in to mixamo.com in neo (Claude can't enter passwords).
+- 2026-11-04 later: Ak set toon aside ("not adequate"); the direction is as-is or smoothed.
+- **Mixamo works.**
+  - Downloads use Ak's sign-in in neo: Mixamo API calls in the page (export, then monitor, then S3 URL), fetched by curl.
+  - Clips in `C:/Users/strav/Tools/humgen/mixamo/`: talk_general (10.3 s), talk_question (3.8 s), sit_talking (45 s), nod_thoughtful.
+  - The neo page has no WebGL, so the Mixamo UI is unusable there. The API route is what works.
+- `scripts/mixamo_retarget.py`:
+  - Rest-aligned world-rotation transfer onto Rigify FK controls (body, arms, wrists, all fingers).
+  - Shoulders are left out because they hunched him.
+  - Legs use swing-only.
+  - Keys go in after the bake loop.
+- `lucas_test.py` env:
+  - `MOTION=<fbx>`, `MSTART`, `CHAIR=1` (simple wooden chair), `WIDE=1`.
+  - Floor added; focus locks to the head bone; the close-up camera follows the head at 55%.
+- Videos: `lucas-hg/talk-real.mp4`, `talk-soft.mp4`, `sit-soft.mp4` (0.71-0.76 s/frame, GPU at most 67 C).
+- Open issues:
+  - The close-up hides the hand gestures (try a medium shot).
+  - Mixamo idle download returned a stale job, so it is not fetched.
+
+## Season 1 stays 2D — movement and texture plan (2026-11-04)
+Ak: 3D is a merry-go-round; parked until Season 2. Planning only, nothing built yet.
+Plan: `docs/research/2d-motion-plan-2026-11.md` — an 8-layer stack (intent, choreography, body solver with IK/balance/foot planting, automatic animation principles, hair and cloth physics with wind and a hard modesty line, bendy shapes and smears, GPU surface layer via PixiJS, camera + motion blur + impact frames).
+Next step: a "2D Lab" side-by-side page; Ak picks small round (≈50 human work hours) or full (≈110). Four open questions at the end of the plan.
+
+### 2026-11-04 evening: full scene, darker light, pelvis fix
+- `lucas-hg/scene-soft.mp4` (23 s, 960×540): walk in, turn, sit, legs crossed, restless leg, stand, look around, run out. Built by `Tools/humgen/scripts/seq_test.py` using `mixamo_retarget.sequence()`, which chains clips, carries the root path and blends 2–14 frames between clips.
+- New Mixamo clips in `Tools/humgen/mixamo/`: walk_std, walk_stop, turn_r90, stand_to_sit, fidget_feet, sit_to_stand, look_nervous, turn_run(_m mirrored). Plain "run" loop download failed; the run tail repeats the last stride of turn_run_m.
+- Retarget bug fixed: the Rigify `torso` control is flat, so aligning it to the upright Mixamo hips tilted the pelvis 90° and dropped the legs about 25 cm (bent knees, kneeling run). Torso now uses no direction offset. talk-real/talk-soft re-rendered with the fix.
+- Light: `LIGHT=dark` (default) in both scripts, about 0.3–0.45 of the old energy, darker wall and floor, AgX Medium High Contrast.
+- Weight: `SKINNY=0..1` env. At 0.5 only the neck and jaw change visibly; the loose trial outfit hides the body. weight-0.png / weight-0.5.png.
+- Speed: 0.60 s/frame at 960×540; the bake of 560 frames takes about 6 min on the CPU. GPU peak 73 °C.
+
+## 2D Lab built — full round (2026-11-04)
+Page: `characters/samples/lab2d.html` (rebuild: `node tools/lab2d-sheet.mjs`; serve with the `vf-takes` launch config → http://localhost:41970/lab2d.html). Seven side-by-side tests, today vs lab, live at 30 fps.
+Code: `characters/lab/` — anim.mjs (key poses, curves, overlap, overshoot, alive), body.mjs (IK, joint limits, reach, balance, planted feet), physics.mjs (hair/hem chains, wind, leaves, cloth flag, faint topple; HEM_LIFT_MAX modesty cap), moves.mjs (wave, sit/stand, jump, kick, dance, faint, wind), pair.mjs (handshake, hug, head pat, catch), actor.mjs (ties it together), surface.mjs (WebGL2 re-lighting: lit, clay, gouache, ink — own shader, no PixiJS download), frame.mjs (room parallax, camera, shadows, smears, dust, RED FLAG impact frame).
+Engine hooks added to `core/draw.mjs` (no change when unused): `state.adjust`, `follow.hairField` / `follow.hemField`, `state.armsSkip` / `state.armsOnly` (hug draw order); drawCharacter now also returns `sk`.
+Tests: `characters/lab.test.mjs` (in `npm test`): finite frames, feet on the floor, MODESTY (no hem past the cap in calm→strong wind, jumping, dancing), hands reach their contacts. All pass. Two older failures in moves.test.mjs are shelf wording ("waves hello" twice; a laugh tag) and predate the lab.
+Measured: hand "jumpiness" on the wave, today 39 vs lab 23 (lower = smoother). Live cost with motion blur ≈ 20–29 ms a frame per stage on the laptop.
+Findings for Ak: hose2 kids are nearly adult height (big heads) — the head pat draws Young Amber at 80%. Hug faces overlap with these big heads. Clay/gouache/ink are a first pass at taste.
+Not built: mouth from the voice in the lab, beat gestures from words, a larger pose library, rendering lab scenes into videos.
+
+### 2D Lab, round 2 (2026-11-04, Ak's notes)
+- Faces: new engine hook `state.headView` (core/draw.mjs) — the head turns less than the body. Lab actors cap the face at 0.9 (three-quarter) while bodies go to profile: fixes the profile nose, the sliver eye and the front-on mouth in side and pair shots.
+- Turned views (view ≥ 1): hand targets mean "forwards" for BOTH arms, knees bend forwards — this was why the catch looked like elbows catching and why the handshake used her left hand. Handshake is now right hand to right hand and lets go by drawing back.
+- Softer "soft knee" (SOFT 0.994) — the skier stance is gone; catch crouch lighter; wind-up keeps the face clear.
+- Red Flag moment: Subtle (Sunday show: slow push-in, small flag over her head on an exclamation-mark mast, faint red edge) and Loud (clip days: freeze, red/black, inked figure, whip pan). Mast is a red "!" (Ak). `frame.mjs flagMast()`.
+- Motion blur now off by default: Ak saw no difference at these speeds; smears do that job.
+- Materials: Ak judged all five bad (Young Amber least bad). Outline-guessing shading is the wrong method; fake 3D needs per-part shading from the real shapes (see chat answer, 4 Nov).
+
+### 2D Lab, round 3 (2026-11-04)
+- FAKE 3D in the engine: `look.form` (core/paint.mjs `formFill` / `formStroke`): each filled part gets a lit side, a core shadow and a floor bounce; limbs are shaded tubes; every part throws a soft shadow on what is behind it; hair gets a shine band; the look's flat half-shade steps aside; the neck sits in the head's shadow. Light from the screen's upper left (mirror-safe). Section 6 of the lab is now flat vs fake 3D on five cast members. The outline-guessing GPU surfaces (lab/surface.mjs) are no longer on the page.
+- `state.armsFront` (core/draw.mjs): a far arm drawn in front of the chest — the handshake (her right hand across her body) and folded arms.
+- Handshake: bodies at view 1.45, an arm's length apart, hands meet halfway between the two people.
+- Red Flag, subtle: a tiny "!" over her head and the flag is RAISED up it (`flagMast(..., hoist)`), not waved. Lucas's shrug and Chloe's folded arms rewritten for the turned-view hand convention (they were reaching backwards).
+- New lab section 2b: a slow turntable, face turning all the way vs face held at three-quarter.
+
+### 2D Lab, round 4 — a hint of 3D (2026-11-04)
+- `look.form` is now a STRENGTH (number; `true` = 1). Lab section 6 shows flat / 0.5 "a hint of 3D" (Ak: "less aggressive and more detailed") / 1 "fuller 3D".
+- Limbs: no more stacked offset strokes (read as double lines). Now the plain stroke, then a blurred shadow down the far side and a faint blurred light down the near side, clipped inside the limb's own capsule outline.
+- Small parts (pockets, buttons) get almost no shading (size factor from the shape's radius). Bounce and rim light are neutral warm-white (the pink bounce muddied blue clothes). New: a faint rim of reflected light just inside each big shape's far edge.
+- Fixed: the hair shine replaced the canvas path, so outlined looks (hose2) lost their hair outline — the shape path is now re-traced after the shine.
+
+### Red Flag default: a hint of 3D (Ak, 2026-11-04)
+- New card field `form` (core/card.mjs, group Look, 0 flat … 1 fuller; default 0). drawCharacter applies it unless the look already sets `form`.
+- `brands/redflag/cast.json` now has `form: 0.5` (+ `formNote`); every page that builds Red Flag cards passes `form: CAST.form` (lab2d, natural, library, cast pages — all rebuilt). Lab section 6 forces its own strengths, so its "Flat" panel stays flat.
+- When the app itself starts reading the Red Flag cast, carry `form` across the same way.
+
+## 2D Lab, round 5 — anatomy of the turn, text styles, transitions (5 Nov 2026)
+
+Ak's notes and what changed (nothing committed; ultra review first):
+- **Turned bodies were backwards.** A head turning to +x now keeps its −x eye full size (near) and narrows the +x eye (far) (`core/rig.mjs` eyes). The near shoulder (−x) keeps its width, the far one tucks in. Turned, the near arm and near leg are `arms[0]` / `legs[0]` and draw over the body (`core/draw.mjs`). Handshake comment in `lab/pair.mjs` is now wrong in words (her right hand IS the near arm) but the code is right.
+- **Elbows**: turned, the elbow bends anatomically, a little behind the shoulder-to-hand line (`lab/body.mjs`).
+- **Side noses**: a small knob below the eye line. **Mouth** narrows as the head turns. **Lipstick**: thinner ink line.
+- **Profile only for walks, hugs, handshakes**: kick and faint now three-quarter (view 1), sit 1.15.
+- **Thumbs** turn towards the face on open/wave hands (`core/hands.mjs`). **Wave arm** no longer flips over the hair (hand above the chin stays behind).
+- **Kick arms**: calm keys, critically damped springs (moves may now set `springs`).
+- **Faint**: no smile on the floor — a move with a negative smile drops the card's resting smile (`state.mouthRest`).
+- **Hair** takes 1.45× the hint of 3D; arms and legs unchanged.
+- **Fabric patterns** pinned to the body and bent with the hem; **paper grain** moves with the figure (was fixed to the screen = "part of the background").
+- **MODESTY BUG FOUND AND FIXED**: the hem physics could swing a dress 7.5% of the body height sideways — in the handshake it slid off her hips. Cap now 2% (`HEM_SWAY_MAX`), new test in `characters/lab.test.mjs`.
+- **Talking mouth** (lab stand-in): syllables (open vowel → consonant, 140–230 ms), 70 ms smooth blends, M/B/P closures, phrase rests.
+- **Sunday flag**: camera leans in 5% and tips under a degree, then eases back; the big push-in is gone.
+- **New section 8** on `lab2d.html`: four text styles (clean, kinetic, pop, marker) and four transitions (red-flag iris, ink wipe, paper tear, whip pan) — `characters/lab/words.mjs`.
+- Research (helper): `docs/research/pro-2d-techniques-2026-11.md`. Next steps and answers: `docs/research/2d-plus-next-2026-11.md`.
+- Tests: lab 4/4; full suite 223 pass, 3 fail — the old shelf/script-tag failures (`moves.test.mjs` ×2, `tools/lib/moveTracks.test.mjs`), not touched this round.
+- Known left: the grip hand reads as a ring; the real app's lip sync (from the voice) is not touched — the lab only.
+
+## Clay details (5 Nov 2026)
+- New card setting **"Clay details"** (`formDetail`, off by default), on top of the hint of 3D. Code: `characters/core/clay.mjs`, warm skin edge in `paint.mjs` formFill.
+- What it adds: the fringe's soft shadow on the forehead; a soft shadow and a shine on the nose; cheek sheen; a lower-lip shine; a warm red edge where skin turns to shadow; soft drape folds on tops; the hoodie pocket as a soft opening instead of a flat patch.
+- Compare on `lab2d.html` section 6: Flat / Hint / **Hint + clay details** / Fuller. Not switched on for the Red Flag cast yet; that's Ak's call (set `"formDetail": true` next to `"form"` in `brands/redflag/cast.json` and pass it in the page builders like `form`).
+- Test: `characters/lab.test.mjs` "clay details draw finite frames".
+- Stronger (Ak, 5 Nov: "stronger first"): standard clay strength raised 1.7× (`CLAY_K` in `core/clay.mjs`); `formDetail` may be a number to scale it. Section 6 now: Hint / Clay first try / Clay stronger / Fuller.
+
+## New Red Flag look + slow-turn check (5 Nov 2026)
+- Ak: "stronger clay, full 3D, just tone down the hands, arms and legs". `brands/redflag/cast.json`: `form` 1, `formDetail` true, `formLimbs` 0.5 (new card field: how much 3D the arms, hands, legs and feet take). All four page builders pass the three fields.
+- Clay strength is now independent of the body's 3D strength (it doubled at full 3D and the nose shadow became a smudge).
+- Slow turn panel (`lab2d.html` section 6, `MV.turnSlow`, head turns fully). Issues found and fixed: near arm jumped in front at the half-turn (now comes round over a short stretch); profile eye sat on the face's edge; short-hair styles left the back of the head bald when turned (cap styles now cover it, ear on top).
+- Still known: in full profile the faces are weaker than front/three-quarter — the show caps the head at three-quarter (`HEAD_MAX`), so it only shows if a scene raises it.
+- Long hair follows the head turn: hair beside the head sits on a ring round it (near side swings in, far side tucks to a sliver); long styles also cover the back of the skull when it turns into view (`wrapRound` / `CAP_STYLES` in `core/draw.mjs`).
+
+## Subtitles (5 Nov 2026)
+- Ak: text is needed more for subtitles than calls to action; transitions are "meh". Section 8 of `lab2d.html` is now **Subtitles**: classic, karaoke (word lights up in the speaker's colour), kinetic (2–3 word chunks, key words red), drama (speaker name/colour on their side; inner thoughts italic, tagged THINKS). Code: `subtitleScene` in `characters/lab/words.mjs`; the dialogue is a sample with simulated word timing — the app would use the real word times from the voice.
+- The call-to-action text styles stay in `words.mjs` (`textScene`) but are no longer on the page. Transitions unchanged, waiting on Ak.
+- Transitions round 2 (Ak: the first four were "meh"): red cloth flag sweep with the "!", a match cut through the eyes (drawn sharp through the zoom), glass shatter (shards carry the picture, crack flash first), film burn into a memory (light leaks, charred burn holes, sepia print). `transitionScene` in `characters/lab/words.mjs`.
+- Kinetic subtitles round 2 (Ak: "an invisible flipbox with 4 sides rotating on the long axis, the spoken word in the colour of the character"): each 2–3 word chunk on a face of an unseen box that rolls a quarter turn per chunk with a small overshoot; the word being said is in the speaker's colour, key words underlined in it.

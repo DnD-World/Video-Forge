@@ -20,6 +20,7 @@
 // packs are listed in docs/CHARACTER-BUILDER-PLAN.md.
 // ---------------------------------------------------------------------------
 
+import { softPocket } from "./clay.mjs";
 import { shade } from "./math.mjs";
 
 /** Slots: one item each, except the ones in MULTI. "full" fills top + bottom. */
@@ -178,7 +179,10 @@ export const ITEMS = [
     torso: (G, c) => {
       const { sk } = G;
       G.pen.rpoly(G.U(torsoShape(sk, sk.hy + 0.01)), 0.025 * G.S); G.fill(c[0]);
-      G.pen.rpoly(G.U([[-sk.sx * 0.55, sk.hy - 0.07], [sk.sx * 0.55, sk.hy - 0.07], [sk.sx * 0.65, sk.hy - 0.005], [-sk.sx * 0.65, sk.hy - 0.005]]), 0.01 * G.S); G.fill(shade(c[0], -0.08), { noShade: true });
+      const pocket = [[-sk.sx * 0.55, sk.hy - 0.07], [sk.sx * 0.55, sk.hy - 0.07], [sk.sx * 0.65, sk.hy - 0.005], [-sk.sx * 0.65, sk.hy - 0.005]];
+      // clay details: the pocket as soft shading (Ak, 5 Nov 2026: the flat pocket patch looked bad)
+      if (G.look.formDetail) softPocket(G, pocket);
+      else { G.pen.rpoly(G.U(pocket), 0.01 * G.S); G.fill(shade(c[0], -0.08), { noShade: true }); }
       for (const s of [-0.18, 0.18]) { G.pen.poly(G.U([[sk.neck[0] + s * sk.sx, sk.sy + 0.01], [sk.neck[0] + s * sk.sx * 1.2, sk.sy + 0.09]]), false); G.line("#f2f2f2", 0.004, { feature: true }); }
     },
     arm: sleeve(1.95) },
@@ -211,6 +215,13 @@ export const ITEMS = [
     neck: (G, c) => { const { sk } = G, l = sk.neck[0], vb = vNotch(sk).vb; G.pen.poly(G.U([[l - 0.008, sk.sy + 0.012], [l + 0.008, sk.sy + 0.012], [l + 0.013, vb - 0.01], [l, vb + 0.012], [l - 0.013, vb - 0.01]])); G.fill(c[0], { noShade: true, outline: (G.look.outline ?? 0) * 0.6, pattern: c.pattern }); } },
   { id: "bowtie", label: "Bow tie", slot: "neck", colors: ["#c0392b"], patterns: true,
     neck: (G, c) => { const { sk } = G, l = sk.neck[0], y = sk.sy + 0.012; for (const s of [-1, 1]) { G.pen.poly(G.U([[l, y], [l + s * 0.03, y - 0.014], [l + s * 0.03, y + 0.014]])); G.fill(c[0], { noShade: true }); } G.pen.circle(l * G.S, y * G.S, 0.006 * G.S); G.fill(shade(c[0], -0.2), { noShade: true }); } },
+  // a judge's lace collar: wide scalloped collar plus a short falling ruffle (Judge Mara, 2 Nov 2026)
+  { id: "jabot", label: "Lace collar (judge)", slot: "neck", colors: ["#f4f1ea"],
+    neck: (G, c) => { const { sk } = G, l = sk.neck[0], y = sk.sy + 0.012, w = sk.sx * 0.78;
+      // big heads hang their chin below the shoulder line, so the collar sits low and wide enough to show
+      G.pen.ellipse(l * G.S, y * G.S, w * G.S, 0.06 * G.S, 0, 0, Math.PI); G.fill(c[0], { noShade: true, outline: (G.look.outline ?? 0) * 0.5 });
+      for (let i = 0; i <= 6; i++) { const a = Math.PI * (0.08 + i * 0.14); G.pen.circle((l + Math.cos(a) * w * 0.96) * G.S, (y + Math.sin(a) * 0.058) * G.S, 0.013 * G.S); G.fill(c[0], { noShade: true }); }
+      for (const [d, k] of [[0.05, 1.1], [0.085, 0.85]]) { G.pen.blob(G.U([[l - 0.022 * k, y + d - 0.012], [l + 0.022 * k, y + d - 0.012], [l + 0.026 * k, y + d + 0.018], [l, y + d + 0.026], [l - 0.026 * k, y + d + 0.018]])); G.fill(c[0], { noShade: true, outline: (G.look.outline ?? 0) * 0.4 }); } } },
   { id: "scarf", label: "Scarf", slot: "neck", colors: ["#d4a537"], patterns: true,
     neck: (G, c) => { const { sk } = G, l = sk.neck[0]; G.pen.rpoly(G.U([[l - sk.sx * 0.6, sk.sy - 0.02], [l + sk.sx * 0.6, sk.sy - 0.02], [l + sk.sx * 0.55, sk.sy + 0.025], [l - sk.sx * 0.55, sk.sy + 0.025]]), 0.012 * G.S); G.fill(c[0], { pattern: c.pattern }); G.pen.rpoly(G.U([[l + 0.01, sk.sy], [l + 0.035, sk.sy], [l + 0.04, sk.sy + 0.14], [l + 0.015, sk.sy + 0.14]]), 0.008 * G.S); G.fill(c[0], { pattern: c.pattern }); } },
   // bottoms
@@ -288,7 +299,14 @@ export const ITEMS = [
   { id: "sunglasses", label: "Sunglasses", slot: "eyes", colors: ["#141414"],
     face: (G, c) => { const { sk } = G, S = G.S; const [e0, e1] = sk.face.eyes; const r = sk.R * 0.22; for (const e of [e0, e1]) if (e.visible) { G.pen.rpoly([[(e.x - r * e.scaleX) * S, (e.y - r * 0.7) * S], [(e.x + r * e.scaleX) * S, (e.y - r * 0.7) * S], [(e.x + r * 0.85 * e.scaleX) * S, (e.y + r * 0.75) * S], [(e.x - r * 0.85 * e.scaleX) * S, (e.y + r * 0.75) * S]], r * 0.4 * S); G.fill(c[0], { feature: true }); } if (e0.visible) { G.pen.poly([[(e0.x + r * e0.scaleX) * S, (e0.y - r * 0.4) * S], [(e1.x - r) * S, (e1.y - r * 0.4) * S]], false); G.line(c[0], 0.004, { feature: true }); } } },
   { id: "earrings", label: "Earrings", slot: "ears", colors: ["#e0b040"],
-    face: (G, c) => { const { sk } = G, S = G.S; for (const e of sk.face.ears) if (e.visible) { G.pen.circle(e.x * S, (e.y + sk.R * 0.24) * S, sk.R * 0.06 * S); G.fill(c[0], { feature: true }); } } },
+    face: (G, c) => { const { sk } = G, S = G.S;
+      // with follow-through (follow.mjs) they hang from the lobe and swing
+      const a = G.follow ? (G.follow.ear ?? 0) * G.fsx - sk.rot * (G.follow.tilt?.ear ?? 1) : 0, L = sk.R * 0.24;
+      for (const e of sk.face.ears) if (e.visible) {
+        const bx = e.x + Math.sin(a) * L, by = e.y + sk.R * 0.06 + Math.cos(a) * (L - sk.R * 0.06);
+        if (G.follow) { G.pen.poly([[e.x * S, (e.y + sk.R * 0.06) * S], [bx * S, by * S]], false); G.line(c[0], 0.0025, { feature: true }); }
+        G.pen.circle(bx * S, by * S, sk.R * 0.06 * S); G.fill(c[0], { feature: true });
+      } } },
   // ---- costumes (28 Oct 2026): picked for Ak's subjects — D&D, dogs,
   // manipulation defence, soft skills, seasonal, ELI5 AI, tropes
   { id: "wizardhat", label: "Wizard hat", slot: "head", colors: ["#3b2a7a", "#ffd400"],
@@ -359,8 +377,9 @@ export const ITEMS = [
   { id: "robe", label: "Long robe", slot: "full", colors: ["#3b2a7a", "#ffd400"], patterns: false,
     torso: (G, c) => { const { sk } = G, w = sk.hx;
       G.pen.rpoly(G.U([...torsoShape(sk, sk.hy, 1).slice(0, 2), [w * 2.1, -0.02], [-w * 2.1, -0.02]]), 0.02 * G.S); G.fill(c[0]);
-      G.pen.poly(G.U([[sk.neck[0], sk.sy + 0.01], [sk.neck[0], -0.03]]), false); G.line(c[1] ?? "#ffd400", 0.006);
-      G.pen.poly(G.U([[-w * 1.1, sk.waistY], [w * 1.1, sk.waistY]]), false); G.line(c[1] ?? "#ffd400", 0.008); },
+      // trim down the front opening, V at the collar; no belt across it (a belt made a cross: a judge read as a priest, Ak 2 Nov 2026)
+      const vy = sk.sy + (sk.hy - sk.sy) * 0.35;
+      for (const s of [-1, 1]) { G.pen.poly(G.U([[sk.neck[0] + s * sk.sx * 0.45, sk.sy + 0.005], [sk.neck[0] + s * 0.004, vy], [sk.neck[0] + s * 0.004, -0.03]]), false); G.line(c[1] ?? "#ffd400", 0.005); } },
     arm: (G, c, arm) => { if (G.look.limb === "line") return; G.pen.poly(G.U(armPath(arm, 1.55)), false); G.line(c[0], G.sk.limbW * 1.7); } },
   { id: "santacoat", label: "Santa coat", slot: "full", colors: ["#d7261e", "#ffffff"], patterns: false,
     torso: (G, c) => { const { sk } = G, w = sk.hx;
