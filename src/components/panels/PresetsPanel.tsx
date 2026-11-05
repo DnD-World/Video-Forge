@@ -242,7 +242,7 @@ export function PresetsPanel() {
             type="text" placeholder="Name this look…" value={name}
             data-tip="Give your current look a name, then press Save to keep it for later."
             onChange={(e) => setName(e.target.value)}
-            className="flex-1 min-w-0 bg-metal-900 border border-accent/25 px-3 py-2 text-base text-neutral-100 outline-none focus:border-accent"
+            className="flex-1 min-w-0 bg-metal-900 border border-accent/25 px-3 py-2 text-base text-neutral-100 outline-hidden focus:border-accent"
           />
           <HudButton
             data-tip="Saves the way your video looks right now under the name you typed, so you can use it again."

@@ -297,7 +297,7 @@ export function ExplainerStudio() {
         {message && <div data-tip={message.tone === "good" ? "What just happened." : "Something went wrong. The message says what to fix."} className={`rounded-xl px-3 py-2 text-sm ${message.tone === "good" ? "bg-emerald-400/10 text-emerald-200 border border-emerald-400/30" : "bg-rose-400/10 text-rose-200 border border-rose-400/30"}`}>{message.text}</div>}
         {busy && (
           <div className="flex items-center gap-3" data-tip="Working — this can take a while for long videos.">
-            <div className="flex-1 h-2 rounded-full bg-white/10 overflow-hidden"><div className="h-full bg-[var(--accent)]" style={{ width: `${Math.round(busy.pct * 100)}%` }} /></div>
+            <div className="flex-1 h-2 rounded-full bg-white/10 overflow-hidden"><div className="h-full bg-(--accent)" style={{ width: `${Math.round(busy.pct * 100)}%` }} /></div>
             <span className="text-xs text-neutral-300">{busy.note}</span>
             <HudButton tone="crit" data-tip="Stop the job that is running." onClick={() => window.byok.explainer.cancel()}>Cancel</HudButton>
           </div>
@@ -313,7 +313,7 @@ export function ExplainerStudio() {
 
 function StyleCard({ active, title, sub, tip, onClick, onRemove }: { active: boolean; title: string; sub: string; tip: string; onClick: () => void; onRemove?: () => void }) {
   return (
-    <div className={`rounded-2xl border p-3 ${active ? "border-[var(--accent)] bg-white/5" : "border-white/10"}`}>
+    <div className={`rounded-2xl border p-3 ${active ? "border-(--accent) bg-white/5" : "border-white/10"}`}>
       <button className="text-left w-full" data-tip={tip} onClick={onClick}>
         <div className="font-semibold">{title}</div>
         <div className="text-xs text-neutral-400">{sub}</div>

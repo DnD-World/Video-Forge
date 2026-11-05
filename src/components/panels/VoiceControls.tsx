@@ -107,7 +107,7 @@ export function VoiceControls({
             <span data-tip="The feeling the app gives to flat lines, for example “cheerful”." className="label-etched text-sm">Lift them to</span>
             <input
               type="text"
-              className="w-full mt-1 bg-black/30 border border-accent/20 rounded px-2 py-1 text-sm"
+              className="w-full mt-1 bg-black/30 border border-accent/20 rounded-sm px-2 py-1 text-sm"
               placeholder="speaks warmly"
               data-tip="The mood the app adds to flat lines, for example speaks warmly."
               value={expression.defaultVerb ?? ""}

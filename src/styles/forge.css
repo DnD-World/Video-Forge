@@ -1,3 +1,5 @@
+/* In Tailwind 4's utilities layer, after its own rules: the order v3 gave this file (index.css says why). */
+@layer utilities {
 /* =============================================================================
    THE FORGE LOOK — shared by Video Forge and Image Forge.
    Chosen by Ak on 11 Oct 2026 from docs/design/looks-pick.html (look A,
@@ -81,7 +83,7 @@ body { font-family: "Sora", system-ui, sans-serif; letter-spacing: 0; }
 }
 /* Breathing room inside panels. :where() keeps this at zero specificity, so
    a panel that sets its own padding (the header's px-4 py-2) still wins. */
-:where(.panel-hud) { padding: 10px 12px; }
+/* (moved to the base layer at the end of this file) */
 .panel-hud::before {
   inset: 0 !important;
   border-radius: inherit;
@@ -329,7 +331,7 @@ input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-of
 /* :where() = no weight, so an element's own position (absolute buttons like
    .forge-next) still wins. Found 21 Oct 2026: the plain selector made the
    Next button a full-width block that pushed the preview off the stage. */
-:where([data-tip]) { position: relative; }
+/* (moved to the base layer at the end of this file) */
 /* The bubble itself is drawn by components/ui/TipLayer.tsx, once for the
    whole window: drawn inside its panel (the first version) it was cut off by
    the panel's scroll edge — the lowest choices had no help at all (Ak, 13 Oct). */
@@ -618,3 +620,13 @@ html[data-motion="off"] body::before { animation: none; }
 .forge-set-tile:hover { border-color: var(--line-hot); transform: translateY(-1px); }
 .forge-set-tile.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; color: var(--ink); }
 .forge-set-tile .none { display: grid; place-items: center; aspect-ratio: 16 / 9; border-radius: 10px; background: repeating-linear-gradient(45deg, rgba(255,255,255,.03) 0 8px, transparent 8px 16px); }
+}
+
+/* The two zero-weight rules above. They are meant to lose to anything, and in
+   Tailwind 4's layers only the bottom layer does that: in the utilities layer
+   they beat Deco Noir's own rules (the hidden .hint stopped floating and
+   squeezed the preview's scrub bar to a third of its width). */
+@layer base {
+  :where(.panel-hud) { padding: 10px 12px; }
+  :where([data-tip]) { position: relative; }
+}

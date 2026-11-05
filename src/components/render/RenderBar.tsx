@@ -366,7 +366,7 @@ export function RenderBar() {
         </div>
       )}
 
-      {error && <ErrorLine tip="The video could not be made. Read the message, fix the cause, and press Render again." className="text-xs text-red-400 break-words" text={error} />}
+      {error && <ErrorLine tip="The video could not be made. Read the message, fix the cause, and press Render again." className="text-xs text-red-400 wrap-break-word" text={error} />}
 
       {result && !busy && (
         <div className="flex flex-col gap-2">

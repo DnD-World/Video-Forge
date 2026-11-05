@@ -213,7 +213,7 @@ export function Picker<T extends string>({
               >
                 <span className="flex-1 truncate text-left">{o.label}</span>
                 {o.note && (
-                  <span className="text-[color:var(--ink-3)] text-sm flex-none">{o.note}</span>
+                  <span className="text-(--ink-3) text-sm flex-none">{o.note}</span>
                 )}
               </button>
             ))}
