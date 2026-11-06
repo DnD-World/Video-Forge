@@ -106,7 +106,7 @@ export function SfxPanel() {
           onKeyDown={(e) => e.key === "Enter" && runSearch()}
           placeholder="dog bark"
           data-tip="Type the sound you want, in English, like dog bark, then press Enter to search."
-          className="flex-1 min-w-0 bg-black/60 px-3 py-2 text-neutral-200 outline-none border border-accent/25"
+          className="flex-1 min-w-0 bg-black/60 px-3 py-2 text-neutral-200 outline-hidden border border-accent/25"
         />
         <HudButton onClick={runSearch} disabled={!!busy} data-tip="Looks for free sound effects that match your words.">
           Search

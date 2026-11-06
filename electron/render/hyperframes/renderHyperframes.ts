@@ -317,7 +317,9 @@ export async function renderHyperframes(input: HyperframesInput): Promise<void> 
   onProgress(0.2, "Rendering frames…");
   // A complete copy of the hidden browser (renderBrowser.ts says why).
   const browser = pickRenderBrowser();
-  const cli = require_.resolve("hyperframes/bin/hyperframes.mjs");
+  // Found through package.json: since 0.9 the package only exports ./api and
+  // ./package.json, so asking for the bin file by name is refused.
+  const cli = path.join(path.dirname(require_.resolve("hyperframes/package.json")), "bin", "hyperframes.mjs");
   try {
     await run(process.execPath, [cli, "render", input.dir, "--output", input.outputPath, "--fps", String(props.fps), "--crf", String(input.crf), "--sdr", ...gpuFlags(), "--quiet"], {
       // childEnv() carries the no-update / no-telemetry switches (it is the one

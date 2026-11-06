@@ -439,12 +439,12 @@ export default function BackendPanel() {
                     onChange={(e) =>
                       setDraft((d) => ({ ...d, [p.id]: e.target.value }))
                     }
-                    className="flex-1 bg-metal-900 border border-accent/25 px-3 py-2 text-base text-neutral-100 outline-none focus:border-accent"
+                    className="flex-1 bg-metal-900 border border-accent/25 px-3 py-2 text-base text-neutral-100 outline-hidden focus:border-accent"
                   />
                   <button
                     onClick={() => save(p.id)}
                     data-tip={`Keeps the key you pasted for ${p.label}.`}
-                    className="btn cut-sm btn-primary px-4 py-2 text-sm font-display font-semibold uppercase tracking-[0.1em]"
+                    className="btn cut-sm btn-primary px-4 py-2 text-sm font-display font-semibold uppercase tracking-widest"
                   >
                     Save
                   </button>
@@ -454,14 +454,14 @@ export default function BackendPanel() {
                         onClick={() => test(p.id)}
                         data-tip={`Checks that your ${p.label} key really works.`}
                         disabled={state?.busy}
-                        className="btn cut-sm px-4 py-2 text-sm font-display uppercase tracking-[0.1em] hover:text-accent-bright disabled:opacity-40"
+                        className="btn cut-sm px-4 py-2 text-sm font-display uppercase tracking-widest hover:text-accent-bright disabled:opacity-40"
                       >
                         {state?.busy ? "Testing…" : "Test"}
                       </button>
                       <button
                         onClick={() => remove(p.id)}
                         data-tip={`Forgets your ${p.label} key. You can paste it again later.`}
-                        className="btn cut-sm px-4 py-2 text-sm font-display uppercase tracking-[0.1em] hover:text-red-400"
+                        className="btn cut-sm px-4 py-2 text-sm font-display uppercase tracking-widest hover:text-red-400"
                       >
                         Clear
                       </button>

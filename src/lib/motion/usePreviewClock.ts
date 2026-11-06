@@ -22,7 +22,7 @@ import { useEffect, useRef, useState } from "react";
  */
 export function usePreviewClock(loopMs?: number): number {
   const [timeMs, setTimeMs] = useState(0);
-  const rafRef = useRef<number>();
+  const rafRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     const start = performance.now();

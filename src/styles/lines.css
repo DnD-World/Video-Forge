@@ -1,3 +1,5 @@
+/* In Tailwind 4's utilities layer, after its own rules: the order v3 gave this file (index.css says why). */
+@layer utilities {
 /* ---- Script: the lines, each with ▶ and Remake; Cast: ▶ a voice (plan #16) ---- */
 .forge-lines { display: flex; flex-direction: column; gap: 4px; max-height: 420px; overflow-y: auto; padding-right: 2px; }
 .forge-lines .line { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; align-items: center; gap: 6px; padding: 3px; border-radius: 12px;
@@ -18,3 +20,4 @@
 .forge-lines .redo:hover:not(:disabled) { border-color: var(--accent); color: var(--ink); }
 .forge-lines .redo:disabled { opacity: .45; cursor: not-allowed; }
 .forge-sample.playing { background: var(--accent); color: #001a10; }
+}

@@ -79,7 +79,7 @@ export function LanguageCard() {
           <div
             key={en}
             data-tip={ready ? "The language the app is in now." : `${en}: coming soon.`}
-            className={`rounded-xl border px-3 py-2 ${ready ? "border-[var(--accent)] text-[var(--ink)]" : "border-[var(--line)] text-neutral-500"}`}
+            className={`rounded-xl border px-3 py-2 ${ready ? "border-(--accent) text-(--ink)" : "border-(--line) text-neutral-500"}`}
           >
             <div className="text-sm">{own}</div>
             <div className="text-xs">{ready ? "in use" : "coming soon"}</div>

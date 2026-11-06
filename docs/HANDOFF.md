@@ -1,8 +1,24 @@
-# Handoff — updated 5 Nov 2026
+# Handoff — updated 6 Nov 2026
 
 Everything a fresh session needs. `PLAN.md` holds the long history; this is the
 working state. Newest sections first. Plans: `docs/V2-PLAN.md` (Video Forge),
 `docs/FORGES-PLAN.md` (both apps; has a Status section at the bottom).
+
+## Major package upgrades — 6 Nov 2026 (branch `deps-major`)
+
+Replaces Dependabot's PR 18 (23 updates in one go; it broke the build). Done one step per commit, each checked before the next.
+
+| Step | Versions | What had to change |
+|---|---|---|
+| Small | Remotion 4.0.540, hyperframes 0.9, esbuild 0.28, ws, electron-builder, MediaPipe 1.2, @types/node 24 (Electron runs Node 24) | hyperframes 0.9 only exports `./api` and `./package.json`, so `renderHyperframes.ts` finds its bin file through package.json (every puppet render failed without this; test in `tools/lib/work.test.mjs`) |
+| Tailwind 3 → 4 | tailwindcss 4.3, @tailwindcss/postcss | Config moved into `src/index.css` (`@theme`); autoprefixer and tailwind.config.js gone. `forge.css` and `lines.css` sit in `@layer utilities`; the two zero-weight `:where()` rules sit in `@layer base` (else Deco Noir's floating `.hint` turns static and squeezes the scrub bar). v3 line heights, placeholder grey and border colour kept. The upgrade tool also renamed non-class words (`"blur"` event, saved `"rounded"`/`"blur"` ids, "ring" in hover text): put back |
+| React 19 | react 19.3, framer-motion 14, zustand 5 | `React.JSX.Element`, `useRef(undefined)`. zustand 5 loops on selectors that build new objects: none here do; keep it that way |
+| Build tools | Vite 8, electron-vite 6, plugin-react 6, TypeScript 7 | Nothing |
+| Electron 45 | 45.2 (Node 24) | Nothing yet. **Before Electron 46:** move `electron/keyStore.ts` to `safeStorage.encryptStringAsync` / `decryptStringAsync` / `isAsyncEncryptionAvailable` (the sync calls are removed in 46; the async decrypt reads keys the sync one wrote, tested). Dependabot ignores electron ≥46 until then |
+
+- **Checked:** `tsc` clean; `npm test` all pass; app build; page build; 18 app screens (every step, every Look/Make tab, explainer, many videos, settings) screenshotted on main and on each step: identical apart from animations; a scripted editing session; puppet test render `jobs/boil-test.json` and explainer `explainer/samples/how-it-works.json` both **pixel-identical** to main (PSNR inf; puppet render with main's narration, since Piper's voice varies run to run). Not checked: the installer (`npm run build-exe`).
+- Known small visual changes: Tailwind 4's `space-y` puts the gap below items instead of above (2–4 px in two long panels); its palette colours at 15% strength differ slightly.
+- **Dependabot** now groups only minor/patch updates; each major gets its own PR. New `.github/workflows/check.yml` type-checks, tests and builds every PR on Windows.
 
 ## Package security updates — 5 Nov 2026 (merged)
 

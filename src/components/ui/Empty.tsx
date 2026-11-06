@@ -18,7 +18,7 @@ export function Empty({ children }: Props) {
   return (
     <div className="empty">
       <span className="emptymark cut" aria-hidden />
-      <p className="text-sm text-[color:var(--ink-3)] max-w-[34ch]">{children}</p>
+      <p className="text-sm text-(--ink-3) max-w-[34ch]">{children}</p>
     </div>
   );
 }

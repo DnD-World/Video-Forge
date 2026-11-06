@@ -9,11 +9,69 @@
    here is a class, so specificity keeps it intact. The one thing that would
    have collided is a `body` rule, which was stripped when vendoring because
    this app sets its own height and overflow for the Electron shell. */
-@import "./styles/deco-noir.css";
+@import "./styles/deco-noir.css" layer(base);
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Tailwind 4. Since v4, Tailwind's rules live in real CSS layers
+   (base < components < utilities), and anything outside a layer beats all of
+   them. forge.css and lines.css therefore put their rules in the utilities
+   layer, after Tailwind's own, which is the order v3 gave them. */
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  /* The Forge look: near-black with the stravelakis panel blues in it. */
+  --color-metal-500: #11374a;
+  --color-metal-600: #0b2837;
+  --color-metal-700: #071c26;
+  --color-metal-800: #03090c;
+  --color-metal-900: #000000;
+
+  /* Accent glow — reads live CSS variables (set below / by the Appearance
+     color picker) instead of a fixed hex, so switching the color at runtime
+     recolors every accent-* utility class. */
+  --color-accent: rgb(var(--accent-rgb));
+  --color-accent-bright: rgb(var(--accent-bright-rgb));
+  --color-accent-deep: rgb(var(--accent-deep-rgb));
+
+  --color-speaker1: #e8a24a;
+  --color-speaker2: #4ac2e8;
+
+  /* Sora for every word — the Forge look (11 Oct 2026). */
+  --font-display: "Sora", system-ui, sans-serif;
+  --font-mono: "Sora", ui-monospace, monospace;
+  --font-body: "Sora", system-ui, sans-serif;
+
+  --shadow-glow: 0 0 12px rgb(var(--accent-rgb) / 0.55), 0 0 2px rgb(var(--accent-bright-rgb) / 0.9);
+  --shadow-glow-lg: 0 0 20px rgb(var(--accent-rgb) / 0.45), 0 0 4px rgb(var(--accent-bright-rgb) / 0.8);
+
+  /* v3's fixed line heights. v4 makes them a ratio of the font size, which
+     changes every line where our own CSS sets the size and text-sm only set
+     the line height. */
+  --text-xs--line-height: 1rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg--line-height: 1.75rem;
+  --text-xl--line-height: 1.75rem;
+  --text-2xl--line-height: 2rem;
+}
+
+/* v4's default border colour is currentcolor; v3's was gray-200. Kept so every
+   bare `border` looks as it did. */
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+  /* v3's placeholder grey; v4 uses the text colour at half strength. */
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-gray-400);
+  }
+}
 
 :root {
   /* Default accent = brass. Overridden at runtime (as "R G B" triples) by the

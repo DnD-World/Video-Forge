@@ -58,3 +58,14 @@ test("renders are stoppable and the window asks before closing on one", () => {
   // the screen has a Stop that calls it
   assert.match(read("src/components/render/RenderBar.tsx"), /render\.cancel\(\)/);
 });
+
+test("the hyperframes render program can be found (its package only exports ./api and ./package.json)", async () => {
+  const { createRequire } = await import("node:module");
+  const path = await import("node:path");
+  const fs = await import("node:fs");
+  const req = createRequire(new URL("../../package.json", import.meta.url));
+  const cli = path.join(path.dirname(req.resolve("hyperframes/package.json")), "bin", "hyperframes.mjs");
+  assert.ok(fs.existsSync(cli), cli);
+  const src = fs.readFileSync(new URL("../../electron/render/hyperframes/renderHyperframes.ts", import.meta.url), "utf8");
+  assert.match(src, /resolve\("hyperframes\/package\.json"\)/);
+});

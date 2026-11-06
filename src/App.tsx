@@ -465,7 +465,7 @@ export default function App() {
     // regardless of DOM order. Panels escape that on their own by being
     // position:relative, but loose text in a static container would not. The
     // library's own demo lifts its wrapper the same way.
-    <div className="relative z-[1] h-full w-full flex flex-col text-neutral-200">
+    <div className="relative z-1 h-full w-full flex flex-col text-neutral-200">
 
       <SparkField moving={motionEnabled} />
       <TipLayer />

@@ -82,7 +82,7 @@ export default function TtsTestPanel() {
           value={piperPythonPath}
           data-tip="Where Python is installed on your computer. The test voices need it to run."
           onChange={(e) => setDefault("piperPythonPath", e.target.value)}
-          className="w-full bg-metal-900 border border-accent/25 px-3 py-2 text-base text-neutral-100 outline-none focus:border-accent"
+          className="w-full bg-metal-900 border border-accent/25 px-3 py-2 text-base text-neutral-100 outline-hidden focus:border-accent"
         />
         <input
           type="text"
@@ -90,14 +90,14 @@ export default function TtsTestPanel() {
           value={piperVoicesDir}
           data-tip="The folder on your computer that holds your Piper voice files (files ending in .onnx)."
           onChange={(e) => setDefault("piperVoicesDir", e.target.value)}
-          className="w-full bg-metal-900 border border-accent/25 px-3 py-2 text-base text-neutral-100 outline-none focus:border-accent"
+          className="w-full bg-metal-900 border border-accent/25 px-3 py-2 text-base text-neutral-100 outline-hidden focus:border-accent"
         />
         <div className="flex items-center gap-3">
           <button
             onClick={runScan}
             data-tip="Looks in that folder and lists the voices it finds."
             disabled={scanning}
-            className="btn cut-sm px-4 py-2 text-sm font-display uppercase tracking-[0.1em] hover:text-accent-bright disabled:opacity-50"
+            className="btn cut-sm px-4 py-2 text-sm font-display uppercase tracking-widest hover:text-accent-bright disabled:opacity-50"
           >
             {scanning ? "Scanning…" : "Scan for Voices"}
           </button>
@@ -126,13 +126,13 @@ export default function TtsTestPanel() {
           data-tip="Type any sentence here, then press Speak to hear the voice say it."
           onChange={(e) => setTestText(e.target.value)}
           rows={2}
-          className="w-full bg-metal-900 border border-accent/25 px-3 py-2 text-base text-neutral-100 outline-none focus:border-accent resize-none"
+          className="w-full bg-metal-900 border border-accent/25 px-3 py-2 text-base text-neutral-100 outline-hidden focus:border-accent resize-none"
         />
         <button
           onClick={runSynthesize}
           data-tip="Makes the chosen voice say your sentence and plays it so you can listen."
           disabled={synthesizing || !selectedVoice}
-          className="btn cut-sm btn-primary px-4 py-2 text-sm font-display font-semibold uppercase tracking-[0.1em] text-accent-bright disabled:opacity-40"
+          className="btn cut-sm btn-primary px-4 py-2 text-sm font-display font-semibold uppercase tracking-widest text-accent-bright disabled:opacity-40"
         >
           {synthesizing ? "Speaking…" : "Speak"}
         </button>

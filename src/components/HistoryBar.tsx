@@ -98,16 +98,16 @@ export function HistoryBar() {
 
       {open && createPortal(
         <>
-          <div className="fixed inset-0 z-[998]" data-tip="Click anywhere outside the list to close it." onClick={() => setOpen(false)} />
+          <div className="fixed inset-0 z-998" data-tip="Click anywhere outside the list to close it." onClick={() => setOpen(false)} />
           <div
-            className="fixed z-[999] w-[360px] max-h-[70vh] overflow-y-auto p-2 rounded-lg border border-[var(--line-hot)] bg-[#04141c] shadow-2xl"
+            className="fixed z-999 w-[360px] max-h-[70vh] overflow-y-auto p-2 rounded-lg border border-(--line-hot) bg-[#04141c] shadow-2xl"
             style={{ left: pos.left, top: pos.top }}
             role="menu"
             aria-label="Recent projects"
             data-tip="The last project files you saved or opened."
           >
             {note && (
-              <div className="mb-2 p-2 text-sm rounded border border-[var(--line)] text-neutral-200" data-tip="What just happened.">
+              <div className="mb-2 p-2 text-sm rounded-sm border border-(--line) text-neutral-200" data-tip="What just happened.">
                 <div>{note.text}</div>
                 {note.gone && (
                   <button
@@ -128,7 +128,7 @@ export function HistoryBar() {
               <button
                 key={r.path}
                 role="menuitem"
-                className="block w-full text-left px-3 py-2 rounded hover:bg-white/5"
+                className="block w-full text-left px-3 py-2 rounded-sm hover:bg-white/5"
                 data-tip={`Opens ${r.name}. It's saved at ${r.path}.`}
                 onClick={() => void openRecent(r.path)}
               >

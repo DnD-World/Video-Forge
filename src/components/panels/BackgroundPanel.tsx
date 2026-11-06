@@ -313,7 +313,7 @@ export function BackgroundPanel() {
       {searchOpen &&
         createPortal(
           <div
-            className="fixed inset-0 z-[200] grid place-items-center p-6"
+            className="fixed inset-0 z-200 grid place-items-center p-6"
             style={{ background: "rgba(0,0,0,.72)", backdropFilter: "blur(3px)" }}
             onMouseDown={(e) => e.target === e.currentTarget && setSearchOpen(false)}
           >

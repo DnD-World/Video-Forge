@@ -92,7 +92,7 @@ export function NumberField({
           const n = Number(e.target.value);
           if (!Number.isNaN(n)) onChange(clamp(n));
         }}
-        className="min-w-0 flex-1 px-3 py-2 text-base text-[color:var(--ink)] outline-none cut-sm"
+        className="min-w-0 flex-1 px-3 py-2 text-base text-(--ink) outline-hidden cut-sm"
         style={{
           background: "#0a0907",
           boxShadow: "inset 0 2px 5px rgba(0,0,0,.75), inset 0 0 0 1px rgb(var(--accent-rgb) / .25)",
@@ -106,7 +106,7 @@ export function NumberField({
             disabled={disabled}
             aria-label={dir === 1 ? "Increase" : "Decrease"}
             onPointerDown={() => startRepeat(dir)}
-            className="btn btn-sm cut-sm flex-1 !px-2 !py-0 leading-none"
+            className="btn btn-sm cut-sm flex-1 px-2! py-0! leading-none"
             style={{ minHeight: 0 }}
           >
             <span aria-hidden style={{ fontSize: "0.6em", letterSpacing: 0 }}>
