@@ -5,6 +5,9 @@ Nothing is tagged yet; everything below is under Unreleased.
 
 ## [Unreleased]
 
+### Changed (6 Nov 2026)
+- Under the hood: React 19, Tailwind 4, Vite 8, TypeScript 7, Electron 45, Remotion 4.0.540. The app looks and renders the same; builds are about 4× faster.
+
 ### Added (27–30 Oct 2026, batch 2 and 3)
 - Drawn characters: smoother movement layer, in-between poses, round smiles, beards that follow the jaw, shoes, elbows and knees that bend, Karagiozis looks, 1.5-eye turning heads.
 - Sets: news desk, conference room, conference stage, podcast (facing or split screen), game show; speakers are seated, legs hidden.
