@@ -167,3 +167,16 @@ test("the window may stay on the app's own page and nowhere else", () => {
   assert.ok(!isAppPage("http://localhost:9999/", app));
   assert.ok(!isAppPage("garbage", app));
 });
+
+test("a folder named by its short 8.3 form still counts as inside, for files not made yet", () => {
+  const w = world();
+  // what the short-name bug looked like: the root resolves to one spelling,
+  // a missing file under it kept another. Simulated with a link, which any
+  // machine can make: the root is reached through a junction.
+  const alias = path.join(w.base, "alias");
+  fs.symlinkSync(w.own, alias, "junction");
+  const g = new PathGuard({ ownRoots: () => [alias], readOnlyRoots: () => [], grantsFile: w.grantsFile });
+  assert.ok(g.canRead(path.join(alias, "media", "deep", "a.mp4")), "a new file two folders down");
+  assert.ok(g.canWrite(path.join(alias, "renders", "v.mp4")));
+  assert.ok(!g.canRead(path.join(alias, "..", "secrets", "keys.txt")));
+});

@@ -38,7 +38,8 @@ test("switching a pack on and off", () => {
   assert.equal(b.name, "Acme");
   assert.equal(b.puppetDir, path.join(root, "brands", "acme", "puppet"));
   assert.equal(b.addOutros.outrosDir, path.join(root, "brands", "acme", "outros", "cut"));
-  assert.equal(b.addOutros.lessonsSrc, path.resolve("/somewhere/else"));
+  // an absolute path stays absolute (on Windows, on the pack's own drive)
+  assert.equal(b.addOutros.lessonsSrc, path.resolve(root, "/somewhere/else"));
   setActiveBrand(null, root);
   assert.equal(activeBrandId(root), null);
 });

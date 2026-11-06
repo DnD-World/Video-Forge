@@ -76,16 +76,23 @@ export class PathGuard {
   }
 
   /** The path with links followed, so a junction inside an allowed folder
-   *  cannot lead out of it. For a file that does not exist yet, its folder. */
+   *  cannot lead out of it. For a path that does not exist yet, its nearest
+   *  existing folder is followed and the rest added back: the missing part
+   *  cannot be a link. (Following only the parent left a path to a new
+   *  subfolder unresolved, and when the root's own name was a short 8.3 form
+   *  such as RUNNER~1 it no longer matched the root's long form.) */
   private real(p: string): string {
     const full = path.resolve(p);
-    try {
-      return fs.realpathSync.native(full);
-    } catch {
+    let dir = full;
+    const rest: string[] = [];
+    for (;;) {
       try {
-        return path.join(fs.realpathSync.native(path.dirname(full)), path.basename(full));
+        return path.join(fs.realpathSync.native(dir), ...rest);
       } catch {
-        return full;
+        const up = path.dirname(dir);
+        if (up === dir) return full;
+        rest.unshift(path.basename(dir));
+        dir = up;
       }
     }
   }
