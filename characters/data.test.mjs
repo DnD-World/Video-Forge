@@ -21,6 +21,8 @@ const unique = (list, what) => { const seen = new Set(); for (const id of list) 
 
 // ---- the Red Flag cast: one file per character (character creator phase 1, 6 Nov 2026) ----------
 const CHAR_DIR = "brands/redflag/characters";
+// git may check files out with Windows line endings; compare the text, not the line endings
+const lf = (text) => text.replace(/\r\n/g, "\n");
 const characterFiles = () => fs.readdirSync(path.join(root, CHAR_DIR)).filter((f) => f.endsWith(".json")).sort();
 
 test("Red Flag cast: the 40 character files exist, each loads without a problem", () => {
@@ -71,7 +73,7 @@ test("Red Flag cast: every part has a lock, saved in the file (moved in fully lo
 });
 
 test("Red Flag cast: the index lists exactly the files in the folder", () => {
-  assert.equal(fs.readFileSync(path.join(root, CHAR_DIR, "index.mjs"), "utf8"), characterIndexText(path.join(root, CHAR_DIR)),
+  assert.equal(lf(fs.readFileSync(path.join(root, CHAR_DIR, "index.mjs"), "utf8")), characterIndexText(path.join(root, CHAR_DIR)),
     "run: node tools/character-index.mjs brands/redflag");
   assert.equal(CAST.people.length, 40);
   assert.deepEqual(CAST.people.map((p) => p.roster), Array.from({ length: 40 }, (_, i) => i + 1), "people come in roster order");
@@ -79,7 +81,7 @@ test("Red Flag cast: the index lists exactly the files in the folder", () => {
 
 test("Red Flag cast: a file written back is the file that was read", () => {
   for (const f of characterFiles()) {
-    const text = fs.readFileSync(path.join(root, CHAR_DIR, f), "utf8");
+    const text = lf(fs.readFileSync(path.join(root, CHAR_DIR, f), "utf8"));
     assert.equal(characterToFile(JSON.parse(text)), text, `${f} changes when saved again`);
   }
 });
