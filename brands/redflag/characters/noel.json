@@ -1,0 +1,134 @@
+{
+  "kind": "video-forge-character",
+  "v": 1,
+  "id": "noel",
+  "roster": 33,
+  "name": "Hotel Desk Clerk Noel",
+  "group": "week",
+  "role": "Retail guest.",
+  "look": "geo",
+  "framing": "waist",
+  "signature": "#4a6f8a",
+  "signatureName": "steel blue",
+  "voice": null,
+  "locks": {
+    "body": true,
+    "head": true,
+    "eyes": true,
+    "brows": true,
+    "nose": true,
+    "mouth": true,
+    "ears": true,
+    "hair": true,
+    "skin": true,
+    "facialHair": true,
+    "outfits": true,
+    "marks": true
+  },
+  "base": {
+    "name": "Hotel Desk Clerk Noel",
+    "skin": "#f0d6bf",
+    "headShape": "oval",
+    "eyes": "oval",
+    "hair": "sidepart",
+    "hairColor": "#3a2a1e",
+    "expression": "smile",
+    "blinkRate": 1,
+    "energy": 0.5,
+    "sway": 0.4,
+    "form": 1,
+    "formDetail": true,
+    "formLimbs": 0.5
+  },
+  "accessories": [],
+  "faces": [
+    {"id": "A", "label": "As written", "set": {}},
+    {"id": "B", "label": "short hair", "set": {"hair": "short"}},
+    {"id": "C", "label": "buzz hair, beard stubble", "set": {"hair": "buzz", "beard": "stubble"}}
+  ],
+  "chosen": {"face": "A", "outfits": ["o2", "o7", "o6", "o1"]},
+  "outfits": [
+    {
+      "id": "o1",
+      "label": "As written",
+      "wear": [
+        {"id": "shirt", "colors": ["#f4f1ea"]},
+        {"id": "blazer", "colors": ["#4a6f8a"]},
+        {"id": "bowtie", "colors": ["#b8862a"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o2",
+      "label": "Smart jacket",
+      "wear": [
+        {"id": "shirt", "colors": ["#f4f1ea"]},
+        {"id": "blazer", "colors": ["#4a6f8a"]},
+        {"id": "tie", "colors": ["#b8862a"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o3",
+      "label": "Polo",
+      "wear": [
+        {"id": "polo", "colors": ["#4a6f8a"]},
+        {"id": "trousers", "colors": ["#c8b48a"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o4",
+      "label": "Pullover",
+      "wear": [
+        {"id": "sweater", "colors": ["#4a6f8a"]},
+        {"id": "trousers", "colors": ["#c8b48a"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o5",
+      "label": "Weekend tee",
+      "wear": [
+        {"id": "tshirt", "colors": ["#4a6f8a"]},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "sneakers", "colors": ["#f4f1ea", "#4a6f8a"]}
+      ]
+    },
+    {
+      "id": "o6",
+      "label": "Waistcoat",
+      "wear": [
+        {"id": "shirt", "colors": ["#efe6d2"]},
+        {"id": "vest", "colors": ["#4a6f8a"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o7",
+      "label": "Full suit",
+      "wear": [
+        {"id": "shirt", "colors": ["#f4f1ea"]},
+        {"id": "blazer", "colors": ["#4a6f8a"]},
+        {"id": "tie", "colors": ["#b8862a"]},
+        {"id": "trousers", "colors": ["#4a6f8a"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o8",
+      "label": "Check shirt",
+      "wear": [
+        {"id": "shirt", "colors": ["#4a6f8a"], "pattern": "checks"},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "boots", "colors": ["#3b2a1e"]}
+      ]
+    }
+  ],
+  "proposed": true,
+  "source": "roster 33",
+  "target": "4–5"
+}

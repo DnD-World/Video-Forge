@@ -37,11 +37,37 @@ export interface CharacterCard {
   blinkRate: number;
   energy: number;
   sway: number;
+  /** The main colour, "#rrggbb", or "" for none (character creator, 6 Nov 2026). */
+  signature?: string;
+  /** Their own voice, or null. A speaker can override it for one project. */
+  voice?: CharacterVoice | null;
+  form?: number;
+  formDetail?: boolean;
+  formLimbs?: number;
+}
+
+export type VoiceEngine = "gemini" | "piper" | "elevenlabs" | "fish";
+/** The same four things a speaker's voice is made of: engine, voice, pitch, speed (+ the engine's model). */
+export interface CharacterVoice { engine: VoiceEngine; voiceId: string; model: string; pitch: number; speed: number; }
+
+export type PartId = "body" | "head" | "eyes" | "brows" | "nose" | "mouth" | "ears" | "hair" | "skin" | "facialHair" | "outfits" | "marks";
+export type Locks = Record<PartId, boolean>;
+export interface Part { id: PartId; label: string; fields: (keyof CharacterCard)[]; }
+
+/** One character file (characters/core/character.mjs explains every field). */
+export interface CharacterFile {
+  kind: "video-forge-character"; v: number; id: string; roster: number | null; name: string; group: string; role: string;
+  look: string; framing: "full" | "waist" | "head"; signature: string; signatureName: string;
+  voice: CharacterVoice | null; locks: Locks; base: Partial<CharacterCard>; accessories: WornItem[];
+  faces: { id: string; label: string; set: Partial<CharacterCard> }[];
+  chosen: { face: string; outfits: string[]; faceNote?: string };
+  outfits: { id: string; label: string; wear: WornItem[] }[];
+  proposed?: boolean; source?: string; target?: string;
 }
 
 export interface Look { id: string; name: string; blurb: string; profile?: boolean; [k: string]: unknown; }
 export interface Field {
-  key: keyof CharacterCard; group: string; label: string; kind: "text" | "choice" | "number" | "color" | "bool" | "wear";
+  key: keyof CharacterCard; group: string; label: string; kind: "text" | "choice" | "number" | "color" | "bool" | "wear" | "voice";
   options?: string[]; min?: number; max?: number; step?: number; default: unknown; help: string; examples: unknown[]; optional?: boolean;
 }
 export interface HeadPose { rotateDeg: number; dx: number; dy: number; }
@@ -84,6 +110,23 @@ export function defaultCard(over?: Partial<CharacterCard>): CharacterCard;
 export function normalizeCard(input: unknown): { card: CharacterCard; problems: string[] };
 export function checkField(f: Field, value: unknown): [unknown, string | null];
 export function fieldByKey(k: string): Field | undefined;
+export const PARTS: Part[];
+export const PART_IDS: PartId[];
+export function partOf(key: string): PartId | null;
+export function allLocked(): Locks;
+export function normalizeLocks(value: unknown): { locks: Locks; problems: string[] };
+export function keepLocked(before: unknown, proposal: unknown, locks: unknown): CharacterCard;
+export const VOICE_ENGINES: VoiceEngine[];
+export const PITCH_RANGE: [number, number];
+export const SPEED_RANGE: [number, number];
+export function normalizeVoice(value: unknown): [CharacterVoice | null, string[]];
+export const CHARACTER_KIND: "video-forge-character";
+export const CHARACTER_VERSION: number;
+export function normalizeCharacter(raw: unknown): { character: CharacterFile; problems: string[] };
+export function cardFor(character: CharacterFile, o?: { face?: string; outfit?: string; look?: string }): CharacterCard;
+export function characterToFile(character: CharacterFile): string;
+export function castFrom<S extends object>(settings: S, characters: CharacterFile[]): S & { people: CharacterFile[] };
+export function wearsColor(wear: unknown, color: string): boolean;
 export const ITEMS: { id: string; label: string; slot: string; colors: string[] }[];
 export const SLOTS: string[];
 export const PATTERNS: string[];

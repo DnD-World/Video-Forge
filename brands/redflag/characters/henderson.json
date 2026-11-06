@@ -1,0 +1,105 @@
+{
+  "kind": "video-forge-character",
+  "v": 1,
+  "id": "henderson",
+  "roster": 38,
+  "name": "Mr. Henderson",
+  "group": "support",
+  "role": "Science teacher / lab coat.",
+  "look": "paper",
+  "framing": "full",
+  "signature": "#8a6a4a",
+  "signatureName": "tweed brown",
+  "voice": null,
+  "locks": {
+    "body": true,
+    "head": true,
+    "eyes": true,
+    "brows": true,
+    "nose": true,
+    "mouth": true,
+    "ears": true,
+    "hair": true,
+    "skin": true,
+    "facialHair": true,
+    "outfits": true,
+    "marks": true
+  },
+  "base": {
+    "name": "Mr. Henderson",
+    "skin": "#efcfb4",
+    "headShape": "oval",
+    "eyes": "oval",
+    "nose": "dot",
+    "hair": "short",
+    "hairColor": "#7a6a5a",
+    "expression": "smile",
+    "blinkRate": 1,
+    "energy": 0.5,
+    "sway": 0.4,
+    "form": 1,
+    "formDetail": true,
+    "formLimbs": 0.5
+  },
+  "accessories": [{"id": "glasses", "colors": ["#1c1c22"]}],
+  "faces": [
+    {"id": "A", "label": "As written", "set": {}},
+    {"id": "B", "label": "sidepart hair", "set": {"hair": "sidepart"}},
+    {"id": "C", "label": "curly hair, beard stubble", "set": {"hair": "curly", "beard": "stubble"}}
+  ],
+  "chosen": {"face": "A", "outfits": ["o1", "o2"]},
+  "outfits": [
+    {
+      "id": "o1",
+      "label": "As written",
+      "wear": [
+        {"id": "shirt", "colors": ["#f4f1ea"]},
+        {"id": "labcoat", "colors": ["#f2f0ea"]},
+        {"id": "tie", "colors": ["#8a6a4a"]},
+        {"id": "trousers", "colors": ["#8a6a4a"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o2",
+      "label": "Smart jacket",
+      "wear": [
+        {"id": "shirt", "colors": ["#f4f1ea"]},
+        {"id": "blazer", "colors": ["#8a6a4a"]},
+        {"id": "tie", "colors": ["#4c3a29"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o3",
+      "label": "Polo",
+      "wear": [
+        {"id": "polo", "colors": ["#8a6a4a"]},
+        {"id": "trousers", "colors": ["#c8b48a"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o4",
+      "label": "Pullover",
+      "wear": [
+        {"id": "sweater", "colors": ["#8a6a4a"]},
+        {"id": "trousers", "colors": ["#c8b48a"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o5",
+      "label": "Weekend tee",
+      "wear": [
+        {"id": "tshirt", "colors": ["#8a6a4a"]},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "sneakers", "colors": ["#f4f1ea", "#8a6a4a"]}
+      ]
+    }
+  ],
+  "proposed": true,
+  "source": "roster 38",
+  "target": "2–3"
+}

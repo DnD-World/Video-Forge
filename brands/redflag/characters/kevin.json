@@ -1,0 +1,137 @@
+{
+  "kind": "video-forge-character",
+  "v": 1,
+  "id": "kevin",
+  "roster": 29,
+  "name": "Tired Barista Kevin",
+  "group": "week",
+  "role": "Retail guest.",
+  "look": "geo",
+  "framing": "waist",
+  "signature": "#4a9a5e",
+  "signatureName": "barista green",
+  "voice": null,
+  "locks": {
+    "body": true,
+    "head": true,
+    "eyes": true,
+    "brows": true,
+    "nose": true,
+    "mouth": true,
+    "ears": true,
+    "hair": true,
+    "skin": true,
+    "facialHair": true,
+    "outfits": true,
+    "marks": true
+  },
+  "base": {
+    "name": "Tired Barista Kevin",
+    "build": "thin",
+    "posture": "slouch",
+    "skin": "#f0d6bf",
+    "headShape": "oval",
+    "eyes": "sleepy",
+    "hair": "messy",
+    "hairColor": "#3a2a1e",
+    "darkCircles": true,
+    "expression": "neutral",
+    "blinkRate": 0.6,
+    "energy": 0.2,
+    "sway": 0.3,
+    "form": 1,
+    "formDetail": true,
+    "formLimbs": 0.5
+  },
+  "accessories": [],
+  "faces": [
+    {"id": "A", "label": "As written", "set": {}},
+    {"id": "B", "label": "shaggy hair", "set": {"hair": "shaggy"}},
+    {"id": "C", "label": "curly hair, beard stubble", "set": {"hair": "curly", "beard": "stubble"}}
+  ],
+  "chosen": {"face": "C", "outfits": ["o1"]},
+  "outfits": [
+    {
+      "id": "o1",
+      "label": "As written",
+      "wear": [
+        {"id": "tshirt", "colors": ["#3a3a40"]},
+        {"id": "apron", "colors": ["#4a9a5e"]},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "sneakers", "colors": ["#f4f1ea", "#4a9a5e"]},
+        {"id": "beanie", "colors": ["#4a9a5e"]}
+      ]
+    },
+    {
+      "id": "o2",
+      "label": "Smart jacket",
+      "wear": [
+        {"id": "shirt", "colors": ["#f4f1ea"]},
+        {"id": "blazer", "colors": ["#4a9a5e"]},
+        {"id": "tie", "colors": ["#295534"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o3",
+      "label": "Polo",
+      "wear": [
+        {"id": "polo", "colors": ["#4a9a5e"]},
+        {"id": "trousers", "colors": ["#c8b48a"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o4",
+      "label": "Pullover",
+      "wear": [
+        {"id": "sweater", "colors": ["#4a9a5e"]},
+        {"id": "trousers", "colors": ["#c8b48a"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o5",
+      "label": "Weekend tee",
+      "wear": [
+        {"id": "tshirt", "colors": ["#4a9a5e"]},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "sneakers", "colors": ["#f4f1ea", "#4a9a5e"]}
+      ]
+    },
+    {
+      "id": "o6",
+      "label": "Waistcoat",
+      "wear": [
+        {"id": "shirt", "colors": ["#efe6d2"]},
+        {"id": "vest", "colors": ["#4a9a5e"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o7",
+      "label": "Full suit",
+      "wear": [
+        {"id": "shirt", "colors": ["#f4f1ea"]},
+        {"id": "blazer", "colors": ["#4a9a5e"]},
+        {"id": "tie", "colors": ["#295534"]},
+        {"id": "trousers", "colors": ["#4a9a5e"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o8",
+      "label": "Check shirt",
+      "wear": [
+        {"id": "shirt", "colors": ["#4a9a5e"], "pattern": "checks"},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "boots", "colors": ["#3b2a1e"]}
+      ]
+    }
+  ],
+  "proposed": true,
+  "source": "roster 29 (tired → sleepy eyes + dark circles)",
+  "target": "4–5"
+}

@@ -6,8 +6,10 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { normalizeCard } from "./core/card.mjs";
-import { normalizeWear } from "./core/wardrobe.mjs";
+import { normalizeCard, allLocked } from "./core/card.mjs";
+import { normalizeCharacter, cardFor, wearsColor, characterToFile } from "./core/character.mjs";
+import { characterIndexText } from "../tools/character-index.mjs";
+import CAST from "../brands/redflag/cast.mjs";
 import { normalizeTake, clipTracked, clipOnShelf, clipMoveId } from "./core/acted.mjs";
 import { SHELF_DATA } from "./moves/shelf.mjs";
 import { ACTED_DATA } from "./moves/acted/shelf.mjs";
@@ -17,29 +19,69 @@ const json = (p) => JSON.parse(fs.readFileSync(path.join(root, p), "utf8"));
 const HEX = /^#[0-9a-f]{6}$/i;
 const unique = (list, what) => { const seen = new Set(); for (const id of list) { assert.ok(!seen.has(id), `${what} "${id}" twice`); seen.add(id); } };
 
-test("Red Flag cast: every card, face and outfit loads without a problem", () => {
-  const cast = json("brands/redflag/cast.json");
-  assert.ok(cast.form >= 0 && cast.form <= 1, "form 0–1");
-  assert.ok(cast.formLimbs >= 0 && cast.formLimbs <= 1, "formLimbs 0–1");
-  assert.equal(typeof cast.formDetail, "boolean");
-  unique(cast.groups.map((g) => g.id), "group");
-  unique(cast.people.map((p) => p.id), "person");
-  const groups = new Set(cast.groups.map((g) => g.id));
+// ---- the Red Flag cast: one file per character (character creator phase 1, 6 Nov 2026) ----------
+const CHAR_DIR = "brands/redflag/characters";
+const characterFiles = () => fs.readdirSync(path.join(root, CHAR_DIR)).filter((f) => f.endsWith(".json")).sort();
+
+test("Red Flag cast: the 40 character files exist, each loads without a problem", () => {
+  const files = characterFiles();
+  assert.equal(files.length, 40, "Season 1 has 40 characters");
+  const settings = json("brands/redflag/cast-settings.json");
+  const groups = new Set(settings.groups.map((g) => g.id));
+  unique(settings.groups.map((g) => g.id), "group");
   const problems = [];
-  for (const p of cast.people) {
-    if (!groups.has(p.group)) problems.push(`${p.id}: group "${p.group}" doesn't exist`);
-    if (!HEX.test(p.signature ?? "")) problems.push(`${p.id}: signature colour "${p.signature}"`);
-    unique((p.faces ?? []).map((f) => f.id), `${p.id} face`);
-    unique((p.outfits ?? []).map((o) => o.id), `${p.id} outfit`);
-    for (const f of p.faces ?? []) {
-      const r = normalizeCard({ ...p.base, ...f.set });
-      for (const x of r.problems) problems.push(`${p.id} face ${f.id}: ${x}`);
-    }
-    for (const o of p.outfits ?? []) {
-      for (const x of normalizeWear(o.wear).problems) problems.push(`${p.id} outfit ${o.id}: ${x}`);
-    }
+  for (const f of files) {
+    const raw = json(`${CHAR_DIR}/${f}`);
+    const { character, problems: p } = normalizeCharacter(raw);
+    for (const x of p) problems.push(`${f}: ${x}`);
+    if (raw.id + ".json" !== f) problems.push(`${f}: the file is named after its id ("${raw.id}")`);
+    if (!groups.has(character.group)) problems.push(`${f}: group "${character.group}" isn't in cast-settings.json`);
+    if (!character.chosen.face) problems.push(`${f}: no face chosen`);
+    // the drawn card of every face and every outfit loads cleanly
+    for (const face of character.faces) for (const x of normalizeCard(cardFor(character, { face: face.id })).problems) problems.push(`${f} face ${face.id}: ${x}`);
   }
   assert.deepEqual(problems, []);
+});
+
+test("Red Flag cast: ids and roster numbers are unique", () => {
+  const all = characterFiles().map((f) => json(`${CHAR_DIR}/${f}`));
+  unique(all.map((c) => c.id), "character id");
+  unique(all.map((c) => c.roster), "roster number");
+  assert.deepEqual(all.map((c) => c.roster).sort((a, b) => a - b), Array.from({ length: 40 }, (_, i) => i + 1));
+});
+
+test("Red Flag cast: the main colour is on one piece of every outfit", () => {
+  const missing = [];
+  let outfits = 0;
+  for (const f of characterFiles()) {
+    const c = json(`${CHAR_DIR}/${f}`);
+    assert.match(c.signature, HEX, `${f}: main colour`);
+    for (const o of c.outfits) { outfits++; if (!wearsColor(o.wear, c.signature)) missing.push(`${c.id} ${o.id} (${o.label})`); }
+  }
+  assert.deepEqual(missing, []);
+  assert.ok(outfits >= 300, `all the outfits were checked (${outfits})`);
+});
+
+test("Red Flag cast: every part has a lock, saved in the file (moved in fully locked)", () => {
+  for (const f of characterFiles()) {
+    const c = json(`${CHAR_DIR}/${f}`);
+    assert.deepEqual(Object.keys(c.locks).sort(), Object.keys(allLocked()).sort(), `${f}: one lock per part`);
+    assert.ok(Object.values(c.locks).every((v) => typeof v === "boolean"), `${f}: locks are true or false`);
+  }
+});
+
+test("Red Flag cast: the index lists exactly the files in the folder", () => {
+  assert.equal(fs.readFileSync(path.join(root, CHAR_DIR, "index.mjs"), "utf8"), characterIndexText(path.join(root, CHAR_DIR)),
+    "run: node tools/character-index.mjs brands/redflag");
+  assert.equal(CAST.people.length, 40);
+  assert.deepEqual(CAST.people.map((p) => p.roster), Array.from({ length: 40 }, (_, i) => i + 1), "people come in roster order");
+});
+
+test("Red Flag cast: a file written back is the file that was read", () => {
+  for (const f of characterFiles()) {
+    const text = fs.readFileSync(path.join(root, CHAR_DIR, f), "utf8");
+    assert.equal(characterToFile(JSON.parse(text)), text, `${f} changes when saved again`);
+  }
 });
 
 test("Red Flag characters.json: cards load, looks are known", () => {

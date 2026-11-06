@@ -1,0 +1,156 @@
+{
+  "kind": "video-forge-character",
+  "v": 1,
+  "id": "young_lucas",
+  "roster": 12,
+  "name": "Young Lucas",
+  "group": "young",
+  "role": "Lucas at 8–12, flashbacks.",
+  "look": "hose2",
+  "framing": "full",
+  "signature": "#6d7f96",
+  "signatureName": "muted grey-blue (as Lucas)",
+  "voice": null,
+  "locks": {
+    "body": true,
+    "head": true,
+    "eyes": true,
+    "brows": true,
+    "nose": true,
+    "mouth": true,
+    "ears": true,
+    "hair": true,
+    "skin": true,
+    "facialHair": true,
+    "outfits": true,
+    "marks": true
+  },
+  "base": {
+    "name": "Young Lucas",
+    "height": 0.8,
+    "build": "thin",
+    "headSize": 1.22,
+    "posture": "slouch",
+    "skin": "#f0d0b6",
+    "headShape": "round",
+    "eyes": "oval",
+    "nose": "dot",
+    "hair": "tuft",
+    "hairColor": "#5a3a24",
+    "freckles": true,
+    "expression": "neutral",
+    "blinkRate": 1.5,
+    "energy": 0.25,
+    "sway": 0.5,
+    "form": 1,
+    "formDetail": true,
+    "formLimbs": 0.5
+  },
+  "accessories": [],
+  "faces": [
+    {"id": "A", "label": "As written", "set": {}},
+    {"id": "B", "label": "messy hair", "set": {"hair": "messy"}},
+    {"id": "C", "label": "short hair, freckles False", "set": {"hair": "short", "freckles": false}}
+  ],
+  "chosen": {"face": "B", "outfits": ["o1", "o2", "o3", "o6", "o9"]},
+  "outfits": [
+    {
+      "id": "o1",
+      "label": "As written",
+      "wear": [
+        {"id": "tshirt", "colors": ["#6d7f96"], "pattern": "stripes"},
+        {"id": "shorts", "colors": ["#2f3b52"]},
+        {"id": "sneakers", "colors": ["#f4f1ea", "#6d7f96"]}
+      ]
+    },
+    {
+      "id": "o2",
+      "label": "Plain tee",
+      "wear": [
+        {"id": "tshirt", "colors": ["#6d7f96"]},
+        {"id": "shorts", "colors": ["#c8b48a"]},
+        {"id": "sneakers", "colors": ["#f4f1ea", "#6d7f96"]}
+      ]
+    },
+    {
+      "id": "o3",
+      "label": "Hoodie",
+      "wear": [
+        {"id": "hoodie", "colors": ["#6d7f96"]},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "sneakers", "colors": ["#f4f1ea", "#6d7f96"]}
+      ]
+    },
+    {
+      "id": "o4",
+      "label": "Pullover",
+      "wear": [
+        {"id": "sweater", "colors": ["#6d7f96"]},
+        {"id": "trousers", "colors": ["#c8b48a"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o5",
+      "label": "School shirt",
+      "wear": [
+        {"id": "shirt", "colors": ["#f4f1ea"]},
+        {"id": "vest", "colors": ["#6d7f96"]},
+        {"id": "trousers", "colors": ["#2d3446"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o6",
+      "label": "Pyjamas",
+      "wear": [
+        {"id": "tshirt", "colors": ["#6d7f96"]},
+        {"id": "trousers", "colors": ["#afb9c5"], "pattern": "checks"},
+        {"id": "paws", "colors": ["#c5ccd5"]}
+      ]
+    },
+    {
+      "id": "o7",
+      "label": "Rain day",
+      "wear": [
+        {"id": "hoodie_up", "colors": ["#6d7f96"]},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "wellies", "colors": ["#3c4652"]}
+      ]
+    },
+    {
+      "id": "o8",
+      "label": "Cap and tee",
+      "wear": [
+        {"id": "tshirt", "colors": ["#6d7f96"]},
+        {"id": "shorts", "colors": ["#2f3b52"]},
+        {"id": "sneakers", "colors": ["#f4f1ea", "#6d7f96"]},
+        {"id": "cap", "colors": ["#3c4652"]}
+      ]
+    },
+    {
+      "id": "o9",
+      "label": "Sunday best",
+      "wear": [
+        {"id": "shirt", "colors": ["#f4f1ea"]},
+        {"id": "bowtie", "colors": ["#6d7f96"]},
+        {"id": "trousers", "colors": ["#6d7f96"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o10",
+      "label": "Winter",
+      "wear": [
+        {"id": "sweater", "colors": ["#6d7f96"]},
+        {"id": "scarf", "colors": ["#3c4652"]},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "boots", "colors": ["#3b2a1e"]},
+        {"id": "beanie", "colors": ["#3c4652"]}
+      ]
+    }
+  ],
+  "proposed": true,
+  "source": "roster 12",
+  "target": "More than 5"
+}

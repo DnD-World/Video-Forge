@@ -1,0 +1,139 @@
+{
+  "kind": "video-forge-character",
+  "v": 1,
+  "id": "schopenhauer",
+  "roster": 17,
+  "name": "Arthur Schopenhauer",
+  "group": "week",
+  "role": "Cold Mom expert (Mon couch).",
+  "look": "hose2",
+  "framing": "waist",
+  "signature": "#5a2e4a",
+  "signatureName": "dark plum",
+  "voice": null,
+  "locks": {
+    "body": true,
+    "head": true,
+    "eyes": true,
+    "brows": true,
+    "nose": true,
+    "mouth": true,
+    "ears": true,
+    "hair": true,
+    "skin": true,
+    "facialHair": true,
+    "outfits": true,
+    "marks": true
+  },
+  "base": {
+    "name": "Arthur Schopenhauer",
+    "posture": "hunch",
+    "skin": "#f0d6bf",
+    "headShape": "square",
+    "eyes": "oval",
+    "brows": "thick",
+    "hair": "sides",
+    "hairColor": "#e8e6e0",
+    "expression": "grumpy",
+    "blinkRate": 0.6,
+    "energy": 0.5,
+    "sway": 0.3,
+    "form": 1,
+    "formDetail": true,
+    "formLimbs": 0.5
+  },
+  "accessories": [],
+  "faces": [
+    {"id": "A", "label": "As written", "set": {}},
+    {"id": "B", "label": "bald hair", "set": {"hair": "bald"}},
+    {"id": "C", "label": "buzz hair, headShape oval", "set": {"hair": "buzz", "headShape": "oval"}}
+  ],
+  "chosen": {"face": "A", "outfits": ["o8"]},
+  "outfits": [
+    {
+      "id": "o1",
+      "label": "As written",
+      "wear": [
+        {"id": "shirt", "colors": ["#efe6d2"]},
+        {"id": "blazer", "colors": ["#5a2e4a"]},
+        {"id": "scarf", "colors": ["#f4f1ea"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o2",
+      "label": "Waistcoat and tie",
+      "wear": [
+        {"id": "shirt", "colors": ["#efe6d2"]},
+        {"id": "vest", "colors": ["#5a2e4a"]},
+        {"id": "tie", "colors": ["#1c1c22"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o3",
+      "label": "Top hat",
+      "wear": [
+        {"id": "shirt", "colors": ["#efe6d2"]},
+        {"id": "blazer", "colors": ["#5a2e4a"]},
+        {"id": "tie", "colors": ["#1c1c22"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]},
+        {"id": "tophat", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o4",
+      "label": "Cape",
+      "wear": [
+        {"id": "shirt", "colors": ["#efe6d2"]},
+        {"id": "vest", "colors": ["#3a3a40"]},
+        {"id": "cape", "colors": ["#5a2e4a"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "boots", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o5",
+      "label": "Long robe",
+      "wear": [{"id": "robe", "colors": ["#5a2e4a", "#321929"]}, {"id": "sandals", "colors": ["#3b2a1e"]}]
+    },
+    {
+      "id": "o6",
+      "label": "Bow tie",
+      "wear": [
+        {"id": "shirt", "colors": ["#efe6d2"]},
+        {"id": "blazer", "colors": ["#5a2e4a"]},
+        {"id": "bowtie", "colors": ["#321929"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o7",
+      "label": "Scholar's pullover",
+      "wear": [
+        {"id": "sweater", "colors": ["#5a2e4a"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o8",
+      "label": "Beret",
+      "wear": [
+        {"id": "shirt", "colors": ["#efe6d2"]},
+        {"id": "blazer", "colors": ["#5a2e4a"]},
+        {"id": "scarf", "colors": ["#321929"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]},
+        {"id": "beret", "colors": ["#3a1e30"]}
+      ]
+    }
+  ],
+  "proposed": true,
+  "source": "roster 17",
+  "target": "4–5"
+}

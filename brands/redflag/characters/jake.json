@@ -1,0 +1,185 @@
+{
+  "kind": "video-forge-character",
+  "v": 1,
+  "id": "jake",
+  "roster": 1,
+  "name": "Jake",
+  "group": "main",
+  "role": "Dad, 45. Charming in public.",
+  "look": "paper",
+  "framing": "full",
+  "signature": "#24365c",
+  "signatureName": "navy",
+  "voice": null,
+  "locks": {
+    "body": true,
+    "head": true,
+    "eyes": true,
+    "brows": true,
+    "nose": true,
+    "mouth": true,
+    "ears": true,
+    "hair": true,
+    "skin": true,
+    "facialHair": true,
+    "outfits": true,
+    "marks": true
+  },
+  "base": {
+    "name": "Jake",
+    "framing": "full",
+    "height": 1.08,
+    "build": "average",
+    "muscle": 0.2,
+    "headSize": 1,
+    "posture": "upright",
+    "skin": "#efcfb4",
+    "headShape": "oval",
+    "eyes": "oval",
+    "eyeSpacing": 0.95,
+    "brows": "thick",
+    "nose": "dot",
+    "mouth": "plain",
+    "ears": "small",
+    "hair": "sidepart",
+    "hairColor": "#2b2622",
+    "highlight": "#9b9a98",
+    "expression": "smile",
+    "blinkRate": 0.6,
+    "energy": 0.9,
+    "sway": 0.2,
+    "form": 1,
+    "formDetail": true,
+    "formLimbs": 0.5
+  },
+  "accessories": [],
+  "faces": [
+    {"id": "A", "label": "As written", "set": {}},
+    {"id": "B", "label": "short hair", "set": {"hair": "short"}},
+    {"id": "C", "label": "buzz hair, beard stubble", "set": {"hair": "buzz", "beard": "stubble"}}
+  ],
+  "chosen": {"face": "A", "outfits": ["o12", "o9", "o7", "o5", "o1", "o3"]},
+  "outfits": [
+    {
+      "id": "o1",
+      "label": "As written",
+      "wear": [
+        {"id": "polo", "colors": ["#f2efe6"]},
+        {"id": "blazer", "colors": ["#24365c"]},
+        {"id": "trousers", "colors": ["#c8b48a"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o2",
+      "label": "Smart jacket",
+      "wear": [
+        {"id": "shirt", "colors": ["#f4f1ea"]},
+        {"id": "blazer", "colors": ["#24365c"]},
+        {"id": "tie", "colors": ["#141e33"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o3",
+      "label": "Polo",
+      "wear": [
+        {"id": "polo", "colors": ["#24365c"]},
+        {"id": "trousers", "colors": ["#c8b48a"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o4",
+      "label": "Pullover",
+      "wear": [
+        {"id": "sweater", "colors": ["#24365c"]},
+        {"id": "trousers", "colors": ["#c8b48a"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o5",
+      "label": "Weekend tee",
+      "wear": [
+        {"id": "tshirt", "colors": ["#24365c"]},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "sneakers", "colors": ["#f4f1ea", "#24365c"]}
+      ]
+    },
+    {
+      "id": "o6",
+      "label": "Waistcoat",
+      "wear": [
+        {"id": "shirt", "colors": ["#efe6d2"]},
+        {"id": "vest", "colors": ["#24365c"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o7",
+      "label": "Full suit",
+      "wear": [
+        {"id": "shirt", "colors": ["#f4f1ea"]},
+        {"id": "blazer", "colors": ["#24365c"]},
+        {"id": "tie", "colors": ["#141e33"]},
+        {"id": "trousers", "colors": ["#24365c"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o8",
+      "label": "Check shirt",
+      "wear": [
+        {"id": "shirt", "colors": ["#24365c"], "pattern": "checks"},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "boots", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o9",
+      "label": "Hoodie",
+      "wear": [
+        {"id": "hoodie", "colors": ["#24365c"]},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "sneakers", "colors": ["#f4f1ea", "#24365c"]}
+      ]
+    },
+    {
+      "id": "o10",
+      "label": "Winter",
+      "wear": [
+        {"id": "sweater", "colors": ["#24365c"]},
+        {"id": "scarf", "colors": ["#141e33"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "boots", "colors": ["#3b2a1e"]},
+        {"id": "beanie", "colors": ["#141e33"]}
+      ]
+    },
+    {
+      "id": "o11",
+      "label": "Sport",
+      "wear": [
+        {"id": "tshirt", "colors": ["#24365c"]},
+        {"id": "shorts", "colors": ["#2d3446"]},
+        {"id": "sneakers", "colors": ["#f4f1ea", "#24365c"]},
+        {"id": "cap", "colors": ["#24365c"]}
+      ]
+    },
+    {
+      "id": "o12",
+      "label": "Barbecue apron",
+      "wear": [
+        {"id": "tshirt", "colors": ["#24365c"]},
+        {"id": "apron", "colors": ["#141e33"]},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "sneakers", "colors": ["#f4f1ea", "#24365c"]}
+      ]
+    }
+  ],
+  "proposed": false,
+  "source": "already built",
+  "target": "More than 5"
+}

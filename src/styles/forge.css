@@ -348,6 +348,9 @@ input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-of
 .forge-who .who:hover { color: var(--ink); border-color: var(--c, var(--accent)); }
 .forge-who .who.on { color: #001a10; background: var(--c); border-color: var(--c); box-shadow: 0 0 22px -6px var(--c); }
 .forge-who .who.on i { background: #001a10; box-shadow: none; }
+/* a dark speaker colour (a navy main colour): white writing on the selected tab */
+.forge-who .who.on.dark { color: #fff; }
+.forge-who .who.on.dark i { background: #fff; }
 .forge-who .add { width: 38px; justify-content: center; padding: 8px 0; font-size: 1.1rem; color: var(--accent); }
 
 .forge-sec { border-radius: 14px; background: rgba(0, 0, 0, .28); border: 1px solid var(--line); padding: 10px 14px 14px; }
@@ -610,6 +613,7 @@ html[data-motion="off"] body::before { animation: none; }
 .kind-badge.pic { color: #ffb35b; background: rgba(255, 179, 91, .14); }
 .kind-badge.drawn { color: #5be3b5; background: rgba(91, 227, 181, .14); }
 .forge-who .who.on .kind-badge { background: rgba(0, 26, 16, .18); color: #001a10; }
+.forge-who .who.on.dark .kind-badge { background: rgba(255, 255, 255, .18); color: #fff; }
 .drawn-face { display: block; width: 100%; aspect-ratio: 1; border-radius: 50%; overflow: hidden; background: radial-gradient(circle at 50% 35%, #1b4a3e, #04121a 70%); }
 .drawn-face > div { width: 100% !important; height: 100% !important; }
 

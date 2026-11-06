@@ -1,0 +1,124 @@
+{
+  "kind": "video-forge-character",
+  "v": 1,
+  "id": "brenda",
+  "roster": 30,
+  "name": "Supermarket Cashier Brenda",
+  "group": "week",
+  "role": "Retail guest.",
+  "look": "geo",
+  "framing": "waist",
+  "signature": "#c23b3b",
+  "signatureName": "store red",
+  "voice": null,
+  "locks": {
+    "body": true,
+    "head": true,
+    "eyes": true,
+    "brows": true,
+    "nose": true,
+    "mouth": true,
+    "ears": true,
+    "hair": true,
+    "skin": true,
+    "facialHair": true,
+    "outfits": true,
+    "marks": true
+  },
+  "base": {
+    "name": "Supermarket Cashier Brenda",
+    "posture": "slouch",
+    "skin": "#e0b48c",
+    "headShape": "oval",
+    "eyes": "oval",
+    "hair": "ponytail",
+    "hairColor": "#5a3825",
+    "expression": "serious",
+    "blinkRate": 1,
+    "energy": 0.4,
+    "sway": 0.4,
+    "form": 1,
+    "formDetail": true,
+    "formLimbs": 0.5
+  },
+  "accessories": [],
+  "faces": [
+    {"id": "A", "label": "As written", "set": {}},
+    {"id": "B", "label": "long hair", "set": {"hair": "long"}},
+    {"id": "C", "label": "bun hair, makeup soft", "set": {"hair": "bun", "makeup": "soft"}}
+  ],
+  "chosen": {"face": "A", "outfits": ["o3", "o7", "o2"]},
+  "outfits": [
+    {
+      "id": "o1",
+      "label": "As written",
+      "wear": [
+        {"id": "polo", "colors": ["#f4f1ea"]},
+        {"id": "vest", "colors": ["#c23b3b"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o2",
+      "label": "Pullover and skirt",
+      "wear": [
+        {"id": "sweater", "colors": ["#c23b3b"]},
+        {"id": "skirt", "colors": ["#2d3446"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o3",
+      "label": "Dress",
+      "wear": [{"id": "dress", "colors": ["#c23b3b"]}, {"id": "shoes", "colors": ["#3b2a1e"]}]
+    },
+    {
+      "id": "o4",
+      "label": "Blazer and trousers",
+      "wear": [
+        {"id": "shirt", "colors": ["#f4f1ea"]},
+        {"id": "blazer", "colors": ["#c23b3b"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o5",
+      "label": "Blazer and skirt",
+      "wear": [
+        {"id": "shirt", "colors": ["#f4f1ea"]},
+        {"id": "blazer", "colors": ["#c23b3b"]},
+        {"id": "skirt", "colors": ["#3a3a40"]},
+        {"id": "heels", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o6",
+      "label": "Cosy scarf",
+      "wear": [
+        {"id": "sweater", "colors": ["#c23b3b"]},
+        {"id": "scarf", "colors": ["#6b2020"]},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "boots", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o7",
+      "label": "Dotted dress",
+      "wear": [{"id": "dress", "colors": ["#c23b3b"], "pattern": "dots"}, {"id": "heels", "colors": ["#6b2020"]}]
+    },
+    {
+      "id": "o8",
+      "label": "Weekend tee",
+      "wear": [
+        {"id": "tshirt", "colors": ["#c23b3b"]},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "sneakers", "colors": ["#f4f1ea", "#c23b3b"]}
+      ]
+    }
+  ],
+  "proposed": true,
+  "source": "roster 30",
+  "target": "4–5"
+}

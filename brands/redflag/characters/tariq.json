@@ -1,0 +1,133 @@
+{
+  "kind": "video-forge-character",
+  "v": 1,
+  "id": "tariq",
+  "roster": 31,
+  "name": "Call-Center Rep Tariq",
+  "group": "week",
+  "role": "Retail guest.",
+  "look": "geo",
+  "framing": "waist",
+  "signature": "#f08060",
+  "signatureName": "coral",
+  "voice": null,
+  "locks": {
+    "body": true,
+    "head": true,
+    "eyes": true,
+    "brows": true,
+    "nose": true,
+    "mouth": true,
+    "ears": true,
+    "hair": true,
+    "skin": true,
+    "facialHair": true,
+    "outfits": true,
+    "marks": true
+  },
+  "base": {
+    "name": "Call-Center Rep Tariq",
+    "skin": "#c68b5e",
+    "headShape": "oval",
+    "eyes": "oval",
+    "hair": "short",
+    "hairColor": "#1e1a18",
+    "beard": "stubble",
+    "expression": "neutral",
+    "blinkRate": 1,
+    "energy": 0.4,
+    "sway": 0.4,
+    "form": 1,
+    "formDetail": true,
+    "formLimbs": 0.5
+  },
+  "accessories": [{"id": "headset", "colors": ["#1c1c22"]}],
+  "faces": [
+    {"id": "A", "label": "As written", "set": {}},
+    {"id": "B", "label": "sidepart hair", "set": {"hair": "sidepart"}},
+    {"id": "C", "label": "curly hair, beard none", "set": {"hair": "curly", "beard": "none"}}
+  ],
+  "chosen": {"face": "B", "outfits": ["o8", "o3", "o1"]},
+  "outfits": [
+    {
+      "id": "o1",
+      "label": "As written",
+      "wear": [
+        {"id": "shirt", "colors": ["#f08060"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o2",
+      "label": "Smart jacket",
+      "wear": [
+        {"id": "shirt", "colors": ["#f4f1ea"]},
+        {"id": "blazer", "colors": ["#f08060"]},
+        {"id": "tie", "colors": ["#844635"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o3",
+      "label": "Polo",
+      "wear": [
+        {"id": "polo", "colors": ["#f08060"]},
+        {"id": "trousers", "colors": ["#c8b48a"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o4",
+      "label": "Pullover",
+      "wear": [
+        {"id": "sweater", "colors": ["#f08060"]},
+        {"id": "trousers", "colors": ["#c8b48a"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o5",
+      "label": "Weekend tee",
+      "wear": [
+        {"id": "tshirt", "colors": ["#f08060"]},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "sneakers", "colors": ["#f4f1ea", "#f08060"]}
+      ]
+    },
+    {
+      "id": "o6",
+      "label": "Waistcoat",
+      "wear": [
+        {"id": "shirt", "colors": ["#efe6d2"]},
+        {"id": "vest", "colors": ["#f08060"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o7",
+      "label": "Full suit",
+      "wear": [
+        {"id": "shirt", "colors": ["#f4f1ea"]},
+        {"id": "blazer", "colors": ["#f08060"]},
+        {"id": "tie", "colors": ["#844635"]},
+        {"id": "trousers", "colors": ["#f08060"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o8",
+      "label": "Check shirt",
+      "wear": [
+        {"id": "shirt", "colors": ["#f08060"], "pattern": "checks"},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "boots", "colors": ["#3b2a1e"]}
+      ]
+    }
+  ],
+  "proposed": true,
+  "source": "roster 31",
+  "target": "4–5"
+}

@@ -1,0 +1,134 @@
+{
+  "kind": "video-forge-character",
+  "v": 1,
+  "id": "margo",
+  "roster": 5,
+  "name": "Margo Habernathy",
+  "group": "week",
+  "role": "Therapist, hosts the morning couch.",
+  "look": "geo",
+  "framing": "full",
+  "signature": "#00a7b5",
+  "signatureName": "bright turquoise (Ak 2 Nov: brighter, vibrant)",
+  "voice": null,
+  "locks": {
+    "body": true,
+    "head": true,
+    "eyes": true,
+    "brows": true,
+    "nose": true,
+    "mouth": true,
+    "ears": true,
+    "hair": true,
+    "skin": true,
+    "facialHair": true,
+    "outfits": true,
+    "marks": true
+  },
+  "base": {
+    "name": "Margo Habernathy",
+    "framing": "full",
+    "eyes": "oval",
+    "nose": "dot",
+    "mouth": "plain",
+    "ears": "small",
+    "sway": 0.4,
+    "height": 0.98,
+    "build": "round",
+    "headShape": "round",
+    "brows": "arched",
+    "lips": true,
+    "lipColor": "#b8676b",
+    "makeup": "soft",
+    "makeupColor": "#b08a7a",
+    "hair": "bob",
+    "hairColor": "#e8c46a",
+    "expression": "smile",
+    "blinkRate": 0.9,
+    "energy": 0.55,
+    "highlight": "#f8e6ae",
+    "form": 1,
+    "formDetail": true,
+    "formLimbs": 0.5
+  },
+  "accessories": [{"id": "glasses", "colors": ["#5a3825"]}, {"id": "earrings", "colors": ["#d8c27a"]}],
+  "faces": [
+    {"id": "A", "label": "As written", "set": {}},
+    {"id": "B", "label": "long hair", "set": {"hair": "long"}},
+    {"id": "C", "label": "bun hair, makeup none", "set": {"hair": "bun", "makeup": "none"}}
+  ],
+  "chosen": {"face": "B", "outfits": ["o2", "o1", "o4"]},
+  "outfits": [
+    {
+      "id": "o1",
+      "label": "As written",
+      "wear": [
+        {"id": "shirt", "colors": ["#ffe08a"]},
+        {"id": "blazer", "colors": ["#00a7b5"]},
+        {"id": "skirt", "colors": ["#f4f1ea"]},
+        {"id": "shoes", "colors": ["#ff7a5c"]}
+      ]
+    },
+    {
+      "id": "o2",
+      "label": "Pullover and skirt",
+      "wear": [
+        {"id": "sweater", "colors": ["#00a7b5"]},
+        {"id": "skirt", "colors": ["#ff7a5c"]},
+        {"id": "shoes", "colors": ["#ff7a5c"]}
+      ]
+    },
+    {
+      "id": "o3",
+      "label": "Dress",
+      "wear": [{"id": "dress", "colors": ["#00a7b5"]}, {"id": "shoes", "colors": ["#ff7a5c"]}]
+    },
+    {
+      "id": "o4",
+      "label": "Blazer and trousers",
+      "wear": [
+        {"id": "shirt", "colors": ["#ffe08a"]},
+        {"id": "blazer", "colors": ["#00a7b5"]},
+        {"id": "trousers", "colors": ["#f4f1ea"]},
+        {"id": "shoes", "colors": ["#ff7a5c"]}
+      ]
+    },
+    {
+      "id": "o5",
+      "label": "Blazer and skirt",
+      "wear": [
+        {"id": "shirt", "colors": ["#ffe08a"]},
+        {"id": "blazer", "colors": ["#00a7b5"]},
+        {"id": "skirt", "colors": ["#f4f1ea"]},
+        {"id": "heels", "colors": ["#ff7a5c"]}
+      ]
+    },
+    {
+      "id": "o6",
+      "label": "Cosy scarf",
+      "wear": [
+        {"id": "sweater", "colors": ["#00a7b5"]},
+        {"id": "scarf", "colors": ["#ff7a5c"]},
+        {"id": "jeans", "colors": ["#f4f1ea"]},
+        {"id": "boots", "colors": ["#ff7a5c"]}
+      ]
+    },
+    {
+      "id": "o7",
+      "label": "Dotted dress",
+      "wear": [{"id": "dress", "colors": ["#00a7b5"], "pattern": "dots"}, {"id": "heels", "colors": ["#ff7a5c"]}]
+    },
+    {
+      "id": "o8",
+      "label": "Weekend tee",
+      "wear": [
+        {"id": "tshirt", "colors": ["#00a7b5"]},
+        {"id": "jeans", "colors": ["#f4f1ea"]},
+        {"id": "sneakers", "colors": ["#ffe08a", "#00a7b5"]}
+      ]
+    }
+  ],
+  "proposed": false,
+  "source": "already built",
+  "target": "4–5"
+}

@@ -16,6 +16,8 @@ import {
 import type { ProjectPreset, SpeakerSlot } from "./templatesTypes";
 import { defaultProject } from "./defaults";
 import { defaultTrackWaveform } from "../lib/waveform/buildTracks";
+import { withCharacterColor } from "./characterColor";
+
 
 const SPEAKER_COLORS = ["#e8a24a", "#4ac2e8"]; // speaker1 / speaker2 from tailwind theme
 
@@ -60,7 +62,8 @@ function applySlots(
 function migrateSpeaker(sp: SpeakerConfig, i: number): SpeakerConfig {
   const size = sp.size > 1 ? Math.min(1, sp.size / LEGACY_AUTHORED_WIDTH) : sp.size;
   const lane = i === 0 ? 0 : i % 2 === 1 ? 1 : -1;
-  return {
+  // a drawn character's main colour is their speaker colour (store/characterColor.ts)
+  return withCharacterColor({
     ...sp,
     size,
     outlineShape: sp.outlineShape ?? "circle",
@@ -74,7 +77,7 @@ function migrateSpeaker(sp: SpeakerConfig, i: number): SpeakerConfig {
     // missing waveform on a project that used to have one. Confirmed against a
     // real pre-branch autosave shape.
     waveform: migrateTrack({ ...defaultTrackWaveform(lane), ...(sp.waveform ?? {}) }),
-  };
+  });
 }
 
 /** A saved waveform, read in today's terms.
@@ -281,12 +284,12 @@ export const useProjectStore = create<ProjectState & Actions>()(
       return {
         speakers: [
           ...s.speakers,
-          {
+          withCharacterColor({
             ...preset,
             id: crypto.randomUUID(),
             x: n % 2 === 0 ? 0.3 : 0.7,
             y: 0.6,
-          },
+          }),
         ],
       };
     }),
@@ -297,7 +300,7 @@ export const useProjectStore = create<ProjectState & Actions>()(
   updateSpeaker: (id, patch) =>
     set((s) => ({
       speakers: s.speakers.map((sp) =>
-        sp.id === id ? { ...sp, ...patch } : sp
+        sp.id === id ? withCharacterColor({ ...sp, ...patch }) : sp
       ),
     })),
 

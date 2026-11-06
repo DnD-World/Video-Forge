@@ -1,0 +1,131 @@
+{
+  "kind": "video-forge-character",
+  "v": 1,
+  "id": "lexi",
+  "roster": 11,
+  "name": "Lexi",
+  "group": "week",
+  "role": "Explains the week's terms on cards. Professor look (the notebook also offers a grandma look).",
+  "look": "paper",
+  "framing": "full",
+  "signature": "#7a4fc0",
+  "signatureName": "violet",
+  "voice": null,
+  "locks": {
+    "body": true,
+    "head": true,
+    "eyes": true,
+    "brows": true,
+    "nose": true,
+    "mouth": true,
+    "ears": true,
+    "hair": true,
+    "skin": true,
+    "facialHair": true,
+    "outfits": true,
+    "marks": true
+  },
+  "base": {
+    "name": "Lexi",
+    "framing": "full",
+    "eyes": "oval",
+    "nose": "dot",
+    "mouth": "plain",
+    "ears": "small",
+    "sway": 0.4,
+    "height": 0.96,
+    "build": "average",
+    "headShape": "round",
+    "brows": "arched",
+    "lips": true,
+    "lipColor": "#a8556a",
+    "hair": "curly",
+    "hairColor": "#3a2a24",
+    "expression": "smile",
+    "blinkRate": 1,
+    "energy": 0.65,
+    "form": 1,
+    "formDetail": true,
+    "formLimbs": 0.5
+  },
+  "accessories": [{"id": "glasses", "colors": ["#3a2a24"]}],
+  "faces": [
+    {"id": "A", "label": "As written", "set": {}},
+    {"id": "B", "label": "afro hair", "set": {"hair": "afro"}},
+    {"id": "C", "label": "bob hair, makeup soft", "set": {"hair": "bob", "makeup": "soft"}}
+  ],
+  "chosen": {"face": "B", "outfits": ["o3", "o8"]},
+  "outfits": [
+    {
+      "id": "o1",
+      "label": "As written",
+      "wear": [
+        {"id": "sweater", "colors": ["#7a4fc0"]},
+        {"id": "skirt", "colors": ["#2d3446"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o2",
+      "label": "Dress",
+      "wear": [{"id": "dress", "colors": ["#7a4fc0"]}, {"id": "shoes", "colors": ["#3b2a1e"]}]
+    },
+    {
+      "id": "o3",
+      "label": "Blazer and trousers",
+      "wear": [
+        {"id": "shirt", "colors": ["#f4f1ea"]},
+        {"id": "blazer", "colors": ["#7a4fc0"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o4",
+      "label": "Blazer and skirt",
+      "wear": [
+        {"id": "shirt", "colors": ["#f4f1ea"]},
+        {"id": "blazer", "colors": ["#7a4fc0"]},
+        {"id": "skirt", "colors": ["#3a3a40"]},
+        {"id": "heels", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o5",
+      "label": "Cosy scarf",
+      "wear": [
+        {"id": "sweater", "colors": ["#7a4fc0"]},
+        {"id": "scarf", "colors": ["#432b6a"]},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "boots", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o6",
+      "label": "Dotted dress",
+      "wear": [{"id": "dress", "colors": ["#7a4fc0"], "pattern": "dots"}, {"id": "heels", "colors": ["#432b6a"]}]
+    },
+    {
+      "id": "o7",
+      "label": "Weekend tee",
+      "wear": [
+        {"id": "tshirt", "colors": ["#7a4fc0"]},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "sneakers", "colors": ["#f4f1ea", "#7a4fc0"]}
+      ]
+    },
+    {
+      "id": "o8",
+      "label": "Waistcoat",
+      "wear": [
+        {"id": "shirt", "colors": ["#f4f1ea"]},
+        {"id": "vest", "colors": ["#7a4fc0"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    }
+  ],
+  "proposed": false,
+  "source": "already built",
+  "target": "4–5"
+}

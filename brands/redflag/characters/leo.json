@@ -1,0 +1,140 @@
+{
+  "kind": "video-forge-character",
+  "v": 1,
+  "id": "leo",
+  "roster": 6,
+  "name": "Leo Vance",
+  "group": "week",
+  "role": "Progressive IT / corporate guy, co-host.",
+  "look": "geo",
+  "framing": "full",
+  "signature": "#2f6fd8",
+  "signatureName": "electric blue",
+  "voice": null,
+  "locks": {
+    "body": true,
+    "head": true,
+    "eyes": true,
+    "brows": true,
+    "nose": true,
+    "mouth": true,
+    "ears": true,
+    "hair": true,
+    "skin": true,
+    "facialHair": true,
+    "outfits": true,
+    "marks": true
+  },
+  "base": {
+    "name": "Leo Vance",
+    "framing": "full",
+    "eyes": "oval",
+    "nose": "dot",
+    "mouth": "plain",
+    "ears": "small",
+    "sway": 0.4,
+    "height": 1.04,
+    "build": "thin",
+    "headShape": "oval",
+    "brows": "thick",
+    "beard": "stubble",
+    "hair": "undercut",
+    "hairColor": "#2b2622",
+    "expression": "smile",
+    "blinkRate": 1.2,
+    "energy": 0.8,
+    "form": 1,
+    "formDetail": true,
+    "formLimbs": 0.5
+  },
+  "accessories": [{"id": "glasses", "colors": ["#1a1a1a"]}],
+  "faces": [
+    {"id": "A", "label": "As written", "set": {}},
+    {"id": "B", "label": "spiky hair", "set": {"hair": "spiky"}},
+    {"id": "C", "label": "short hair, beard none", "set": {"hair": "short", "beard": "none"}}
+  ],
+  "chosen": {"face": "C", "outfits": ["o7", "o1", "o2"]},
+  "outfits": [
+    {
+      "id": "o1",
+      "label": "As written",
+      "wear": [
+        {"id": "hoodie", "colors": ["#2f6fd8"]},
+        {"id": "blazer", "colors": ["#3a3f4a"]},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "sneakers", "colors": ["#f2f2f2", "#2f6fd8"]}
+      ]
+    },
+    {
+      "id": "o2",
+      "label": "Smart jacket",
+      "wear": [
+        {"id": "shirt", "colors": ["#f4f1ea"]},
+        {"id": "blazer", "colors": ["#2f6fd8"]},
+        {"id": "tie", "colors": ["#1a3d77"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o3",
+      "label": "Polo",
+      "wear": [
+        {"id": "polo", "colors": ["#2f6fd8"]},
+        {"id": "trousers", "colors": ["#c8b48a"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o4",
+      "label": "Pullover",
+      "wear": [
+        {"id": "sweater", "colors": ["#2f6fd8"]},
+        {"id": "trousers", "colors": ["#c8b48a"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o5",
+      "label": "Weekend tee",
+      "wear": [
+        {"id": "tshirt", "colors": ["#2f6fd8"]},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "sneakers", "colors": ["#f4f1ea", "#2f6fd8"]}
+      ]
+    },
+    {
+      "id": "o6",
+      "label": "Waistcoat",
+      "wear": [
+        {"id": "shirt", "colors": ["#efe6d2"]},
+        {"id": "vest", "colors": ["#2f6fd8"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o7",
+      "label": "Full suit",
+      "wear": [
+        {"id": "shirt", "colors": ["#f4f1ea"]},
+        {"id": "blazer", "colors": ["#2f6fd8"]},
+        {"id": "tie", "colors": ["#1a3d77"]},
+        {"id": "trousers", "colors": ["#2f6fd8"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o8",
+      "label": "Check shirt",
+      "wear": [
+        {"id": "shirt", "colors": ["#2f6fd8"], "pattern": "checks"},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "boots", "colors": ["#3b2a1e"]}
+      ]
+    }
+  ],
+  "proposed": false,
+  "source": "already built",
+  "target": "4–5"
+}

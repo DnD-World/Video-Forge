@@ -1,8 +1,8 @@
 // The 2D Lab (Ak, 4 Nov 2026: "full round"). Seven side-by-side tests of the
 // Season 1 plan (docs/research/2d-motion-plan-2026-11.md): today's engine on
 // the left, the lab's layers on the right, on the Red Flag cast.
-import { SHELF, lookById, stageOf, drawFigure, drawCharacter, characterState, performAt, movesAt, normalizeCard, followAt, autoPerformance } from "../core/index.mjs";
-import CAST from "../../brands/redflag/cast.json";
+import { SHELF, lookById, stageOf, drawFigure, drawCharacter, characterState, performAt, movesAt, cardFor, followAt, autoPerformance } from "../core/index.mjs";
+import CAST from "../../brands/redflag/cast.mjs";
 import { Actor, buildFor } from "../lab/actor.mjs";
 import { restPose } from "../lab/body.mjs";
 import * as MV from "../lab/moves.mjs";
@@ -22,11 +22,8 @@ const NAMES = {};
 function cardOf(id) {
   const p = CAST.people.find((x) => x.id === id);
   NAMES[id] = p.name ?? id;
-  const face = p.faces.find((f) => f.id === p.chosen?.face) ?? p.faces[0];
-  const ids = p.chosen?.outfits ?? [p.outfits[0].id];
-  const o = p.outfits.find((x) => x.id === ids[0]) ?? p.outfits[0];
   const lookId = UI.look === "own" ? p.look : UI.look;
-  const card = normalizeCard({ ...p.base, ...face.set, form: CAST.form ?? 0, formDetail: CAST.formDetail ?? false, formLimbs: CAST.formLimbs ?? 1, look: lookId, wear: [...o.wear, ...p.accessories] }).card;
+  const card = cardFor(p, { look: lookId });
   return { card, look: lookObj(lookId) };
 }
 

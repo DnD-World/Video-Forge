@@ -1,0 +1,104 @@
+{
+  "kind": "video-forge-character",
+  "v": 1,
+  "id": "bob",
+  "roster": 40,
+  "name": "Neighbor Bob",
+  "group": "support",
+  "role": "Neighbour. Sees only the polite side.",
+  "look": "paper",
+  "framing": "full",
+  "signature": "#4a6a9a",
+  "signatureName": "denim blue",
+  "voice": null,
+  "locks": {
+    "body": true,
+    "head": true,
+    "eyes": true,
+    "brows": true,
+    "nose": true,
+    "mouth": true,
+    "ears": true,
+    "hair": true,
+    "skin": true,
+    "facialHair": true,
+    "outfits": true,
+    "marks": true
+  },
+  "base": {
+    "name": "Neighbor Bob",
+    "skin": "#efcfb4",
+    "headShape": "round",
+    "eyes": "oval",
+    "nose": "dot",
+    "hair": "short",
+    "hairColor": "#7a5a3a",
+    "expression": "smile",
+    "blinkRate": 1,
+    "energy": 0.6,
+    "sway": 0.5,
+    "form": 1,
+    "formDetail": true,
+    "formLimbs": 0.5
+  },
+  "accessories": [],
+  "faces": [
+    {"id": "A", "label": "As written", "set": {}},
+    {"id": "B", "label": "sidepart hair", "set": {"hair": "sidepart"}},
+    {"id": "C", "label": "curly hair, beard stubble", "set": {"hair": "curly", "beard": "stubble"}}
+  ],
+  "chosen": {"face": "A", "outfits": ["o1", "o4"]},
+  "outfits": [
+    {
+      "id": "o1",
+      "label": "As written",
+      "wear": [
+        {"id": "polo", "colors": ["#4a6a9a"]},
+        {"id": "trousers", "colors": ["#c8b48a"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]},
+        {"id": "cap", "colors": ["#4a6a9a"]}
+      ]
+    },
+    {
+      "id": "o2",
+      "label": "Smart jacket",
+      "wear": [
+        {"id": "shirt", "colors": ["#f4f1ea"]},
+        {"id": "blazer", "colors": ["#4a6a9a"]},
+        {"id": "tie", "colors": ["#293a55"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o3",
+      "label": "Polo",
+      "wear": [
+        {"id": "polo", "colors": ["#4a6a9a"]},
+        {"id": "trousers", "colors": ["#c8b48a"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o4",
+      "label": "Pullover",
+      "wear": [
+        {"id": "sweater", "colors": ["#4a6a9a"]},
+        {"id": "trousers", "colors": ["#c8b48a"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o5",
+      "label": "Weekend tee",
+      "wear": [
+        {"id": "tshirt", "colors": ["#4a6a9a"]},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "sneakers", "colors": ["#f4f1ea", "#4a6a9a"]}
+      ]
+    }
+  ],
+  "proposed": true,
+  "source": "roster 40",
+  "target": "2–3"
+}

@@ -1,8 +1,27 @@
-# Handoff — updated 5 Nov 2026
+# Handoff — updated 6 Nov 2026
 
 Everything a fresh session needs. `PLAN.md` holds the long history; this is the
 working state. Newest sections first. Plans: `docs/V2-PLAN.md` (Video Forge),
 `docs/FORGES-PLAN.md` (both apps; has a Status section at the bottom).
+
+## Character creator, phase 1: character files, locks, voice, main colour — 6 Nov 2026 (branch `claude/creator-phase1-4272d7`, not pushed)
+
+Spec: `docs/character-creator-spec.md` (agreed with Ak 6 Nov). Phase 2 (the creator screen) builds on this.
+
+- **The 40 Red Flag characters are files now**: `brands/redflag/characters/<id>.json`, one per person. Moved by `tools/migrate-redflag-characters.mjs` (one-off; checked field by field against the old `cast.json`: nothing lost). `brands/redflag/cast.json` is gone; what belongs to the whole cast (groups, `geoEyes`, the 3D defaults for NEW characters) is in `brands/redflag/cast-settings.json`.
+  - The brand's 3D settings (form 1, clay details, softer limbs 0.5) were laid over every card by every page; they are now in each character's `base`, so a character drawn from its file alone (or copied into another project) looks the same.
+  - Format: `characters/core/character.mjs` (top of file explains every field). `normalizeCharacter` checks a file and reports problems in plain words; `cardFor(character, { face, outfit, look })` gives the card to draw; `characterToFile` writes one back (short things on one line).
+  - Pages and tests that bundle the cast import `brands/redflag/cast.mjs` (the old shape: settings + `people` in roster order), built from `brands/redflag/characters/index.mjs`. **After adding or removing a character file run `node tools/character-index.mjs brands/redflag`**; a test fails until you do.
+- **Parts and locks** (`characters/core/card.mjs`): 12 parts (body, head, eyes, brows, nose, mouth, ears, hair, skin, facial hair, outfits, marks) mapped to card fields in `PARTS`. Each file has `locks`, one per part, all `true` (locked) as moved in. A missing lock counts as locked. `keepLocked(before, proposal, locks)` is the rule the randomiser and AI box (phases 2–3) must use: only unlocked parts change.
+  - Not in any part, so never changed by the randomiser: name, look, framing, line wobble, 3D, main colour, voice, and the personality fields (resting face, blinking, gestures, idle sway). **Question for Ak in phase 2:** add a "Personality" part?
+- **New card fields:** `signature` (main colour) and `voice` (`{ engine, voiceId, model, pitch, speed }`, checked by `normalizeVoice`). The AI helper never sees or changes them. All 40 files have `voice: null`: no voice was ever chosen for them, none was made up.
+- **Voice in the app** (`src/lib/narration/characterVoice.ts`): a drawn character's own voice is used unless the speaker's new `voiceOverride` is on ("in this project only"). Changing any voice setting in the Cast panel turns the override on and writes only the speaker's own fields; the character's voice is untouched. Buttons: "Use <name>'s own voice" (back), "Make this <name>'s own voice" (puts the current voice on the project's copy of the character). Narration, remake, ▶ sample and Many videos all go through `voicedSpeaker()`. Project file version stays 2: every new field is optional, older projects open unchanged (tested).
+- **Main colour in the app** (`src/store/characterColor.ts`): everything about a speaker already used one colour (`borderColor`), so the main colour sets it whenever a speaker is added, changed or loaded (also in the batch, `electron/batch/runJob.ts`). That colours: their sound bars in any position (bottom bar included) and the bars' glow, their spoken word in the subtitles (when "word colour from the speaker" is on, the default), their frame and its glow, their stretch on the timeline. The colour swatch shows "Main colour 🔒" for such a speaker. The selected speaker tab now writes in white on dark colours (12 of the 40 are dark; Jake's navy was unreadable).
+  - **Doesn't exist in the app yet, so not wired:** a lower third (name card), and the one outfit piece is only data (every outfit is checked to carry it; the creator will keep it so).
+- **New in the Cast "+" menu:** "From a character file…" adds one person from their file (chosen face, first chosen outfit, main colour, voice). A copy: the file isn't changed.
+- **Checked in the app** (test copy on a scratch data folder, driven by script; the Windows file picker was answered by the script): Jake and Rita added from their files; a short test narration (tones, no voice service): navy bars round Jake and navy spoken word, teal bottom bar and teal spoken word for Rita, timeline in both colours, locked swatch, voice own → this project only → back. Screenshots: `docs/creator-phase1/`.
+- **Tests:** `characters/creator.test.mjs` (parts, locks, voice, file rules), `characters/data.test.mjs` (40 files load clean, ids and roster unique, main colour on every outfit, locks per part, index current, files save back unchanged), `tools/lib/characterVoice.test.mjs` (voice override, colour, project file round trip). `npm test`: 254 pass, 0 fail.
+- **Not done / not checked:** a real voice made with a character's own voice (no voice run was started); a render (only the live preview was looked at). Dark main colours (Jake navy, Celeste, Kafka …) read weakly on a black background: a taste call for Ak, not changed.
 
 ## PR 12 code review fixes + easy wins — 5 Nov 2026 (branch `redflag-2d-lab`)
 

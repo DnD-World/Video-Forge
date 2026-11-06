@@ -17,9 +17,12 @@ import { LOOKS } from "./looks.mjs";
 import { PATTERNS } from "./wardrobe.mjs";
 import { extractJson } from "../../explainer/core/prompts.mjs";
 
+/** Who the character IS, not how they look: the AI helper never sees or sets these. */
+export const AI_SKIPS = new Set(["signature", "voice"]);
+
 /** The card format, written for a model: every field, its allowed values, its meaning. */
 export function cardSchemaText() {
-  const lines = FIELDS.filter((f) => f.kind !== "wear").map((f) => {
+  const lines = FIELDS.filter((f) => f.kind !== "wear" && !AI_SKIPS.has(f.key)).map((f) => {
     const allowed = f.kind === "choice" ? `one of: ${f.options.join(" | ")}`
       : f.kind === "number" ? `a number ${f.min}–${f.max}`
       : f.kind === "color" ? `a colour "#rrggbb"${f.optional ? ' or ""' : ""}`

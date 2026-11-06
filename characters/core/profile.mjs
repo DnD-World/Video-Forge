@@ -85,7 +85,8 @@ export const activeCard = (sp = {}) => (formOf(sp) === "drawn" ? sp.character : 
 export function cardDiff(before, after) {
   const out = [];
   for (const f of FIELDS) {
-    if (f.key === "name") continue;
+    // the name, main colour and voice are who they are: a suggestion never changes them
+    if (f.key === "name" || f.key === "signature" || f.key === "voice") continue;
     const a = before?.[f.key], b = after?.[f.key];
     if (JSON.stringify(a) !== JSON.stringify(b)) out.push({ key: f.key, label: f.label, from: a, to: b });
   }

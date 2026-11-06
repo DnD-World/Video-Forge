@@ -1,0 +1,100 @@
+{
+  "kind": "video-forge-character",
+  "v": 1,
+  "id": "mia",
+  "roster": 39,
+  "name": "Mia",
+  "group": "support",
+  "role": "Teen friend.",
+  "look": "paper",
+  "framing": "full",
+  "signature": "#b48ad8",
+  "signatureName": "lilac",
+  "voice": null,
+  "locks": {
+    "body": true,
+    "head": true,
+    "eyes": true,
+    "brows": true,
+    "nose": true,
+    "mouth": true,
+    "ears": true,
+    "hair": true,
+    "skin": true,
+    "facialHair": true,
+    "outfits": true,
+    "marks": true
+  },
+  "base": {
+    "name": "Mia",
+    "height": 0.95,
+    "build": "thin",
+    "skin": "#f6dcc6",
+    "headShape": "oval",
+    "eyes": "lash",
+    "nose": "dot",
+    "hair": "long",
+    "hairColor": "#2b2018",
+    "expression": "smile",
+    "blinkRate": 1.1,
+    "energy": 0.7,
+    "sway": 0.6,
+    "form": 1,
+    "formDetail": true,
+    "formLimbs": 0.5
+  },
+  "accessories": [],
+  "faces": [
+    {"id": "A", "label": "As written", "set": {}},
+    {"id": "B", "label": "ponytail hair", "set": {"hair": "ponytail"}},
+    {"id": "C", "label": "braid hair, freckles True", "set": {"hair": "braid", "freckles": true}}
+  ],
+  "chosen": {"face": "A", "outfits": ["o5", "o2"]},
+  "outfits": [
+    {
+      "id": "o1",
+      "label": "As written",
+      "wear": [
+        {"id": "tank", "colors": ["#b48ad8"]},
+        {"id": "skirt", "colors": ["#2f3b52"]},
+        {"id": "sneakers", "colors": ["#f4f1ea", "#b48ad8"]}
+      ]
+    },
+    {
+      "id": "o2",
+      "label": "Preppy waistcoat",
+      "wear": [
+        {"id": "shirt", "colors": ["#f4f1ea"]},
+        {"id": "vest", "colors": ["#b48ad8"]},
+        {"id": "skirt", "colors": ["#2d3446"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o3",
+      "label": "Pullover and skirt",
+      "wear": [
+        {"id": "sweater", "colors": ["#b48ad8"]},
+        {"id": "skirt", "colors": ["#2d3446"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o4",
+      "label": "Dress",
+      "wear": [{"id": "dress", "colors": ["#b48ad8"]}, {"id": "shoes", "colors": ["#f4f1ea"]}]
+    },
+    {
+      "id": "o5",
+      "label": "Polo and skirt",
+      "wear": [
+        {"id": "polo", "colors": ["#b48ad8"]},
+        {"id": "skirt", "colors": ["#f4f1ea"]},
+        {"id": "sneakers", "colors": ["#f4f1ea", "#b48ad8"]}
+      ]
+    }
+  ],
+  "proposed": true,
+  "source": "roster 39",
+  "target": "2–3"
+}

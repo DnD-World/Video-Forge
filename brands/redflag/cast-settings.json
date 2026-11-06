@@ -1,0 +1,37 @@
+{
+  "_about": "Red Flag Theory Season 1 cast (roster 1–40, NotebookLM source 2). A person = base face + one face candidate + one outfit; accessories (glasses, earrings, headband, headset) belong to the face. Every outfit keeps the signature colour on its main piece. New people's signature colours are proposals. Generated 2 Nov 2026. Ak picked faces and outfits on 2026-11-03: see each person's \"chosen\" (fewer outfits on purpose, for recognisability). Geo-minimal eyes: own white eyes with lids. Moved 6 Nov 2026: each person is now their own file in characters/ (tools/migrate-redflag-characters.mjs); this file keeps what belongs to the whole cast.",
+  "groups": [
+    {
+      "id": "main",
+      "title": "The family",
+      "sub": "Sunday, paper cut-out. Pick more than 5 outfits each."
+    },
+    {
+      "id": "young",
+      "title": "The family in flashbacks",
+      "sub": "1930s rubber hose, early colour. Pick more than 5."
+    },
+    {
+      "id": "week",
+      "title": "The week",
+      "sub": "Hosts in their show's look, dead thinkers in 1930s colour, Monday outro and retail guests in geo-minimal. Pick 4–5."
+    },
+    {
+      "id": "extended",
+      "title": "Extended family",
+      "sub": "Sunday, paper cut-out. Pick 2–3."
+    },
+    {
+      "id": "support",
+      "title": "Sunday support cast",
+      "sub": "Sunday, paper cut-out. Pick 2–3."
+    }
+  ],
+  "geoEyes": "own",
+  "defaults": {
+    "form": 1,
+    "formDetail": true,
+    "formLimbs": 0.5
+  },
+  "defaultsNote": "Card fields a NEW Red Flag character starts with. Every existing character has them in its own base. Red Flag look (Ak, 5 Nov 2026): full 3D shading (form 1) with the stronger clay details (formDetail) and softer arms, hands, legs and feet (formLimbs 0.5). Before: a hint of 3D (form 0.5, 4 Nov)."
+}

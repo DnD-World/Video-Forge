@@ -1,0 +1,140 @@
+{
+  "kind": "video-forge-character",
+  "v": 1,
+  "id": "kafka",
+  "roster": 16,
+  "name": "Franz Kafka",
+  "group": "week",
+  "role": "Scary Dad expert (Mon couch).",
+  "look": "hose2",
+  "framing": "waist",
+  "signature": "#2c3142",
+  "signatureName": "ink blue-black",
+  "voice": null,
+  "locks": {
+    "body": true,
+    "head": true,
+    "eyes": true,
+    "brows": true,
+    "nose": true,
+    "mouth": true,
+    "ears": true,
+    "hair": true,
+    "skin": true,
+    "facialHair": true,
+    "outfits": true,
+    "marks": true
+  },
+  "base": {
+    "name": "Franz Kafka",
+    "build": "thin",
+    "posture": "slouch",
+    "skin": "#f0d6bf",
+    "headShape": "oval",
+    "eyes": "oval",
+    "brows": "thick",
+    "hair": "sidepart",
+    "hairColor": "#1e1a18",
+    "ears": "big",
+    "expression": "serious",
+    "blinkRate": 1.6,
+    "energy": 0.2,
+    "sway": 0.3,
+    "form": 1,
+    "formDetail": true,
+    "formLimbs": 0.5
+  },
+  "accessories": [],
+  "faces": [
+    {"id": "A", "label": "As written", "set": {}},
+    {"id": "B", "label": "short hair", "set": {"hair": "short"}},
+    {"id": "C", "label": "buzz hair, ears small", "set": {"hair": "buzz", "ears": "small"}}
+  ],
+  "chosen": {"face": "B", "outfits": ["o1"]},
+  "outfits": [
+    {
+      "id": "o1",
+      "label": "As written",
+      "wear": [
+        {"id": "shirt", "colors": ["#f4f1ea"]},
+        {"id": "blazer", "colors": ["#2c3142"]},
+        {"id": "tie", "colors": ["#1c1c22"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o2",
+      "label": "Frock coat and cravat",
+      "wear": [
+        {"id": "shirt", "colors": ["#efe6d2"]},
+        {"id": "blazer", "colors": ["#2c3142"]},
+        {"id": "scarf", "colors": ["#f4f1ea"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o3",
+      "label": "Waistcoat and tie",
+      "wear": [
+        {"id": "shirt", "colors": ["#efe6d2"]},
+        {"id": "vest", "colors": ["#2c3142"]},
+        {"id": "tie", "colors": ["#1c1c22"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o4",
+      "label": "Top hat",
+      "wear": [
+        {"id": "shirt", "colors": ["#efe6d2"]},
+        {"id": "blazer", "colors": ["#2c3142"]},
+        {"id": "tie", "colors": ["#1c1c22"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]},
+        {"id": "tophat", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o5",
+      "label": "Cape",
+      "wear": [
+        {"id": "shirt", "colors": ["#efe6d2"]},
+        {"id": "vest", "colors": ["#3a3a40"]},
+        {"id": "cape", "colors": ["#2c3142"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "boots", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o6",
+      "label": "Long robe",
+      "wear": [{"id": "robe", "colors": ["#2c3142", "#181b24"]}, {"id": "sandals", "colors": ["#3b2a1e"]}]
+    },
+    {
+      "id": "o7",
+      "label": "Bow tie",
+      "wear": [
+        {"id": "shirt", "colors": ["#efe6d2"]},
+        {"id": "blazer", "colors": ["#2c3142"]},
+        {"id": "bowtie", "colors": ["#181b24"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o8",
+      "label": "Scholar's pullover",
+      "wear": [
+        {"id": "sweater", "colors": ["#2c3142"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    }
+  ],
+  "proposed": true,
+  "source": "roster 16",
+  "target": "4–5"
+}

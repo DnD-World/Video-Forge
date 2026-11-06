@@ -1,7 +1,8 @@
 // The drawn-character engine, in one import (the app, Remotion and the tools
 // use this; tests may import modules directly). Types: index.d.mts.
 export { LOOKS, LOOK_IDS, lookById, stageOf } from "./looks.mjs";
-export { FIELDS, WARDROBE, CARD_VERSION, defaultCard, normalizeCard, checkField, fieldByKey } from "./card.mjs";
+export { FIELDS, WARDROBE, CARD_VERSION, defaultCard, normalizeCard, checkField, fieldByKey, PARTS, PART_IDS, partOf, allLocked, normalizeLocks, keepLocked, VOICE_ENGINES, PITCH_RANGE, SPEED_RANGE, normalizeVoice } from "./card.mjs";
+export { CHARACTER_KIND, CHARACTER_VERSION, normalizeCharacter, cardFor, castFrom, characterToFile, wearsColor } from "./character.mjs";
 export { ITEMS, SLOTS, PATTERNS, itemById, normalizeWear } from "./wardrobe.mjs";
 export { POSES, POSE_NAMES, solveRig, anchors, figureExtent } from "./rig.mjs";
 export { MOUTHS, LIDS, BROWS, mouthShape } from "./face.mjs";
