@@ -1,14 +1,21 @@
 version: 2
 updates:
-  # Change the ecosystem per repo: npm, pip, composer, cargo, docker...
+  # Small updates (minor and patch) arrive together in one weekly PR. A major
+  # version gets a PR of its own, so one breaking change can't hide among 20
+  # safe ones (PR 18, 5 Nov 2026, bundled 23 updates and broke the build).
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "weekly"
     groups:
-      dependencies:
-        patterns:
-          - "*"
+      small-updates:
+        update-types: ["minor", "patch"]
+    ignore:
+      # Electron 46 removes the synchronous safeStorage calls electron/keyStore.ts
+      # uses to encrypt the saved keys. Move keyStore to the async calls first
+      # (docs/HANDOFF.md), then delete this rule.
+      - dependency-name: "electron"
+        versions: [">=46"]
 
   # Keeps the versions in .github/workflows current. Every repo has workflows.
   - package-ecosystem: "github-actions"

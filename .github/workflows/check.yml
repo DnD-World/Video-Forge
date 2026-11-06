@@ -1,0 +1,28 @@
+# Builds and tests every PR, so an update that breaks the app shows up as a
+# red check instead of being found by hand (PR 18, 5 Nov 2026).
+name: check
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Type check
+        run: npx tsc --noEmit -p .
+      - name: Tests
+        run: npm test
+      - name: App build
+        run: npm run build
+      - name: Page build
+        run: npm run build:pages
