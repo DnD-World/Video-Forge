@@ -4,7 +4,14 @@ Everything a fresh session needs. `PLAN.md` holds the long history; this is the
 working state. Newest sections first. Plans: `docs/V2-PLAN.md` (Video Forge),
 `docs/FORGES-PLAN.md` (both apps; has a Status section at the bottom).
 
-## Major package upgrades — 6 Nov 2026 (branch `deps-major`)
+## undici security fix — 6 Nov 2026 (branch `deps-undici`)
+
+After PR 19, GitHub listed 26 undici warnings: hyperframes 0.9 pins `undici` 7.25.0 exactly. `package.json` `overrides` now gives hyperframes `^7.30.1` (got 7.30.2). Scoped on purpose: node-gyp's undici 6.29.1 has no warnings and a global override would push it a major version up. hyperframes only uses undici to download remote https assets (`fetchPublic`), so local renders don't touch it.
+
+- **Checked:** `tsc`, 236 tests, app build, page build; puppet test render and sample explainer with 7.30.2 vs 7.25.0 swapped in: **pixel-identical** (PSNR inf, same saved narration). `npm audit` left: minimatch only (build tools; fix is minimatch 11, a major).
+- When hyperframes releases a version pinning undici ≥ 7.30.1, the override can go.
+
+## Major package upgrades — 6 Nov 2026 (merged, PR 19)
 
 Replaces Dependabot's PR 18 (23 updates in one go; it broke the build). Done one step per commit, each checked before the next.
 
