@@ -5,6 +5,9 @@ Nothing is tagged yet; everything below is under Unreleased.
 
 ## [Unreleased]
 
+### Security (6 Nov 2026)
+- The video renderer's download library (undici) moved from 7.25.0 to 7.30.2, clearing 26 GitHub security warnings. Renders are unchanged.
+
 ### Changed (6 Nov 2026)
 - Under the hood: React 19, Tailwind 4, Vite 8, TypeScript 7, Electron 45, Remotion 4.0.540. The app looks and renders the same; builds are about 4× faster.
 
