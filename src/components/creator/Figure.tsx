@@ -20,12 +20,12 @@ function later(job: () => void) {
   requestAnimationFrame(pump);
 }
 
-export function StillFigure({ card, look, framing, view = 0, className = "" }: { card: CharacterCard; look: Look; framing: Framing; view?: number; className?: string }) {
+export function StillFigure({ card, look, framing, view = 0, className = "", fitTo }: { card: CharacterCard; look: Look; framing: Framing; view?: number; className?: string; fitTo?: CharacterCard }) {
   const cv = useRef<HTMLCanvasElement>(null);
-  const key = JSON.stringify(card) + look.id + framing + view + String((look as { eyes?: unknown }).eyes);
+  const key = JSON.stringify(card) + look.id + framing + view + String((look as { eyes?: unknown }).eyes) + (fitTo ? JSON.stringify(fitTo) : "");
   useLayoutEffect(() => {
     let live = true;
-    later(() => { if (live && cv.current) drawStill(cv.current, card, look, framing, view); });
+    later(() => { if (live && cv.current) drawStill(cv.current, card, look, framing, view, fitTo); });
     return () => { live = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);

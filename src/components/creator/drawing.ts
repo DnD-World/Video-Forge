@@ -43,11 +43,12 @@ function box(W: number, H: number, framing: Framing, pad = 0.06) {
 }
 
 /** Draw one figure in a state. */
-export function drawIn(cv: HTMLCanvasElement, card: CharacterCard, look: Look, framing: Framing, state: Partial<CharacterState>, o: { mirror?: boolean; pad?: number; maxDpr?: number } = {}) {
+export function drawIn(cv: HTMLCanvasElement, card: CharacterCard, look: Look, framing: Framing, state: Partial<CharacterState>, o: { mirror?: boolean; pad?: number; maxDpr?: number; fitTo?: CharacterCard } = {}) {
   const f = fit(cv, o.maxDpr);
   if (!f) return;
   const c = { ...card, framing };
-  const fr = frameFor(c, look, framing, box(f.W, f.H, framing, o.pad));
+  // fitTo: size the picture by another card (the widest option), so a row of options shares one scale
+  const fr = frameFor(o.fitTo ? { ...o.fitTo, framing } : c, look, framing, box(f.W, f.H, framing, o.pad));
   // a soft floor shadow under full figures, so they stand on something
   if (framing === "full") {
     const g = f.ctx.createRadialGradient(f.W / 2, fr.y, 0, f.W / 2, fr.y, f.W * 0.32);
@@ -59,9 +60,9 @@ export function drawIn(cv: HTMLCanvasElement, card: CharacterCard, look: Look, f
 }
 
 /** A still: resting, eyes open, a hint of a smile. */
-export function drawStill(cv: HTMLCanvasElement, card: CharacterCard, look: Look, framing: Framing, view = 0) {
+export function drawStill(cv: HTMLCanvasElement, card: CharacterCard, look: Look, framing: Framing, view = 0, fitTo?: CharacterCard) {
   const state = autoPerformance(0.35, { seed: card.seed ?? 1, talking: false, pose: "rest", view });
-  drawIn(cv, card, look, framing, state);
+  drawIn(cv, card, look, framing, state, { fitTo });
 }
 
 // ---- moving clips --------------------------------------------------------------------------------

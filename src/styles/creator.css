@@ -302,6 +302,66 @@
 .cr-chip { font-size: 13px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); background: rgba(0, 0, 0, .3); color: var(--ink-2); cursor: pointer; transition: border-color .2s, color .2s, background .2s; }
 .cr-chip.on { background: var(--accent); color: #00140c; border-color: var(--accent); }
 
+/* ---- phase 3: marks, the AI box ------------------------------------------------------------- */
+.cr-markpic { width: 100%; aspect-ratio: 1; display: block; }
+.cr-addmarks { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+.cr-pic.small { padding: 6px 4px; }
+.cr-pic.small .cr-markpic { width: 70%; margin: 0 auto; }
+.cr-pic.small span { font-size: 13px; }
+.cr-mark { border: 1px solid var(--line); border-radius: 14px; background: rgba(0, 0, 0, .28); padding: 8px; margin-bottom: 8px; animation: cr-rise .35s var(--ease) both; }
+.cr-mark-head { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.cr-mark-head .cr-markpic { width: 34px; height: 34px; flex: none; }
+.cr-mark-head span { color: var(--ink-2); font-size: 13px; flex: 1; }
+.cr-mark-body { display: grid; grid-template-columns: 112px 1fr; gap: 10px; margin-top: 8px; align-items: start; }
+.cr-mark-controls { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.cr-bodymap { width: 112px; height: auto; }
+.cr-bodymap .b { fill: rgba(255, 255, 255, .06); stroke: rgba(255, 255, 255, .22); stroke-width: 1.2; }
+.cr-bodymap .limb { fill: none; stroke: rgba(255, 255, 255, .22); stroke-width: 9; stroke-linecap: round; }
+.cr-bodymap .spot { cursor: pointer; outline: none; }
+.cr-bodymap .hit { fill: transparent; }
+.cr-bodymap .dot { fill: rgba(255, 255, 255, .35); transition: fill .2s, r .2s; }
+.cr-bodymap .spot:hover .dot, .cr-bodymap .spot:focus .dot { fill: var(--main-soft); }
+.cr-bodymap .spot.on .dot { fill: var(--lit); r: 6.5; filter: drop-shadow(0 0 4px var(--main-glow)); }
+.cr-shapes { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; }
+.cr-shape { padding: 3px; border-radius: 10px; border: 1px solid var(--line); background: rgba(0, 0, 0, .3); cursor: pointer; transition: border-color .2s, box-shadow .2s; }
+.cr-shape.on { border-color: var(--main-soft); box-shadow: 0 0 14px -4px var(--main-glow); }
+
+.cr-ai-fold { margin-top: 0; border-top: 0; padding-top: 0; }
+.cr-ai-fold > summary { color: var(--main-soft); }
+.cr-ai { display: flex; flex-direction: column; gap: 8px; padding: 10px; border-radius: 14px; margin: 6px 0 12px;
+  background: linear-gradient(140deg, color-mix(in srgb, var(--lit) 12%, rgba(0,0,0,.35)), rgba(85, 98, 184, .14));
+  border: 1px solid color-mix(in srgb, var(--lit) 35%, var(--line)); position: relative; overflow: hidden; }
+.cr-ai.busy::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,.08) 50%, transparent 70%); animation: cr-shimmer 1.4s linear infinite; pointer-events: none; }
+@keyframes cr-shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+.cr-ai-words { width: 100%; resize: vertical; min-height: 54px; border-radius: 10px; border: 1px solid var(--line); background: rgba(0, 0, 0, .45); color: var(--ink); padding: 8px 10px; font: inherit; font-size: 14px; outline: none; }
+.cr-ai-words:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(118, 255, 194, .14); }
+.cr-ai-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.cr-ai-pick { font-size: 13px; background: #000; color: var(--ink-2); border: 1px solid var(--line); border-radius: 999px; padding: 5px 10px; max-width: 150px; }
+.cr-ai-pick.model { flex: 1; min-width: 0; max-width: none; }
+.cr-ai-go { font-size: 13px; }
+.cr-ai-wait { font-size: 13px; color: var(--ink-2); display: flex; align-items: center; gap: 4px; }
+.cr-ai-wait i { width: 6px; height: 6px; border-radius: 50%; background: var(--main-soft); animation: cr-blip 1s ease-in-out infinite; }
+.cr-ai-wait i:nth-child(2) { animation-delay: .15s; } .cr-ai-wait i:nth-child(3) { animation-delay: .3s; }
+@keyframes cr-blip { 50% { transform: translateY(-4px); opacity: .4; } }
+.cr-ai-result { animation: cr-rise .35s var(--ease) both; display: flex; flex-direction: column; gap: 6px; }
+.cr-ai-note { font-size: 13px; color: var(--ink-2); margin: 0; font-style: italic; }
+.cr-ai-changes { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.cr-ai-changes li { font-size: 13px; padding: 5px 8px; border-radius: 8px; background: rgba(0, 0, 0, .3); }
+.cr-ai-changes b { color: var(--ink); font-weight: 600; margin-right: 4px; }
+.cr-ai-changes span { color: var(--ink-3); text-decoration: line-through; }
+.cr-ai-changes em { font-style: normal; color: var(--main-soft); }
+.cr-ai-problems { margin: 4px 0 0; padding-left: 18px; font-size: 13px; color: var(--ink-2); }
+.cr-ai-meta { margin-left: auto; font-size: 13px; color: var(--ink-3); }
+.cr-ai-sw { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 4px; vertical-align: -1px; box-shadow: 0 0 0 1px rgba(255,255,255,.3); }
+.cr-ai-none { font-size: 13px; color: var(--ink-2); margin: 4px 0 12px; }
+.cr-ai-btn.on { border-color: var(--main-soft); background: color-mix(in srgb, var(--lit) 22%, rgba(0,0,0,.45)); }
+.cr-ai-float { position: absolute; left: 18px; bottom: 18px; width: min(380px, 42%); z-index: 3; padding: 12px; border-radius: 18px;
+  background: rgba(6, 16, 24, .86); border: 1px solid color-mix(in srgb, var(--lit) 40%, var(--line)); backdrop-filter: blur(16px);
+  box-shadow: 0 20px 50px -20px rgba(0, 0, 0, .8), 0 0 30px -12px var(--main-glow); animation: cr-rise .35s var(--ease) both; max-height: 80%; overflow-y: auto; }
+.cr-ai-float-head { display: flex; align-items: center; justify-content: space-between; font-size: 14px; margin-bottom: 4px; }
+.cr-preview-badge { position: absolute; left: 50%; top: 74px; transform: translateX(-50%); padding: 6px 14px; border-radius: 999px; font-size: 13px;
+  color: #00140c; background: linear-gradient(100deg, var(--accent), var(--main-soft)); box-shadow: 0 0 24px -6px var(--main-glow); animation: cr-toast .4s var(--ease) both; z-index: 2; }
+
 @media (max-width: 1500px) {
   .cr-studio { grid-template-columns: 220px minmax(0, 1fr) 372px; }
   .cr-tiles { grid-template-columns: repeat(2, 1fr); }

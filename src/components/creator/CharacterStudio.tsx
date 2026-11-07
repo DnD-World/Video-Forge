@@ -12,14 +12,15 @@
 // ---------------------------------------------------------------------------
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import { PARTS, PART_IDS, type CharacterFile, type PartId } from "../../../characters/core/index.mjs";
+import { PARTS, PART_IDS, type CharacterCard, type CharacterFile, type PartId } from "../../../characters/core/index.mjs";
 import { isDraft, useCreatorStore, useOpenCharacter } from "../../store/useCreatorStore";
 import { useProjectStore } from "../../store/useProjectStore";
 import { defaultTrackWaveform } from "../../lib/waveform/buildTracks";
-import { cardOf, faceIdOf, outfitIdOf, outfitsWithoutMain, randomise, setLock, setUsualFace } from "../../lib/creator/edit";
+import { cardOf, faceIdOf, outfitIdOf, outfitsWithoutMain, randomise, setField, setLock, setUsualFace } from "../../lib/creator/edit";
 import { LiveFigure, StillFigure } from "./Figure";
 import { CLIPS, litColor, lookFor } from "./drawing";
 import { PartPanel } from "./PartPanel";
+import { AiBox } from "./AiBox";
 import { LockIcon, PART_UI, PartIcon } from "./parts";
 
 export function CharacterStudio() {
@@ -60,12 +61,18 @@ function Studio({ character: c, dirty }: { character: CharacterFile; dirty: bool
   const look = useMemo(() => lookFor(c.look, settings), [c.look, settings]);
   const face = faceIdOf(c, s.face), outfit = outfitIdOf(c, s.outfit);
   const card = useMemo(() => cardOf(c, face, outfit), [c, face, outfit]);
+  // the AI's answer, shown on the stage until it's kept or thrown away
+  const [preview, setPreview] = useState<CharacterCard | null>(null);
+  const [aiOpen, setAiOpen] = useState(false);
+  useEffect(() => { setPreview(null); }, [c.id, face, outfit]);
+  const shown = preview ?? card;
+  const aiKeys = PARTS.filter((p) => c.locks[p.id] === false && p.id !== "outfits").flatMap((p) => p.fields as string[]);
   const clip = CLIPS.find((x) => x.id === s.clip) ?? CLIPS[0];
   const [epoch, setEpoch] = useState(0);
   const [burst, setBurst] = useState(0);
   // every change sweeps a light across the figure, so you see it transform
   const [sheen, setSheen] = useState(0);
-  const cardKey = JSON.stringify(card);
+  const cardKey = JSON.stringify(shown);
   const firstCard = useRef(cardKey);
   useEffect(() => { if (cardKey !== firstCard.current) setSheen((n) => n + 1); }, [cardKey]);
   const missing = outfitsWithoutMain(c);
@@ -92,8 +99,23 @@ function Studio({ character: c, dirty }: { character: CharacterFile; dirty: bool
           <div className="cr-floor" aria-hidden />
           <div className="cr-pedestal" aria-hidden />
           <div className="cr-figure" key={`${c.id}-${s.clip}-${epoch}`}>
-            <LiveFigure card={card} look={look} clip={clip} framing={clip.framing ?? "full"} fps={50} epoch={epoch} seed={card.seed ?? 2} pad={0.02} />
+            <LiveFigure card={shown} look={look} clip={clip} framing={clip.framing ?? "full"} fps={50} epoch={epoch} seed={card.seed ?? 2} pad={0.02} />
           </div>
+          {preview && <div className="cr-preview-badge" data-tip="The stage shows the AI's answer. Keep it or throw it away in the AI box.">✦ AI preview: keep or throw away</div>}
+          {aiOpen && (
+            <div className="cr-ai-float" data-tip="Ask the AI about the whole character: it may change only the unlocked parts.">
+              <div className="cr-ai-float-head">
+                <b data-tip="The AI box for the whole character.">✦ Ask the AI about {c.name}</b>
+                <button className="cr-x" onClick={() => { setAiOpen(false); setPreview(null); }} data-tip="Close the AI box." aria-label="Close">×</button>
+              </div>
+              {aiKeys.length ? (
+                <AiBox scope="the whole character" keys={aiKeys} card={card} locks={c.locks} example="a tired night-shift nurse: heavy lids, dark circles, a small scar on the chin"
+                  onPreview={setPreview} onKeep={(changes) => s.edit((x) => changes.reduce((y, ch) => setField(y, face, ch.key, ch.to)[0], x))} />
+              ) : (
+                <p className="cr-ai-none" data-tip="The AI never touches a locked part.">Every part is locked. Unlock the parts the AI may change (the locks on the right), then ask.</p>
+              )}
+            </div>
+          )}
           {sheen > 0 && <div className="cr-sheen" key={`s${sheen}`} aria-hidden />}
           {burst > 0 && <div className="cr-burst" key={burst} aria-hidden />}
 
@@ -111,6 +133,7 @@ function Studio({ character: c, dirty }: { character: CharacterFile; dirty: bool
           <div className="cr-tools">
             <button className="cr-tool" onClick={() => s.undoOne()} disabled={!canUndo} data-tip="Undo the last change (Ctrl+Z)." aria-label="Undo">↶</button>
             <button className="cr-tool" onClick={() => s.redoOne()} disabled={!canRedo} data-tip="Redo what you undid (Ctrl+Y)." aria-label="Redo">↷</button>
+            <button className={`cr-tool wide cr-ai-btn ${aiOpen ? "on" : ""}`} onClick={() => { setAiOpen((v) => !v); setPreview(null); }} aria-pressed={aiOpen} data-tip="Ask the AI to change the whole character in plain words. It only touches unlocked parts, and you see it before keeping it.">✦ AI</button>
             <button className={`cr-dice ${unlocked.length ? "" : "off"}`} onClick={doRandom} disabled={!unlocked.length} key={`d${burst}`}
               data-tip={unlocked.length ? `Randomise the unlocked parts (${unlocked.map((p) => PART_UI[p].label.toLowerCase()).join(", ")}). Click again until it's close.` : "Unlock a part first: the randomiser only changes unlocked parts."}>
               <span className="die" aria-hidden>⚄</span> Randomise
@@ -200,6 +223,8 @@ function Studio({ character: c, dirty }: { character: CharacterFile; dirty: bool
           onEdit={s.edit}
           onUnlock={() => s.edit((x) => setLock(x, s.part as PartId, false))}
           onShowOutfit={(id) => s.set({ outfit: id })}
+          locks={c.locks}
+          onPreview={setPreview}
         />
       </aside>
     </div>

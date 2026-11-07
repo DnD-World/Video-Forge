@@ -14,6 +14,7 @@
 import { LOOK_IDS } from "./looks.mjs";
 import { HAIR_STYLES } from "./draw.mjs";
 import { ITEMS, normalizeWear } from "./wardrobe.mjs";
+import { normalizeMarks } from "./marks.mjs";
 
 export const CARD_VERSION = 1;
 const HEX = /^#[0-9a-f]{6}$/i;
@@ -86,11 +87,26 @@ export const FIELDS = [
     help: "Eyeshadow above the eyes; bold adds a dark liner. Lip colour is its own field.", examples: ["none", "soft", "bold"] },
   { key: "makeupColor", group: "Head & face", label: "Eyeshadow colour", kind: "color", default: "#9a7aa8",
     help: "Used only when eye makeup is on.", examples: ["#9a7aa8", "#c08a6a", "#6a8aa8", "#b85c7a"] },
+  // EYE QUIRKS (phase 3, 7 Nov 2026). Left and right are as you look at them from the front.
+  { key: "lazyEye", group: "Head & face", label: "Lazy eye", kind: "choice", options: ["none", "left", "right"], default: "none",
+    help: "One eye looks a little off to the side and its lid droops a touch. Left and right as you look at them.", examples: ["none", "left", "right"] },
+  { key: "lazyAmount", group: "Head & face", label: "How lazy", kind: "number", min: 0.1, max: 1, step: 0.05, default: 0.5,
+    help: "How far the lazy eye drifts: a hint (0.2) to clearly off (1). Used only with a lazy eye.", examples: [0.2, 0.5, 1] },
+  { key: "hazyEye", group: "Head & face", label: "Hazy eye", kind: "choice", options: ["none", "left", "right", "both"], default: "none",
+    help: "A milky, clouded eye. Only eyes with whites show it.", examples: ["none", "left", "both"] },
+  { key: "maxOpen", group: "Head & face", label: "Eyes open at most", kind: "number", min: 0.3, max: 1, step: 0.05, default: 1,
+    help: "How far the eyes ever open, even when surprised: 1 is fully, 0.5 is half (heavy lids). They still blink.", examples: [1, 0.7, 0.5] },
+  { key: "irisLeft", group: "Head & face", label: "Left eye colour", kind: "color", default: "", optional: true,
+    help: "A coloured ring round the pupil. Empty: dark eyes. Give the two eyes different colours for odd eyes.", examples: ["", "#3a78c2", "#4e8a3e", "#8a5a2b", "#7a8a96"] },
+  { key: "irisRight", group: "Head & face", label: "Right eye colour", kind: "color", default: "", optional: true,
+    help: "A coloured ring round the pupil. Empty: dark eyes.", examples: ["", "#3a78c2", "#4e8a3e", "#8a5a2b", "#7a8a96"] },
   { key: "beard", group: "Head & face", label: "Beard", kind: "choice", options: ["none", "stubble", "short", "full", "goatee"], default: "none",
     help: "In the hair colour. The mouth still shows through.", examples: ["none", "stubble", "full", "goatee"] },
   { key: "moustache", group: "Head & face", label: "Moustache", kind: "choice", options: ["none", "thin", "thick", "handlebar"], default: "none",
     help: "In the hair colour.", examples: ["none", "thin", "thick", "handlebar"] },
 
+  { key: "marks", group: "Head & face", label: "Tattoos, scars and marks", kind: "marks", default: [],
+    help: "Up to 6 simple marks on the cheeks, brows, forehead, chin, neck, forearms or backs of the hands. They move with that part; sleeves cover forearm marks." },
   { key: "hair", group: "Hair", label: "Hair style", kind: "choice", options: HAIR_STYLES, default: "short",
     help: "Hair style. Long styles and ponytails swing a little as they move.", examples: ["short", "sidepart", "ponytail", "bun", "curly", "bald"] },
   { key: "hairColor", group: "Hair", label: "Hair colour", kind: "color", default: "#262a33",
@@ -144,6 +160,10 @@ export function checkField(f, value) {
       return HEX.test(value) ? [String(value).toLowerCase(), null] : [f.default, `${f.label}: "${value}" isn't a colour like #3a6fb0`];
     case "bool":
       return typeof value === "boolean" ? [value, null] : [!!value && value !== "false", null];
+    case "marks": {
+      const { marks, problems } = normalizeMarks(value);
+      return [marks, problems.length ? problems.join("; ") : null];
+    }
     case "voice": {
       const [voice, problems] = normalizeVoice(value);
       return [voice, problems.length ? problems.join("; ") : null];
@@ -227,7 +247,7 @@ export function normalizeVoice(value) {
 export const PARTS = [
   { id: "body", label: "Body", fields: ["height", "build", "muscle", "posture", "armLength"] },
   { id: "head", label: "Head", fields: ["headShape", "headSize"] },
-  { id: "eyes", label: "Eyes", fields: ["eyes", "eyeSpacing", "darkCircles", "makeup", "makeupColor"] },
+  { id: "eyes", label: "Eyes", fields: ["eyes", "eyeSpacing", "darkCircles", "makeup", "makeupColor", "lazyEye", "lazyAmount", "hazyEye", "maxOpen", "irisLeft", "irisRight"] },
   { id: "brows", label: "Eyebrows", fields: ["brows"] },
   { id: "nose", label: "Nose", fields: ["nose"] },
   { id: "mouth", label: "Mouth", fields: ["mouth", "lips", "lipColor"] },
@@ -236,7 +256,7 @@ export const PARTS = [
   { id: "skin", label: "Skin", fields: ["skin", "cheeks"] },
   { id: "facialHair", label: "Facial hair", fields: ["beard", "moustache"] },
   { id: "outfits", label: "Outfits", fields: ["wear"] },
-  { id: "marks", label: "Marks", fields: ["freckles", "bruise"] },
+  { id: "marks", label: "Marks", fields: ["freckles", "bruise", "marks"] },
 ];
 export const PART_IDS = PARTS.map((p) => p.id);
 const PART_OF = Object.fromEntries(PARTS.flatMap((p) => p.fields.map((k) => [k, p.id])));

@@ -13,8 +13,8 @@ import path from "node:path";
 import { listCharacterFiles, saveCharacterFile } from "../../tools/lib/characterFiles.mjs";
 import * as keyStore from "../keyStore";
 import { guard } from "../security/guard";
-import { PROVIDERS, pickModel } from "../../tools/lib/explainerLlm.mjs";
-import { cardFromDescription, cardFromPicture, suggestForCard } from "../../tools/lib/characterLlm.mjs";
+import { PROVIDERS, pickModel, listModels } from "../../tools/lib/explainerLlm.mjs";
+import { cardFromDescription, cardFromPicture, suggestForCard, partsFromWords } from "../../tools/lib/characterLlm.mjs";
 import type { CharacterCard } from "../../characters/core/index.mjs";
 
 /** Providers whose usual models can look at pictures (the others: text only). */
@@ -94,6 +94,34 @@ export function registerCharacterIpc(getWindow: () => BrowserWindow | null) {
       const key = await keyFor(req.provider);
       const model = await chooseModel(req.provider, key, req.model);
       const r = await cardFromPicture({ provider: req.provider, key, model, file: req.file, description: String(req.description ?? "").slice(0, 2000), look: req.look, signal });
+      return { ...r, model };
+    })
+  );
+
+  // THE AI BOX (creator phase 3): which models this key can use, for the picker. Text models only:
+  // speech, pictures, video, embeddings and moderation models can't fill a card.
+  const NOT_TEXT = /embed|tts|whisper|transcri|audio|speech|orpheus|playai|image|imagen|dall|veo|lyria|vision-only|moderation|guard|rerank|realtime|search|computer-use|robotics/i;
+  ipcMain.handle("character:models", async (_e, provider: unknown) => {
+    const p = String(provider);
+    if (!PROVIDERS[p]) throw new Error(`"${p}" isn't a provider this app knows`);
+    const key = await keyFor(p);
+    const ids = (await listModels(p, key)).filter((id: string) => !NOT_TEXT.test(id)).sort();
+    let usual = "";
+    try { usual = await chooseModel(p, key); } catch { /* none of the usual ones: the list still works */ }
+    return { models: ids, usual };
+  });
+
+  // The window says which fields are open (the unlocked parts'); main asks the model with the key
+  // and returns the checked answer. The window checks it again against its own locks.
+  ipcMain.handle("character:askParts", (_e, req: { card: CharacterCard; keys: string[]; request: string; scope?: string; provider: string; model?: string }) =>
+    run(async (signal) => {
+      const keys = Array.isArray(req.keys) ? req.keys.map(String).slice(0, 40) : [];
+      if (!keys.length) throw new Error("No part is open to change: unlock a part first.");
+      const request = String(req.request ?? "").trim().slice(0, 1500);
+      if (!request) throw new Error("Type what you want first.");
+      const key = await keyFor(req.provider);
+      const model = await chooseModel(req.provider, key, req.model);
+      const r = await partsFromWords({ provider: req.provider, key, model, card: req.card, keys, request, scope: String(req.scope ?? "the character").slice(0, 60), signal });
       return { ...r, model };
     })
   );

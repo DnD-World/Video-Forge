@@ -18,7 +18,7 @@ export interface PartUi {
 export const PART_UI: Record<PartId, PartUi> = {
   body: { label: "Body", tip: "Build, posture and height: the shape you know them by from across a room.", main: ["build", "posture", "height"], advanced: ["muscle", "armLength"], framing: "full" },
   head: { label: "Head", tip: "The shape and size of the head.", main: ["headShape", "headSize"], advanced: [], framing: "head" },
-  eyes: { label: "Eyes", tip: "Eye style and how far apart they sit. Make-up and tired eyes under Advanced.", main: ["eyes", "eyeSpacing"], advanced: ["darkCircles", "makeup", "makeupColor"], framing: "head" },
+  eyes: { label: "Eyes", tip: "Eye style and how far apart they sit. Eye quirks (lazy, hazy, half-open, odd colours), make-up and tired eyes under Advanced.", main: ["eyes", "eyeSpacing"], advanced: ["lazyEye", "lazyAmount", "hazyEye", "maxOpen", "irisLeft", "irisRight", "darkCircles", "makeup", "makeupColor"], framing: "head" },
   brows: { label: "Eyebrows", tip: "Eyebrow style. They still move with the feelings in the script.", main: ["brows"], advanced: [], framing: "head" },
   nose: { label: "Nose", tip: "Nose style. Every nose shows in profile.", main: ["nose"], advanced: [], framing: "head" },
   mouth: { label: "Mouth", tip: "Mouth style. Coloured lips under Advanced.", main: ["mouth"], advanced: ["lips", "lipColor"], framing: "head" },
@@ -27,7 +27,7 @@ export const PART_UI: Record<PartId, PartUi> = {
   skin: { label: "Skin", tip: "Skin colour. Rosy cheeks under Advanced.", main: ["skin"], advanced: ["cheeks"], framing: "head" },
   facialHair: { label: "Facial hair", tip: "Beard and moustache, in the hair colour.", main: ["beard", "moustache"], advanced: [], framing: "head" },
   outfits: { label: "Outfits", tip: "Their clothes sets: switch, add, copy, delete, rename, and each piece's colours.", main: [], advanced: [], framing: "full" },
-  marks: { label: "Marks", tip: "Freckles and bruises. Scars and tattoos come in the next phase.", main: ["freckles", "bruise"], advanced: [], framing: "head" },
+  marks: { label: "Marks", tip: "Tattoos, scars, freckles, birthmarks and moles that move with the face, neck, forearms or hands; and bruises.", main: ["marks", "freckles", "bruise"], advanced: [], framing: "head" },
 };
 
 /** Simple line icons, one per part (24×24, drawn in the current colour). */
@@ -68,6 +68,7 @@ export function optionLabel(key: string, value: unknown): string {
   if (typeof value === "boolean") return value ? "On" : "Off";
   if (value === "none") return "None";
   const s = String(value);
+  if (key === "lazyEye" || key === "hazyEye") return value === "none" ? "None" : value === "both" ? "Both" : value === "left" ? "Left" : "Right";
   const named: Record<string, string> = { sidepart: "Side part", hoodie_up: "Hood up", oval: "Oval", lash: "Lashes", googly: "Big round", dot: "Dots", undercut: "Undercut" };
   return named[s] ?? s.charAt(0).toUpperCase() + s.slice(1);
 }

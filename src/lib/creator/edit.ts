@@ -8,7 +8,7 @@
 // rules (checkField / normalizeWear).
 //
 // WHERE A CHANGE GOES. A character has a `base` and face options (A, B, C …)
-// laid over it. Body changes (height, build, posture, muscles, arm length) go
+// laid over it. Body changes (height, build, posture, muscles, arm length) and marks go
 // into the base, so every face has the same body. Everything else from the
 // face parts goes into the face being edited; a value that comes back to the
 // base's is dropped from the face, so files stay small.
@@ -29,7 +29,7 @@ type Rng = () => number;
 const HEX = /^#[0-9a-f]{6}$/i;
 
 /** Body fields live in the base; the rest of the face parts live in the face being edited. */
-export const BODY_KEYS = new Set(PARTS.find((p) => p.id === "body")!.fields as string[]);
+export const BODY_KEYS = new Set([...(PARTS.find((p) => p.id === "body")!.fields as string[]), "marks"]);
 
 const clone = <T>(x: T): T => JSON.parse(JSON.stringify(x));
 
@@ -97,7 +97,8 @@ export function randomise(c: CharacterFile, face: string, outfit: string, locks:
   const proposal: Record<string, unknown> = { ...before };
   for (const p of PARTS) {
     if (l[p.id] !== false || p.id === "outfits") continue;
-    for (const k of p.fields) proposal[k] = randomValue(k as string, rng);
+    // marks are placed by hand (or by the AI box), never at random
+    for (const k of p.fields) if (k !== "marks") proposal[k] = randomValue(k as string, rng);
   }
   const kept = keepLocked(before, proposal, l) as unknown as Record<string, unknown>;
   let next = c;

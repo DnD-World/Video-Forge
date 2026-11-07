@@ -215,6 +215,9 @@ const api = {
     cancel: (): Promise<boolean> => ipcRenderer.invoke("character:cancel"),
     /** The character creator: every brand's character files, and saving one (checked in main). */
     listFiles: (): Promise<any> => ipcRenderer.invoke("character:listFiles"),
+    /** The AI box: the models a provider's key can use, and asking for changes to the open fields. */
+    models: (provider: string): Promise<{ models: string[]; usual: string }> => ipcRenderer.invoke("character:models", provider),
+    askParts: (req: unknown): Promise<any> => ipcRenderer.invoke("character:askParts", req),
     saveFile: (brand: string, character: unknown): Promise<any> => ipcRenderer.invoke("character:saveFile", brand, character),
   },
 

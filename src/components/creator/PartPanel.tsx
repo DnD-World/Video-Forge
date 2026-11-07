@@ -4,7 +4,9 @@
 // panel: the sets, and the pieces of the one shown.
 
 import { useState } from "react";
-import { WARDROBE, fieldByKey, PATTERNS, type CharacterCard, type CharacterFile, type Look, type PartId } from "../../../characters/core/index.mjs";
+import { WARDROBE, fieldByKey, PATTERNS, type CharacterCard, type CharacterFile, type Look, type Locks, type Mark, type PartId } from "../../../characters/core/index.mjs";
+import { MarksEditor } from "./MarksEditor";
+import { AiBox } from "./AiBox";
 import { Slider } from "../ui/Slider";
 import { StillFigure } from "./Figure";
 import { PART_UI, LockIcon, optionLabel } from "./parts";
@@ -26,7 +28,16 @@ interface Props {
   onEdit: Edit;
   onUnlock: () => void;
   onShowOutfit: (id: string) => void;
+  locks: Locks;
+  /** Show the AI's answer on the stage (null: back to the character). */
+  onPreview: (c: CharacterCard | null) => void;
 }
+
+const AI_EXAMPLES: Partial<Record<PartId, string>> = {
+  body: "a bit taller and slouching", head: "a slightly bigger, rounder head", eyes: "left eye a bit lazy, eyes at most 50% open",
+  brows: "thicker brows", nose: "a small button nose", mouth: "coloured lips, a deep red", ears: "bigger ears", hair: "a messy bun, grey with silver streaks",
+  skin: "a warm olive skin with rosy cheeks", facialHair: "a short grey beard and a thin moustache", marks: "a small anchor tattoo on the right forearm and a scar through the left eyebrow",
+};
 
 export function PartPanel(p: Props) {
   const ui = PART_UI[p.part];
@@ -40,6 +51,15 @@ export function PartPanel(p: Props) {
           </button>
         )}
       </header>
+      {p.part !== "outfits" && (
+        p.locked ? null : (
+          <details className="cr-adv cr-ai-fold">
+            <summary data-tip={`Say what you want for the ${ui.label.toLowerCase()} in plain words; the AI fills in the choices and sliders.`}>✦ Ask the AI about the {ui.label.toLowerCase()}</summary>
+            <AiBox scope={`the ${ui.label.toLowerCase()}`} keys={[...ui.main, ...ui.advanced]} card={p.card} locks={p.locks} example={AI_EXAMPLES[p.part] ?? ""}
+              onPreview={p.onPreview} onKeep={(changes) => p.onEdit((c) => changes.reduce((x, ch) => setField(x, p.face, ch.key, ch.to)[0], c))} compact />
+          </details>
+        )
+      )}
       {p.part === "outfits" ? (
         <OutfitPanel {...p} />
       ) : (
@@ -57,13 +77,24 @@ export function PartPanel(p: Props) {
   );
 }
 
+/** Fields whose pictures read better another way than the part's usual crop. */
+const PIC_VIEW: Record<string, { framing: "head" | "waist" | "full"; view: number }> = {
+  build: { framing: "waist", view: 0 },
+  posture: { framing: "full", view: 2 },
+};
+
 function FieldControl({ field, card, look, face, part, onEdit }: Props & { field: string }) {
   const f = fieldByKey(field)!;
   const value = (card as unknown as Record<string, unknown>)[field];
   const put = (v: unknown) => onEdit((c) => setField(c, face, field, v)[0]);
+  if (f.kind === "marks") return <MarksEditor marks={(value as Mark[]) ?? []} skin={card.skin} onChange={put} />;
   const framing = PART_UI[part].framing;
   if (f.kind === "choice" || f.kind === "bool") {
     const options = f.kind === "bool" ? [false, true] : (f.options as string[]);
+    // body shapes compare by size: every picture in the row drawn at the scale of the biggest option;
+    // build from the waist up (the body fills the picture), posture side on (where a slouch shows)
+    const fitTo = part === "body" ? ({ ...card, [field]: field === "build" ? "round" : options[options.length - 1] } as CharacterCard) : undefined;
+    const pic = PIC_VIEW[field] ?? { framing, view: 0 };
     return (
       <div className="cr-field" data-tip={f.help}>
         <div className="cr-field-label" data-tip={f.help}>{f.label}</div>
@@ -78,7 +109,7 @@ function FieldControl({ field, card, look, face, part, onEdit }: Props & { field
               onClick={() => put(o)}
               data-tip={`${f.label}: ${optionLabel(field, o)}.`}
             >
-              <StillFigure card={{ ...card, [field]: o } as CharacterCard} look={look} framing={framing} />
+              <StillFigure card={{ ...card, [field]: o } as CharacterCard} look={look} framing={pic.framing} view={pic.view} fitTo={fitTo} />
               <span>{optionLabel(field, o)}</span>
             </button>
           ))}

@@ -37,6 +37,14 @@ export interface CharacterCard {
   blinkRate: number;
   energy: number;
   sway: number;
+  /** Eye quirks and marks (creator phase 3, 7 Nov 2026). */
+  lazyEye?: "none" | "left" | "right";
+  lazyAmount?: number;
+  hazyEye?: "none" | "left" | "right" | "both";
+  maxOpen?: number;
+  irisLeft?: string;
+  irisRight?: string;
+  marks?: Mark[];
   /** The main colour, "#rrggbb", or "" for none (character creator, 6 Nov 2026). */
   signature?: string;
   /** Their own voice, or null. A speaker can override it for one project. */
@@ -67,7 +75,7 @@ export interface CharacterFile {
 
 export interface Look { id: string; name: string; blurb: string; profile?: boolean; [k: string]: unknown; }
 export interface Field {
-  key: keyof CharacterCard; group: string; label: string; kind: "text" | "choice" | "number" | "color" | "bool" | "wear" | "voice";
+  key: keyof CharacterCard; group: string; label: string; kind: "text" | "choice" | "number" | "color" | "bool" | "wear" | "voice" | "marks";
   options?: string[]; min?: number; max?: number; step?: number; default: unknown; help: string; examples: unknown[]; optional?: boolean;
 }
 export interface HeadPose { rotateDeg: number; dx: number; dy: number; }
@@ -155,6 +163,19 @@ export function suggestPrompt(card: CharacterCard, o?: { purpose?: string }): { 
 export function readCardAnswer(text: string, base?: Partial<CharacterCard>): { card: CharacterCard; problems: string[] };
 export function readSuggestions(text: string, card: CharacterCard): { field: string; label: string; value: unknown; why: string }[];
 export function cardSchemaText(): string;
+export const AI_SKIPS: Set<string>;
+export function partsPrompt(card: CharacterCard, keys: string[], request: string, o?: { scope?: string }): { system: string; user: string };
+export function readPartsAnswer(text: string, card: CharacterCard, keys: string[]): { card: CharacterCard; changes: { key: string; label: string; from: unknown; to: unknown }[]; problems: string[]; note: string };
+export const MARK_KINDS: Record<string, { label: string; color: string; shapes?: string[] }>;
+export const MARK_KIND_IDS: string[];
+export const MARK_SPOTS: Record<string, { label: string; area: "face" | "neck" | "arm" | "hand" }>;
+export const MARK_SPOT_IDS: string[];
+export const MAX_MARKS: number;
+export const MARK_SIZE: [number, number];
+export const MARK_ANGLE: [number, number];
+export interface Mark { kind: string; on: string; shape?: string; size: number; color: string; angle: number }
+export function normalizeMarks(value: unknown): { marks: Mark[]; problems: string[] };
+export function drawMark(ctx: CanvasRenderingContext2D, m: Mark, x: number, y: number, unit: number, o?: { sx?: number; along?: number; ink?: string | null; alpha?: number }): void;
 export function setCanvasFactory(fn: (w: number, h: number) => HTMLCanvasElement | OffscreenCanvas): void;
 
 // ---- motion library (moves.mjs, hands.mjs, props.mjs) -------------------------------------
