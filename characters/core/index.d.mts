@@ -193,6 +193,8 @@ export const SHELF: Record<string, Move>;
 export function normalizeMove(input: unknown): { move: Move; problems: string[] };
 export function buildShelf(list: unknown[]): { shelf: Record<string, Move>; problems: string[] };
 export function playMove(move: Move, ms: number, opts?: { style?: string; energy?: number; size?: number; tempo?: number; seed?: number; mirror?: boolean; spanMs?: number; travelBodies?: number }): MoveState & { u: number; stance: string | null };
+/** Follow-through for hair, hems and earrings (core/follow.mjs): `at(ms)` gives the body's motion at a time. */
+export function followAt(at: (ms: number) => { x: number; y: number; rot: number; hipX: number; hipY: number }, timeMs: number): unknown;
 export function movesAt(spans: MoveSpan[] | undefined, shelf: Record<string, Move>, timeMs: number, opts?: { energy?: number; seed?: number; style?: string; mirror?: boolean }): MoveState | null;
 export function moveProgress(move: Move, spanMs: number, ms: number, tempo?: number): { u: number; wall: number };
 export function moveLengthMs(move: Move, o?: { style?: string; tempo?: number }): number;

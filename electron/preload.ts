@@ -213,6 +213,9 @@ const api = {
     fromPicture: (req: unknown): Promise<any> => ipcRenderer.invoke("character:fromPicture", req),
     suggest: (req: unknown): Promise<any> => ipcRenderer.invoke("character:suggest", req),
     cancel: (): Promise<boolean> => ipcRenderer.invoke("character:cancel"),
+    /** The character creator: every brand's character files, and saving one (checked in main). */
+    listFiles: (): Promise<any> => ipcRenderer.invoke("character:listFiles"),
+    saveFile: (brand: string, character: unknown): Promise<any> => ipcRenderer.invoke("character:saveFile", brand, character),
   },
 
   forge: {

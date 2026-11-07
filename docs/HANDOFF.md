@@ -1,8 +1,26 @@
-# Handoff — updated 6 Nov 2026
+# Handoff — updated 7 Nov 2026
 
 Everything a fresh session needs. `PLAN.md` holds the long history; this is the
 working state. Newest sections first. Plans: `docs/V2-PLAN.md` (Video Forge),
 `docs/FORGES-PLAN.md` (both apps; has a Status section at the bottom).
+
+## Character creator, phase 2: the creator screen — 7 Nov 2026 (branch `claude/creator-phase1-4272d7`, not pushed)
+
+Spec: `docs/character-creator-spec.md`. Builds on phase 1 (next section). Screenshots: `docs/creator-phase2/`.
+
+- **Where:** a fourth button in the app's top bar, **Characters** (`src/components/creator/CharacterStudio.tsx`). Left: the brand's cast as faces, by group, with a search. Centre: the character big and moving on a stage lit in their main colour, their faces (A/B/C, star = the one the videos use), "Use in my video", and the preview strip. Right: the 12 parts, each with its lock, and the open part's panel.
+- **Parts** (`src/components/creator/parts.tsx`, `PartPanel.tsx`): every choice is a picture list drawn by the engine; numbers are sliders; colours are swatches plus "any colour"; fine details sit under **Advanced**. Body changes go into the base (all faces); face-part changes go into the face being edited (`src/lib/creator/edit.ts` explains).
+- **Locks:** a character opens with whatever locks its file has (all locked as moved in). A locked part's panel is dimmed and can't change; "Locked · unlock to change" or the lock in the part grid opens it. Locks are saved in the file.
+- **Randomise:** changes only unlocked parts (through phase 1's `keepLocked`). Never picks "no eyes". Unlocked outfits: new colours for the pieces that aren't in the main colour; the clothes themselves stay, so nothing gets less covered.
+- **Outfits:** switch, New (plain, top in the main colour), Copy, Rename, Delete (asks once more; never the last), star = used in the videos. Each piece: its colours, pattern (fabrics only), ★ to put the main colour on it, × to take it off; "Advanced: add a piece" shows the wardrobe by place as pictures. An outfit without a main-colour piece is outlined red and **Save waits** until it has one.
+- **Preview strip** (`src/components/creator/drawing.ts` `CLIPS`): idle, talking, hair motion (a cheer, hair and clothes swing), sitting (on a chair), stand up, side walk (profile), wave, dance, big laugh, shrug, surprised. Click one to play it big. With "reduce motion" on, everything stands still.
+- **Save** (Ctrl+S): `character:saveFile` in `electron/characters/characterIpc.ts` → `tools/lib/characterFiles.mjs`. Refused unless the character checks out (no problems at all); brand and id must be plain names; the old file is copied to `brands/<brand>/characters/.backup/` (ignored by git) and the new one written whole. A new character id also updates the pages' index. When the app's own folder can't be written (an installed copy), the save goes to `<data folder>/characters/<brand>/` and that copy wins.
+- **Unsaved changes** are kept per character while the app is open (switching people or screens loses nothing; a yellow dot on the face). Undo / Redo (Ctrl+Z / Ctrl+Y), "Put back" throws them away. Closing the app loses unsaved changes (no warning yet).
+- **Speed:** the strip's small clips take turns (two drawn per frame) so the stage stays smooth: measured 24 → 49 frames a second in the test copy.
+- **Design check** (run before showing): fixed: figure too small for the stage (now bigger, with a glowing pedestal); changes snapped with no feedback (a light sweeps the figure on each change); dark main colours (navy) barely glowed (glows use the colour lifted to a brighter tone of the same hue); part names and long names were cut off; the colour chip showed a drafting note.
+- **Tested in the app** (test copy, scratch data folder, driven by script): open Rita → unlock Hair → pick Bob; Randomise twice; unlock Outfits → Copy (13 sets); Save → file written, backup made, data tests still pass on the saved file (then Rita's file was put back from git); pick Margo, face C, Use in my video (added with her colour and face); Lucas: unlock Nose → Long → Ctrl+Z / Ctrl+Y / Put back. No errors in the window's console.
+- **Tests:** `tools/lib/characterFiles.test.mjs` (7: listing, safe save, refusals, backups, data-folder fallback), `tools/lib/creatorEdit.test.mjs` (10: where changes go, randomiser respects locks, outfits, main colour). `npm test`: 271 pass, 0 fail.
+- **Not checked / not done:** with "reduce motion" switched on in Windows; an installed copy (the data-folder save path is tested only in the unit test); a warning when closing the app with unsaved changes; voice on the creator screen (it stays in the Cast panel); tattoos, scars, eye quirks and the AI box are phase 3; importing from other projects is phase 4.
 
 ## Character creator, phase 1: character files, locks, voice, main colour — 6 Nov 2026 (branch `claude/creator-phase1-4272d7`, not pushed)
 

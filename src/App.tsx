@@ -1,5 +1,6 @@
 import { ExplainerStudio } from "./components/explainer/ExplainerStudio";
 import { ManyVideosStudio } from "./components/render/ManyVideos";
+import { CharacterStudio } from "./components/creator/CharacterStudio";
 import { initManyEvents } from "./store/useManyStore";
 import { HudButton } from "./components/ui/HudButton";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -93,9 +94,10 @@ export default function App() {
   // WHAT KIND OF VIDEO (21 Oct 2026): puppet videos (the four steps) or
   // explainers (animated, drawn by code — src/components/explainer). Remembered.
   // MANY VIDEOS (26 Oct 2026) is a third kind, with its own screen.
-  type Mode = "puppet" | "explainer" | "many";
+  // CHARACTERS (7 Nov 2026): the character creator, its own screen too.
+  type Mode = "puppet" | "explainer" | "many" | "characters";
   const [mode, setModeState] = useState<Mode>(() => {
-    try { const m = localStorage.getItem("vf.mode"); return m === "explainer" || m === "many" ? m : "puppet"; } catch { return "puppet"; }
+    try { const m = localStorage.getItem("vf.mode"); return m === "explainer" || m === "many" || m === "characters" ? m : "puppet"; } catch { return "puppet"; }
   });
   const setMode = (m: Mode) => { setModeState(m); setSettingsOpen(false); try { localStorage.setItem("vf.mode", m); } catch { /* fine */ } };
   // A batch reports its progress whichever screen is open.
@@ -502,6 +504,7 @@ export default function App() {
           <HudButton data-tip="Puppet videos: talking characters, in four steps." active={mode === "puppet" && !settingsOpen} onClick={() => setMode("puppet")}>Puppet video</HudButton>
           <HudButton data-tip="Explainers: animated pictures, words and charts drawn by code, timed to a narration — with or without puppets on top." active={mode === "explainer" && !settingsOpen} onClick={() => setMode("explainer")}>Explainer</HudButton>
           <HudButton data-tip="Many videos at once: one row of a spreadsheet per video, all made in a row with the look you set up." active={mode === "many" && !settingsOpen} onClick={() => setMode("many")}>Many videos</HudButton>
+          <HudButton data-tip="The character creator: each person of your cast, part by part, with locks, a randomiser, outfits and moving previews." active={mode === "characters" && !settingsOpen} onClick={() => setMode("characters")}>Characters</HudButton>
         </div>
         <button
           className={`forge-gear ml-3 ${settingsOpen ? "on" : ""}`}
@@ -514,7 +517,7 @@ export default function App() {
         </button>
       </header>
 
-      {mode === "explainer" && !settingsOpen ? <ExplainerStudio /> : mode === "many" && !settingsOpen ? <ManyVideosStudio onEditProject={() => { setMode("puppet"); goStep("cast"); }} /> : view === "settings" ? (
+      {mode === "characters" && !settingsOpen ? <CharacterStudio /> : mode === "explainer" && !settingsOpen ? <ExplainerStudio /> : mode === "many" && !settingsOpen ? <ManyVideosStudio onEditProject={() => { setMode("puppet"); goStep("cast"); }} /> : view === "settings" ? (
         <main className="panel-hud relative flex-1 mx-3 mb-3 p-6 min-h-0 overflow-hidden">
           <HudCorners />
           <div className="w-full h-full flex flex-col">

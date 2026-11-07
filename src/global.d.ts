@@ -271,6 +271,10 @@ declare global {
         fromPicture: (req: { file: string; description?: string; look?: string; provider: string; model?: string }) => Promise<{ card: import("../characters/core/index.mjs").CharacterCard; problems: string[]; ms: number; model: string }>;
         suggest: (req: { card: import("../characters/core/index.mjs").CharacterCard; purpose?: string; provider: string; model?: string }) => Promise<{ suggestions: { field: string; label: string; value: unknown; why: string }[]; ms: number; model: string }>;
         cancel: () => Promise<boolean>;
+        /** The character creator: every brand that has character files (tools/lib/characterFiles.mjs). */
+        listFiles: () => Promise<{ brand: string; title: string; settings: { groups?: { id: string; title: string; sub?: string }[]; geoEyes?: string; defaults?: Record<string, unknown> }; characters: { id: string; raw: unknown; where: "app" | "user" }[] }[]>;
+        /** Save one character file. Refused (ok: false, problems) unless it checks out. */
+        saveFile: (brand: string, character: unknown) => Promise<{ ok: true; file: string; where: "app" | "user"; unchanged?: boolean } | { ok: false; problems: string[] }>;
       };
       forge: {
         openImageForge: () => Promise<boolean>;

@@ -8,7 +8,9 @@
 // preview) and in Remotion; nothing here draws.
 // ---------------------------------------------------------------------------
 
-import { dialog, ipcMain, type BrowserWindow } from "electron";
+import { app, dialog, ipcMain, type BrowserWindow } from "electron";
+import path from "node:path";
+import { listCharacterFiles, saveCharacterFile } from "../../tools/lib/characterFiles.mjs";
 import * as keyStore from "../keyStore";
 import { guard } from "../security/guard";
 import { PROVIDERS, pickModel } from "../../tools/lib/explainerLlm.mjs";
@@ -51,6 +53,13 @@ export function registerCharacterIpc(getWindow: () => BrowserWindow | null) {
   };
 
   ipcMain.handle("character:cancel", () => { busy?.abort(); return true; });
+
+  // THE CHARACTER CREATOR (phase 2, 7 Nov 2026): every brand's character files, and saving one.
+  // The window only ever names a brand and hands over a character; where it is written is decided
+  // here (tools/lib/characterFiles.mjs checks the names and the character before writing).
+  const roots = () => ({ app: path.join(app.getAppPath(), "brands"), user: path.join(app.getPath("userData"), "characters") });
+  ipcMain.handle("character:listFiles", () => listCharacterFiles(roots()));
+  ipcMain.handle("character:saveFile", (_e, brand: unknown, raw: unknown) => saveCharacterFile(roots(), String(brand), raw));
 
   ipcMain.handle("character:providers", async () => {
     const out: { id: string; label: string; hasKey: boolean; seesPictures: boolean }[] = [];
