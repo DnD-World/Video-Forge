@@ -1,19 +1,15 @@
 // The motion library: every move copied from a real person in a free clip,
 // played by a Red Flag character, beside the clip it came from. Ak keeps or
 // drops each one; "Copy my picks" gives the list back (3 Nov 2026).
-import { SHELF, lookById, stageOf, drawFigure, frameFor, characterState, performAt, normalizeCard, followAt, movesAt } from "../core/index.mjs";
+import { SHELF, lookById, stageOf, drawFigure, frameFor, characterState, performAt, cardFor as cardOfCharacter, followAt, movesAt } from "../core/index.mjs";
 import CLIPS from "../moves/acted/clips.json";
-import CAST from "../../brands/redflag/cast.json";
+import CAST from "../../brands/redflag/cast.mjs";
 import PREVIEW from "../moves/acted/preview.json";
 
 const PEOPLE = ["chloe", "jake", "margo", "lucas", "rita", "arthur"].map((id) => CAST.people.find((p) => p.id === id)).filter(Boolean);
 const GEO_OWN = { ...lookById("geo"), eyes: undefined };
 const lookFor = (p) => (p.look === "geo" ? GEO_OWN : lookById(p.look));
-const cardFor = (p) => {
-  const face = p.faces.find((f) => f.id === p.chosen?.face) ?? p.faces[0];
-  const o = p.outfits.find((x) => x.id === p.chosen?.outfits?.[0]) ?? p.outfits[0];
-  return normalizeCard({ ...p.base, ...face.set, form: CAST.form ?? 0, formDetail: CAST.formDetail ?? false, formLimbs: CAST.formLimbs ?? 1, look: p.look, wear: [...o.wear, ...p.accessories] }).card;
-};
+const cardFor = (p) => cardOfCharacter(p);
 const KEY = "rf-motion-picks-v2"; // v1 held the rejected stock-clip moves
 const store = (() => { try { return JSON.parse(localStorage.getItem(KEY)) ?? {}; } catch { return {}; } })();
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch {} };

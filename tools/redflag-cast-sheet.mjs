@@ -95,7 +95,7 @@ h4{margin:2px 0 8px;font-size:15px}h4 small{color:var(--muted);font-weight:400;f
 <main id="main">
   <section id="geo"><h2>Decide: geo-minimal eyes <small>Monday to Wednesday. Your choice: <span id="geonow"></span>. Click one; every geo-minimal person below updates.</small></h2><div id="geogrid"></div></section>
 </main>
-<p class="foot">Built from brands/redflag/cast.json (roster 1–40). New people's signature colours are proposals.</p>
+<p class="foot">Built from the character files in brands/redflag/characters/ (roster 1–40). New people's signature colours are proposals.</p>
 <script>${js}</script>
 </body></html>`;
 const dest = path.join(root, "characters/samples/redflag-cast.html");

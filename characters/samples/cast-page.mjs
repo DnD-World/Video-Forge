@@ -1,10 +1,10 @@
 // The Red Flag Theory Season 1 cast picker: every person in their own show's
-// look, a face and the clothes chosen separately. Data: brands/redflag/cast.json
-// (built from the roster). Built into characters/samples/redflag-cast.html by
+// look, a face and the clothes chosen separately. Data: brands/redflag/cast.mjs
+// (the character files in brands/redflag/characters/, one per person). Built into characters/samples/redflag-cast.html by
 // tools/redflag-cast-sheet.mjs. Picks stay in this browser (localStorage
 // "rf-cast"); window.__picks() returns them.
-import { lookById, stageOf, drawFigure, frameFor, autoPerformance, normalizeCard, applyScene } from "../core/index.mjs";
-import CAST from "../../brands/redflag/cast.json";
+import { lookById, stageOf, drawFigure, frameFor, autoPerformance, cardFor, applyScene } from "../core/index.mjs";
+import CAST from "../../brands/redflag/cast.mjs";
 
 const $ = (id) => document.getElementById(id);
 const KEY = "rf-cast";
@@ -27,11 +27,11 @@ const GEO_EYES = [
 ];
 const lookFor = (p) => (p.look === "geo" ? (GEO_EYES.find((g) => g.id === store.geoEyes) ?? GEO_EYES[0]).look : lookById(p.look));
 
-const cardOf = (p, faceId, outfitId) => {
-  const face = p.faces.find((f) => f.id === faceId) ?? p.faces[0];
-  const outfit = p.outfits.find((o) => o.id === outfitId) ?? p.outfits[0];
-  return normalizeCard({ ...p.base, ...face.set, form: CAST.form ?? 0, formDetail: CAST.formDetail ?? false, formLimbs: CAST.formLimbs ?? 1, look: p.look, wear: [...outfit.wear, ...p.accessories] }).card;
-};
+// an unknown face or outfit id falls back to the first, as before (not to the chosen one)
+const cardOf = (p, faceId, outfitId) => cardFor(p, {
+  face: p.faces.some((f) => f.id === faceId) ? faceId : p.faces[0].id,
+  outfit: p.outfits.some((o) => o.id === outfitId) ? outfitId : p.outfits[0].id,
+});
 
 function paintRoom(ctx, W, H, look, floorAt = 0.78) {
   const [wall, floor] = stageOf(look);

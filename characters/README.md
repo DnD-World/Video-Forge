@@ -15,6 +15,7 @@ phase — see the plan).
 | Part | File | What it does |
 |---|---|---|
 | Card | `core/card.mjs` | Every field: allowed values, default, help text, examples. `normalizeCard` makes anything valid and says what it fixed. Drives the form, the checks and the AI. |
+| Character file | `core/character.mjs` | One whole person per file (`brands/<brand>/characters/<id>.json`): base card, faces, outfits, what was chosen, main colour, voice, a lock per part. `normalizeCharacter` checks one; `cardFor` gives the card to draw. Parts and locks are `PARTS` / `keepLocked` in `core/card.mjs`. |
 | Looks | `core/looks.mjs` | 20 ways of drawing: proportions, line, fill mode, colour treatment, whole-figure effect. |
 | Skeleton | `core/rig.mjs` | Where every joint is: 9 arm poses, walking, sitting, posture, any turn from front (0) to profile (2). |
 | Face | `core/face.mjs` | Mouth shapes for all 13 Video Forge mouth ids (blendable), lids, brows. |

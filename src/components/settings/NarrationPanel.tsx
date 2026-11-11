@@ -2,7 +2,8 @@ import { engineOf } from "../../lib/narration/geminiVoices";
 import { narrationInputFor, parseAnyScript, scriptLineFor } from "../../lib/narration/resolveSegments";
 import { ErrorLine } from "../ui/ErrorLine";
 import { plainError } from "../../lib/plainError";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { voicedSpeaker } from "../../lib/narration/characterVoice";
 import { useProjectStore } from "../../store/useProjectStore";
 import { useSettingsStore } from "../../store/useSettingsStore";
 import { useVoicesStore } from "../../store/useVoicesStore";
@@ -25,7 +26,9 @@ const LANGUAGES = [
  * saves what that box reads.
  */
 export default function NarrationPanel() {
-  const speakers = useProjectStore((s) => s.speakers);
+  // as they will sound: a drawn character's own voice unless this project overrides it
+  const storeSpeakers = useProjectStore((s) => s.speakers);
+  const speakers = useMemo(() => storeSpeakers.map(voicedSpeaker), [storeSpeakers]);
   const updateSpeaker = useProjectStore((s) => s.updateSpeaker);
   const script = useProjectStore((s) => s.script);
   const setScript = useProjectStore((s) => s.setScript);

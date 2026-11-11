@@ -1,0 +1,171 @@
+{
+  "kind": "video-forge-character",
+  "v": 1,
+  "id": "amber",
+  "roster": 4,
+  "name": "Amber",
+  "group": "main",
+  "role": "Daughter, teen. The golden child.",
+  "look": "paper",
+  "framing": "full",
+  "signature": "#c9814f",
+  "signatureName": "muted orange",
+  "voice": null,
+  "locks": {
+    "body": true,
+    "head": true,
+    "eyes": true,
+    "brows": true,
+    "nose": true,
+    "mouth": true,
+    "ears": true,
+    "hair": true,
+    "skin": true,
+    "facialHair": true,
+    "outfits": true,
+    "marks": true
+  },
+  "base": {
+    "name": "Amber",
+    "framing": "full",
+    "height": 0.93,
+    "build": "thin",
+    "headSize": 1.08,
+    "posture": "upright",
+    "skin": "#f4dac6",
+    "headShape": "round",
+    "eyes": "lash",
+    "eyeSpacing": 1,
+    "brows": "arched",
+    "nose": "dot",
+    "mouth": "plain",
+    "ears": "small",
+    "cheeks": true,
+    "hair": "ponytail",
+    "hairColor": "#e2c27a",
+    "expression": "smile",
+    "blinkRate": 1,
+    "energy": 0.6,
+    "sway": 0.4,
+    "form": 1,
+    "formDetail": true,
+    "formLimbs": 0.5
+  },
+  "accessories": [{"id": "headband", "colors": ["#c9814f"]}],
+  "faces": [
+    {"id": "A", "label": "As written", "set": {}},
+    {"id": "B", "label": "long hair", "set": {"hair": "long"}},
+    {"id": "C", "label": "bun hair, freckles True", "set": {"hair": "bun", "freckles": true}}
+  ],
+  "chosen": {"face": "A", "outfits": ["o5", "o1", "o7", "o12", "o6", "o3", "o2"]},
+  "outfits": [
+    {
+      "id": "o1",
+      "label": "As written",
+      "wear": [
+        {"id": "shirt", "colors": ["#ffffff"]},
+        {"id": "vest", "colors": ["#c9814f"]},
+        {"id": "skirt", "colors": ["#2b3a4a"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o2",
+      "label": "Preppy waistcoat",
+      "wear": [
+        {"id": "shirt", "colors": ["#f4f1ea"]},
+        {"id": "vest", "colors": ["#c9814f"]},
+        {"id": "skirt", "colors": ["#2d3446"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o3",
+      "label": "Pullover and skirt",
+      "wear": [
+        {"id": "sweater", "colors": ["#c9814f"]},
+        {"id": "skirt", "colors": ["#2d3446"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o4",
+      "label": "Dress",
+      "wear": [{"id": "dress", "colors": ["#c9814f"]}, {"id": "shoes", "colors": ["#f4f1ea"]}]
+    },
+    {
+      "id": "o5",
+      "label": "Polo and skirt",
+      "wear": [
+        {"id": "polo", "colors": ["#c9814f"]},
+        {"id": "skirt", "colors": ["#f4f1ea"]},
+        {"id": "sneakers", "colors": ["#f4f1ea", "#c9814f"]}
+      ]
+    },
+    {
+      "id": "o6",
+      "label": "School blazer",
+      "wear": [
+        {"id": "shirt", "colors": ["#f4f1ea"]},
+        {"id": "blazer", "colors": ["#c9814f"]},
+        {"id": "tie", "colors": ["#2d3446"]},
+        {"id": "skirt", "colors": ["#2d3446"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o7",
+      "label": "Tee and jeans",
+      "wear": [
+        {"id": "tshirt", "colors": ["#c9814f"]},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "sneakers", "colors": ["#f4f1ea", "#c9814f"]}
+      ]
+    },
+    {
+      "id": "o8",
+      "label": "Hoodie",
+      "wear": [
+        {"id": "hoodie", "colors": ["#c9814f"]},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "sneakers", "colors": ["#f4f1ea", "#c9814f"]}
+      ]
+    },
+    {
+      "id": "o9",
+      "label": "Summer",
+      "wear": [
+        {"id": "tank", "colors": ["#c9814f"]},
+        {"id": "shorts", "colors": ["#2f3b52"]},
+        {"id": "sandals", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o10",
+      "label": "Party dress",
+      "wear": [{"id": "dress", "colors": ["#c9814f"], "pattern": "dots"}, {"id": "heels", "colors": ["#f4f1ea"]}]
+    },
+    {
+      "id": "o11",
+      "label": "Sport",
+      "wear": [
+        {"id": "tshirt", "colors": ["#c9814f"]},
+        {"id": "shorts", "colors": ["#2d3446"]},
+        {"id": "sneakers", "colors": ["#f4f1ea", "#c9814f"]},
+        {"id": "cap", "colors": ["#c9814f"]}
+      ]
+    },
+    {
+      "id": "o12",
+      "label": "Pyjamas",
+      "wear": [
+        {"id": "tshirt", "colors": ["#c9814f"]},
+        {"id": "trousers", "colors": ["#e1ba9e"], "pattern": "dots"},
+        {"id": "sandals", "colors": ["#3b2a1e"]}
+      ]
+    }
+  ],
+  "proposed": false,
+  "source": "already built",
+  "target": "More than 5"
+}

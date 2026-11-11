@@ -1,0 +1,119 @@
+{
+  "kind": "video-forge-character",
+  "v": 1,
+  "id": "wollstonecraft",
+  "roster": 25,
+  "name": "Mary Wollstonecraft",
+  "group": "week",
+  "role": "Call-in healer (replaces bell hooks).",
+  "look": "hose2",
+  "framing": "waist",
+  "signature": "#6a8aa8",
+  "signatureName": "dusty blue",
+  "voice": null,
+  "locks": {
+    "body": true,
+    "head": true,
+    "eyes": true,
+    "brows": true,
+    "nose": true,
+    "mouth": true,
+    "ears": true,
+    "hair": true,
+    "skin": true,
+    "facialHair": true,
+    "outfits": true,
+    "marks": true
+  },
+  "base": {
+    "name": "Mary Wollstonecraft",
+    "skin": "#f3dccb",
+    "headShape": "oval",
+    "eyes": "oval",
+    "hair": "curly",
+    "hairColor": "#9a4a2a",
+    "expression": "smile",
+    "blinkRate": 1,
+    "energy": 0.5,
+    "sway": 0.4,
+    "form": 1,
+    "formDetail": true,
+    "formLimbs": 0.5
+  },
+  "accessories": [{"id": "headband", "colors": ["#f4f1ea"]}],
+  "faces": [
+    {"id": "A", "label": "As written", "set": {}},
+    {"id": "B", "label": "afro hair", "set": {"hair": "afro"}},
+    {"id": "C", "label": "bob hair, makeup soft", "set": {"hair": "bob", "makeup": "soft"}}
+  ],
+  "chosen": {"face": "B", "outfits": ["o6", "o4"]},
+  "outfits": [
+    {
+      "id": "o1",
+      "label": "As written",
+      "wear": [
+        {"id": "dress", "colors": ["#6a8aa8"]},
+        {"id": "scarf", "colors": ["#f4f1ea"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o2",
+      "label": "Dress and jacket",
+      "wear": [
+        {"id": "dress", "colors": ["#efe6d2"]},
+        {"id": "blazer", "colors": ["#6a8aa8"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o3",
+      "label": "Striped dress",
+      "wear": [{"id": "dress", "colors": ["#6a8aa8"], "pattern": "stripes"}, {"id": "shoes", "colors": ["#1c1c22"]}]
+    },
+    {
+      "id": "o4",
+      "label": "Cape",
+      "wear": [
+        {"id": "dress", "colors": ["#6a8aa8"]},
+        {"id": "cape", "colors": ["#455a6d"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o5",
+      "label": "Waistcoat dress",
+      "wear": [
+        {"id": "dress", "colors": ["#6a8aa8"]},
+        {"id": "vest", "colors": ["#50687e"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o6",
+      "label": "Long robe",
+      "wear": [{"id": "robe", "colors": ["#6a8aa8", "#3a4c5c"]}, {"id": "shoes", "colors": ["#1c1c22"]}]
+    },
+    {
+      "id": "o7",
+      "label": "Dotted dress",
+      "wear": [
+        {"id": "dress", "colors": ["#6a8aa8"], "pattern": "dots"},
+        {"id": "scarf", "colors": ["#3a4c5c"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o8",
+      "label": "Pullover and skirt",
+      "wear": [
+        {"id": "sweater", "colors": ["#6a8aa8"]},
+        {"id": "skirt", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    }
+  ],
+  "proposed": true,
+  "source": "roster 25",
+  "target": "4–5"
+}

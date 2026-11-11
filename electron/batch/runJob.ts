@@ -52,6 +52,7 @@ import {
   defaultLogo,
   type TrackWaveform,
 } from "../../src/store/types";
+import { withCharacterColor } from "../../src/store/characterColor";
 
 /** One member of the cast, as a job file describes them.
  *
@@ -385,7 +386,8 @@ export async function runBatchJob(
   const speakers: SpeakerConfig[] = job.cast.map((c, i) => {
     const s = slot(i);
     const fromPreset = preset.speakers?.[i];
-    return {
+    // a drawn character's main colour is their speaker colour, as in the app (src/store/characterColor.ts)
+    return withCharacterColor({
       ...(fromPreset ?? {}),
       id: `s${i + 1}`,
       label: c.label,
@@ -408,7 +410,7 @@ export async function runBatchJob(
       size: s?.size ?? fromPreset?.size ?? 0.34,
       ttsEngine: c.engine,
       voiceId: c.piperOnnxPath,
-    } as SpeakerConfig;
+    } as SpeakerConfig);
   });
 
   // ONE STYLE FOR EVERY SPEAKER, when the job asks for it. Comparing looks is

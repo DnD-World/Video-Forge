@@ -1,14 +1,16 @@
 // The drawn-character engine, in one import (the app, Remotion and the tools
 // use this; tests may import modules directly). Types: index.d.mts.
 export { LOOKS, LOOK_IDS, lookById, stageOf } from "./looks.mjs";
-export { FIELDS, WARDROBE, CARD_VERSION, defaultCard, normalizeCard, checkField, fieldByKey } from "./card.mjs";
+export { FIELDS, WARDROBE, CARD_VERSION, defaultCard, normalizeCard, checkField, fieldByKey, PARTS, PART_IDS, partOf, allLocked, normalizeLocks, keepLocked, VOICE_ENGINES, PITCH_RANGE, SPEED_RANGE, normalizeVoice } from "./card.mjs";
+export { CHARACTER_KIND, CHARACTER_VERSION, normalizeCharacter, cardFor, castFrom, characterToFile, wearsColor } from "./character.mjs";
 export { ITEMS, SLOTS, PATTERNS, itemById, normalizeWear } from "./wardrobe.mjs";
 export { POSES, POSE_NAMES, solveRig, anchors, figureExtent } from "./rig.mjs";
 export { MOUTHS, LIDS, BROWS, mouthShape } from "./face.mjs";
 export { drawCharacter, drawFigure, frameFor, HAIR_STYLES } from "./draw.mjs";
 export { applyScene } from "./fx.mjs";
 export { characterState, poseBlendAt, facingView, autoPerformance } from "./perform.mjs";
-export { cardPrompt, suggestPrompt, readCardAnswer, readSuggestions, cardSchemaText } from "./ai.mjs";
+export { cardPrompt, suggestPrompt, readCardAnswer, readSuggestions, cardSchemaText, AI_SKIPS, partsPrompt, readPartsAnswer } from "./ai.mjs";
+export { MARK_KINDS, MARK_KIND_IDS, MARK_SPOTS, MARK_SPOT_IDS, MAX_MARKS, MARK_SIZE, MARK_ANGLE, normalizeMarks, drawMark } from "./marks.mjs";
 export { setCanvasFactory } from "./paint.mjs";
 export { MOVE_VERSION, CHANNELS, REST, HAND_SHAPES, KINDS, STYLES, STYLE_IDS, normalizeMove, playMove, movesAt, moveProgress, moveLengthMs, readMoveTag, buildShelf } from "./moves.mjs";
 export { PROPS, PROP_IDS, PROP_NAMES, drawProp } from "./props.mjs";

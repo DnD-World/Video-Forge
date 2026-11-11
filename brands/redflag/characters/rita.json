@@ -1,0 +1,174 @@
+{
+  "kind": "video-forge-character",
+  "v": 1,
+  "id": "rita",
+  "roster": 2,
+  "name": "Rita",
+  "group": "main",
+  "role": "Mum, 43. Tired, keeps the peace.",
+  "look": "paper",
+  "framing": "full",
+  "signature": "#2f8f7a",
+  "signatureName": "teal",
+  "voice": null,
+  "locks": {
+    "body": true,
+    "head": true,
+    "eyes": true,
+    "brows": true,
+    "nose": true,
+    "mouth": true,
+    "ears": true,
+    "hair": true,
+    "skin": true,
+    "facialHair": true,
+    "outfits": true,
+    "marks": true
+  },
+  "base": {
+    "name": "Rita",
+    "framing": "full",
+    "height": 0.97,
+    "build": "average",
+    "headSize": 1,
+    "posture": "slouch",
+    "skin": "#f1d3bd",
+    "headShape": "oval",
+    "eyes": "oval",
+    "eyeSpacing": 1,
+    "brows": "arched",
+    "nose": "dot",
+    "mouth": "plain",
+    "lips": true,
+    "lipColor": "#b8676b",
+    "ears": "small",
+    "hair": "bun",
+    "hairColor": "#7a4a2c",
+    "expression": "neutral",
+    "blinkRate": 1.6,
+    "energy": 0.35,
+    "sway": 0.5,
+    "form": 1,
+    "formDetail": true,
+    "formLimbs": 0.5
+  },
+  "accessories": [{"id": "earrings", "colors": ["#d8c27a"]}],
+  "faces": [
+    {"id": "A", "label": "As written", "set": {}},
+    {"id": "B", "label": "bob hair", "set": {"hair": "bob"}},
+    {"id": "C", "label": "ponytail hair, makeup soft", "set": {"hair": "ponytail", "makeup": "soft"}}
+  ],
+  "chosen": {"face": "B", "outfits": ["o12", "o9", "o6", "o8", "o1", "o4"]},
+  "outfits": [
+    {
+      "id": "o1",
+      "label": "As written",
+      "wear": [
+        {"id": "sweater", "colors": ["#2f8f7a"]},
+        {"id": "scarf", "colors": ["#e8dccb"]},
+        {"id": "skirt", "colors": ["#6e6a7c"]},
+        {"id": "shoes", "colors": ["#5a3825"]}
+      ]
+    },
+    {
+      "id": "o2",
+      "label": "Pullover and skirt",
+      "wear": [
+        {"id": "sweater", "colors": ["#2f8f7a"]},
+        {"id": "skirt", "colors": ["#2d3446"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o3",
+      "label": "Dress",
+      "wear": [{"id": "dress", "colors": ["#2f8f7a"]}, {"id": "shoes", "colors": ["#3b2a1e"]}]
+    },
+    {
+      "id": "o4",
+      "label": "Blazer and trousers",
+      "wear": [
+        {"id": "shirt", "colors": ["#f4f1ea"]},
+        {"id": "blazer", "colors": ["#2f8f7a"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o5",
+      "label": "Blazer and skirt",
+      "wear": [
+        {"id": "shirt", "colors": ["#f4f1ea"]},
+        {"id": "blazer", "colors": ["#2f8f7a"]},
+        {"id": "skirt", "colors": ["#3a3a40"]},
+        {"id": "heels", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o6",
+      "label": "Cosy scarf",
+      "wear": [
+        {"id": "sweater", "colors": ["#2f8f7a"]},
+        {"id": "scarf", "colors": ["#1a4f43"]},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "boots", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o7",
+      "label": "Dotted dress",
+      "wear": [{"id": "dress", "colors": ["#2f8f7a"], "pattern": "dots"}, {"id": "heels", "colors": ["#1a4f43"]}]
+    },
+    {
+      "id": "o8",
+      "label": "Weekend tee",
+      "wear": [
+        {"id": "tshirt", "colors": ["#2f8f7a"]},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "sneakers", "colors": ["#f4f1ea", "#2f8f7a"]}
+      ]
+    },
+    {
+      "id": "o9",
+      "label": "Waistcoat",
+      "wear": [
+        {"id": "shirt", "colors": ["#f4f1ea"]},
+        {"id": "vest", "colors": ["#2f8f7a"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o10",
+      "label": "Winter",
+      "wear": [
+        {"id": "sweater", "colors": ["#2f8f7a"]},
+        {"id": "scarf", "colors": ["#1a4f43"]},
+        {"id": "skirt", "colors": ["#3a3a40"]},
+        {"id": "boots", "colors": ["#3b2a1e"]},
+        {"id": "beanie", "colors": ["#1a4f43"]}
+      ]
+    },
+    {
+      "id": "o11",
+      "label": "Polo and skirt",
+      "wear": [
+        {"id": "polo", "colors": ["#2f8f7a"]},
+        {"id": "skirt", "colors": ["#c8b48a"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o12",
+      "label": "Kitchen apron",
+      "wear": [
+        {"id": "dress", "colors": ["#2f8f7a"]},
+        {"id": "apron", "colors": ["#efe6d2"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    }
+  ],
+  "proposed": false,
+  "source": "already built",
+  "target": "More than 5"
+}

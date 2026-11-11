@@ -7,7 +7,7 @@ import { LOOKS } from "./core/looks.mjs";
 import { mouthShape, MOUTHS } from "./core/face.mjs";
 import { solveRig, POSE_NAMES } from "./core/rig.mjs";
 import { poseBlendAt, facingView, characterState, autoPerformance } from "./core/perform.mjs";
-import { readCardAnswer, readSuggestions, cardPrompt, cardSchemaText } from "./core/ai.mjs";
+import { readCardAnswer, readSuggestions, cardPrompt, cardSchemaText, AI_SKIPS } from "./core/ai.mjs";
 import { runChecks, readableSize, sampleCards, RecordingCtx, useRecordingCanvases } from "./core/check.mjs";
 import { drawCharacter, drawFigure, frameFor } from "./core/draw.mjs";
 
@@ -121,7 +121,8 @@ test("suggestions: only valid, different values survive", () => {
 
 test("the prompt shows the model every field and every wardrobe item", () => {
   const text = cardSchemaText();
-  for (const f of FIELDS) assert.ok(text.includes(`"${f.key}"`), f.key);
+  // every field but the two that say who they are (main colour, voice): the AI never sets those
+  for (const f of FIELDS) if (!AI_SKIPS.has(f.key)) assert.ok(text.includes(`"${f.key}"`), f.key);
   for (const i of ITEMS) assert.ok(text.includes(i.id), i.id);
   const { system, user } = cardPrompt({ description: "a tired dad", picture: true, look: "sitcom" });
   assert.match(system, /"look": "sitcom"/);

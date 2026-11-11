@@ -10,6 +10,7 @@ import type { NarrationInput } from "../../../electron/tts/buildNarration";
 import type { SpeakerConfig as Speaker } from "../../store/types";
 import { engineOf, geminiModeOf, DEFAULT_GEMINI_MODEL, DEFAULT_GEMINI_VOICE } from "./geminiVoices";
 import { parseScript, type ScriptSegment } from "./parseScript";
+import { voicedSpeaker } from "./characterVoice";
 import { parseDramaboxScript } from "./parseDramaboxScript";
 
 /** "Name: words" lines, or the prose style where a character is found by the
@@ -29,10 +30,12 @@ export function parseAnyScript(script: string, speakers: Speaker[]): { segments:
 /** One script line with its speaker's voice and settings resolved. */
 export function narrationInputFor(
   seg: { speakerId: string; speakerLabel: string; text: string; direction?: string },
-  sp: Speaker,
+  speaker: Speaker,
   language: string,
   piperPythonPath: string
 ): NarrationInput {
+  // the character's own voice, unless this project overrides it
+  const sp = voicedSpeaker(speaker);
   const engine = engineOf(sp);
   return {
     speakerId: seg.speakerId,

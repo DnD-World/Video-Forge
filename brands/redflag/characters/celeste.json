@@ -1,0 +1,129 @@
+{
+  "kind": "video-forge-character",
+  "v": 1,
+  "id": "celeste",
+  "roster": 28,
+  "name": "Madame Celeste",
+  "group": "week",
+  "role": "Monday outro: horoscopes.",
+  "look": "geo",
+  "framing": "waist",
+  "signature": "#2b2f6b",
+  "signatureName": "midnight indigo",
+  "voice": null,
+  "locks": {
+    "body": true,
+    "head": true,
+    "eyes": true,
+    "brows": true,
+    "nose": true,
+    "mouth": true,
+    "ears": true,
+    "hair": true,
+    "skin": true,
+    "facialHair": true,
+    "outfits": true,
+    "marks": true
+  },
+  "base": {
+    "name": "Madame Celeste",
+    "skin": "#f1d3bd",
+    "headShape": "oval",
+    "eyes": "lash",
+    "hair": "long",
+    "hairColor": "#4a2a5a",
+    "lips": true,
+    "makeup": "bold",
+    "makeupColor": "#6a5ac8",
+    "expression": "smile",
+    "blinkRate": 1,
+    "energy": 0.6,
+    "sway": 0.6,
+    "form": 1,
+    "formDetail": true,
+    "formLimbs": 0.5
+  },
+  "accessories": [
+    {"id": "headband", "colors": ["#e8c25a"]},
+    {"id": "glasses", "colors": ["#e8c25a"]},
+    {"id": "earrings", "colors": ["#e8c25a"]}
+  ],
+  "faces": [
+    {"id": "A", "label": "As written", "set": {}},
+    {"id": "B", "label": "ponytail hair", "set": {"hair": "ponytail"}},
+    {"id": "C", "label": "braid hair, makeup none", "set": {"hair": "braid", "makeup": "none"}}
+  ],
+  "chosen": {"face": "C", "outfits": ["o1"]},
+  "outfits": [
+    {
+      "id": "o1",
+      "label": "As written",
+      "wear": [
+        {"id": "robe", "colors": ["#2b2f6b", "#e8c25a"]},
+        {"id": "scarf", "colors": ["#e8c25a"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o2",
+      "label": "Pullover and skirt",
+      "wear": [
+        {"id": "sweater", "colors": ["#2b2f6b"]},
+        {"id": "skirt", "colors": ["#2d3446"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o3",
+      "label": "Dress",
+      "wear": [{"id": "dress", "colors": ["#2b2f6b"]}, {"id": "shoes", "colors": ["#3b2a1e"]}]
+    },
+    {
+      "id": "o4",
+      "label": "Blazer and trousers",
+      "wear": [
+        {"id": "shirt", "colors": ["#f4f1ea"]},
+        {"id": "blazer", "colors": ["#2b2f6b"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o5",
+      "label": "Blazer and skirt",
+      "wear": [
+        {"id": "shirt", "colors": ["#f4f1ea"]},
+        {"id": "blazer", "colors": ["#2b2f6b"]},
+        {"id": "skirt", "colors": ["#3a3a40"]},
+        {"id": "heels", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o6",
+      "label": "Cosy scarf",
+      "wear": [
+        {"id": "sweater", "colors": ["#2b2f6b"]},
+        {"id": "scarf", "colors": ["#181a3b"]},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "boots", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o7",
+      "label": "Dotted dress",
+      "wear": [{"id": "dress", "colors": ["#2b2f6b"], "pattern": "dots"}, {"id": "heels", "colors": ["#181a3b"]}]
+    },
+    {
+      "id": "o8",
+      "label": "Weekend tee",
+      "wear": [
+        {"id": "tshirt", "colors": ["#2b2f6b"]},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "sneakers", "colors": ["#f4f1ea", "#2b2f6b"]}
+      ]
+    }
+  ],
+  "proposed": true,
+  "source": "roster 28",
+  "target": "4–5"
+}
