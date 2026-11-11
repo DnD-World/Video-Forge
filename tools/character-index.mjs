@@ -29,7 +29,8 @@ export function writeCharacterIndex(brandDir) {
   return path.join(dir, "index.mjs");
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+// process.argv[1] is missing inside the installed app, where this file is bundled in (crash on start, 11 Nov 2026)
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const brand = process.argv[2];
   if (!brand) { console.error("Usage: node tools/character-index.mjs <brand folder>, e.g. brands/redflag"); process.exit(1); }
   console.log("wrote", path.relative(root, writeCharacterIndex(path.resolve(root, brand))));
