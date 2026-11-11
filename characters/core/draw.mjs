@@ -25,6 +25,7 @@ import { applyLayer } from "./fx.mjs";
 import { RecordingCtx } from "./record.mjs";
 import { capHem } from "./follow.mjs";
 import { drawHand, palmPx } from "./hands.mjs";
+import { drawFaceMarks, drawNeckMarks, drawArmMarks } from "./marks.mjs";
 import { hairContactShadow, faceClay, torsoCreases } from "./clay.mjs";
 import { drawProp, drawSeat, PROPS } from "./props.mjs";
 
@@ -315,6 +316,9 @@ export function drawCharacter(ctx, card, { look: look0 = card.look, S, x = 0, y 
   const drawArm = (arm) => {
     G.limbPass = true;
     limb([arm.sh, arm.el, arm.ha], look.limb === "line" ? ink : armColor, sk.limbW, "arm");
+    // marks on bare skin only, before the sleeve (a long sleeve covers a forearm tattoo)
+    const armMarks = card.marks?.length && look.limb !== "line" && armColor === card.skin;
+    if (armMarks) drawArmMarks(G, arm, card.marks, "forearm", { ink: look.tone === "mono" ? ink : null });
     if (look.limb !== "hose") phase("arm", arm);
     const held = (state.props ?? []).filter((p) => PROPS[p.id] && PROPS[p.id].hold !== "seat" && p.hand === which(arm));
     const palm = palmPx(G);
@@ -324,6 +328,7 @@ export function drawCharacter(ctx, card, { look: look0 = card.look, S, x = 0, y 
     for (const p of [...under, ...fist]) drawProp(G, arm, p.id, { ...p, palm });
     if (fist.length) drawHand(G, arm, "fist", { relaxed: relaxedHand });
     else if (!held.length) drawHand(G, arm, state.hands?.[which(arm)], { relaxed: relaxedHand });
+    if (card.marks?.length && !look.gloves && look.limb !== "line") drawArmMarks(G, arm, card.marks, "hand", { ink: look.tone === "mono" ? ink : null });
     G.limbPass = false;
   };
 
@@ -402,6 +407,7 @@ export function drawCharacter(ctx, card, { look: look0 = card.look, S, x = 0, y 
     pen.poly(G.U([[l - nw, sk.sy - 0.03], [l + nw, sk.sy - 0.03], [l + nw, sk.sy + 0.004], [l - nw, sk.sy + 0.004]]));
     // fake 3D: the neck sits in the head's shadow
     G.fill(look.form ? shade(card.skin, -0.14) : card.skin, { role: "skin", noShade: true, outline: look.fill === "glass" ? look.outline : 0 });
+    if (card.marks?.length) drawNeckMarks(G, sk, card.marks, { ink: look.tone === "mono" ? ink : null });
   }
   phase("neck");
 
@@ -599,7 +605,7 @@ function drawFace(G, state) {
   const R = sk.R, F = sk.face;
   const eyesStyle = look.eyes ?? card.eyes ?? "dot";
   const lid0 = state.lid ? lidAmount(state.lid.from, state.lid.to, state.lid.mix) : 0;
-  const lid = eyesStyle === "sleepy" ? Math.max(lid0, 0.45) : lid0;
+  const lidAll = eyesStyle === "sleepy" ? Math.max(lid0, 0.45) : lid0;
   const gaze = (state.gaze ?? 0.4) * R * 0.04;
   const mono = look.tone === "mono";
   const featureInk = ink;
@@ -634,8 +640,16 @@ function drawFace(G, state) {
       ctx.restore();
     }
   }
-  // eyes
+  // eyes (with the quirks: a lazy eye, a hazy eye, a cap on how far they open, an iris colour)
+  const capLid = 1 - (card.maxOpen ?? 1);
   for (const e of F.eyes) {
+    const which = F.eyes.indexOf(e) === 0 ? "left" : "right"; // as you look at them
+    const lazy = card.lazyEye === which ? (card.lazyAmount ?? 0.5) : 0;
+    const drift = Math.sign(e.x - F.faceDX || (which === "left" ? -1 : 1)) * lazy * R * 0.075;
+    let lid = lidAll;
+    if (capLid > 0.001) lid = Math.max(lid, capLid);
+    const iris = which === "left" ? card.irisLeft : card.irisRight;
+    const hazy = card.hazyEye === which || card.hazyEye === "both";
     const ex = e.x * S, ey = e.y * S, sx = e.scaleX;
     const r0 = { dot: 0.085, small: 0.07, oval: 0.15, lash: 0.15, googly: 0.22, pie: 0.16, sleepy: 0.15 }[eyesStyle] ?? 0.085;
     eyesOut.push({ x: e.x, y: e.y, r: R * r0, visible: e.visible });
@@ -645,10 +659,10 @@ function drawFace(G, state) {
       ctx.strokeStyle = featureInk; ctx.lineWidth = Math.max(1.5, R * 0.06 * S); ctx.lineCap = "round"; ctx.stroke();
       continue;
     }
-    const open = 1 - Math.max(0, lid);
+    const open = Math.max(0.1, 1 - Math.max(0, lid) - lazy * 0.15);
     const wide = lid < 0 ? 1 - lid * 0.5 : 1;
     if (eyesStyle === "dot" || eyesStyle === "small") {
-      pen.ellipse(ex + gaze * S, ey, R * r0 * sx * S * wide, R * r0 * S * Math.max(0.25, open) * wide);
+      pen.ellipse(ex + (gaze + drift * 0.6) * S, ey, R * r0 * sx * S * wide, R * r0 * S * Math.max(0.25, open) * wide);
       G.fill(featureInk, { feature: true, outline: 0 });
       continue;
     }
@@ -664,12 +678,15 @@ function drawFace(G, state) {
       ctx.fillStyle = toneColor(look, "#ffffff", "eye"); ctx.beginPath(); ctx.moveTo(ex + R * 0.03 * S, ecy + R * 0.06 * S); ctx.lineTo(ex + R * 0.16 * S, ecy - R * 0.12 * S); ctx.lineTo(ex + R * 0.16 * S, ecy + R * 0.02 * S); ctx.closePath(); ctx.fill();
     } else {
       const pr = eyesStyle === "googly" ? R * 0.06 : R * 0.09;
-      pen.circle(ex + gaze * S * 2, ecy + R * 0.02 * S, pr * S); G.fill(mono ? featureInk : "#1b1b2a", { feature: true, outline: 0 });
-      pen.circle(ex + gaze * S * 2 + pr * 0.35 * S, ecy - pr * 0.3 * S, pr * 0.33 * S); G.fill("#ffffff", { feature: true, outline: 0 });
+      const px = ex + gaze * S * 2 + drift * S, py = ecy + R * 0.02 * S + Math.abs(drift) * 0.25 * S;
+      if (iris && !mono) { pen.circle(px, py, pr * 1.55 * S); G.fill(toneColor(look, iris, "eye"), { feature: true, outline: 0 }); }
+      pen.circle(px, py, pr * (iris && !mono ? 0.78 : 1) * S); G.fill(mono ? featureInk : "#1b1b2a", { feature: true, outline: 0 });
+      if (hazy && !mono) { pen.circle(px, py, pr * 1.75 * S); ctx.fillStyle = "rgba(226,234,242,0.62)"; ctx.fill(); }
+      pen.circle(px + pr * 0.35 * S, py - pr * 0.32 * S, pr * 0.33 * S); G.fill("#ffffff", { feature: true, outline: 0 });
     }
     // the lid: always a little over the eye at rest (fully round eyes read as shock,
     // Ak 2 Nov 2026); only a wide look ("surprised") opens it all the way
-    const lidE = lid < 0 ? 0 : Math.max(lid, LID_REST[eyesStyle] ?? 0.2);
+    const lidE = Math.min(0.8, (lid < 0 ? 0 : Math.max(lid, LID_REST[eyesStyle] ?? 0.2)) + lazy * 0.16);
     if (lidE > 0.02) {
       const edge = ecy - ry * S + ry * S * 2 * lidE, sag = ry * S * 0.18 * (1 - lidE);
       ctx.beginPath(); ctx.moveTo(ex - rx * S * 1.2, ecy - ry * S * 1.3); ctx.lineTo(ex + rx * S * 1.2, ecy - ry * S * 1.3);
@@ -729,6 +746,7 @@ function drawFace(G, state) {
     if (card.makeup === "bold") { ctx.beginPath(); ctx.ellipse(a.x * S, a.cy * S, a.rx * 1.02 * S, a.ry * 1.02 * S, 0, Math.PI * 1.08, Math.PI * 1.98); ctx.strokeStyle = featureInk; ctx.lineWidth = Math.max(1.4, R * 0.04 * S); ctx.stroke(); }
   }
   if (card.freckles && !mono) for (let i = 0; i < 10; i++) { const e = F.eyes[i % 2]; if (!e.visible) continue; pen.circle((e.x + (i % 5 - 2) * R * 0.05) * S, (e.y + R * (0.18 + (i % 3) * 0.04)) * S, R * 0.012 * S); ctx.fillStyle = featureInk; ctx.globalAlpha = 0.5; ctx.fill(); ctx.globalAlpha = 1; }
+  if (card.marks?.length) drawFaceMarks(G, F, R, card.marks, { ink: mono ? featureInk : null });
 
   // beard and moustache (before the mouth, so the mouth opens through them)
   const hairC = card.hairColor ?? "#262a33";

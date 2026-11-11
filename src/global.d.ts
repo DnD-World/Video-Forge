@@ -271,6 +271,14 @@ declare global {
         fromPicture: (req: { file: string; description?: string; look?: string; provider: string; model?: string }) => Promise<{ card: import("../characters/core/index.mjs").CharacterCard; problems: string[]; ms: number; model: string }>;
         suggest: (req: { card: import("../characters/core/index.mjs").CharacterCard; purpose?: string; provider: string; model?: string }) => Promise<{ suggestions: { field: string; label: string; value: unknown; why: string }[]; ms: number; model: string }>;
         cancel: () => Promise<boolean>;
+        /** The AI box (creator phase 3): text models this provider's key can use, and the usual one. */
+        models: (provider: string) => Promise<{ models: string[]; usual: string }>;
+        /** Plain words → checked changes to the open fields only. */
+        askParts: (req: { card: import("../characters/core/index.mjs").CharacterCard; keys: string[]; request: string; scope?: string; provider: string; model?: string }) => Promise<{ text: string; note: string; changes: { key: string; label: string; from: unknown; to: unknown }[]; problems: string[]; ms: number; model: string }>;
+        /** The character creator: every brand that has character files (tools/lib/characterFiles.mjs). */
+        listFiles: () => Promise<{ brand: string; title: string; settings: { groups?: { id: string; title: string; sub?: string }[]; geoEyes?: string; defaults?: Record<string, unknown> }; characters: { id: string; raw: unknown; where: "app" | "user" }[] }[]>;
+        /** Save one character file. Refused (ok: false, problems) unless it checks out. */
+        saveFile: (brand: string, character: unknown) => Promise<{ ok: true; file: string; where: "app" | "user"; unchanged?: boolean } | { ok: false; problems: string[] }>;
       };
       forge: {
         openImageForge: () => Promise<boolean>;

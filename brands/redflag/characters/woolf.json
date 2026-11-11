@@ -1,0 +1,121 @@
+{
+  "kind": "video-forge-character",
+  "v": 1,
+  "id": "woolf",
+  "roster": 20,
+  "name": "Virginia Woolf",
+  "group": "week",
+  "role": "Martyr Dad expert (Mon couch).",
+  "look": "hose2",
+  "framing": "waist",
+  "signature": "#7f9a7a",
+  "signatureName": "sage",
+  "voice": null,
+  "locks": {
+    "body": true,
+    "head": true,
+    "eyes": true,
+    "brows": true,
+    "nose": true,
+    "mouth": true,
+    "ears": true,
+    "hair": true,
+    "skin": true,
+    "facialHair": true,
+    "outfits": true,
+    "marks": true
+  },
+  "base": {
+    "name": "Virginia Woolf",
+    "build": "thin",
+    "posture": "slouch",
+    "skin": "#f3dccb",
+    "headShape": "egg",
+    "eyes": "oval",
+    "hair": "bun",
+    "hairColor": "#6a4a32",
+    "expression": "serious",
+    "blinkRate": 1,
+    "energy": 0.2,
+    "sway": 0.35,
+    "form": 1,
+    "formDetail": true,
+    "formLimbs": 0.5
+  },
+  "accessories": [],
+  "faces": [
+    {"id": "A", "label": "As written", "set": {}},
+    {"id": "B", "label": "bob hair", "set": {"hair": "bob"}},
+    {"id": "C", "label": "ponytail hair, makeup soft", "set": {"hair": "ponytail", "makeup": "soft"}}
+  ],
+  "chosen": {"face": "A", "outfits": ["o1", "o2", "o8"]},
+  "outfits": [
+    {
+      "id": "o1",
+      "label": "As written",
+      "wear": [
+        {"id": "dress", "colors": ["#7f9a7a"]},
+        {"id": "scarf", "colors": ["#efe6d2"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o2",
+      "label": "Period dress and scarf",
+      "wear": [
+        {"id": "dress", "colors": ["#7f9a7a"]},
+        {"id": "scarf", "colors": ["#f4f1ea"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o3",
+      "label": "Dress and jacket",
+      "wear": [
+        {"id": "dress", "colors": ["#efe6d2"]},
+        {"id": "blazer", "colors": ["#7f9a7a"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o4",
+      "label": "Striped dress",
+      "wear": [{"id": "dress", "colors": ["#7f9a7a"], "pattern": "stripes"}, {"id": "shoes", "colors": ["#1c1c22"]}]
+    },
+    {
+      "id": "o5",
+      "label": "Cape",
+      "wear": [
+        {"id": "dress", "colors": ["#7f9a7a"]},
+        {"id": "cape", "colors": ["#53644f"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o6",
+      "label": "Waistcoat dress",
+      "wear": [
+        {"id": "dress", "colors": ["#7f9a7a"]},
+        {"id": "vest", "colors": ["#5f745c"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o7",
+      "label": "Long robe",
+      "wear": [{"id": "robe", "colors": ["#7f9a7a", "#465543"]}, {"id": "shoes", "colors": ["#1c1c22"]}]
+    },
+    {
+      "id": "o8",
+      "label": "Dotted dress",
+      "wear": [
+        {"id": "dress", "colors": ["#7f9a7a"], "pattern": "dots"},
+        {"id": "scarf", "colors": ["#465543"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    }
+  ],
+  "proposed": true,
+  "source": "roster 20 (pullover over dress isn't possible: dress + scarf)",
+  "target": "4–5"
+}

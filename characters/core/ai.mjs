@@ -15,11 +15,15 @@
 import { FIELDS, WARDROBE, checkField, fieldByKey, normalizeCard } from "./card.mjs";
 import { LOOKS } from "./looks.mjs";
 import { PATTERNS } from "./wardrobe.mjs";
+import { MARK_KINDS, MARK_SPOTS, MAX_MARKS, MARK_SIZE, MARK_ANGLE } from "./marks.mjs";
 import { extractJson } from "../../explainer/core/prompts.mjs";
+
+/** Who the character IS, not how they look: the AI helper never sees or sets these. */
+export const AI_SKIPS = new Set(["signature", "voice"]);
 
 /** The card format, written for a model: every field, its allowed values, its meaning. */
 export function cardSchemaText() {
-  const lines = FIELDS.filter((f) => f.kind !== "wear").map((f) => {
+  const lines = FIELDS.filter((f) => f.kind !== "wear" && f.kind !== "marks" && !AI_SKIPS.has(f.key)).map((f) => {
     const allowed = f.kind === "choice" ? `one of: ${f.options.join(" | ")}`
       : f.kind === "number" ? `a number ${f.min}–${f.max}`
       : f.kind === "color" ? `a colour "#rrggbb"${f.optional ? ' or ""' : ""}`
@@ -28,6 +32,7 @@ export function cardSchemaText() {
   });
   const items = WARDROBE.map((w) => `${w.id} (${w.label}; place: ${w.slot}; ${w.colors} colour${w.colors > 1 ? "s" : ""}${w.patterns ? "; pattern ok" : ""})`).join(", ");
   lines.push(`- "wear": a list of { "id", "colors": ["#rrggbb", …], "pattern" } — one item per place (one top, one hat …; "full" replaces top and bottom). Items: ${items}. Patterns: ${PATTERNS.join(" | ")}.`);
+  lines.push(`- "marks": a list (at most ${MAX_MARKS}) of { "kind": ${Object.keys(MARK_KINDS).map((k) => `"${k}"`).join(" | ")}, "on": ${Object.keys(MARK_SPOTS).map((k) => `"${k}"`).join(" | ")}, "shape" (tattoos only): ${MARK_KINDS.tattoo.shapes.map((k) => `"${k}"`).join(" | ")} ("band" on a forearm only), "size": ${MARK_SIZE[0]}–${MARK_SIZE[1]} (1 is clearly visible, 0.8 is small, below 0.7 hard to see), "color": "#rrggbb", "angle": ${MARK_ANGLE[0]}–${MARK_ANGLE[1]} }. L/R = left/right as you look at them.`);
   const looks = LOOKS.map((l) => `${l.id} = ${l.name}`).join("; ");
   return `${lines.join("\n")}\nLooks: ${looks}.`;
 }
@@ -84,4 +89,58 @@ export function readSuggestions(text, card) {
     out.push({ field: f.key, label: f.label, value, why: String(s.why ?? "").slice(0, 200) });
   }
   return out.slice(0, 6);
+}
+
+// ---- the AI box (character creator phase 3, 7 Nov 2026) ------------------------------------------
+// Ak types plain words for one part or the whole character ("left eye a bit lazy", "eyes at most
+// 50% open"). The model is shown ONLY the fields it may change (the unlocked parts' fields, never
+// clothes, main colour or voice), with their allowed values and the current values, and answers
+// with changes to those fields. Everything it says is checked like typed input; anything else is
+// refused and listed. The screen shows the result as a preview to keep or throw away.
+
+/** The schema lines for some fields only (the ones open to change). */
+function schemaFor(keys) {
+  const all = cardSchemaText().split("\n");
+  return keys.map((k) => all.find((l) => l.startsWith(`- "${k}":`))).filter(Boolean).join("\n");
+}
+
+/** Prompt for changing some fields of a card from plain words. Returns { system, user }. */
+export function partsPrompt(card, keys, request, { scope = "the character" } = {}) {
+  const now = Object.fromEntries(keys.map((k) => [k, card[k]]));
+  const system = `You adjust a cartoon character for an animation app. The character is a CHARACTER CARD (JSON).
+You may change ONLY these fields (${scope}), with only these values:
+${schemaFor(keys)}
+
+Their values now: ${JSON.stringify(now)}
+
+Rules:
+- Change only what the request asks for; leave everything else out of your answer.
+- Left and right mean as you look at the character from the front.
+- "A bit" or "slightly" means a small step from the value now; "very" or "a lot" a big one.
+- If the request needs a field that isn't in the list, don't invent it: say so in "note".
+- Colours: soft, natural shades that suit a cartoon (a blue eye is like #3a78c2, a green one like #4e8a3e), never pure screen colours like #0000ff; the field's examples are good choices.
+Answer with ONE JSON object: { "changes": { "<field>": <new value>, … }, "note": "<one short plain sentence: what you changed, or why you couldn't>" }.`;
+  return { system, user: String(request ?? "").trim().slice(0, 1500) };
+}
+
+/**
+ * A model's answer to partsPrompt → the checked result. Only `keys` may change; each value goes
+ * through the card's own check. Returns { card, changes: [{ key, label, from, to }], problems, note }.
+ */
+export function readPartsAnswer(text, card, keys) {
+  const got = extractJson(text);
+  const asked = got && typeof got.changes === "object" && got.changes && !Array.isArray(got.changes) ? got.changes : {};
+  const allowed = new Set(keys);
+  const problems = [], next = { ...card }, changes = [];
+  for (const [k, v] of Object.entries(asked)) {
+    const f = fieldByKey(k);
+    if (!f) { problems.push(`"${k}" isn't a card field, ignored`); continue; }
+    if (!allowed.has(k)) { problems.push(`${f.label} isn't open to change here (locked, or another part), left as it was`); continue; }
+    const [value, problem] = checkField(f, v);
+    if (problem) problems.push(problem);
+    if (JSON.stringify(value) === JSON.stringify(card[k])) continue;
+    next[k] = value;
+    changes.push({ key: k, label: f.label, from: card[k], to: value });
+  }
+  return { card: normalizeCard(next).card, changes, problems, note: typeof got?.note === "string" ? got.note.slice(0, 300) : "" };
 }

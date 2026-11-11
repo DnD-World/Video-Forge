@@ -13,6 +13,7 @@ import { parseScript } from "../lib/narration/parseScript";
 import { parseDramaboxScript } from "../lib/narration/parseDramaboxScript";
 import { plainError } from "../lib/plainError";
 import { activeCard } from "../../characters/core/index.mjs";
+import { voicedSpeaker } from "../lib/narration/characterVoice";
 
 export type Row = Record<string, string>;
 export interface RowCheck { ok: boolean; why: string; lines: number }
@@ -124,10 +125,11 @@ export const useManyStore = create<ManyState>((set, get) => ({
     const speakers = project.speakers;
     const checks = checkRows(rows);
     set({ finished: "", problem: "" });
-    const cast = speakers.map((s) => ({
+    const cast = speakers.map(voicedSpeaker).map((s) => ({
       label: s.label,
       openingPhrase: s.openingPhrase,
       puppetPath: s.puppetPath,
+      portraitPath: s.portraitPath,
       sheetPath: s.sheetPath,
       character: activeCard(s) ?? undefined,
       engine: (s.ttsEngine === "dramabox" ? "gemini" : s.ttsEngine ?? "gemini") as "gemini",

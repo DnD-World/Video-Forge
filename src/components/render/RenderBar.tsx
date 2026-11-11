@@ -180,6 +180,7 @@ export function RenderBar() {
           // place rather than being decided twice.
           sheetPath: sp.sheetPath,
           puppetPath: sp.puppetPath,
+          portraitPath: sp.portraitPath,
           // a drawn character is JSON; it shows when the speaker's form is drawn
           // (formOf, characters/core/profile.mjs — the one rule everywhere)
           character: activeCard(sp) ?? undefined,

@@ -1,0 +1,101 @@
+{
+  "kind": "video-forge-character",
+  "v": 1,
+  "id": "sam",
+  "roster": 37,
+  "name": "Roommate Sam",
+  "group": "support",
+  "role": "Lucas's college roommate.",
+  "look": "paper",
+  "framing": "full",
+  "signature": "#8ab83a",
+  "signatureName": "lime",
+  "voice": null,
+  "locks": {
+    "body": true,
+    "head": true,
+    "eyes": true,
+    "brows": true,
+    "nose": true,
+    "mouth": true,
+    "ears": true,
+    "hair": true,
+    "skin": true,
+    "facialHair": true,
+    "outfits": true,
+    "marks": true
+  },
+  "base": {
+    "name": "Roommate Sam",
+    "skin": "#8d5a3b",
+    "headShape": "oval",
+    "eyes": "oval",
+    "nose": "dot",
+    "hair": "afro",
+    "hairColor": "#1e1a18",
+    "expression": "neutral",
+    "blinkRate": 1,
+    "energy": 0.5,
+    "sway": 0.5,
+    "form": 1,
+    "formDetail": true,
+    "formLimbs": 0.5
+  },
+  "accessories": [],
+  "faces": [
+    {"id": "A", "label": "As written", "set": {}},
+    {"id": "B", "label": "curly hair", "set": {"hair": "curly"}},
+    {"id": "C", "label": "buzz hair, freckles True", "set": {"hair": "buzz", "freckles": true}}
+  ],
+  "chosen": {"face": "A", "outfits": ["o2"]},
+  "outfits": [
+    {
+      "id": "o1",
+      "label": "As written",
+      "wear": [
+        {"id": "hoodie", "colors": ["#8ab83a"]},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "sneakers", "colors": ["#f4f1ea", "#8ab83a"]}
+      ]
+    },
+    {
+      "id": "o2",
+      "label": "Hood up",
+      "wear": [
+        {"id": "hoodie_up", "colors": ["#8ab83a"]},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "sneakers", "colors": ["#f4f1ea", "#8ab83a"]}
+      ]
+    },
+    {
+      "id": "o3",
+      "label": "Tee and jeans",
+      "wear": [
+        {"id": "tshirt", "colors": ["#8ab83a"]},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "sneakers", "colors": ["#f4f1ea", "#8ab83a"]}
+      ]
+    },
+    {
+      "id": "o4",
+      "label": "Pullover",
+      "wear": [
+        {"id": "sweater", "colors": ["#8ab83a"]},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "sneakers", "colors": ["#f4f1ea", "#8ab83a"]}
+      ]
+    },
+    {
+      "id": "o5",
+      "label": "Check shirt",
+      "wear": [
+        {"id": "shirt", "colors": ["#8ab83a"], "pattern": "checks"},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "sneakers", "colors": ["#f4f1ea", "#8ab83a"]}
+      ]
+    }
+  ],
+  "proposed": true,
+  "source": "roster 37",
+  "target": "2–3"
+}

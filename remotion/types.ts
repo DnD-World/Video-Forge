@@ -72,6 +72,9 @@ export type RenderSpeaker = {
   /** A drawn character (characters/core). Wins over the puppet and the sheet.
    *  Pure JSON: nothing to copy into the public dir. */
   character?: CharacterCard | null;
+  /** An illustrated portrait rig (remotion/portrait). Filename inside the
+   *  public dir: the file is several MB of pictures, far too big for inputProps. */
+  portrait?: { fileName: string } | null;
 };
 
 /** One background clip, reduced to what the composition needs to draw it.

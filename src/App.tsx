@@ -1,5 +1,6 @@
 import { ExplainerStudio } from "./components/explainer/ExplainerStudio";
 import { ManyVideosStudio } from "./components/render/ManyVideos";
+import { CharacterStudio } from "./components/creator/CharacterStudio";
 import { initManyEvents } from "./store/useManyStore";
 import { HudButton } from "./components/ui/HudButton";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -8,6 +9,8 @@ import { Toggle } from "./components/ui/Toggle";
 import { SpeakerAvatar } from "./components/canvas/SpeakerAvatar";
 import { PuppetAvatar } from "./components/canvas/PuppetAvatar";
 import { CharacterAvatar } from "./components/canvas/CharacterAvatar";
+import { PortraitView } from "./components/canvas/PortraitView";
+import { usePortraits } from "./lib/portraits/usePortraits";
 import { activeCard, facingView, lookById } from "../characters/core/index.mjs";
 import { WaveformScene } from "./components/canvas/WaveformScene";
 import { BackgroundScene } from "./components/canvas/BackgroundScene";
@@ -93,9 +96,10 @@ export default function App() {
   // WHAT KIND OF VIDEO (21 Oct 2026): puppet videos (the four steps) or
   // explainers (animated, drawn by code — src/components/explainer). Remembered.
   // MANY VIDEOS (26 Oct 2026) is a third kind, with its own screen.
-  type Mode = "puppet" | "explainer" | "many";
+  // CHARACTERS (7 Nov 2026): the character creator, its own screen too.
+  type Mode = "puppet" | "explainer" | "many" | "characters";
   const [mode, setModeState] = useState<Mode>(() => {
-    try { const m = localStorage.getItem("vf.mode"); return m === "explainer" || m === "many" ? m : "puppet"; } catch { return "puppet"; }
+    try { const m = localStorage.getItem("vf.mode"); return m === "explainer" || m === "many" || m === "characters" ? m : "puppet"; } catch { return "puppet"; }
   });
   const setMode = (m: Mode) => { setModeState(m); setSettingsOpen(false); try { localStorage.setItem("vf.mode", m); } catch { /* fine */ } };
   // A batch reports its progress whichever screen is open.
@@ -251,6 +255,7 @@ export default function App() {
     [backgrounds]
   );
   const { puppets } = usePuppets(speakers.map((sp) => sp.puppetPath));
+  const { files: portraits } = usePortraits(speakers.map((sp) => sp.portraitPath));
   const browTracks = useMemo(
     () => buildSpeakerBrowTracks(narration?.segments ?? []),
     [narration]
@@ -502,6 +507,7 @@ export default function App() {
           <HudButton data-tip="Puppet videos: talking characters, in four steps." active={mode === "puppet" && !settingsOpen} onClick={() => setMode("puppet")}>Puppet video</HudButton>
           <HudButton data-tip="Explainers: animated pictures, words and charts drawn by code, timed to a narration — with or without puppets on top." active={mode === "explainer" && !settingsOpen} onClick={() => setMode("explainer")}>Explainer</HudButton>
           <HudButton data-tip="Many videos at once: one row of a spreadsheet per video, all made in a row with the look you set up." active={mode === "many" && !settingsOpen} onClick={() => setMode("many")}>Many videos</HudButton>
+          <HudButton data-tip="The character creator: each person of your cast, part by part, with locks, a randomiser, outfits and moving previews." active={mode === "characters" && !settingsOpen} onClick={() => setMode("characters")}>Characters</HudButton>
         </div>
         <button
           className={`forge-gear ml-3 ${settingsOpen ? "on" : ""}`}
@@ -514,7 +520,7 @@ export default function App() {
         </button>
       </header>
 
-      {mode === "explainer" && !settingsOpen ? <ExplainerStudio /> : mode === "many" && !settingsOpen ? <ManyVideosStudio onEditProject={() => { setMode("puppet"); goStep("cast"); }} /> : view === "settings" ? (
+      {mode === "characters" && !settingsOpen ? <CharacterStudio /> : mode === "explainer" && !settingsOpen ? <ExplainerStudio /> : mode === "many" && !settingsOpen ? <ManyVideosStudio onEditProject={() => { setMode("puppet"); goStep("cast"); }} /> : view === "settings" ? (
         <main className="panel-hud relative flex-1 mx-3 mb-3 p-6 min-h-0 overflow-hidden">
           <HudCorners />
           <div className="w-full h-full flex flex-col">
@@ -654,7 +660,8 @@ export default function App() {
                     // breathing while you're trying to place it fights the mouse.
                     transform:
                       "translate(-50%, -50%)" +
-                      (draggingId === sp.id
+                      // a portrait sways inside its own frame; the frame stays put (as in the render)
+                      (draggingId === sp.id || sp.portraitPath
                         ? ""
                         : motionTransform(
                             headMotion(
@@ -670,7 +677,19 @@ export default function App() {
                   }}
                   className="z-10"
                 >
-                  {activeCard(sp) ? (
+                  {sp.portraitPath && portraits[sp.portraitPath] ? (
+                    // an illustrated portrait (brands/scotus): wins over every other face, as in the render
+                    <PortraitView
+                      file={portraits[sp.portraitPath]}
+                      id={sp.id}
+                      timeMs={previewTimeMs}
+                      viseme={blend.to}
+                      prevViseme={blend.from}
+                      mix={blend.mix}
+                      active={activeSpeakerId === sp.id}
+                      size={sp.size * canvasSize.w}
+                    />
+                  ) : activeCard(sp) ? (
                     // a drawn character: same signals as the puppet, drawn by code
                     <CharacterAvatar
                       card={activeCard(sp)!}

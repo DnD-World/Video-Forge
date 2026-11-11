@@ -305,6 +305,9 @@ export interface SpeakerConfig {
    *  halfway through building a puppet should not lose the working sheet, and
    *  every project saved before puppets existed still opens with its face on. */
   puppetPath?: string;
+  /** An illustrated portrait that talks (brands/<brand>/rig/build/<name>.portrait.json).
+   *  Wins over everything else: it is a whole picture, frame and background included. */
+  portraitPath?: string;
   /** A character drawn by code (characters/core) — the third kind of face.
    *  A small JSON card, so it lives in the project itself and rides into the
    *  render with no files. Which form shows is `form` (formOf in
@@ -376,6 +379,13 @@ export interface SpeakerConfig {
   pitch?: number;
   /** Speaking speed, 1 = as made (0.8–1.25). */
   speed?: number;
+  /** IN THIS PROJECT ONLY (character creator, 6 Nov 2026): when the drawn
+   *  character has a voice of their own (`character.voice`), the voice fields on
+   *  this speaker are ignored unless this is true. Then they are this project's
+   *  voice for the character, and the character's own voice is left as it is.
+   *  Read through voicedSpeaker() in src/lib/narration/characterVoice.ts.
+   *  Unset/false = the character's own voice (or, without one, these fields). */
+  voiceOverride?: boolean;
   /** Pause between two of this speaker's own lines, ms. Unset = the project's. */
   breathMs?: number;
   voiceId?: string;      // assigned Piper voice's onnxPath, if any

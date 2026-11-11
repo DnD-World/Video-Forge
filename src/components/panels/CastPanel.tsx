@@ -26,7 +26,9 @@ import { usePlayer } from "../../lib/motion/usePreviewPlayer";
 import { plainError } from "../../lib/plainError";
 import { PuppetShelf } from "./PuppetShelf";
 import { CharacterAvatar } from "../canvas/CharacterAvatar";
-import { COSTUMES, DRAWN_PRESETS, LOOKS, SUBJECTS, defaultCard, describeCard, formOf, normalizeCard } from "../../../characters/core/index.mjs";
+import { COSTUMES, DRAWN_PRESETS, LOOKS, SUBJECTS, CHARACTER_KIND, cardFor, defaultCard, describeCard, formOf, normalizeCard, normalizeCharacter } from "../../../characters/core/index.mjs";
+import { characterVoiceOf, characterVoicePatch, projectVoicePatch, usesProjectVoice, voiceFromSpeaker, voicedSpeaker } from "../../lib/narration/characterVoice";
+import { mainColorOf } from "../../store/characterColor";
 import { resolveAssetDir } from "../../lib/puppets/puppetAssets";
 import { useSpeakerLibraryStore } from "../../store/useSpeakerLibraryStore";
 import { usePuppetDefs } from "../../lib/puppets/usePuppets";
@@ -124,7 +126,8 @@ export function CastPanel() {
   const [sampleOn, setSampleOn] = useState<string | null>(null);
   const [sampleNote, setSampleNote] = useState<string | null>(null);
   useEffect(() => () => { sampleAudio.current?.pause(); }, []);
-  const playVoice = async (sp: (typeof speakers)[number]) => {
+  const playVoice = async (speakerNow: (typeof speakers)[number]) => {
+    const sp = voicedSpeaker(speakerNow); // the character's own voice unless this project overrides it
     setSampleNote(null);
     sampleAudio.current?.pause();
     setSampleOn(null);
@@ -175,6 +178,34 @@ export function CastPanel() {
     if (adding) void window.byok?.forge?.shelfPuppets().then(setShelf).catch(() => setShelf([]));
   }, [adding]);
   const [saved, setSaved] = useState<string | null>(null);
+
+  // "From a character file": one person from a brand's characters folder (e.g.
+  // brands/redflag/characters/jake.json), with their chosen face and usual outfit,
+  // their main colour and their voice. A copy: the file itself is never changed.
+  const [fileNote, setFileNote] = useState<string | null>(null);
+  const addFromCharacterFile = async () => {
+    setFileNote(null);
+    const path = await window.byok?.dialog.openFile([{ name: "Character file", extensions: ["json"] }]);
+    if (!path) return;
+    try {
+      const raw = JSON.parse(new TextDecoder().decode(await window.byok.storage.readFile(path)));
+      if (raw?.kind !== CHARACTER_KIND) {
+        setFileNote(`${fileName(path)} isn't a character file. Character files are in a brand's characters folder, one per person.`);
+        return;
+      }
+      const { character, problems } = normalizeCharacter(raw);
+      addSpeakerFrom({
+        label: character.name, form: "drawn", character: cardFor(character), description: character.role,
+        borderColor: character.signature || DRAWN_COLORS[speakers.length % DRAWN_COLORS.length],
+        bgColor: "#1a1a1a", bgOpacity: 0, borderOpacity: 0, outlineShape: "none", size: 0.32,
+        waveform: defaultTrackWaveform(speakers.length === 0 ? 0 : speakers.length % 2 === 1 ? 1 : -1),
+      });
+      if (problems.length) setFileNote(`Added ${character.name}. ${problems.length} thing${problems.length === 1 ? " was" : "s were"} fixed on the way in: ${problems.slice(0, 3).join("; ")}${problems.length > 3 ? " …" : ""}`);
+      setAdding(false);
+    } catch (e) {
+      setFileNote(plainError(e, "Pick the file again."));
+    }
+  };
 
   // Never leave the panel pointing at a speaker that has just been deleted.
   useEffect(() => {
@@ -274,7 +305,7 @@ export function CastPanel() {
             key={s.id}
             role="tab"
             aria-selected={s.id === active}
-            className={`who ${s.id === active ? "on" : ""}`}
+            className={`who ${s.id === active ? "on" : ""} ${isDarkColor(s.borderColor) ? "dark" : ""}`}
             style={{ ["--c" as string]: s.borderColor }}
             onClick={() => setActive(s.id)}
             data-tip={`Everything about ${s.label}: voice, look, sound bars and place. ${formOf(s) === "drawn" ? "A drawn character: full movement." : "A picture puppet: rich detail and texture."}`}
@@ -366,6 +397,16 @@ export function CastPanel() {
               <h3 data-tip="Drawn by this app as it plays: they walk in and out, sit, jump, dance, wave and hold things. Any drawing style.">
                 <KindBadge drawn /> Drawn characters <small>full movement</small>
               </h3>
+              <div className="flex flex-wrap items-center gap-2 pb-2">
+                <button
+                  className="btn"
+                  onClick={() => void addFromCharacterFile()}
+                  data-tip="Add one person from their own file, e.g. brands/redflag/characters/jake.json: chosen face, usual outfit, main colour and voice. The file itself is not changed."
+                >
+                  From a character file…
+                </button>
+                {fileNote && <span className="text-sm text-neutral-400" data-tip="What happened with the character file you picked.">{fileNote}</span>}
+              </div>
               <div className="forge-shelf">
                 {DRAWN_PRESETS.map((p, i) => (
                   <button
@@ -492,8 +533,26 @@ export function CastPanel() {
                 >
                   {sp.puppetPath ? "Change face" : "Choose face…"}
                 </button>
+                <button
+                  className="btn"
+                  onClick={async () => {
+                    const p = await window.byok.dialog.openFile([{ name: "Portrait rig", extensions: ["json"] }]);
+                    if (!p) return;
+                    if (!/.portrait.json$/i.test(p)) { window.alert("That is not a portrait rig. Pick a file ending in .portrait.json (brands/scotus/rig/build)."); return; }
+                    // a portrait is its own frame: no rings or outline round it
+                    updateSpeaker(sp.id, { portraitPath: p, outlineShape: "none", waveform: { ...sp.waveform, enabled: false } });
+                  }}
+                  data-tip="An illustrated portrait that talks: a whole framed picture (the SCOTUS justices). It wins over the face and the drawn character."
+                >
+                  {sp.portraitPath ? "Change portrait" : "Portrait…"}
+                </button>
+                {sp.portraitPath && (
+                  <button className="btn" onClick={() => updateSpeaker(sp.id, { portraitPath: undefined })} data-tip="Back to their face or drawn character.">
+                    Remove portrait
+                  </button>
+                )}
                 <span className="text-sm text-neutral-500 truncate flex-1" title={sp.puppetPath ?? sp.sheetPath}>
-                  {fileName(sp.puppetPath ?? sp.sheetPath) ?? "no face"}
+                  {fileName(sp.portraitPath ?? sp.puppetPath ?? sp.sheetPath) ?? "no face"}
                   {sp.puppetPath && puppetErrors[sp.puppetPath] && <span className="text-red-400"> — {puppetErrors[sp.puppetPath]}</span>}
                 </span>
               </div>
@@ -516,10 +575,17 @@ export function CastPanel() {
                 ))}
               </div>
               <div className="flex items-center gap-4">
-                <label className="flex items-center gap-2" data-tip="Their colour: the frame and their sound bars use it.">
-                  <input type="color" value={sp.borderColor} onChange={(e) => updateSpeaker(sp.id, { borderColor: e.target.value })} className="forge-swatch" />
-                  <span className="text-sm text-neutral-400">Colour</span>
-                </label>
+                {mainColorOf(sp) ? (
+                  <label className="flex items-center gap-2" data-tip={`${sp.label}'s main colour, which belongs to the character: their frame, their sound bars and their spoken word in the subtitles all use it, and one piece of every outfit carries it. It is changed on the character, not here.`}>
+                    <input type="color" value={sp.borderColor} disabled aria-label={`${sp.label}'s main colour`} className="forge-swatch" />
+                    <span className="text-sm text-neutral-400">Main colour 🔒</span>
+                  </label>
+                ) : (
+                  <label className="flex items-center gap-2" data-tip="Their colour: the frame and their sound bars use it.">
+                    <input type="color" value={sp.borderColor} onChange={(e) => updateSpeaker(sp.id, { borderColor: e.target.value })} className="forge-swatch" />
+                    <span className="text-sm text-neutral-400">Colour</span>
+                  </label>
+                )}
                 <label className="flex items-center gap-2" data-tip="The colour inside the frame, behind the face.">
                   <input type="color" value={sp.bgColor} onChange={(e) => updateSpeaker(sp.id, { bgColor: e.target.value })} className="forge-swatch" />
                   <span className="text-sm text-neutral-400">Fill</span>
@@ -575,82 +641,113 @@ export function CastPanel() {
               </div>
             </Section>
 
+            {(() => {
+              // the voice as it will sound: the character's own, unless this project overrides it
+              const vs = voicedSpeaker(sp);
+              const own = characterVoiceOf(sp);
+              const setVoice = (change: Partial<SpeakerConfig>) => updateSpeaker(sp.id, projectVoicePatch(sp, change));
+              const said = (v: NonNullable<typeof own>) => `${v.engine === "gemini" ? "Gemini" : v.engine === "piper" ? "Piper" : v.engine === "elevenlabs" ? "ElevenLabs" : "Fish Audio"}${v.voiceId && v.engine !== "piper" ? ` · ${v.voiceId}` : v.voiceId ? ` · ${fileName(v.voiceId)}` : ""}${v.pitch ? ` · pitch ${v.pitch > 0 ? "+" : "−"}${Math.abs(v.pitch)}` : ""}${v.speed !== 1 ? ` · ${v.speed.toFixed(2)}×` : ""}`;
+              return (
             <Section title="Voice" tip="How they sound.">
+              {own && !usesProjectVoice(sp) && (
+                <p className="text-sm text-neutral-400" data-tip={`This voice belongs to ${sp.label} and travels with them. Change anything below and it changes in this project only; ${sp.label}'s own voice stays as it is.`}>
+                  🔒 {sp.label}&apos;s own voice: {said(own)}. Changing it here changes it in this project only.
+                </p>
+              )}
+              {own && usesProjectVoice(sp) && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm text-amber-300" data-tip={`This project uses its own voice for ${sp.label}. Their own voice (${said(own)}) is unchanged.`}>
+                    Voice changed for this project only.
+                  </span>
+                  <button className="btn" onClick={() => updateSpeaker(sp.id, characterVoicePatch())} data-tip={`Go back to ${sp.label}'s own voice: ${said(own)}. This project's settings are kept, in case you switch back.`}>
+                    Use {sp.label}&apos;s own voice
+                  </button>
+                </div>
+              )}
+              {sp.character && formOf(sp) === "drawn" && usesProjectVoice(sp) && (
+                <button
+                  className="btn"
+                  onClick={() => updateSpeaker(sp.id, { character: { ...sp.character!, voice: voiceFromSpeaker(sp) }, voiceOverride: false })}
+                  data-tip={`Make the voice set below ${sp.label}'s own: it goes with them when you save them to the library${own ? `, in place of ${said(own)}` : ""}. Afterwards, changes here are for this project only.`}
+                >
+                  Make this {sp.label}&apos;s own voice
+                </button>
+              )}
               <div data-tip="Which voice service speaks for them. Gemini and Fish are free.">
                 <Picker
                   aria-label="Voice engine"
                   className="w-full"
-                  value={engineOf(sp)}
+                  value={engineOf(vs)}
                   options={[
                     { value: "gemini", label: "Gemini — free, acts, many languages" },
                     { value: "fish", label: "Fish Audio — free, a funny foreign accent" },
                     { value: "elevenlabs", label: "ElevenLabs — charged per character" },
                     { value: "piper", label: "Piper — offline, flat" },
                   ]}
-                  onChange={(v) => updateSpeaker(sp.id, { ttsEngine: v as "gemini" | "fish" | "elevenlabs" | "piper" })}
+                  onChange={(v) => setVoice({ ttsEngine: v as "gemini" | "fish" | "elevenlabs" | "piper" })}
                 />
               </div>
-              {engineOf(sp) === "gemini" && (
+              {engineOf(vs) === "gemini" && (
                 <>
                   <div data-tip="Live models are free with no daily limit. Voice-only models sound a little better, but only 10 lines a day are free.">
                     <Picker
                       aria-label="Gemini model"
                       className="w-full"
-                      value={sp.geminiModel ?? DEFAULT_GEMINI_MODEL}
+                      value={vs.geminiModel ?? DEFAULT_GEMINI_MODEL}
                       options={GEMINI_MODELS.map((m) => ({ value: m.id, label: m.label }))}
-                      onChange={(v) => updateSpeaker(sp.id, { geminiModel: v, geminiMode: geminiModeOf(v) })}
+                      onChange={(v) => setVoice({ geminiModel: v, geminiMode: geminiModeOf(v) })}
                     />
                   </div>
                   <div data-tip="Which of Google's voices. The word after the name is how Google describes it.">
                     <Picker
                       aria-label="Gemini voice"
                       className="w-full"
-                      value={sp.geminiVoice ?? DEFAULT_GEMINI_VOICE}
+                      value={vs.geminiVoice ?? DEFAULT_GEMINI_VOICE}
                       options={GEMINI_VOICES.map((v) => ({ value: v.name, label: `${v.name} — ${v.feel}` }))}
-                      onChange={(v) => updateSpeaker(sp.id, { geminiVoice: v })}
+                      onChange={(v) => setVoice({ geminiVoice: v })}
                     />
                   </div>
                 </>
               )}
-              {engineOf(sp) === "piper" && (
+              {engineOf(vs) === "piper" && (
                 <Picker
                   aria-label="Piper voice"
                   className="w-full"
                   placeholder={voices.length === 0 ? "No voices — scan in Settings" : "Saved voice not found — pick another"}
-                  value={sp.voiceId ?? ""}
+                  value={vs.voiceId ?? ""}
                   options={[
                     { value: "", label: voices.length === 0 ? "No voices — scan in Settings" : "No voice assigned" },
                     ...voices.map((v) => ({ value: v.onnxPath, label: v.name })),
                   ]}
-                  onChange={(v) => updateSpeaker(sp.id, { voiceId: v || undefined })}
+                  onChange={(v) => setVoice({ voiceId: v || undefined })}
                 />
               )}
-              {engineOf(sp) === "elevenlabs" && (
+              {engineOf(vs) === "elevenlabs" && (
                 <Picker
                   aria-label="ElevenLabs voice"
                   className="w-full"
                   placeholder={elevenVoices.length === 0 ? "No voices — save a key in Settings" : "Pick a voice"}
-                  value={sp.elevenVoiceId ?? ""}
+                  value={vs.elevenVoiceId ?? ""}
                   options={[{ value: "", label: "No voice chosen" }, ...elevenVoices.map((v) => ({ value: v.id, label: v.name }))]}
-                  onChange={(v) => updateSpeaker(sp.id, { elevenVoiceId: v || undefined })}
+                  onChange={(v) => setVoice({ elevenVoiceId: v || undefined })}
                 />
               )}
               <div data-tip="Higher or lower voice, without changing how fast they talk.">
                 <Slider
                   label="Pitch"
-                  value={sp.pitch ?? 0}
+                  value={vs.pitch ?? 0}
                   min={-6} max={6} step={1}
                   format={(v) => (v === 0 ? "as is" : `${v > 0 ? "+" : "−"}${Math.abs(v)} step${Math.abs(v) === 1 ? "" : "s"}`)}
-                  onChange={(pitch) => updateSpeaker(sp.id, { pitch })}
+                  onChange={(pitch) => setVoice({ pitch })}
                 />
               </div>
               <div data-tip="How fast they talk. 1× is as the voice made it.">
                 <Slider
                   label="Speed"
-                  value={sp.speed ?? 1}
+                  value={vs.speed ?? 1}
                   min={0.8} max={1.25} step={0.05}
                   format={(v) => `${v.toFixed(2)}×`}
-                  onChange={(speed) => updateSpeaker(sp.id, { speed })}
+                  onChange={(speed) => setVoice({ speed })}
                 />
               </div>
               <div data-tip="The little pause when they say two lines in a row. Until you move it, the video's own setting (Script step) is used.">
@@ -662,13 +759,15 @@ export function CastPanel() {
                   onChange={(breathMs) => updateSpeaker(sp.id, { breathMs })}
                 />
               </div>
-              {engineOf(sp) === "gemini" && (
+              {engineOf(vs) === "gemini" && (
                 <p className="text-sm text-neutral-500">
                   Write [laughs], [whispers], [sighs] inside a line to have it acted, never read out. Each line is
                   checked word by word and re-made if it drifts from the script.
                 </p>
               )}
             </Section>
+              );
+            })()}
 
             <Section title="Sound bars" tip="The moving bars that show when they speak." open={false}>
               <WaveformControls label={`Show ${sp.label}'s sound bars`} value={sp.waveform} onChange={(patch) => setSpeakerWaveform(sp.id, patch)} face={{ color: sp.borderColor, shape: sp.outlineShape }} />
@@ -693,6 +792,15 @@ export function CastPanel() {
 }
 
 const fileName = (p?: string) => (p ? p.split(/[\\/]/).pop() : undefined);
+
+/** Too dark for the selected tab's dark writing (a navy main colour, say)? Then it writes in white.
+ *  0.18 is where white and the tab's near-black text read equally well (WCAG contrast). */
+function isDarkColor(hex: string): boolean {
+  const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex ?? "");
+  if (!m) return false;
+  const [r, g, b] = m.slice(1).map((x) => parseInt(x, 16) / 255).map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b < 0.18;
+}
 
 /** A collapsible section of a speaker's tab. */
 function Section({ title, tip, open = true, children }: { title: string; tip: string; open?: boolean; children: ReactNode }) {

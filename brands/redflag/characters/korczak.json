@@ -1,0 +1,137 @@
+{
+  "kind": "video-forge-character",
+  "v": 1,
+  "id": "korczak",
+  "roster": 26,
+  "name": "Janusz Korczak",
+  "group": "week",
+  "role": "Call-in healer (replaces Fred Rogers).",
+  "look": "hose2",
+  "framing": "waist",
+  "signature": "#e9e4d6",
+  "signatureName": "doctor's white",
+  "voice": null,
+  "locks": {
+    "body": true,
+    "head": true,
+    "eyes": true,
+    "brows": true,
+    "nose": true,
+    "mouth": true,
+    "ears": true,
+    "hair": true,
+    "skin": true,
+    "facialHair": true,
+    "outfits": true,
+    "marks": true
+  },
+  "base": {
+    "name": "Janusz Korczak",
+    "skin": "#f0d6bf",
+    "headShape": "round",
+    "eyes": "oval",
+    "hair": "sides",
+    "hairColor": "#8a7a6a",
+    "beard": "goatee",
+    "expression": "smile",
+    "blinkRate": 1,
+    "energy": 0.4,
+    "sway": 0.4,
+    "form": 1,
+    "formDetail": true,
+    "formLimbs": 0.5
+  },
+  "accessories": [{"id": "glasses", "colors": ["#2b2018"]}],
+  "faces": [
+    {"id": "A", "label": "As written", "set": {}},
+    {"id": "B", "label": "bald hair", "set": {"hair": "bald"}},
+    {"id": "C", "label": "buzz hair, beard none", "set": {"hair": "buzz", "beard": "none"}}
+  ],
+  "chosen": {"face": "B", "outfits": ["o7"]},
+  "outfits": [
+    {
+      "id": "o1",
+      "label": "As written",
+      "wear": [
+        {"id": "shirt", "colors": ["#b8c4cc"]},
+        {"id": "labcoat", "colors": ["#e9e4d6"]},
+        {"id": "tie", "colors": ["#5a3a2a"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o2",
+      "label": "Frock coat and cravat",
+      "wear": [
+        {"id": "shirt", "colors": ["#efe6d2"]},
+        {"id": "blazer", "colors": ["#e9e4d6"]},
+        {"id": "scarf", "colors": ["#f4f1ea"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o3",
+      "label": "Waistcoat and tie",
+      "wear": [
+        {"id": "shirt", "colors": ["#efe6d2"]},
+        {"id": "vest", "colors": ["#e9e4d6"]},
+        {"id": "tie", "colors": ["#1c1c22"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o4",
+      "label": "Top hat",
+      "wear": [
+        {"id": "shirt", "colors": ["#efe6d2"]},
+        {"id": "blazer", "colors": ["#e9e4d6"]},
+        {"id": "tie", "colors": ["#1c1c22"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]},
+        {"id": "tophat", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o5",
+      "label": "Cape",
+      "wear": [
+        {"id": "shirt", "colors": ["#efe6d2"]},
+        {"id": "vest", "colors": ["#3a3a40"]},
+        {"id": "cape", "colors": ["#e9e4d6"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "boots", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o6",
+      "label": "Long robe",
+      "wear": [{"id": "robe", "colors": ["#e9e4d6", "#5a3a2a"]}, {"id": "sandals", "colors": ["#3b2a1e"]}]
+    },
+    {
+      "id": "o7",
+      "label": "Bow tie",
+      "wear": [
+        {"id": "shirt", "colors": ["#efe6d2"]},
+        {"id": "blazer", "colors": ["#e9e4d6"]},
+        {"id": "bowtie", "colors": ["#5a3a2a"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o8",
+      "label": "Scholar's pullover",
+      "wear": [
+        {"id": "sweater", "colors": ["#e9e4d6"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    }
+  ],
+  "proposed": true,
+  "source": "roster 26",
+  "target": "4–5"
+}

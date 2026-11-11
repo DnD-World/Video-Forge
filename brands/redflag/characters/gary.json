@@ -1,0 +1,104 @@
+{
+  "kind": "video-forge-character",
+  "v": 1,
+  "id": "gary",
+  "roster": 35,
+  "name": "Uncle Gary",
+  "group": "extended",
+  "role": "Uncle.",
+  "look": "paper",
+  "framing": "full",
+  "signature": "#b5523a",
+  "signatureName": "brick",
+  "voice": null,
+  "locks": {
+    "body": true,
+    "head": true,
+    "eyes": true,
+    "brows": true,
+    "nose": true,
+    "mouth": true,
+    "ears": true,
+    "hair": true,
+    "skin": true,
+    "facialHair": true,
+    "outfits": true,
+    "marks": true
+  },
+  "base": {
+    "name": "Uncle Gary",
+    "build": "round",
+    "skin": "#efcfb4",
+    "headShape": "round",
+    "eyes": "oval",
+    "hair": "sides",
+    "hairColor": "#5a4a3a",
+    "moustache": "thick",
+    "expression": "smile",
+    "blinkRate": 1,
+    "energy": 0.6,
+    "sway": 0.5,
+    "form": 1,
+    "formDetail": true,
+    "formLimbs": 0.5
+  },
+  "accessories": [],
+  "faces": [
+    {"id": "A", "label": "As written", "set": {}},
+    {"id": "B", "label": "bald hair", "set": {"hair": "bald"}},
+    {"id": "C", "label": "buzz hair, beard stubble", "set": {"hair": "buzz", "beard": "stubble"}}
+  ],
+  "chosen": {"face": "A", "outfits": ["o1", "o2", "o5"]},
+  "outfits": [
+    {
+      "id": "o1",
+      "label": "As written",
+      "wear": [
+        {"id": "polo", "colors": ["#b5523a"]},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o2",
+      "label": "Smart jacket",
+      "wear": [
+        {"id": "shirt", "colors": ["#f4f1ea"]},
+        {"id": "blazer", "colors": ["#b5523a"]},
+        {"id": "tie", "colors": ["#642d20"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o3",
+      "label": "Polo",
+      "wear": [
+        {"id": "polo", "colors": ["#b5523a"]},
+        {"id": "trousers", "colors": ["#c8b48a"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o4",
+      "label": "Pullover",
+      "wear": [
+        {"id": "sweater", "colors": ["#b5523a"]},
+        {"id": "trousers", "colors": ["#c8b48a"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o5",
+      "label": "Weekend tee",
+      "wear": [
+        {"id": "tshirt", "colors": ["#b5523a"]},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "sneakers", "colors": ["#f4f1ea", "#b5523a"]}
+      ]
+    }
+  ],
+  "proposed": true,
+  "source": "roster 35 (striped polo: polo has no stripes in the engine yet)",
+  "target": "2–3"
+}

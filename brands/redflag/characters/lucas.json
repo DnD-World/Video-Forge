@@ -1,0 +1,178 @@
+{
+  "kind": "video-forge-character",
+  "v": 1,
+  "id": "lucas",
+  "roster": 3,
+  "name": "Lucas",
+  "group": "main",
+  "role": "Son, 18. The one who sees it.",
+  "look": "paper",
+  "framing": "full",
+  "signature": "#6d7f96",
+  "signatureName": "muted grey-blue",
+  "voice": null,
+  "locks": {
+    "body": true,
+    "head": true,
+    "eyes": true,
+    "brows": true,
+    "nose": true,
+    "mouth": true,
+    "ears": true,
+    "hair": true,
+    "skin": true,
+    "facialHair": true,
+    "outfits": true,
+    "marks": true
+  },
+  "base": {
+    "name": "Lucas",
+    "framing": "full",
+    "height": 1.02,
+    "build": "thin",
+    "headSize": 1.04,
+    "posture": "slouch",
+    "skin": "#f0d0b6",
+    "headShape": "oval",
+    "eyes": "oval",
+    "eyeSpacing": 1.08,
+    "brows": "line",
+    "nose": "dot",
+    "mouth": "plain",
+    "ears": "small",
+    "hair": "messy",
+    "hairColor": "#5a3a24",
+    "expression": "serious",
+    "blinkRate": 1.1,
+    "energy": 0.3,
+    "sway": 0.45,
+    "darkCircles": true,
+    "form": 1,
+    "formDetail": true,
+    "formLimbs": 0.5
+  },
+  "accessories": [],
+  "faces": [
+    {"id": "A", "label": "As written", "set": {}},
+    {"id": "B", "label": "shaggy hair", "set": {"hair": "shaggy"}},
+    {"id": "C", "label": "curly hair, darkCircles False", "set": {"hair": "curly", "darkCircles": false}}
+  ],
+  "chosen": {"face": "A", "outfits": ["o1", "o2", "o8", "o12", "o9", "o7", "o11", "o6"]},
+  "outfits": [
+    {
+      "id": "o1",
+      "label": "As written",
+      "wear": [
+        {"id": "hoodie", "colors": ["#6d7f96"]},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "sneakers", "colors": ["#e9e6df", "#6d7f96"]}
+      ]
+    },
+    {
+      "id": "o2",
+      "label": "Hoodie",
+      "wear": [
+        {"id": "hoodie", "colors": ["#6d7f96"]},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "sneakers", "colors": ["#f4f1ea", "#6d7f96"]}
+      ]
+    },
+    {
+      "id": "o3",
+      "label": "Hood up",
+      "wear": [
+        {"id": "hoodie_up", "colors": ["#6d7f96"]},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "sneakers", "colors": ["#f4f1ea", "#6d7f96"]}
+      ]
+    },
+    {
+      "id": "o4",
+      "label": "Tee and jeans",
+      "wear": [
+        {"id": "tshirt", "colors": ["#6d7f96"]},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "sneakers", "colors": ["#f4f1ea", "#6d7f96"]}
+      ]
+    },
+    {
+      "id": "o5",
+      "label": "Pullover",
+      "wear": [
+        {"id": "sweater", "colors": ["#6d7f96"]},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "sneakers", "colors": ["#f4f1ea", "#6d7f96"]}
+      ]
+    },
+    {
+      "id": "o6",
+      "label": "Check shirt",
+      "wear": [
+        {"id": "shirt", "colors": ["#6d7f96"], "pattern": "checks"},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "sneakers", "colors": ["#f4f1ea", "#6d7f96"]}
+      ]
+    },
+    {
+      "id": "o7",
+      "label": "Summer",
+      "wear": [
+        {"id": "tank", "colors": ["#6d7f96"]},
+        {"id": "shorts", "colors": ["#2f3b52"]},
+        {"id": "sandals", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o8",
+      "label": "Beanie and hoodie",
+      "wear": [
+        {"id": "hoodie", "colors": ["#6d7f96"]},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "boots", "colors": ["#3b2a1e"]},
+        {"id": "beanie", "colors": ["#4c5969"]}
+      ]
+    },
+    {
+      "id": "o9",
+      "label": "Family dinner",
+      "wear": [
+        {"id": "shirt", "colors": ["#6d7f96"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o10",
+      "label": "Dressed up",
+      "wear": [
+        {"id": "shirt", "colors": ["#f4f1ea"]},
+        {"id": "blazer", "colors": ["#6d7f96"]},
+        {"id": "tie", "colors": ["#475362"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o11",
+      "label": "Sport",
+      "wear": [
+        {"id": "tshirt", "colors": ["#6d7f96"]},
+        {"id": "shorts", "colors": ["#2d3446"]},
+        {"id": "sneakers", "colors": ["#f4f1ea", "#6d7f96"]},
+        {"id": "cap", "colors": ["#6d7f96"]}
+      ]
+    },
+    {
+      "id": "o12",
+      "label": "Pyjamas",
+      "wear": [
+        {"id": "tshirt", "colors": ["#6d7f96"]},
+        {"id": "trousers", "colors": ["#afb9c5"], "pattern": "checks"},
+        {"id": "sandals", "colors": ["#3b2a1e"]}
+      ]
+    }
+  ],
+  "proposed": false,
+  "source": "already built",
+  "target": "More than 5"
+}

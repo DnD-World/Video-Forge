@@ -12,14 +12,13 @@ import { restPose } from "./lab/body.mjs";
 import { HEM_LIFT_MAX, HEM_SWAY_MAX } from "./lab/physics.mjs";
 import * as MV from "./lab/moves.mjs";
 import * as PR from "./lab/pair.mjs";
-import CAST from "../brands/redflag/cast.json" with { type: "json" };
+import CAST from "../brands/redflag/cast.mjs";
+import { cardFor } from "./core/character.mjs";
 
 const cardOf = (id) => {
   const p = CAST.people.find((x) => x.id === id);
-  const face = p.faces.find((f) => f.id === p.chosen?.face) ?? p.faces[0];
-  const ids = p.chosen?.outfits ?? [p.outfits[0].id];
-  const o = p.outfits.find((x) => x.id === ids[0]) ?? p.outfits[0];
-  return { card: normalizeCard({ ...p.base, ...face.set, look: p.look, wear: [...o.wear, ...p.accessories] }).card, look: lookById(p.look) };
+  // drawn flat (form 0), as these checks were written before the cast had the 3D settings in its files
+  return { card: { ...cardFor(p), form: 0, formDetail: false, formLimbs: 1 }, look: lookById(p.look) };
 };
 const draw = (a, F) => {
   const rc = new RecordingCtx(600, 600);

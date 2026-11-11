@@ -367,7 +367,8 @@ export const ITEMS = [
     torso: (G, c) => { const { sk } = G, l = sk.neck[0];
       G.pen.rpoly(G.U([[l - sk.sx * 0.5, sk.sy + 0.04], [l + sk.sx * 0.5, sk.sy + 0.04], [l + sk.hx * 1.05, sk.hy + 0.16], [l - sk.hx * 1.05, sk.hy + 0.16]]), 0.01 * G.S); G.fill(c[0]);
       for (const s of [-1, 1]) { G.pen.poly(G.U([[l + s * sk.sx * 0.45, sk.sy + 0.045], [l + s * sk.sx * 0.25, sk.sy - 0.005]]), false); G.line(c[0], 0.004); }
-      G.pen.rpoly(G.U([[l - sk.hx * 0.45, sk.waistY + 0.03], [l + sk.hx * 0.45, sk.waistY + 0.03], [l + sk.hx * 0.45, sk.waistY + 0.08], [l - sk.hx * 0.45, sk.waistY + 0.08]]), 0.004 * G.S); G.line(shade(c[0], -0.3), 0.003, { feature: true }); } },
+      // no pocket: the outlined box read as an odd box on Rita, and a soft one still read as a bracket (7 Nov 2026)
+    } },
   { id: "armor", label: "Armour", slot: "outer", colors: ["#b8c2cc", "#8a5a36"],
     torso: (G, c) => { const { sk } = G;
       G.pen.rpoly(G.U(torsoShape(sk, sk.hy + 0.03, 1.12)), 0.03 * G.S); G.fill(c[0]);

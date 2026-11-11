@@ -1,0 +1,144 @@
+{
+  "kind": "video-forge-character",
+  "v": 1,
+  "id": "young_rita",
+  "roster": 15,
+  "name": "Young Rita",
+  "group": "young",
+  "role": "Rita as a young mother, flashbacks.",
+  "look": "hose2",
+  "framing": "full",
+  "signature": "#2f8f7a",
+  "signatureName": "teal (as Rita)",
+  "voice": null,
+  "locks": {
+    "body": true,
+    "head": true,
+    "eyes": true,
+    "brows": true,
+    "nose": true,
+    "mouth": true,
+    "ears": true,
+    "hair": true,
+    "skin": true,
+    "facialHair": true,
+    "outfits": true,
+    "marks": true
+  },
+  "base": {
+    "name": "Young Rita",
+    "skin": "#f1d3bd",
+    "headShape": "oval",
+    "eyes": "oval",
+    "nose": "dot",
+    "hair": "bob",
+    "hairColor": "#8a5a35",
+    "expression": "smile",
+    "blinkRate": 1.5,
+    "energy": 0.5,
+    "sway": 0.25,
+    "form": 1,
+    "formDetail": true,
+    "formLimbs": 0.5
+  },
+  "accessories": [],
+  "faces": [
+    {"id": "A", "label": "As written", "set": {}},
+    {"id": "B", "label": "long hair", "set": {"hair": "long"}},
+    {"id": "C", "label": "bun hair, makeup soft", "set": {"hair": "bun", "makeup": "soft"}}
+  ],
+  "chosen": {"face": "A", "outfits": ["o6", "o8", "o9", "o1", "o2"]},
+  "outfits": [
+    {
+      "id": "o1",
+      "label": "As written",
+      "wear": [
+        {"id": "dress", "colors": ["#2f8f7a"], "pattern": "dots"},
+        {"id": "apron", "colors": ["#efe6d2"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o2",
+      "label": "Pullover and skirt",
+      "wear": [
+        {"id": "sweater", "colors": ["#2f8f7a"]},
+        {"id": "skirt", "colors": ["#2d3446"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o3",
+      "label": "Dress",
+      "wear": [{"id": "dress", "colors": ["#2f8f7a"]}, {"id": "shoes", "colors": ["#3b2a1e"]}]
+    },
+    {
+      "id": "o4",
+      "label": "Blazer and trousers",
+      "wear": [
+        {"id": "shirt", "colors": ["#f4f1ea"]},
+        {"id": "blazer", "colors": ["#2f8f7a"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o5",
+      "label": "Blazer and skirt",
+      "wear": [
+        {"id": "shirt", "colors": ["#f4f1ea"]},
+        {"id": "blazer", "colors": ["#2f8f7a"]},
+        {"id": "skirt", "colors": ["#3a3a40"]},
+        {"id": "heels", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o6",
+      "label": "Cosy scarf",
+      "wear": [
+        {"id": "sweater", "colors": ["#2f8f7a"]},
+        {"id": "scarf", "colors": ["#1a4f43"]},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "boots", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o7",
+      "label": "Dotted dress",
+      "wear": [{"id": "dress", "colors": ["#2f8f7a"], "pattern": "dots"}, {"id": "heels", "colors": ["#1a4f43"]}]
+    },
+    {
+      "id": "o8",
+      "label": "Weekend tee",
+      "wear": [
+        {"id": "tshirt", "colors": ["#2f8f7a"]},
+        {"id": "jeans", "colors": ["#2f3b52"]},
+        {"id": "sneakers", "colors": ["#f4f1ea", "#2f8f7a"]}
+      ]
+    },
+    {
+      "id": "o9",
+      "label": "Waistcoat",
+      "wear": [
+        {"id": "shirt", "colors": ["#f4f1ea"]},
+        {"id": "vest", "colors": ["#2f8f7a"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o10",
+      "label": "Winter",
+      "wear": [
+        {"id": "sweater", "colors": ["#2f8f7a"]},
+        {"id": "scarf", "colors": ["#1a4f43"]},
+        {"id": "skirt", "colors": ["#3a3a40"]},
+        {"id": "boots", "colors": ["#3b2a1e"]},
+        {"id": "beanie", "colors": ["#1a4f43"]}
+      ]
+    }
+  ],
+  "proposed": true,
+  "source": "roster 15",
+  "target": "More than 5"
+}

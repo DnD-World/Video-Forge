@@ -14,6 +14,7 @@
 import { LOOK_IDS } from "./looks.mjs";
 import { HAIR_STYLES } from "./draw.mjs";
 import { ITEMS, normalizeWear } from "./wardrobe.mjs";
+import { normalizeMarks } from "./marks.mjs";
 
 export const CARD_VERSION = 1;
 const HEX = /^#[0-9a-f]{6}$/i;
@@ -25,6 +26,11 @@ const HEX = /^#[0-9a-f]{6}$/i;
 export const FIELDS = [
   { key: "name", group: "About", label: "Name", kind: "text", default: "New character", max: 40,
     help: "What you call them. Only shown in the app.", examples: ["Dad", "Yiayia", "Captain"] },
+  { key: "signature", group: "About", label: "Main colour", kind: "color", default: "", optional: true,
+    help: "The character's own colour, chosen when they are made. It colours their sound bars, their spoken word in the subtitles and the frame around them, and one piece of every outfit carries it. Leave empty for none.",
+    examples: ["", "#24365c", "#2f8f8a", "#c9814f"] },
+  { key: "voice", group: "Voice", label: "Voice", kind: "voice", default: null, optional: true,
+    help: "How they sound, and it travels with them: the speech engine, the voice, pitch and speed. A project can use a different voice for them without changing this one." },
   { key: "look", group: "Look", label: "Look", kind: "choice", options: LOOK_IDS, default: "stick",
     help: "How they are drawn. The same character works in every look.", examples: ["stick", "sticker", "sitcom", "hose"] },
   { key: "framing", group: "Look", label: "Framing", kind: "choice", options: ["full", "waist", "head"], default: "full",
@@ -81,11 +87,26 @@ export const FIELDS = [
     help: "Eyeshadow above the eyes; bold adds a dark liner. Lip colour is its own field.", examples: ["none", "soft", "bold"] },
   { key: "makeupColor", group: "Head & face", label: "Eyeshadow colour", kind: "color", default: "#9a7aa8",
     help: "Used only when eye makeup is on.", examples: ["#9a7aa8", "#c08a6a", "#6a8aa8", "#b85c7a"] },
+  // EYE QUIRKS (phase 3, 7 Nov 2026). Left and right are as you look at them from the front.
+  { key: "lazyEye", group: "Head & face", label: "Lazy eye", kind: "choice", options: ["none", "left", "right"], default: "none",
+    help: "One eye looks a little off to the side and its lid droops a touch. Left and right as you look at them.", examples: ["none", "left", "right"] },
+  { key: "lazyAmount", group: "Head & face", label: "How lazy", kind: "number", min: 0.1, max: 1, step: 0.05, default: 0.5,
+    help: "How far the lazy eye drifts: a hint (0.2) to clearly off (1). Used only with a lazy eye.", examples: [0.2, 0.5, 1] },
+  { key: "hazyEye", group: "Head & face", label: "Hazy eye", kind: "choice", options: ["none", "left", "right", "both"], default: "none",
+    help: "A milky, clouded eye. Only eyes with whites show it.", examples: ["none", "left", "both"] },
+  { key: "maxOpen", group: "Head & face", label: "Eyes open at most", kind: "number", min: 0.3, max: 1, step: 0.05, default: 1,
+    help: "How far the eyes ever open, even when surprised: 1 is fully, 0.5 is half (heavy lids). They still blink.", examples: [1, 0.7, 0.5] },
+  { key: "irisLeft", group: "Head & face", label: "Left eye colour", kind: "color", default: "", optional: true,
+    help: "A coloured ring round the pupil. Empty: dark eyes. Give the two eyes different colours for odd eyes.", examples: ["", "#3a78c2", "#4e8a3e", "#8a5a2b", "#7a8a96"] },
+  { key: "irisRight", group: "Head & face", label: "Right eye colour", kind: "color", default: "", optional: true,
+    help: "A coloured ring round the pupil. Empty: dark eyes.", examples: ["", "#3a78c2", "#4e8a3e", "#8a5a2b", "#7a8a96"] },
   { key: "beard", group: "Head & face", label: "Beard", kind: "choice", options: ["none", "stubble", "short", "full", "goatee"], default: "none",
     help: "In the hair colour. The mouth still shows through.", examples: ["none", "stubble", "full", "goatee"] },
   { key: "moustache", group: "Head & face", label: "Moustache", kind: "choice", options: ["none", "thin", "thick", "handlebar"], default: "none",
     help: "In the hair colour.", examples: ["none", "thin", "thick", "handlebar"] },
 
+  { key: "marks", group: "Head & face", label: "Tattoos, scars and marks", kind: "marks", default: [],
+    help: "Up to 6 simple marks on the cheeks, brows, forehead, chin, neck, forearms or backs of the hands. They move with that part; sleeves cover forearm marks." },
   { key: "hair", group: "Hair", label: "Hair style", kind: "choice", options: HAIR_STYLES, default: "short",
     help: "Hair style. Long styles and ponytails swing a little as they move.", examples: ["short", "sidepart", "ponytail", "bun", "curly", "bald"] },
   { key: "hairColor", group: "Hair", label: "Hair colour", kind: "color", default: "#262a33",
@@ -139,6 +160,14 @@ export function checkField(f, value) {
       return HEX.test(value) ? [String(value).toLowerCase(), null] : [f.default, `${f.label}: "${value}" isn't a colour like #3a6fb0`];
     case "bool":
       return typeof value === "boolean" ? [value, null] : [!!value && value !== "false", null];
+    case "marks": {
+      const { marks, problems } = normalizeMarks(value);
+      return [marks, problems.length ? problems.join("; ") : null];
+    }
+    case "voice": {
+      const [voice, problems] = normalizeVoice(value);
+      return [voice, problems.length ? problems.join("; ") : null];
+    }
     case "wear": {
       const { wear, problems } = normalizeWear(value);
       return [wear, problems.length ? problems.join("; ") : null];
@@ -164,6 +193,109 @@ export function normalizeCard(input) {
   // a stable per-character number for idle motion, from the name
   card.seed = Number.isInteger(src.seed) ? src.seed : [...card.name].reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 9973, 7);
   return { card, problems };
+}
+
+// ---- the voice ----------------------------------------------------------------------------------
+// The same four things a speaker's voice is made of in the app (src/store/types.ts: ttsEngine, the
+// engine's voice, pitch, speed), stored on the character so it travels with them. `voiceId` is
+// whatever that engine calls a voice: a Gemini voice name, a Piper voice file, an ElevenLabs id.
+// Fish has one voice, so it has none. `model` is the engine's model, when it has a choice of them.
+
+export const VOICE_ENGINES = ["gemini", "piper", "elevenlabs", "fish"];
+export const PITCH_RANGE = [-6, 6];   // semitones, as the speaker's pitch
+export const SPEED_RANGE = [0.8, 1.25];
+
+/** Any value to a checked voice or null (no voice of their own). Returns [voice | null, problems]. */
+export function normalizeVoice(value) {
+  if (value === undefined || value === null || value === "") return [null, []];
+  if (typeof value !== "object" || Array.isArray(value)) return [null, [`Voice: ${JSON.stringify(value)} isn't a voice`]];
+  const problems = [];
+  if (!VOICE_ENGINES.includes(value.engine)) return [null, [`Voice: engine "${value.engine}" isn't one of ${VOICE_ENGINES.join(", ")}`]];
+  const text = (x, max, what) => {
+    if (x === undefined || x === null) return "";
+    if (typeof x !== "string") { problems.push(`Voice: ${what} isn't text`); return ""; }
+    if (x.length > max) problems.push(`Voice: ${what} is longer than ${max} characters, cut`);
+    return x.trim().slice(0, max);
+  };
+  const num = (x, [lo, hi], dflt, what) => {
+    if (x === undefined || x === null) return dflt;
+    const n = Number(x);
+    if (!Number.isFinite(n)) { problems.push(`Voice: ${what} "${x}" isn't a number, used ${dflt}`); return dflt; }
+    const c = Math.min(hi, Math.max(lo, n));
+    if (c !== n) problems.push(`Voice: ${what} ${n} is outside ${lo} to ${hi}, used ${c}`);
+    return Math.round(c * 1000) / 1000;
+  };
+  const voice = {
+    engine: value.engine,
+    voiceId: text(value.voiceId, 400, "voice id"),
+    model: text(value.model, 80, "model"),
+    pitch: num(value.pitch, PITCH_RANGE, 0, "pitch"),
+    speed: num(value.speed, SPEED_RANGE, 1, "speed"),
+  };
+  for (const k of Object.keys(value)) if (!(k in voice)) problems.push(`Voice: "${k}" isn't a voice setting, ignored`);
+  return [voice, problems];
+}
+
+// ---- parts and locks -----------------------------------------------------------------------------
+// The character creator shows a character as these parts. Each part has a lock; a locked part is
+// never changed by the randomiser or the AI helper. A character file opens with every part locked.
+//
+// Card fields that belong to no part (name, look, framing, line wobble, the 3D settings, main colour,
+// voice, and the personality fields: resting face, blinking, gestures, idle sway) are not parts:
+// nothing random or automatic touches them; they change only when someone sets them.
+
+export const PARTS = [
+  { id: "body", label: "Body", fields: ["height", "build", "muscle", "posture", "armLength"] },
+  { id: "head", label: "Head", fields: ["headShape", "headSize"] },
+  { id: "eyes", label: "Eyes", fields: ["eyes", "eyeSpacing", "darkCircles", "makeup", "makeupColor", "lazyEye", "lazyAmount", "hazyEye", "maxOpen", "irisLeft", "irisRight"] },
+  { id: "brows", label: "Eyebrows", fields: ["brows"] },
+  { id: "nose", label: "Nose", fields: ["nose"] },
+  { id: "mouth", label: "Mouth", fields: ["mouth", "lips", "lipColor"] },
+  { id: "ears", label: "Ears", fields: ["ears"] },
+  { id: "hair", label: "Hair", fields: ["hair", "hairColor", "highlight"] },
+  { id: "skin", label: "Skin", fields: ["skin", "cheeks"] },
+  { id: "facialHair", label: "Facial hair", fields: ["beard", "moustache"] },
+  { id: "outfits", label: "Outfits", fields: ["wear"] },
+  { id: "marks", label: "Marks", fields: ["freckles", "bruise", "marks"] },
+];
+export const PART_IDS = PARTS.map((p) => p.id);
+const PART_OF = Object.fromEntries(PARTS.flatMap((p) => p.fields.map((k) => [k, p.id])));
+/** Which part a card field belongs to, or null. */
+export const partOf = (key) => PART_OF[key] ?? null;
+
+/** Every part locked: how a character file opens. */
+export const allLocked = () => Object.fromEntries(PART_IDS.map((id) => [id, true]));
+
+/**
+ * Any value to a full set of locks. A part that isn't mentioned is LOCKED, so an old or
+ * hand-written file can never open with a part open by accident. Returns { locks, problems }.
+ */
+export function normalizeLocks(value) {
+  const locks = allLocked(), problems = [];
+  if (value === undefined || value === null) return { locks, problems };
+  if (typeof value !== "object" || Array.isArray(value)) return { locks, problems: ["Locks: not a list of parts, all locked"] };
+  for (const [k, v] of Object.entries(value)) {
+    if (!(k in locks)) { problems.push(`Locks: "${k}" isn't a part, ignored`); continue; }
+    if (typeof v !== "boolean") { problems.push(`Locks: ${k} is "${v}", not true or false, locked`); continue; }
+    locks[k] = v;
+  }
+  return { locks, problems };
+}
+
+/**
+ * A proposed card (from the randomiser, the AI, a preset) with every LOCKED part put back the
+ * way it was. Fields that belong to no part are always put back. Unlocked parts take the
+ * proposal. Both cards are checked first.
+ */
+export function keepLocked(before, proposal, locks) {
+  const a = normalizeCard(before).card, b = normalizeCard(proposal).card;
+  const { locks: l } = normalizeLocks(locks);
+  const out = { ...a };
+  for (const f of FIELDS) {
+    const part = partOf(f.key);
+    if (part && l[part] === false) out[f.key] = b[f.key];
+  }
+  return out;
 }
 
 /** The wardrobe list as the form and the AI see it. */

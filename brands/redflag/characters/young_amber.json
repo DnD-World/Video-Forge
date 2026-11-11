@@ -1,0 +1,140 @@
+{
+  "kind": "video-forge-character",
+  "v": 1,
+  "id": "young_amber",
+  "roster": 13,
+  "name": "Young Amber",
+  "group": "young",
+  "role": "Amber as a little girl, flashbacks.",
+  "look": "hose2",
+  "framing": "full",
+  "signature": "#c9814f",
+  "signatureName": "muted orange (as Amber)",
+  "voice": null,
+  "locks": {
+    "body": true,
+    "head": true,
+    "eyes": true,
+    "brows": true,
+    "nose": true,
+    "mouth": true,
+    "ears": true,
+    "hair": true,
+    "skin": true,
+    "facialHair": true,
+    "outfits": true,
+    "marks": true
+  },
+  "base": {
+    "name": "Young Amber",
+    "height": 0.76,
+    "build": "thin",
+    "headSize": 1.26,
+    "skin": "#f4dac6",
+    "headShape": "round",
+    "eyes": "oval",
+    "nose": "dot",
+    "hair": "pigtails",
+    "hairColor": "#e2c27a",
+    "cheeks": true,
+    "expression": "smile",
+    "blinkRate": 1,
+    "energy": 0.8,
+    "sway": 0.5,
+    "form": 1,
+    "formDetail": true,
+    "formLimbs": 0.5
+  },
+  "accessories": [{"id": "bow", "colors": ["#c9814f"]}],
+  "faces": [
+    {"id": "A", "label": "As written", "set": {}},
+    {"id": "B", "label": "ponytail hair", "set": {"hair": "ponytail"}},
+    {"id": "C", "label": "braid hair, freckles True", "set": {"hair": "braid", "freckles": true}}
+  ],
+  "chosen": {
+    "face": "A",
+    "outfits": ["o2", "o1", "o3", "o5", "o8", "o9"],
+    "faceNote": "No face picked; kept A (as written) until Ak picks."
+  },
+  "outfits": [
+    {
+      "id": "o1",
+      "label": "As written",
+      "wear": [{"id": "dress", "colors": ["#c9814f"]}, {"id": "shoes", "colors": ["#f4f1ea"]}]
+    },
+    {
+      "id": "o2",
+      "label": "Dotted dress",
+      "wear": [{"id": "dress", "colors": ["#c9814f"], "pattern": "dots"}, {"id": "shoes", "colors": ["#f4f1ea"]}]
+    },
+    {
+      "id": "o3",
+      "label": "Tee and skirt",
+      "wear": [
+        {"id": "tshirt", "colors": ["#c9814f"]},
+        {"id": "skirt", "colors": ["#f4f1ea"]},
+        {"id": "sneakers", "colors": ["#f4f1ea", "#c9814f"]}
+      ]
+    },
+    {
+      "id": "o4",
+      "label": "Pullover and skirt",
+      "wear": [
+        {"id": "sweater", "colors": ["#c9814f"]},
+        {"id": "skirt", "colors": ["#2d3446"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o5",
+      "label": "Striped dress",
+      "wear": [{"id": "dress", "colors": ["#c9814f"], "pattern": "stripes"}, {"id": "sandals", "colors": ["#3b2a1e"]}]
+    },
+    {
+      "id": "o6",
+      "label": "Pyjamas",
+      "wear": [
+        {"id": "tshirt", "colors": ["#c9814f"]},
+        {"id": "trousers", "colors": ["#e1ba9e"], "pattern": "dots"},
+        {"id": "paws", "colors": ["#e9cdb9"]}
+      ]
+    },
+    {
+      "id": "o7",
+      "label": "Rain day",
+      "wear": [
+        {"id": "hoodie_up", "colors": ["#c9814f"]},
+        {"id": "skirt", "colors": ["#2d3446"]},
+        {"id": "wellies", "colors": ["#6f472b"]}
+      ]
+    },
+    {
+      "id": "o8",
+      "label": "Summer",
+      "wear": [
+        {"id": "tank", "colors": ["#c9814f"]},
+        {"id": "shorts", "colors": ["#2f3b52"]},
+        {"id": "sandals", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o9",
+      "label": "Sunday best",
+      "wear": [{"id": "dress", "colors": ["#c9814f"]}, {"id": "heels", "colors": ["#f4f1ea"]}]
+    },
+    {
+      "id": "o10",
+      "label": "Winter",
+      "wear": [
+        {"id": "sweater", "colors": ["#c9814f"]},
+        {"id": "scarf", "colors": ["#f4f1ea"]},
+        {"id": "skirt", "colors": ["#2d3446"]},
+        {"id": "boots", "colors": ["#3b2a1e"]},
+        {"id": "beanie", "colors": ["#f4f1ea"]}
+      ]
+    }
+  ],
+  "proposed": true,
+  "source": "roster 13",
+  "target": "More than 5"
+}

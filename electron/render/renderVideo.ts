@@ -43,9 +43,10 @@ export interface RenderJob {
   /** Faces arrive as disk paths — a sheet image, or a puppet JSON with its art
    *  beside it — and are converted to public-dir filenames here, so the
    *  renderer never has to know about the filesystem. */
-  speakers: (Omit<RenderSpeaker, "sheetFileName" | "puppet" | "puppetFiles"> & {
+  speakers: (Omit<RenderSpeaker, "sheetFileName" | "puppet" | "puppetFiles" | "portrait"> & {
     sheetPath?: string;
     puppetPath?: string;
+    portraitPath?: string;
   })[];
   width: number;
   height: number;
@@ -318,7 +319,24 @@ export async function renderVideo(
     };
 
     const speakers: RenderSpeaker[] = [];
+    const portraitByPath = new Map<string, string>();
     for (const sp of job.speakers) {
+      // A portrait rig is one JSON file: the drawing and its numbers.
+      let portrait: RenderSpeaker["portrait"] = null;
+      if (sp.portraitPath) {
+        let name = portraitByPath.get(sp.portraitPath);
+        if (!name) {
+          name = `portrait-${portraitByPath.size}.json`;
+          try {
+            await fsp.copyFile(sp.portraitPath, path.join(publicDir, name));
+            portraitByPath.set(sp.portraitPath, name);
+          } catch {
+            onProgress(STAGE.browser.from, `Couldn't read the portrait for ${sp.label}, rendering without it.`);
+            name = undefined;
+          }
+        }
+        if (name) portrait = { fileName: name };
+      }
       // The puppet wins when both are set — same precedence as the preview.
       const prepared = sp.puppetPath ? await preparePuppet(sp.puppetPath, sp.label) : null;
       let sheetFileName: string | null = null;
@@ -354,6 +372,7 @@ export async function renderVideo(
         puppetFiles: prepared?.files ?? {},
         // the one rule for which form shows (characters/core/profile.mjs)
         character: activeCard(sp) ?? null,
+        portrait,
       });
     }
 

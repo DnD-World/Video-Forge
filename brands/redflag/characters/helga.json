@@ -1,0 +1,100 @@
+{
+  "kind": "video-forge-character",
+  "v": 1,
+  "id": "helga",
+  "roster": 34,
+  "name": "Aunt Helga",
+  "group": "extended",
+  "role": "Nosy aunt.",
+  "look": "paper",
+  "framing": "full",
+  "signature": "#b0307a",
+  "signatureName": "loud magenta",
+  "voice": null,
+  "locks": {
+    "body": true,
+    "head": true,
+    "eyes": true,
+    "brows": true,
+    "nose": true,
+    "mouth": true,
+    "ears": true,
+    "hair": true,
+    "skin": true,
+    "facialHair": true,
+    "outfits": true,
+    "marks": true
+  },
+  "base": {
+    "name": "Aunt Helga",
+    "build": "round",
+    "skin": "#f1d3bd",
+    "headShape": "round",
+    "eyes": "oval",
+    "hair": "curly",
+    "hairColor": "#7a6a5a",
+    "lips": true,
+    "expression": "smile",
+    "blinkRate": 1.2,
+    "energy": 0.8,
+    "sway": 0.6,
+    "form": 1,
+    "formDetail": true,
+    "formLimbs": 0.5
+  },
+  "accessories": [{"id": "glasses", "colors": ["#5a3825"]}, {"id": "earrings", "colors": ["#e8c25a"]}],
+  "faces": [
+    {"id": "A", "label": "As written", "set": {}},
+    {"id": "B", "label": "afro hair", "set": {"hair": "afro"}},
+    {"id": "C", "label": "bob hair, makeup soft", "set": {"hair": "bob", "makeup": "soft"}}
+  ],
+  "chosen": {"face": "A", "outfits": ["o1", "o2", "o5"]},
+  "outfits": [
+    {
+      "id": "o1",
+      "label": "As written",
+      "wear": [
+        {"id": "sweater", "colors": ["#b0307a"], "pattern": "dots"},
+        {"id": "skirt", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o2",
+      "label": "Pullover and skirt",
+      "wear": [
+        {"id": "sweater", "colors": ["#b0307a"]},
+        {"id": "skirt", "colors": ["#2d3446"]},
+        {"id": "shoes", "colors": ["#3b2a1e"]}
+      ]
+    },
+    {
+      "id": "o3",
+      "label": "Dress",
+      "wear": [{"id": "dress", "colors": ["#b0307a"]}, {"id": "shoes", "colors": ["#3b2a1e"]}]
+    },
+    {
+      "id": "o4",
+      "label": "Blazer and trousers",
+      "wear": [
+        {"id": "shirt", "colors": ["#f4f1ea"]},
+        {"id": "blazer", "colors": ["#b0307a"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o5",
+      "label": "Blazer and skirt",
+      "wear": [
+        {"id": "shirt", "colors": ["#f4f1ea"]},
+        {"id": "blazer", "colors": ["#b0307a"]},
+        {"id": "skirt", "colors": ["#3a3a40"]},
+        {"id": "heels", "colors": ["#1c1c22"]}
+      ]
+    }
+  ],
+  "proposed": true,
+  "source": "roster 34",
+  "target": "2–3"
+}

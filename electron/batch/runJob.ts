@@ -52,6 +52,7 @@ import {
   defaultLogo,
   type TrackWaveform,
 } from "../../src/store/types";
+import { withCharacterColor } from "../../src/store/characterColor";
 
 /** One member of the cast, as a job file describes them.
  *
@@ -78,6 +79,8 @@ export interface JobSpeaker {
   puppetPath?: string;
   /** A drawn character (characters/core); wins over both. */
   character?: CharacterCard;
+  /** An illustrated portrait rig (brands/scotus/rig/build/<name>.portrait.json); wins over all. */
+  portraitPath?: string;
   engine: "piper" | "dramabox" | "elevenlabs" | "gemini" | "fish";
   /** Gemini: `live` (default — unlimited free, checked word by word) or `tts`
    *  (10 a day free). Model and voice default to Ak's picks (docs/V2-NEEDS.md). */
@@ -383,13 +386,15 @@ export async function runBatchJob(
   const speakers: SpeakerConfig[] = job.cast.map((c, i) => {
     const s = slot(i);
     const fromPreset = preset.speakers?.[i];
-    return {
+    // a drawn character's main colour is their speaker colour, as in the app (src/store/characterColor.ts)
+    return withCharacterColor({
       ...(fromPreset ?? {}),
       id: `s${i + 1}`,
       label: c.label,
       sheetPath: c.sheetPath ?? fromPreset?.sheetPath,
       puppetPath: c.puppetPath ?? fromPreset?.puppetPath,
       character: c.character ?? fromPreset?.character,
+      portraitPath: c.portraitPath ?? fromPreset?.portraitPath,
       borderColor: c.borderColor ?? fromPreset?.borderColor ?? "#ff9a3c",
       surface: s?.surface ?? fromPreset?.surface,
       bgColor: fromPreset?.bgColor ?? "#000000",
@@ -405,7 +410,7 @@ export async function runBatchJob(
       size: s?.size ?? fromPreset?.size ?? 0.34,
       ttsEngine: c.engine,
       voiceId: c.piperOnnxPath,
-    } as SpeakerConfig;
+    } as SpeakerConfig);
   });
 
   // ONE STYLE FOR EVERY SPEAKER, when the job asks for it. Comparing looks is
@@ -424,6 +429,14 @@ export async function runBatchJob(
       sp.waveform = { ...sp.waveform, style: job.waveformStyle };
     }
     onProgress(2, `Waveform style forced to "${job.waveformStyle}" for all speakers`);
+  }
+
+  // A PORTRAIT IS ITS OWN FRAME. Rings and outlines are for faces in a disc; round
+  // a framed picture they read as a target (seen on the first SCOTUS test, 11 Nov 2026).
+  for (const sp of speakers) {
+    if (!sp.portraitPath) continue;
+    sp.waveform = { ...sp.waveform, enabled: false };
+    sp.outlineShape = "none";
   }
 
   if (job.outlineShape) {
@@ -858,6 +871,7 @@ export async function runBatchJob(
       sheetPath: sp.sheetPath,
       puppetPath: sp.puppetPath,
       character: sp.character,
+      portraitPath: sp.portraitPath,
     })),
     musicColor: preset.musicColor ?? defaultProject.musicColor,
     width,
@@ -893,6 +907,8 @@ export async function runBatchJob(
     subtitles: {
       ...defaultProject.subtitles,
       ...preset.subtitles,
+      // portraits fill the middle of the frame: words go underneath them
+      ...(job.cast.some((c) => c.portraitPath) ? { position: "bottom" as const, fontSize: 0.06 } : {}),
       ...(job.subtitleFont ? { fontFamily: job.subtitleFont } : {}),
       ...(job.subtitleFontWeight ? { fontWeight: job.subtitleFontWeight } : {}),
       ...(job.subtitleEmphasis ? { activeEmphasis: job.subtitleEmphasis } : {}),

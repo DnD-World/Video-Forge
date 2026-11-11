@@ -11,7 +11,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { chat } from "./explainerLlm.mjs";
-import { cardPrompt, readCardAnswer, readSuggestions, suggestPrompt } from "../../characters/core/ai.mjs";
+import { cardPrompt, readCardAnswer, readSuggestions, suggestPrompt, partsPrompt, readPartsAnswer } from "../../characters/core/ai.mjs";
 
 const MIME = { ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp" };
 const MAX_PICTURE = 8 * 1024 * 1024;
@@ -51,4 +51,12 @@ export async function suggestForCard({ provider, key, model, card, purpose, sign
   const { system, user } = suggestPrompt(card, { purpose });
   const text = await ask({ provider, key, model, system, user, signal });
   return { suggestions: readSuggestions(text, card), ms: Date.now() - t0 };
+}
+
+/** The AI box: plain words → changes to the open fields only (checked again in the window). */
+export async function partsFromWords({ provider, key, model, card, keys, request, scope, signal }) {
+  const t0 = Date.now();
+  const { system, user } = partsPrompt(card, keys, request, { scope });
+  const text = await ask({ provider, key, model, system, user, signal });
+  return { ...readPartsAnswer(text, card, keys), text, ms: Date.now() - t0 };
 }

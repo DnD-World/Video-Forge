@@ -1,0 +1,137 @@
+{
+  "kind": "video-forge-character",
+  "v": 1,
+  "id": "byron",
+  "roster": 19,
+  "name": "Lord Byron",
+  "group": "week",
+  "role": "Volatile Mom expert (Mon couch).",
+  "look": "hose2",
+  "framing": "waist",
+  "signature": "#8a1f2c",
+  "signatureName": "wine red",
+  "voice": null,
+  "locks": {
+    "body": true,
+    "head": true,
+    "eyes": true,
+    "brows": true,
+    "nose": true,
+    "mouth": true,
+    "ears": true,
+    "hair": true,
+    "skin": true,
+    "facialHair": true,
+    "outfits": true,
+    "marks": true
+  },
+  "base": {
+    "name": "Lord Byron",
+    "skin": "#f0d6bf",
+    "headShape": "oval",
+    "eyes": "lash",
+    "brows": "arched",
+    "hair": "curly",
+    "hairColor": "#1e1a18",
+    "expression": "smile",
+    "blinkRate": 1,
+    "energy": 0.85,
+    "sway": 0.6,
+    "form": 1,
+    "formDetail": true,
+    "formLimbs": 0.5
+  },
+  "accessories": [],
+  "faces": [
+    {"id": "A", "label": "As written", "set": {}},
+    {"id": "B", "label": "afro hair", "set": {"hair": "afro"}},
+    {"id": "C", "label": "bob hair, beard stubble", "set": {"hair": "bob", "beard": "stubble"}}
+  ],
+  "chosen": {"face": "A", "outfits": ["o1", "o5", "o2", "o3"]},
+  "outfits": [
+    {
+      "id": "o1",
+      "label": "As written",
+      "wear": [
+        {"id": "shirt", "colors": ["#f4f1ea"]},
+        {"id": "scarf", "colors": ["#8a1f2c"]},
+        {"id": "cape", "colors": ["#8a1f2c"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "boots", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o2",
+      "label": "Frock coat and cravat",
+      "wear": [
+        {"id": "shirt", "colors": ["#efe6d2"]},
+        {"id": "blazer", "colors": ["#8a1f2c"]},
+        {"id": "scarf", "colors": ["#f4f1ea"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o3",
+      "label": "Waistcoat and tie",
+      "wear": [
+        {"id": "shirt", "colors": ["#efe6d2"]},
+        {"id": "vest", "colors": ["#8a1f2c"]},
+        {"id": "tie", "colors": ["#1c1c22"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o4",
+      "label": "Top hat",
+      "wear": [
+        {"id": "shirt", "colors": ["#efe6d2"]},
+        {"id": "blazer", "colors": ["#8a1f2c"]},
+        {"id": "tie", "colors": ["#1c1c22"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]},
+        {"id": "tophat", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o5",
+      "label": "Cape",
+      "wear": [
+        {"id": "shirt", "colors": ["#efe6d2"]},
+        {"id": "vest", "colors": ["#3a3a40"]},
+        {"id": "cape", "colors": ["#8a1f2c"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "boots", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o6",
+      "label": "Long robe",
+      "wear": [{"id": "robe", "colors": ["#8a1f2c", "#4c1118"]}, {"id": "sandals", "colors": ["#3b2a1e"]}]
+    },
+    {
+      "id": "o7",
+      "label": "Bow tie",
+      "wear": [
+        {"id": "shirt", "colors": ["#efe6d2"]},
+        {"id": "blazer", "colors": ["#8a1f2c"]},
+        {"id": "bowtie", "colors": ["#4c1118"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o8",
+      "label": "Scholar's pullover",
+      "wear": [
+        {"id": "sweater", "colors": ["#8a1f2c"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    }
+  ],
+  "proposed": true,
+  "source": "roster 19",
+  "target": "4–5"
+}

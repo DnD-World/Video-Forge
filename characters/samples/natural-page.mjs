@@ -5,17 +5,15 @@
 //     the body, swing past and settle; long hair hangs when the head tilts
 //   3 a person in front of a camera (or in a video file) drives the figure
 //     through a body tracker (acted.mjs), with the follow-through on top
-import { SHELF, lookById, stageOf, drawFigure, frameFor, characterState, performAt, movesAt, normalizeCard, followAt, takeAt, normalizeTake, takeNeutral, solveRig } from "../core/index.mjs";
-import CAST from "../../brands/redflag/cast.json";
+import { SHELF, lookById, stageOf, drawFigure, frameFor, characterState, performAt, movesAt, cardFor as cardOfCharacter, followAt, takeAt, normalizeTake, takeNeutral, solveRig } from "../core/index.mjs";
+import CAST from "../../brands/redflag/cast.mjs";
 
 const PEOPLE = ["chloe", "margo", "amber", "rita", "lucas"].map((id) => CAST.people.find((p) => p.id === id)).filter(Boolean);
 const GEO_OWN = { ...lookById("geo"), eyes: undefined }; // Ak picked "own white eyes with lids" for geo-minimal
 const lookFor = (p) => (p.look === "geo" ? GEO_OWN : lookById(p.look));
 const cardFor = (p, outfit = 0) => {
-  const face = p.faces.find((f) => f.id === p.chosen?.face) ?? p.faces[0];
-  const ids = p.chosen?.outfits ?? [p.outfits[0].id];
-  const o = p.outfits.find((x) => x.id === ids[outfit % ids.length]) ?? p.outfits[0];
-  return normalizeCard({ ...p.base, ...face.set, form: CAST.form ?? 0, formDetail: CAST.formDetail ?? false, formLimbs: CAST.formLimbs ?? 1, look: p.look, wear: [...o.wear, ...p.accessories] }).card;
+  const ids = p.chosen?.outfits?.length ? p.chosen.outfits : [p.outfits[0].id];
+  return cardOfCharacter(p, { outfit: ids[outfit % ids.length] });
 };
 
 // ---- the scripted reel: moves that throw the loose parts about ----------------------------

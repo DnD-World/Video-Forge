@@ -1,0 +1,137 @@
+{
+  "kind": "video-forge-character",
+  "v": 1,
+  "id": "kierkegaard",
+  "roster": 21,
+  "name": "Søren Kierkegaard",
+  "group": "week",
+  "role": "Call-in abuser.",
+  "look": "hose2",
+  "framing": "waist",
+  "signature": "#1f4d3a",
+  "signatureName": "bottle green",
+  "voice": null,
+  "locks": {
+    "body": true,
+    "head": true,
+    "eyes": true,
+    "brows": true,
+    "nose": true,
+    "mouth": true,
+    "ears": true,
+    "hair": true,
+    "skin": true,
+    "facialHair": true,
+    "outfits": true,
+    "marks": true
+  },
+  "base": {
+    "name": "Søren Kierkegaard",
+    "build": "thin",
+    "skin": "#f0d6bf",
+    "headShape": "oval",
+    "eyes": "oval",
+    "hair": "spiky",
+    "hairColor": "#8a6a45",
+    "expression": "smile",
+    "blinkRate": 1,
+    "energy": 0.5,
+    "sway": 0.4,
+    "form": 1,
+    "formDetail": true,
+    "formLimbs": 0.5
+  },
+  "accessories": [],
+  "faces": [
+    {"id": "A", "label": "As written", "set": {}},
+    {"id": "B", "label": "messy hair", "set": {"hair": "messy"}},
+    {"id": "C", "label": "undercut hair, beard stubble", "set": {"hair": "undercut", "beard": "stubble"}}
+  ],
+  "chosen": {"face": "A", "outfits": ["o4"]},
+  "outfits": [
+    {
+      "id": "o1",
+      "label": "As written",
+      "wear": [
+        {"id": "shirt", "colors": ["#f4f1ea"]},
+        {"id": "blazer", "colors": ["#1f4d3a"]},
+        {"id": "tie", "colors": ["#1c1c22"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o2",
+      "label": "Frock coat and cravat",
+      "wear": [
+        {"id": "shirt", "colors": ["#efe6d2"]},
+        {"id": "blazer", "colors": ["#1f4d3a"]},
+        {"id": "scarf", "colors": ["#f4f1ea"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o3",
+      "label": "Waistcoat and tie",
+      "wear": [
+        {"id": "shirt", "colors": ["#efe6d2"]},
+        {"id": "vest", "colors": ["#1f4d3a"]},
+        {"id": "tie", "colors": ["#1c1c22"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o4",
+      "label": "Top hat",
+      "wear": [
+        {"id": "shirt", "colors": ["#efe6d2"]},
+        {"id": "blazer", "colors": ["#1f4d3a"]},
+        {"id": "tie", "colors": ["#1c1c22"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]},
+        {"id": "tophat", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o5",
+      "label": "Cape",
+      "wear": [
+        {"id": "shirt", "colors": ["#efe6d2"]},
+        {"id": "vest", "colors": ["#3a3a40"]},
+        {"id": "cape", "colors": ["#1f4d3a"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "boots", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o6",
+      "label": "Long robe",
+      "wear": [{"id": "robe", "colors": ["#1f4d3a", "#112a20"]}, {"id": "sandals", "colors": ["#3b2a1e"]}]
+    },
+    {
+      "id": "o7",
+      "label": "Bow tie",
+      "wear": [
+        {"id": "shirt", "colors": ["#efe6d2"]},
+        {"id": "blazer", "colors": ["#1f4d3a"]},
+        {"id": "bowtie", "colors": ["#112a20"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    },
+    {
+      "id": "o8",
+      "label": "Scholar's pullover",
+      "wear": [
+        {"id": "sweater", "colors": ["#1f4d3a"]},
+        {"id": "trousers", "colors": ["#3a3a40"]},
+        {"id": "shoes", "colors": ["#1c1c22"]}
+      ]
+    }
+  ],
+  "proposed": true,
+  "source": "roster 21",
+  "target": "4–5"
+}
