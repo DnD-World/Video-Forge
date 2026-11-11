@@ -128,6 +128,7 @@ export const useManyStore = create<ManyState>((set, get) => ({
       label: s.label,
       openingPhrase: s.openingPhrase,
       puppetPath: s.puppetPath,
+      portraitPath: s.portraitPath,
       sheetPath: s.sheetPath,
       character: activeCard(s) ?? undefined,
       engine: (s.ttsEngine === "dramabox" ? "gemini" : s.ttsEngine ?? "gemini") as "gemini",

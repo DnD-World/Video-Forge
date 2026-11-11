@@ -1,0 +1,144 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Sotomayor rig test</title>
+<style>
+html,body{margin:0;background:#1b1b1d;color:#ddd;font:13px system-ui,sans-serif}
+#wrap{display:flex;gap:16px;align-items:flex-start;padding:12px}
+#stage{height:96vh;width:auto;aspect-ratio:896/1200;background:#000}
+#panel{width:230px}
+button{margin:2px;padding:5px 9px;background:#333;color:#eee;border:1px solid #555;border-radius:4px;cursor:pointer}
+button.on{background:#7a5c1e}
+small{color:#999}
+body.still #panel{display:none}body.embed #panel{display:none}body.embed #wrap{padding:0}body.embed #stage{height:100vh;width:auto}body.embed{margin:0;overflow:hidden}body.still #wrap{padding:0}body.still #stage{height:1200px;width:896px}
+</style></head><body>
+<div id="wrap">%%SVG%%
+<div id="panel"><b id="ttl">Justice rig</b><br><small>Illustration (coded, not AI-generated). Rest pose = source image.</small><br><br>
+<div id="modes"><button data-m="idle" class="on">Idle</button><button data-m="demo">Demo</button><label><button id="lb">Load audio</button><input id="af" type="file" accept="audio/*" hidden></label></div><br>
+<b>Visemes</b><br><div id="vis"></div><br><button id="bl">Blink</button><br><br><small id="st"></small></div></div>
+<script>
+const D=%%DATA%%;
+const $=id=>document.getElementById(id), clamp=(v,a,b)=>Math.min(b,Math.max(a,v)), lerp=(a,b,t)=>a+(b-a)*t;
+// ---------- visemes: J jaw open px, U upper lift px, W width, P pucker, Sm smile, T teeth, Tg tongue (tiny)
+const V={rest:{J:0,U:0,W:1,P:0,Sm:0,T:0,Tg:0},MBP:{J:-.5,U:-.4,W:.985,P:.15,Sm:0,T:0,Tg:0},AA:{J:13,U:2.4,W:1.03,P:0,Sm:0,T:1,Tg:.5},E:{J:7,U:1.6,W:1.09,P:0,Sm:.3,T:1,Tg:.3},EE:{J:3.6,U:.9,W:1.17,P:0,Sm:.8,T:1,Tg:0},OH:{J:9,U:1.6,W:.78,P:.7,Sm:0,T:.3,Tg:.3},OO:{J:4.6,U:.9,W:.62,P:1,Sm:0,T:0,Tg:0},FV:{J:2.2,U:.5,W:1.0,P:0,Sm:0,T:1,Tg:0},TH:{J:3.8,U:.6,W:1.0,P:0,Sm:0,T:.8,Tg:.8}};
+for(const v of Object.values(V)){v.J*=D.f.scale;v.U*=D.f.scale}
+document.getElementById('ttl').textContent=D.f.name+' rig';
+const KEYS=Object.keys(V[ 'rest']);
+let cur={...V.rest}, tgt={...V.rest};
+// ---------- mouth warp
+const CX=D.f.cx,HW=D.f.hw,PV=D.f.pivot.join(' '), SX=D.seam.x, SY=D.seam.y;
+const sAt=x=>{const i=clamp(Math.round(x)-SX[0],0,SX.length-1);return SY[i]};
+const NS='http://www.w3.org/2000/svg';
+const M2=D.m2, SW=2;
+const wf=x=>{const u=(x-CX)/HW;return Math.abs(u)>=1?0:Math.pow(1-u*u,.6)};
+const smf=(x,q)=>q.Sm*Math.pow(Math.min(Math.abs((x-CX)/HW),1.1),3)*1.6;
+function strips(name,g){const [x0,y0,w,h]=M2[name],arr=[];
+ for(let x=x0;x<x0+w;x+=SW){const s=document.createElementNS(NS,'svg');
+  s.setAttribute('x',x);s.setAttribute('y',y0);s.setAttribute('width',SW+.7);s.setAttribute('height',h);
+  s.setAttribute('viewBox',`${x} ${y0} ${SW+.7} ${h}`);s.setAttribute('overflow','hidden');
+  const u=document.createElementNS(NS,'use');u.setAttribute('href','#img_'+name);s.appendChild(u);
+  const gg=document.createElementNS(NS,'g');gg.appendChild(s);g.appendChild(gg);arr.push({x:x+SW/2,g:gg});}
+ return arr}
+const SU=strips('mU',$('mouthUg')),SL=strips('mL',$('mouthLg')),SC=strips('mC',$('chinG'));
+const LB=M2.lipbot;
+const JY1=M2.JY1,SJ=[];{const [x0,y0,w,h]=M2.mJ;for(let x=x0;x<x0+w;x+=SW){const yt=Math.max(y0,(LB[Math.round(x+1)]!==undefined?LB[Math.round(x+1)]:y0)-2);
+ const s=document.createElementNS(NS,'svg');s.setAttribute('x',x);s.setAttribute('y',yt);s.setAttribute('width',SW+.7);s.setAttribute('height',JY1-yt);
+ s.setAttribute('viewBox',`${x} ${yt} ${SW+.7} ${JY1-yt}`);s.setAttribute('overflow','hidden');
+ const u=document.createElementNS(NS,'use');u.setAttribute('href','#img_mJ');s.appendChild(u);const gg=document.createElementNS(NS,'g');gg.appendChild(s);$('jawG').appendChild(gg);SJ.push({x:x+SW/2,yt,g:gg});}}
+const lbAt=x=>{const k=Math.round(x);return LB[k]!==undefined?LB[k]:sAt(x)+12};
+function place(arr,q,kind){for(const s of arr){const x=s.x,sy=sAt(x),w=wf(x);
+  let k=1+.35*q.P,f;
+  if(kind==='U')f=sy-sy*k-q.U*w-smf(x,q);
+  else if(kind==='L')f=sy-sy*k+q.J*w-smf(x,q);
+  else {k=1;const w2=Math.max(w,wf(x));f=q.J*w2+.35*q.P*(lbAt(x)-sy)*Math.max(w,.0)-smf(x,q);}
+  const e=CX-CX*q.W;
+  s.g.setAttribute('transform',`matrix(${q.W.toFixed(4)} 0 0 ${k.toFixed(4)} ${e.toFixed(3)} ${f.toFixed(3)})`);}}
+let lastQ='';
+function updateMouth(q){
+ const key=KEYS.map(k=>q[k].toFixed(2)).join();if(key===lastQ)return;lastQ=key;
+ place(SU,q,'U');place(SL,q,'L');place(SC,q,'C');
+ for(const s of SJ){const x=s.x,sy=sAt(x),w=wf(x);const d=Math.max(0,q.J*w+.35*q.P*(lbAt(x)-sy)-smf(x,q));
+  const k=(JY1-s.yt-d)/(JY1-s.yt),f=s.yt+d-s.yt*k;s.g.setAttribute('transform',`matrix(1 0 0 ${k.toFixed(4)} 0 ${f.toFixed(3)})`);}
+ const open=Math.max(0,q.J+q.U);
+ const xs=[];for(let x=SX[0];x<=SX[SX.length-1];x+=2)xs.push(x);
+ const top=[],bot=[];
+ for(const x of xs){const w=wf(x),s=sAt(x),xw=CX+(x-CX)*q.W,Sm=smf(x,q);top.push([xw,s-q.U*w-Sm-1.8]);bot.push([xw,s+q.J*w-Sm+1.8]);}
+ const poly=(a,b)=>'M'+a.map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join('L')+'L'+b.slice().reverse().map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join('L')+'Z';
+ if(open<=.6){['mDark','mTeeth','mTongue'].forEach(id=>$(id).setAttribute('d',''));return}
+ $('mDark').setAttribute('d',poly(top,bot));
+ const gap=i=>Math.max(0,bot[i][1]-top[i][1]);
+ const th=top.map((p,i)=>[p[0],p[1]+Math.min(Math.max(0,gap(i)-3.6)*.5+1.8,6.4)*q.T]);
+ $('mTeeth').setAttribute('d',q.T>.04?poly(top,th):'');
+ // tongue: thin sliver only, max ~2px, only for wide openings
+ const tg=bot.map((p,i)=>{const u=(xs[i]-CX)/HW;const h=Math.max(0,1-(u/.55)**2)*Math.min(2.0,gap(i)*.2)*q.Tg;return [p[0],p[1]-1.8-h]});
+ $('mTongue').setAttribute('d',(q.Tg>.05&&open>6)?poly(tg,bot):'');
+}
+// ---------- eyes
+const EY=D.eyes;
+const eye={L:{k:0,gx:0,gy:0},R:{k:0,gx:0,gy:0}};
+function updateEye(s){const e=D.e2[s],st=eye[s],k=clamp(st.k,0,1);
+ // upper lid slides down onto lower lid, flattening slightly
+ const sy=1-.3*k, dy=k*(e.D+.5), yb=e.yb;
+ const tf=y=>yb+(y-1.5-yb)*sy+dy+ (k>0?1.5*(1-k):0);
+ $('lid'+s).setAttribute('transform',`translate(0 ${(yb*(1-sy)+dy).toFixed(2)}) scale(1 ${sy.toFixed(3)})`);
+ // eyeball visible only below moved lid edge
+ const x0=e.xr[0],tc=e.topc;let d=`M${x0-4} 2000L${x0-4} ${tf(tc[0]).toFixed(2)}`;
+ for(let i=0;i<tc.length;i++)d+=`L${x0+i} ${tf(tc[i]).toFixed(2)}`;
+ d+=`L${e.xr[1]+4} ${tf(tc[tc.length-1]).toFixed(2)}L${e.xr[1]+4} 2000Z`;
+ $('bcp'+s).setAttribute('d',d);
+ $('iris'+s).setAttribute('transform',`translate(${st.gx.toFixed(2)} ${st.gy.toFixed(2)})`);}
+// ---------- head / hair / brows
+const H={r:0,tx:0,ty:0,breath:0,hr:0,hv:0,hy:0,hyv:0,brow:0,bl:0,br:0};
+function updateHead(){
+ $('headG').setAttribute('transform',`translate(${H.tx.toFixed(2)} ${(H.ty+H.breath*2).toFixed(2)}) rotate(${H.r.toFixed(3)} ${PV})`);
+ $('hairG').setAttribute('transform',`translate(${(H.tx*1.0).toFixed(2)} ${(H.ty+H.breath*2+H.hy).toFixed(2)}) rotate(${(H.r+H.hr).toFixed(3)} ${PV})`);
+ const sc=1+.0035*H.breath;$('bodyG').setAttribute('transform',`translate(0 ${(1200*(1-sc)).toFixed(2)}) scale(1 ${sc.toFixed(4)})`);
+ for(const [id,b] of [['browLg',H.bl],['browRg',H.br]]){const el=$(id),bx=el.getAttribute('data-b');
+  const base=el.getAttribute('data-base')||(el.setAttribute('data-base',el.getAttribute('transform')),el.getAttribute('transform'));
+  el.setAttribute('transform',`translate(0 ${(-b).toFixed(2)}) `+base);}
+}
+// ---------- driver
+let mode='idle',t0=performance.now(),last=t0,nextBlink=1500,blinkT=-1,vSel=null,aud=null;
+const still=new URLSearchParams(location.search);
+function blinkNow(){blinkT=0}
+function step(now){const dt=Math.min(.05,(now-last)/1000);last=now;const t=(now-t0)/1000;
+ // viseme target
+ if(mode==='demo')demoTick(t); else if(mode==='audio')audioTick(); else if(!vSel)tgt={...V.rest};
+ if(vSel)tgt={...V[vSel]};
+ const a=1-Math.exp(-dt*22); for(const k of KEYS)cur[k]=lerp(cur[k],tgt[k],a);
+ updateMouth(cur);
+ // blink
+ nextBlink-=dt*1000; if(nextBlink<=0&&blinkT<0){blinkNow();nextBlink=2200+Math.random()*3200}
+ let k=0; if(blinkT>=0){blinkT+=dt;const d=.17;const p=blinkT/d;k=p<.4?p/.4:p<1?1-(p-.4)/.6:0;if(blinkT>d){blinkT=-1;k=0}}
+ eye.L.k=eye.R.k=k;
+ // gaze drift
+ const gx=Math.sin(t*.37)*1.6+Math.sin(t*.91)*.6, gy=Math.sin(t*.29+1)*.8;
+ for(const s of 'LR'){eye[s].gx=gx;eye[s].gy=gy;updateEye(s)}
+ // head
+ H.r=Math.sin(t*.45)*.55+Math.sin(t*1.1)*.2+ (mode!=='idle'?cur.J*.02:0);
+ H.tx=Math.sin(t*.31)*1.1; H.ty=Math.sin(t*.52)*.7; H.breath=Math.sin(t*1.25);
+ const prevR=H.r; // hair spring
+ const kx=60,cx=7; H.hv+=(-kx*H.hr - cx*H.hv + (-H.r*14))*dt; H.hr+=H.hv*dt;
+ H.hyv+=(-50*H.hy-6*H.hyv - H.breath*.6)*dt; H.hy+=H.hyv*dt;
+ H.bl=H.br=clamp(cur.J*.1+Math.sin(t*.7)*.5,-1,3);
+ updateHead(); requestAnimationFrame(step)}
+// demo script
+const SCRIPT=['MBP','AA','E','EE','OH','OO','FV','TH','AA','rest'];let di=0,dtm=0;
+function demoTick(t){const i=Math.floor(t/.28)%SCRIPT.length;tgt={...V[SCRIPT[i]]}}
+// audio
+let an,buf,ac,src;
+function audioTick(){if(!an)return;an.getByteFrequencyData(buf);let e=0,c=0,s=0;for(let i=2;i<120;i++){e+=buf[i];c+=i*buf[i];s+=buf[i]}
+ const loud=clamp((e/118/255-.06)*5,0,1),cen=s?c/s:0; // spectral centroid → rough shape
+ let v=cen<14?'OO':cen<22?'OH':cen<34?'AA':cen<48?'E':'EE';const T=V[v];
+ tgt={};for(const k of KEYS)tgt[k]=lerp(V.rest[k],T[k],loud)}
+$('af').onchange=async e=>{const f=e.target.files[0];if(!f)return;ac=ac||new AudioContext();const a=new Audio(URL.createObjectURL(f));a.crossOrigin='anonymous';src=ac.createMediaElementSource(a);an=ac.createAnalyser();an.fftSize=512;buf=new Uint8Array(an.frequencyBinCount);src.connect(an);an.connect(ac.destination);await ac.resume();a.play();setMode('audio')};
+$('lb').onclick=()=>$('af').click();
+function setMode(m){mode=m;document.querySelectorAll('#modes button[data-m]').forEach(b=>b.classList.toggle('on',b.dataset.m===m))}
+document.querySelectorAll('#modes button[data-m]').forEach(b=>b.onclick=()=>setMode(b.dataset.m));
+for(const k of Object.keys(V)){const b=document.createElement('button');b.textContent=k;b.onmousedown=()=>{vSel=k};b.onmouseup=b.onmouseleave=()=>{vSel=null};$('vis').appendChild(b)}
+$('bl').onclick=blinkNow;
+window.rig={V,setViseme:k=>{vSel=k},setBlink:v=>{eye.L.k=eye.R.k=v},cur,H};
+// still / test mode: ?still=1&v=AA&k=1  (frozen pose, no idle motion)
+if(still.get('still')){document.body.classList.add('still');}
+// embed mode for review pages: ?embed=1&mode=demo  (panel hidden, fills the frame)
+if(still.get('embed')){document.body.classList.add('embed');if(still.get('mode'))setMode(still.get('mode'))}
+if(still.get('freeze')){const v=still.get('v')||'rest',kk=parseFloat(still.get('k')||0);cur={...V[v]};updateMouth(cur);eye.L.k=eye.R.k=kk;for(const s of 'LR')updateEye(s);updateHead();}
+else requestAnimationFrame(step);
+</script></body></html>

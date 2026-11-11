@@ -492,8 +492,26 @@ export function CastPanel() {
                 >
                   {sp.puppetPath ? "Change face" : "Choose face…"}
                 </button>
+                <button
+                  className="btn"
+                  onClick={async () => {
+                    const p = await window.byok.dialog.openFile([{ name: "Portrait rig", extensions: ["json"] }]);
+                    if (!p) return;
+                    if (!/.portrait.json$/i.test(p)) { window.alert("That is not a portrait rig. Pick a file ending in .portrait.json (brands/scotus/rig/build)."); return; }
+                    // a portrait is its own frame: no rings or outline round it
+                    updateSpeaker(sp.id, { portraitPath: p, outlineShape: "none", waveform: { ...sp.waveform, enabled: false } });
+                  }}
+                  data-tip="An illustrated portrait that talks: a whole framed picture (the SCOTUS justices). It wins over the face and the drawn character."
+                >
+                  {sp.portraitPath ? "Change portrait" : "Portrait…"}
+                </button>
+                {sp.portraitPath && (
+                  <button className="btn" onClick={() => updateSpeaker(sp.id, { portraitPath: undefined })} data-tip="Back to their face or drawn character.">
+                    Remove portrait
+                  </button>
+                )}
                 <span className="text-sm text-neutral-500 truncate flex-1" title={sp.puppetPath ?? sp.sheetPath}>
-                  {fileName(sp.puppetPath ?? sp.sheetPath) ?? "no face"}
+                  {fileName(sp.portraitPath ?? sp.puppetPath ?? sp.sheetPath) ?? "no face"}
                   {sp.puppetPath && puppetErrors[sp.puppetPath] && <span className="text-red-400"> — {puppetErrors[sp.puppetPath]}</span>}
                 </span>
               </div>

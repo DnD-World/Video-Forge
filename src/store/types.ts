@@ -305,6 +305,9 @@ export interface SpeakerConfig {
    *  halfway through building a puppet should not lose the working sheet, and
    *  every project saved before puppets existed still opens with its face on. */
   puppetPath?: string;
+  /** An illustrated portrait that talks (brands/<brand>/rig/build/<name>.portrait.json).
+   *  Wins over everything else: it is a whole picture, frame and background included. */
+  portraitPath?: string;
   /** A character drawn by code (characters/core) — the third kind of face.
    *  A small JSON card, so it lives in the project itself and rides into the
    *  render with no files. Which form shows is `form` (formOf in

@@ -1,0 +1,31 @@
+{
+  "_comment": "Sotomayor's hand-measured values from the approved rig (11 Nov 2026). With raster:false this rebuilds build/sotomayor_rig.html as approved; raster:true is version B on the review page.",
+  "name": "Sotomayor",
+  "checked": true,
+  "raster": true,
+  "frame": [23, 24, 874, 1176],
+  "navy": [35, 48, 65],
+  "skin": {"mode": "rb", "rb_hi": 28, "rb_lo": 40, "r_min": 100, "split_y": 700},
+  "collar_poly": [[398,742],[462,742],[462,832],[398,832]],
+  "ears": [[[588,492],[611,492],[613,553],[588,553]], [[305,510],[330,510],[330,558],[305,558]]],
+  "hair_poly": [[150,60],[780,60],[780,612],[650,612],[600,606],[560,640],[420,670],[380,640],[330,640],[150,640]],
+  "hair_cut_y": 596,
+  "robe_head_y": 600,
+  "eyes": {
+    "L": {"box": [318,388,416,434], "ic": [367,411.5], "r": 13.2, "rc": 16},
+    "R": {"box": [456,392,552,434], "ic": [503,411], "r": 13.0, "rc": 16}
+  },
+  "eye_rule": "legacy",
+  "brow_rule": "legacy",
+  "brows": {
+    "L": {"search": [312,345,418,395], "box": [300,330,430,400]},
+    "R": {"search": [450,338,548,392], "box": [440,330,560,400]}
+  },
+  "lip_mask": "sotomayor_lippoly.npy",
+  "chin_box": [393,562,492,585],
+  "seam": {"x0": 377, "x1": 508, "kx": [378,398,418,443,463,483,498,508], "ky": [547.8,546.8,548.1,548.1,548.1,547.1,544.9,544.3]},
+  "jaw": {"x0": 384, "x1": 502, "y1": 618},
+  "mouth": {"cx": 442, "hw": 66},
+  "pivot": [440, 745],
+  "scale": 1.0
+}

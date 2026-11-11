@@ -8,6 +8,8 @@ import { Toggle } from "./components/ui/Toggle";
 import { SpeakerAvatar } from "./components/canvas/SpeakerAvatar";
 import { PuppetAvatar } from "./components/canvas/PuppetAvatar";
 import { CharacterAvatar } from "./components/canvas/CharacterAvatar";
+import { PortraitView } from "./components/canvas/PortraitView";
+import { usePortraits } from "./lib/portraits/usePortraits";
 import { activeCard, facingView, lookById } from "../characters/core/index.mjs";
 import { WaveformScene } from "./components/canvas/WaveformScene";
 import { BackgroundScene } from "./components/canvas/BackgroundScene";
@@ -251,6 +253,7 @@ export default function App() {
     [backgrounds]
   );
   const { puppets } = usePuppets(speakers.map((sp) => sp.puppetPath));
+  const { files: portraits } = usePortraits(speakers.map((sp) => sp.portraitPath));
   const browTracks = useMemo(
     () => buildSpeakerBrowTracks(narration?.segments ?? []),
     [narration]
@@ -654,7 +657,8 @@ export default function App() {
                     // breathing while you're trying to place it fights the mouse.
                     transform:
                       "translate(-50%, -50%)" +
-                      (draggingId === sp.id
+                      // a portrait sways inside its own frame; the frame stays put (as in the render)
+                      (draggingId === sp.id || sp.portraitPath
                         ? ""
                         : motionTransform(
                             headMotion(
@@ -670,7 +674,19 @@ export default function App() {
                   }}
                   className="z-10"
                 >
-                  {activeCard(sp) ? (
+                  {sp.portraitPath && portraits[sp.portraitPath] ? (
+                    // an illustrated portrait (brands/scotus): wins over every other face, as in the render
+                    <PortraitView
+                      file={portraits[sp.portraitPath]}
+                      id={sp.id}
+                      timeMs={previewTimeMs}
+                      viseme={blend.to}
+                      prevViseme={blend.from}
+                      mix={blend.mix}
+                      active={activeSpeakerId === sp.id}
+                      size={sp.size * canvasSize.w}
+                    />
+                  ) : activeCard(sp) ? (
                     // a drawn character: same signals as the puppet, drawn by code
                     <CharacterAvatar
                       card={activeCard(sp)!}

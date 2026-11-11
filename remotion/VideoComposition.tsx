@@ -20,6 +20,7 @@ import { WaveformScene } from "../src/components/canvas/WaveformScene";
 import { SubtitleScene } from "../src/components/canvas/SubtitleScene";
 import { SpeakerAvatar } from "../src/components/canvas/SpeakerAvatar";
 import { PuppetAvatar } from "../src/components/canvas/PuppetAvatar";
+import { PortraitAvatar } from "./portrait/PortraitAvatar";
 import { CharacterAvatar } from "../src/components/canvas/CharacterAvatar";
 import { buildSpeakerMoveTracks, moveAt, placeTracks, seatedTracks, stagePlacement, travelBob } from "../src/lib/motion/moveTracks";
 import type { MoveSpan } from "../characters/core/index.mjs";
@@ -375,13 +376,25 @@ export function VideoComposition({
               position: "absolute",
               left: `${(sp.x + stage.dx) * 100}%`,
               top: `${sp.y * 100}%`,
-              transform: "translate(-50%, -50%)" + motionTransform(motion, size) + travelBob(move, timeMs, size, !!sp.character),
+              // a portrait sways inside its own frame; the frame itself stays put
+              transform: "translate(-50%, -50%)" + (sp.portrait ? "" : motionTransform(motion, size) + travelBob(move, timeMs, size, !!sp.character)),
             }}
           >
             {/* The very same components the preview draws. Duplicating the disk
                 markup here is what let the border width and glow drift apart
                 once already — there is only one implementation now. */}
-            {sp.character ? (
+            {sp.portrait ? (
+              <PortraitAvatar
+                fileName={sp.portrait.fileName}
+                id={sp.id}
+                timeMs={timeMs}
+                viseme={mouth.to}
+                prevViseme={mouth.from}
+                mix={mouth.mix}
+                active={activeSpeakerId === sp.id}
+                size={size}
+              />
+            ) : sp.character ? (
               // A drawn character takes the very same signals as the puppet
               // below; it draws instead of swapping pictures.
               <CharacterAvatar
